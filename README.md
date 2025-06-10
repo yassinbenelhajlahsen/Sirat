@@ -1,50 +1,44 @@
-# Welcome to your Expo app 👋
+# Irtiqaa 📿
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Irtiqaa** is a mobile-first Islamic utility app built with React Native and Expo. It helps users practice their faith with tools like prayer time reminders, Qibla direction, nearby mosque discovery, and more.
 
-## Get started
+---
 
-1. Install dependencies
+## ✨ Features
 
-   ```bash
-   npm install
-   ```
+- 🕌 Accurate prayer times using Aladhan API
+- 🧭 Qibla direction compass using device sensors
+- 📍 Mosque locator via Google Maps API and geolocation
+- 🔔 Local Adhan notifications (planned)
+- 📖 Daily Ayah and Hadith feed (planned)
+- 🌙 Offline-friendly UI with theme support (planned)
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 🛠️ Tech Stack
 
-In the output, you'll find options to open the app in a
+- **React Native** + **Expo**  
+- **Tailwind CSS** (via NativeWind)  
+- **Axios** – API calls  
+- **expo-location** – get user location  
+- **expo-sensors** – for compass heading  
+- **expo-notifications** – for scheduled prayer alerts  
+- **AsyncStorage** – for saving preferences
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📚 APIs Used
+Aladhan API – prayer times & Qibla
 
-## Get a fresh project
+Google Maps / Places API – mosque locator
 
-When you're ready, run:
+---
 
-```bash
-npm run reset-project
-```
+## 🚧 Planned Features
+Push notifications with custom Adhan audio
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Bookmarking Ayahs and Hadiths and saving progress, adding a backend
 
-## Learn more
+Full Quran/Hadith browser with search
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Multilingual support (EN, AR, FR, etc.)
