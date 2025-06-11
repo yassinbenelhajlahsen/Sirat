@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "irtiqaa",
-    "slug": "irtiqaa",
+    "name": "Sirat",
+    "slug": "Sirat",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "irtiqaa",
+    "scheme": "Sirat",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
