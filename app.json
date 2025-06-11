@@ -2,9 +2,10 @@
   "expo": {
     "name": "Sirat",
     "slug": "Sirat",
+    "extra": { "fullName": "Sirat - The Path to Your Deen"},
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/sirat_icon.png",
     "scheme": "Sirat",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
