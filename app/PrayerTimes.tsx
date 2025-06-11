@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 
-export default function Home() {
+export default function PrayerTimes() {
   return (
     <View
       style={{
@@ -9,7 +9,7 @@ export default function Home() {
         alignItems: "center",
       }}
     >
-      <Text>Homescreen. This will display todays prayer times and a daily dua.</Text>
+      <Text>Prayer times. This will display todays prayer times and allow user to see past month and year in the future.</Text>
     </View>
   );
 }

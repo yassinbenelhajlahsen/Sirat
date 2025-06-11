@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 
-export default function Home() {
+export default function Qibla() {
   return (
     <View
       style={{
@@ -9,7 +9,7 @@ export default function Home() {
         alignItems: "center",
       }}
     >
-      <Text>Homescreen. This will display todays prayer times and a daily dua.</Text>
+      <Text>Qibla page. Will show qibla compass direction.</Text>
     </View>
   );
 }
