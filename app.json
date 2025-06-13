@@ -2,17 +2,21 @@
   "expo": {
     "name": "Sirat",
     "slug": "Sirat",
-    "extra": { "fullName": "Sirat - The Path to Your Deen"},
+    "extra": {
+      "fullName": "Sirat - The Path to Your Deen"
+    },
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/sirat_icon.png",
     "scheme": "sirat",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0c3605",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "userInterfaceStyle": "dark",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.Sirat"
     },
-
     "plugins": [
       "expo-router",
       [
@@ -21,6 +25,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "android": {
+      "package": "com.anonymous.Sirat"
     }
   }
 }

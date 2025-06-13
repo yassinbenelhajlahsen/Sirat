@@ -29,7 +29,7 @@
 
 ## 📚 APIs Used
 
-Aladhan API – prayer times & Qibla
+Aladhan API – prayer times & calender
 
 Google Maps / Places API – mosque locator
 
