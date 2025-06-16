@@ -3,11 +3,20 @@
     "name": "Sirat",
     "slug": "Sirat",
     "extra": {
-      "fullName": "Sirat - The Path to Your Deen"
+      "fullName": "Sirat - The Path to Your Deen",
+      "router": {},
+      "eas": {
+        "projectId": "cf8d4247-0a70-4fe4-bd59-43ea9efac019"
+      }
     },
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/sirat_icon.png",
+    "splash": {
+      "image": "./assets/images/sirat_splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0c3605"
+    },
     "scheme": "sirat",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0c3605",
@@ -19,9 +28,6 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-splash-screen"
-      ],
       "expo-font"
     ],
     "experiments": {

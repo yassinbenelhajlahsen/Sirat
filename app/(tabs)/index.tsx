@@ -1,4 +1,4 @@
-import { Text, View, SafeAreaView, ScrollView } from "react-native";
+import { SafeAreaView, ScrollView, Text, View } from "react-native";
 
 const prayerTimes = [
   { label: "Fajr", time: "3:45 AM" },
@@ -27,12 +27,12 @@ export default function Home() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
       <ScrollView
-         contentContainerStyle={{
-    paddingTop: 10,
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingBottom: 40, 
-  }}
+        contentContainerStyle={{
+          paddingTop: 10,
+          paddingLeft: 20,
+          paddingRight: 20,
+          paddingBottom: 40,
+        }}
         showsVerticalScrollIndicator={false}
       >
         <Text
