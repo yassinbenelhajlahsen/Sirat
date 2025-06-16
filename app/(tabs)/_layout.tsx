@@ -45,7 +45,7 @@ export default function TabLayout() {
                 tintColor: color,
                 borderRadius: 8,
               }}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           ),
         }}
@@ -63,15 +63,26 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="Mosques"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="location-outline" size={size} color={color} />
+          ),
+        }}
+      />
 
       <Tabs.Screen
         name="Calendar"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Ionicons name="today-outline" size={size} color={color} />
           ),
         }}
       />
+      
+
+      
 
       <Tabs.Screen
         name="Settings"
