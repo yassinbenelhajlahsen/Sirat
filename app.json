@@ -21,7 +21,8 @@
       "expo-router",
       [
         "expo-splash-screen"
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

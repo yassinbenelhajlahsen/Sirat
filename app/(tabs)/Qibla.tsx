@@ -1,18 +1,21 @@
-import { Text, View } from "react-native";
+import { Text, View, SafeAreaView } from "react-native";
 
 export default function Qibla() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-                  padding: 20
-
-      }}
-    >
-      <Text style={{ color: "white" }}>Qibla page. Will show qibla compass direction.</Text>
-    </View>
+   <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
+     
+         <View
+             style={{
+               alignItems: "flex-start",  
+               justifyContent: "flex-start",
+               paddingTop: 10,
+               paddingLeft: 20,
+             }}
+           >
+           <Text style= {{color: "white", fontFamily: "SFProDisplay-Bold", fontSize: 45}}> Qibla </Text>
+     
+         </View> 
+             </SafeAreaView>
 
   );
 }
