@@ -10,7 +10,7 @@ export default function TabLayout() {
         screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#FFD700",
+        tabBarActiveTintColor: "#DABA69",
         tabBarStyle: {
           backgroundColor: "#0c3605",
           borderTopWidth: 0,
@@ -33,20 +33,13 @@ export default function TabLayout() {
         }}
       />
 
+
+      
       <Tabs.Screen
-        name="PrayerTimes"
+        name="Mosques"
         options={{
-          tabBarIcon: ({ color }) => (
-            <Image
-              source={require("../../assets/images/man_praying.png")}
-              style={{
-                width: 24,
-                height: 24,
-                tintColor: color,
-                borderRadius: 8,
-              }}
-              resizeMode="cover"
-            />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="location-outline" size={size} color={color} />
           ),
         }}
       />
@@ -63,14 +56,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="Mosques"
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="location-outline" size={size} color={color} />
-          ),
-        }}
-      />
 
       <Tabs.Screen
         name="Calendar"
@@ -82,8 +67,7 @@ export default function TabLayout() {
       />
       
 
-      
-
+  
       <Tabs.Screen
         name="Settings"
         options={{

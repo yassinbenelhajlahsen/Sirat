@@ -2,7 +2,7 @@ import { Text, View, SafeAreaView } from "react-native";
 
 export default function Qibla() {
   return (
-   <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
+   <SafeAreaView style={{ flex: 1}}>
      
          <View
              style={{
@@ -12,7 +12,7 @@ export default function Qibla() {
                paddingLeft: 20,
              }}
            >
-           <Text style= {{color: "white", fontFamily: "SFProDisplay-Bold", fontSize: 45}}> Qibla </Text>
+           <Text style= {{color: "white", fontFamily: "SFProDisplay-Bold", fontSize: 45}}>Qibla</Text>
      
          </View> 
              </SafeAreaView>
