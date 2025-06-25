@@ -1,7 +1,26 @@
-import { Text, View, SafeAreaView, Image, StyleSheet } from "react-native";
-import useQibla from "../lib/useQibla"; 
+import { Text, View, SafeAreaView, Animated, Image, StyleSheet } from "react-native";
+import { useRef, useEffect } from "react";
+import useQibla from "../lib/useQibla";
+
 export default function Qibla() {
   const { rotation, error } = useQibla();
+
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (rotation !== null) {
+      Animated.timing(rotateAnim, {
+        toValue: rotation,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [rotation]);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 360],
+    outputRange: ["0deg", "360deg"],
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -17,10 +36,13 @@ export default function Qibla() {
         ) : rotation === null ? (
           <Text style={styles.loadingText}>Finding direction...</Text>
         ) : (
-          <Image
-            source={require("../../assets/images/qibla_arrow.png")}
-            style={[styles.arrow, { transform: [{ rotate: `${rotation}deg` }] }]}
-          />
+          <View style={styles.arrowGlow}>
+            <Animated.Image
+              source={require("../../assets/images/qibla_arrow.png")}
+              style={[styles.arrow, { transform: [{ rotate: spin }] }]}
+              resizeMode="contain"
+            />
+          </View>
         )}
       </View>
     </SafeAreaView>
@@ -46,9 +68,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  arrowGlow: {
+    padding: 10,
+    borderRadius: 200,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    shadowColor: "#00ffcc",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 15,
+  },
   arrow: {
-    width: 150,
-    height: 150,
+    width: 300,
+    height: 300,
   },
   loadingText: {
     color: "white",
