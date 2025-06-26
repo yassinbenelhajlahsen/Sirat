@@ -1,5 +1,4 @@
 import * as Location from "expo-location";
-import { Accelerometer, Magnetometer } from "expo-sensors";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -13,7 +12,7 @@ function toDegrees(rad: number) {
   return (rad * 180) / Math.PI;
 }
 
-// Compute bearing from (lat1, lon1) → (lat2, lon2) in degrees [0,360)
+// compute bearing from (lat1, lon1) → (lat2, lon2) in degrees [0,360)
 function computeBearing(
   lat1: number,
   lon1: number,
@@ -32,15 +31,11 @@ function computeBearing(
   if (θ < 0) θ += 360;
   return θ;
 }
-
-
-
 export default function useQibla() {
   const [heading, setHeading] = useState<number>(0);
   const [qiblaAngle, setQiblaAngle] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  /* Get user location & compute Qibla bearing once */
   useEffect(() => {
     (async () => {
       try {
@@ -61,9 +56,8 @@ export default function useQibla() {
         setError("Failed to get location: " + e.message);
       }
     })();
-  }, []); // Added empty dependency array
+  }, []);
 
-  // Simulator for web or debug mode
   useEffect(() => {
     if (Platform.OS !== "web") return;
 
@@ -71,31 +65,26 @@ export default function useQibla() {
       setHeading((h) => (h + 1) % 360);
     }, 100);
     return () => clearInterval(id);
-  }, []); // Added empty dependency array
+  }, []);
 
-  // Magnetometer (native only)
- useEffect(() => {
-  if (Platform.OS === "web") return;
+  useEffect(() => {
+    if (Platform.OS === "web") return;
 
-  const interval = setInterval(async () => {
-    try {
-      const headingData = await Location.getHeadingAsync();
-      setHeading(headingData.trueHeading ?? headingData.magHeading);
-    } catch (e) {
-      setError("Failed to get heading: " + (e as Error).message);
-    }
-  }, 150); // Adjust refresh rate as needed
+    const interval = setInterval(async () => {
+      try {
+        const headingData = await Location.getHeadingAsync();
+        setHeading(headingData.trueHeading ?? headingData.magHeading);
+      } catch (e) {
+        setError("Failed to get heading: " + (e as Error).message);
+      }
+    }, 150); // refresh rate, higher number for smoother, lower for accuracy
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, []);
 
-
-  
-
-  // Compute rotation for your UI
-const rotation =
-  qiblaAngle != null && heading != null
-    ? (qiblaAngle - heading + 360) % 360
-    : null;
+  const rotation =
+    qiblaAngle != null && heading != null
+      ? (qiblaAngle - heading + 360) % 360
+      : null;
   return { rotation, heading, qiblaAngle, error };
 }

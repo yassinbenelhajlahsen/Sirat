@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import { Animated, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import useQibla from "../lib/useQibla";
+
 function getMinimalRotation(from: number, to: number): number {
-  let delta = (to - from + 540) % 360 - 180;
+  let delta = ((to - from + 540) % 360) - 180;
   return from + delta;
 }
 
@@ -10,21 +11,20 @@ export default function Qibla() {
   const { rotation, error } = useQibla();
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
-const lastRotation = useRef(0);
+  const lastRotation = useRef(0);
 
   useEffect(() => {
-  if (rotation !== null) {
-    const minimal = getMinimalRotation(lastRotation.current, rotation);
-    lastRotation.current = minimal;
+    if (rotation !== null) {
+      const minimal = getMinimalRotation(lastRotation.current, rotation);
+      lastRotation.current = minimal;
 
-    Animated.timing(rotateAnim, {
-      toValue: minimal,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }
-}, [rotation]);
-
+      Animated.timing(rotateAnim, {
+        toValue: minimal,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [rotation]);
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 360],
@@ -78,16 +78,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   arrowGlow: {
-  padding: 10,
-  borderRadius: 200,
-  shadowColor: "#00ffcc",
-  shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0.8,
-  shadowRadius: 20,
-  elevation: 15,
-  alignItems: "center",
-  justifyContent: "center",
-},
+    padding: 10,
+    borderRadius: 200,
+    shadowColor: "#00ffcc",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   arrow: {
     width: 400,
