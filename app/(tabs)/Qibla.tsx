@@ -1,21 +1,30 @@
-import { Text, View, SafeAreaView, Animated, Image, StyleSheet } from "react-native";
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { Animated, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import useQibla from "../lib/useQibla";
+function getMinimalRotation(from: number, to: number): number {
+  let delta = (to - from + 540) % 360 - 180;
+  return from + delta;
+}
 
 export default function Qibla() {
   const { rotation, error } = useQibla();
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
+const lastRotation = useRef(0);
 
   useEffect(() => {
-    if (rotation !== null) {
-      Animated.timing(rotateAnim, {
-        toValue: rotation,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [rotation]);
+  if (rotation !== null) {
+    const minimal = getMinimalRotation(lastRotation.current, rotation);
+    lastRotation.current = minimal;
+
+    Animated.timing(rotateAnim, {
+      toValue: minimal,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }
+}, [rotation]);
+
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 360],
@@ -38,7 +47,7 @@ export default function Qibla() {
         ) : (
           <View style={styles.arrowGlow}>
             <Animated.Image
-              source={require("../../assets/images/qibla_arrow.png")}
+              source={require("../../assets/images/qiblaDirection.png")}
               style={[styles.arrow, { transform: [{ rotate: spin }] }]}
               resizeMode="contain"
             />
@@ -69,18 +78,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   arrowGlow: {
-    padding: 10,
-    borderRadius: 200,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    shadowColor: "#00ffcc",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 15,
-  },
+  padding: 10,
+  borderRadius: 200,
+  shadowColor: "#00ffcc",
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.8,
+  shadowRadius: 20,
+  elevation: 15,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
   arrow: {
-    width: 300,
-    height: 300,
+    width: 400,
+    height: 400,
   },
   loadingText: {
     color: "white",
