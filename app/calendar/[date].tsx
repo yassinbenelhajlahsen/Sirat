@@ -41,6 +41,16 @@ export default function CalendarDetail() {
   }, [date]);
 
   if (!selectedDate) return null;
+  const today = new Date();
+  const minDate = new Date(today.getFullYear() - 1, 0); // Jan of last year
+const maxDate = new Date(today.getFullYear() + 1, 11, 31);
+  const prevDate = new Date(selectedDate);
+  prevDate.setDate(prevDate.getDate() - 1);
+  const nextDate = new Date(selectedDate);
+  nextDate.setDate(nextDate.getDate() + 1);
+
+  const isPrevDisabled = prevDate < minDate;
+  const isNextDisabled = nextDate > maxDate;
 
   const changeDate = (daysOffset: number) => {
     const newDate = new Date(selectedDate);
@@ -84,60 +94,64 @@ export default function CalendarDetail() {
 
         {/* Prev / Next Day Buttons */}
         <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 20,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => changeDate(-1)}
-            style={{
-              backgroundColor: "#1f4e17",
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              borderRadius: 10,
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="chevron-back" size={20} color="#DABA69" />
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                marginLeft: 6,
-              }}
-            >
-              Previous
-            </Text>
-          </TouchableOpacity>
+  style={{
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+    marginBottom: 20
+  }}
+>
+  <TouchableOpacity
+    onPress={() => !isPrevDisabled && changeDate(-1)}
+    disabled={isPrevDisabled}
+    style={{
+      backgroundColor: "#1f4e17",
+      padding: 12,
+      borderRadius: 10,
+      flexDirection: "row",
+      alignItems: "center",
+      opacity: isPrevDisabled ? 0.4 : 1,
+    }}
+  >
+    <Ionicons name="chevron-back" size={20} color="#DABA69" />
+    <Text
+      style={{
+        color: "#DABA69",
+        fontFamily: "SFProDisplay-Semibold",
+        fontSize: 16,
+        marginLeft: 4,
+      }}
+    >
+      Previous
+    </Text>
+  </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => changeDate(1)}
-            style={{
-              backgroundColor: "#1f4e17",
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              borderRadius: 10,
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                marginRight: 6,
-              }}
-            >
-              Next
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color="#DABA69" />
-          </TouchableOpacity>
-        </View>
+  <TouchableOpacity
+    onPress={() => !isNextDisabled && changeDate(1)}
+    disabled={isNextDisabled}
+    style={{
+      backgroundColor: "#1f4e17",
+      padding: 12,
+      borderRadius: 10,
+      flexDirection: "row",
+      alignItems: "center",
+      opacity: isNextDisabled ? 0.4 : 1,
+    }}
+  >
+    <Text
+      style={{
+        color: "#DABA69",
+        fontFamily: "SFProDisplay-Semibold",
+        fontSize: 16,
+        marginRight: 4,
+      }}
+    >
+      Next
+    </Text>
+    <Ionicons name="chevron-forward" size={20} color="#DABA69" />
+  </TouchableOpacity>
+</View>
+
 
         {/* Date Info */}
         <Text
