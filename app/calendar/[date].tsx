@@ -12,7 +12,6 @@ const MOCK_PRAYER_TIMES = {
   Isha: "10:09 PM",
 };
 
-// Mock holiday data
 const ISLAMIC_HOLIDAYS: Record<string, string> = {
   "2025-06-06": "Eid al-Adha",
   "2025-03-31": "Start of Ramadan",
@@ -25,7 +24,7 @@ function formatHijriMock(date: Date): string {
 }
 
 export default function CalendarDetail() {
-const { date, month, year } = useLocalSearchParams();
+  const { date, month, year } = useLocalSearchParams();
   const router = useRouter();
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -37,29 +36,108 @@ const { date, month, year } = useLocalSearchParams();
       setSelectedDate(decoded);
 
       const iso = decoded.toISOString().split("T")[0];
-      if (ISLAMIC_HOLIDAYS[iso]) {
-        setHoliday(ISLAMIC_HOLIDAYS[iso]);
-      }
+      setHoliday(ISLAMIC_HOLIDAYS[iso] || null);
     }
   }, [date]);
 
   if (!selectedDate) return null;
 
+  const changeDate = (daysOffset: number) => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + daysOffset);
+    router.replace({
+      pathname: "/calendar/[date]",
+      params: {
+        date: newDate.toISOString(),
+        month: newDate.getMonth().toString(),
+        year: newDate.getFullYear().toString(),
+      },
+    });
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
       <View style={{ padding: 20 }}>
-        {/* Back Button */}
+        {/* Back to Calendar */}
         <TouchableOpacity
-          onPress={() => router.replace(`/Calendar?month=${month}&year=${year}`)
-}
+          onPress={() =>
+            router.replace(`/Calendar?month=${month}&year=${year}`)
+          }
           style={{
-            marginBottom: 20,
+            marginBottom: 16,
             flexDirection: "row",
             alignItems: "center",
           }}
         >
           <Ionicons name="chevron-back" size={24} color="#DABA69" />
+          <Text
+            style={{
+              color: "#DABA69",
+              fontSize: 16,
+              fontFamily: "SFProDisplay-Semibold",
+              marginLeft: 6,
+            }}
+          >
+            Back to Calendar
+          </Text>
         </TouchableOpacity>
+
+        {/* Prev / Next Day Buttons */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginBottom: 20,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => changeDate(-1)}
+            style={{
+              backgroundColor: "#1f4e17",
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 10,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Ionicons name="chevron-back" size={20} color="#DABA69" />
+            <Text
+              style={{
+                color: "#DABA69",
+                fontSize: 16,
+                fontFamily: "SFProDisplay-Semibold",
+                marginLeft: 6,
+              }}
+            >
+              Previous
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => changeDate(1)}
+            style={{
+              backgroundColor: "#1f4e17",
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 10,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: "#DABA69",
+                fontSize: 16,
+                fontFamily: "SFProDisplay-Semibold",
+                marginRight: 6,
+              }}
+            >
+              Next
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color="#DABA69" />
+          </TouchableOpacity>
+        </View>
 
         {/* Date Info */}
         <Text
