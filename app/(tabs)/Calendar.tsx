@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter,useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import { SafeAreaView, Text, TouchableOpacity, View } from "react-native";
 
@@ -28,12 +28,18 @@ const getMonthMatrix = (year: number, month: number) => {
 };
 
 export default function CalendarScreen() {
-  const router = useRouter();
-  const today = new Date();
-  const minDate = new Date(today.getFullYear() - 1, 0); // Jan of last year
-  const maxDate = new Date(today.getFullYear() + 1, 11); // Dec of next year
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
+const router = useRouter();
+const today = new Date();
+const { month, year } = useLocalSearchParams();
+
+const initialMonth = typeof month === "string" ? parseInt(month) : today.getMonth();
+const initialYear = typeof year === "string" ? parseInt(year) : today.getFullYear();
+
+const minDate = new Date(today.getFullYear() - 1, 0);
+const maxDate = new Date(today.getFullYear() + 1, 11);
+
+const [viewYear, setViewYear] = useState(initialYear);
+const [viewMonth, setViewMonth] = useState(initialMonth);
   const isViewingToday =
     viewMonth === today.getMonth() && viewYear === today.getFullYear();
   const matrix = getMonthMatrix(viewYear, viewMonth);
@@ -163,14 +169,23 @@ export default function CalendarScreen() {
                   return (
                     <TouchableOpacity
                       key={j}
-                      onPress={() =>
-                        day > 0 &&
-                        router.push(
-                          `/calendar/${encodeURIComponent(
-                            new Date(viewYear, viewMonth, day).toISOString()
-                          )}`
-                        )
-                      }
+                      onPress={() => {
+                        if (day > 0) {
+                          const selectedDate = new Date(
+                            viewYear,
+                            viewMonth,
+                            day
+                          );
+                          router.push({
+                            pathname: "/calendar/[date]",
+                            params: {
+                              date: selectedDate.toISOString(),
+                              month: viewMonth.toString(),
+                              year: viewYear.toString(),
+                            },
+                          });
+                        }
+                      }}
                       style={{
                         width: 32,
                         height: 32,
@@ -206,7 +221,6 @@ export default function CalendarScreen() {
             ))}
           </View>
         </View>
-        
 
         {/* Back to Today Button */}
         {!isViewingToday && (
@@ -236,7 +250,6 @@ export default function CalendarScreen() {
           </TouchableOpacity>
         )}
       </View>
-      
     </SafeAreaView>
   );
 }

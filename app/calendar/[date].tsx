@@ -1,7 +1,7 @@
-import { View, Text, SafeAreaView, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView, Text, TouchableOpacity, View } from "react-native";
 
 const MOCK_PRAYER_TIMES = {
   Fajr: "3:45 AM",
@@ -14,7 +14,6 @@ const MOCK_PRAYER_TIMES = {
 
 // Mock holiday data
 const ISLAMIC_HOLIDAYS: Record<string, string> = {
-  
   "2025-06-06": "Eid al-Adha",
   "2025-03-31": "Start of Ramadan",
   "2025-04-09": "Laylat al-Qadr",
@@ -26,7 +25,7 @@ function formatHijriMock(date: Date): string {
 }
 
 export default function CalendarDetail() {
-  const { date } = useLocalSearchParams();
+const { date, month, year } = useLocalSearchParams();
   const router = useRouter();
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -50,7 +49,15 @@ export default function CalendarDetail() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
       <View style={{ padding: 20 }}>
         {/* Back Button */}
-        <TouchableOpacity onPress={router.back} style={{ marginBottom: 20, flexDirection: "row", alignItems: "center" }}>
+        <TouchableOpacity
+          onPress={() => router.replace(`/Calendar?month=${month}&year=${year}`)
+}
+          style={{
+            marginBottom: 20,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
           <Ionicons name="chevron-back" size={24} color="#DABA69" />
         </TouchableOpacity>
 
