@@ -76,6 +76,8 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      
     </Tabs>
         </SafeAreaProvider>
 
