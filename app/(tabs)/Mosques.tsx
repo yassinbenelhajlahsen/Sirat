@@ -1,21 +1,161 @@
-import { Text,View, SafeAreaView} from "react-native";
+// app/(tabs)/mosque.tsx
 
-export default function Mosques() {
+import * as Location from "expo-location";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Marker } from "react-native-maps";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const MOCK_MOSQUES = [
+  {
+    id: "1",
+    name: "Ar-Rahman",
+    address: "333 86th St, Brooklyn, NY 11209",
+    lat: 40.6234,
+    lng: -74.0306,
+  },
+  {
+    id: "2",
+    name: "Islamic Society of Bay Ridge",
+    address: "6807 5th Ave, Brooklyn, NY 11220",
+    lat: 40.6358,
+    lng: -74.0243,
+  },
+  {
+    id: "3",
+    name: "Maryam Mosque",
+    address: "7307 5th Ave, Brooklyn, NY 11209",
+    lat: 40.635,
+    lng: -74.0271,
+  },
+];
+
+export default function MosqueScreen() {
+  const [location, setLocation] = useState<null | {
+    latitude: number;
+    longitude: number;
+  }>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+    })();
+  }, []);
+
   return (
-        <SafeAreaView style={{ flex: 1}}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={{ flex: 1, padding: 20 }}>
+        <Text style={styles.title}>Mosques</Text>
+        <Text style={styles.header}>Nearby</Text>
 
-    <View
-        style={{
-          alignItems: "flex-start",  
-          justifyContent: "flex-start",
-          paddingTop: 10,
-          paddingLeft: 20,
-        }}
-      >
-      <Text style= {{color: "white", fontFamily: "SFProDisplay-Bold", fontSize: 45}}>Mosques</Text>
-      
+        <FlatList
+          data={MOCK_MOSQUES}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.address}>{item.address}</Text>
+            </View>
+          )}
+          style={{ marginBottom: 20 }}
+        />
+        <Text style={styles.header}>Map</Text>
 
-    </View> 
-        </SafeAreaView>
+        <TouchableOpacity style={styles.mapContainer} onPress={() => {}}>
+          <MapView
+            style={StyleSheet.absoluteFillObject}
+            initialRegion={{
+              latitude: 40.634,
+              longitude: -74.026,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+            region={
+              location
+                ? {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }
+                : undefined
+            }
+            showsUserLocation={true}
+          >
+            {MOCK_MOSQUES.map((mosque) => (
+              <Marker
+                key={mosque.id}
+                coordinate={{ latitude: mosque.lat, longitude: mosque.lng }}
+                title={mosque.name}
+                description={mosque.address}
+              />
+            ))}
+
+            {location && (
+              <Marker coordinate={location} title="You" pinColor="blue" />
+            )}
+          </MapView>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#0c3605",
+  },
+  title: {
+    color: "white",
+    fontFamily: "SFProDisplay-Bold",
+    fontSize: 36,
+    marginBottom: 8,
+  },
+  header: {
+    color: "#DABA69",
+    fontSize: 22,
+    fontFamily: "SFProDisplay-Bold",
+    marginBottom: 16,
+  },
+  card: {
+    backgroundColor: "#134b0a",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  name: {
+    color: "white",
+    fontFamily: "SFProDisplay-Semibold",
+    fontSize: 20,
+  },
+  address: {
+    color: "white",
+    fontFamily: "SFProDisplay-Regular",
+    fontSize: 16,
+    marginTop: 4,
+    opacity: 0.85,
+  },
+  mapContainer: {
+    height: 200,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+});

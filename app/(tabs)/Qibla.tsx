@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, SafeAreaView, StyleSheet, Text, View } from "react-native";
-import useQibla from "../lib/useQibla";
+import useQibla from "../util/useQibla";
 
 function getMinimalRotation(from: number, to: number): number {
   let delta = ((to - from + 540) % 360) - 180;
