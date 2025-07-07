@@ -59,15 +59,18 @@ export default function Home() {
 
   const [timeLeft, setTimeLeft] = useState("");
 
-  useEffect(() => {
-    if (!nextPrayer) return;
+useEffect(() => {
+  if (!nextPrayer) return;
 
-    const interval = setInterval(() => {
-      setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-    }, 1000);
+  // Set initial value right away
+  setTimeLeft(getTimeUntil(nextPrayer.dateObj));
 
-    return () => clearInterval(interval);
-  }, [nextPrayer]);
+  const interval = setInterval(() => {
+    setTimeLeft(getTimeUntil(nextPrayer.dateObj));
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [nextPrayer]);
 
   let today = new Date();
 
