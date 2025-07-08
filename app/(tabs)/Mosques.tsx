@@ -42,18 +42,20 @@ export default function MosqueScreen() {
     longitude: number;
   }>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
+useEffect(() => {
+  (async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    console.log("Permission status:", status); // add this
+    if (status !== "granted") return;
 
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      });
-    })();
-  }, []);
+    const loc = await Location.getCurrentPositionAsync({});
+    console.log("Location:", loc); // and this
+    setLocation({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    });
+  })();
+}, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -77,13 +79,7 @@ export default function MosqueScreen() {
         <TouchableOpacity style={styles.mapContainer} onPress={() => {}}>
           <MapView
             style={StyleSheet.absoluteFillObject}
-            initialRegion={{
-              latitude: 40.634,
-              longitude: -74.026,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-            region={
+            initialRegion={
               location
                 ? {
                     latitude: location.latitude,
@@ -91,7 +87,12 @@ export default function MosqueScreen() {
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                   }
-                : undefined
+                : {
+                    latitude: 40.634,
+                    longitude: -74.026,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }
             }
             showsUserLocation={true}
           >
@@ -103,10 +104,6 @@ export default function MosqueScreen() {
                 description={mosque.address}
               />
             ))}
-
-            {location && (
-              <Marker coordinate={location} title="You" pinColor="blue" />
-            )}
           </MapView>
         </TouchableOpacity>
       </View>
