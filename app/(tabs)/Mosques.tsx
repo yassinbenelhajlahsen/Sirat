@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 const MOCK_MOSQUES = [
   {
@@ -56,6 +57,7 @@ useEffect(() => {
     });
   })();
 }, []);
+const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -76,7 +78,7 @@ useEffect(() => {
         />
         <Text style={styles.header}>Map</Text>
 
-        <TouchableOpacity style={styles.mapContainer} onPress={() => {}}>
+        <TouchableOpacity style={styles.mapContainer} onPress={() => router.push("/mosque/map")}>
           <MapView
             style={StyleSheet.absoluteFillObject}
             initialRegion={
