@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // <-- update this line
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import useQibla from "../util/useQibla";
 

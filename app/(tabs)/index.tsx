@@ -1,19 +1,16 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
+import { DeviceEventEmitter, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, Text, View } from "react-native";
+import {
+  getPrayerTimes,
+  PrayerSettings,
+  PrayerTime,
+} from "../services/prayerTimesService";
+import CITIES, { City, cityKey } from "../util/cities";
 import getTimeUntil from "../util/getTimeUntil";
-import MOCK_MOSQUES from "../util/mock_mosques";
 
-const prayerTimes = [
-  { label: "Fajr", time: "3:45 AM" },
-  { label: "Sunrise", time: "5:24 AM" },
-  { label: "Dhuhr", time: "12:57 PM" },
-  { label: "Asr", time: "4:57 PM" },
-  { label: "Maghrib", time: "8:29 PM" },
-  { label: "Isha", time: "10:09 PM" },
-];
-
-
+// Helper: parse "3:45 PM" into Date
 function parseTimeToDate(timeStr: string): Date {
   const now = new Date();
   const [time, modifier] = timeStr.split(" ");
@@ -29,42 +26,136 @@ function parseTimeToDate(timeStr: string): Date {
   return date;
 }
 
-
-
 export default function Home() {
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [nextPrayer, setNextPrayer] = useState<null | {
     label: string;
     time: string;
     dateObj: Date;
   }>(null);
-
-  useEffect(() => {
-    const now = new Date();
-    for (let pt of prayerTimes) {
-      const timeObj = parseTimeToDate(pt.time);
-      if (timeObj > now) {
-        setNextPrayer({ ...pt, dateObj: timeObj });
-        break;
-      }
-    }
-  }, []);
-
   const [timeLeft, setTimeLeft] = useState("");
 
-useEffect(() => {
-  if (!nextPrayer) return;
+  const DEFAULT_METHOD = 2;
+  const DEFAULT_CITY: City = CITIES[0];
 
-  // Set initial value right away
-  setTimeLeft(getTimeUntil(nextPrayer.dateObj));
+  // Helper to get settings, using selected city if location is off
+  async function getSettings(): Promise<PrayerSettings> {
+    const stored = await AsyncStorage.getItem("prayerSettings");
+    const base: PrayerSettings = stored
+      ? JSON.parse(stored)
+      : { useLocation: true, method: DEFAULT_METHOD, city: DEFAULT_CITY };
 
-  const interval = setInterval(() => {
+    // If using GPS, no manual city is required
+    if (base.useLocation) {
+      return { useLocation: true, method: base.method ?? DEFAULT_METHOD };
+    }
+
+    // If not using GPS, resolve a City object robustly
+    // 1) Already have a full city object saved
+    if (
+      base.city &&
+      typeof base.city.lat === "number" &&
+      typeof base.city.lng === "number"
+    ) {
+      return {
+        useLocation: false,
+        method: base.method ?? DEFAULT_METHOD,
+        city: base.city,
+      };
+    }
+
+    // 2) Try a saved cityKey inside prayerSettings
+    const savedKey = (base as any).cityKey as string | undefined;
+    if (savedKey) {
+      const byKey = CITIES.find((c) => cityKey(c) === savedKey);
+      if (byKey) {
+        return {
+          useLocation: false,
+          method: base.method ?? DEFAULT_METHOD,
+          city: byKey,
+        };
+      }
+    }
+
+    // 3) Legacy support: read "selectedCity" which might be a key or a plain name
+    const legacy = await AsyncStorage.getItem("selectedCity");
+    if (legacy) {
+      const byExactKey = CITIES.find((c) => cityKey(c) === legacy);
+      if (byExactKey) {
+        return {
+          useLocation: false,
+          method: base.method ?? DEFAULT_METHOD,
+          city: byExactKey,
+        };
+      }
+      const byName = CITIES.find((c) => c.name === legacy);
+      if (byName) {
+        return {
+          useLocation: false,
+          method: base.method ?? DEFAULT_METHOD,
+          city: byName,
+        };
+      }
+    }
+
+    // 4) Final fallback to a known city to avoid crashes
+    return {
+      useLocation: false,
+      method: base.method ?? DEFAULT_METHOD,
+      city: DEFAULT_CITY,
+    };
+  }
+  // Update page when any settings are changed
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
+      const settings = await getSettings();
+      const times = await getPrayerTimes(settings);
+      setPrayerTimes(times);
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Load prayer times
+  useEffect(() => {
+    (async () => {
+      try {
+        const settings = await getSettings();
+        const times = await getPrayerTimes(settings);
+        setPrayerTimes(times);
+
+        // Find next prayer
+        const now = new Date();
+        for (let pt of times) {
+          const timeObj = parseTimeToDate(pt.time);
+          if (timeObj > now) {
+            setNextPrayer({ ...pt, dateObj: timeObj });
+            break;
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching prayer times:", err);
+      }
+    })();
+  }, []);
+
+  // Update countdown
+  useEffect(() => {
+    if (!nextPrayer) return;
+
     setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-  }, 1000);
+    const interval = setInterval(() => {
+      setTimeLeft(getTimeUntil(nextPrayer.dateObj));
+    }, 1000);
 
-  return () => clearInterval(interval);
-}, [nextPrayer]);
+    return () => clearInterval(interval);
+  }, [nextPrayer]);
 
   let today = new Date();
+  let islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(today);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
@@ -76,6 +167,7 @@ useEffect(() => {
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
         <Text
           style={{
             color: "white",
@@ -87,6 +179,7 @@ useEffect(() => {
           Home
         </Text>
 
+        {/* Date */}
         <View style={{ marginTop: 30, alignItems: "center" }}>
           <Text
             style={{
@@ -100,7 +193,7 @@ useEffect(() => {
           <Text
             style={{
               color: "white",
-              fontSize: 18,
+              fontSize: 20,
               fontFamily: "SFProDisplay-Regular",
               marginTop: 5,
               opacity: 0.9,
@@ -111,17 +204,17 @@ useEffect(() => {
           <Text
             style={{
               color: "white",
-              fontSize: 18,
+              fontSize: 20,
               fontFamily: "SFProDisplay-Regular",
               marginTop: 2,
-              opacity: 0.8,
+              opacity: 0.9,
             }}
           >
-            Dhuʻl-Hijjah 19, 1446 AH
+            {islamicDate}
           </Text>
         </View>
 
-        {/* Prayer Time Card */}
+        {/* Prayer Times */}
         <View
           style={{
             marginTop: 30,
@@ -134,7 +227,7 @@ useEffect(() => {
             elevation: 4,
           }}
         >
-          {prayerTimes.map(({ label, time }, index) => {
+          {prayerTimes.map(({ label, time }) => {
             const isNext = nextPrayer?.label === label;
             return (
               <View
@@ -179,7 +272,7 @@ useEffect(() => {
           })}
         </View>
 
-        {/* Time Until Next Prayer */}
+        {/* Countdown */}
         {nextPrayer && (
           <View style={{ marginTop: 10, alignItems: "center" }}>
             <Text
@@ -193,58 +286,6 @@ useEffect(() => {
             </Text>
           </View>
         )}
-
-        {/* Nearby Mosques */}
-        <View style={{ marginTop: 50 }}>
-          <Text
-            style={{
-              color: "white",
-              fontSize: 24,
-              fontFamily: "SFProDisplay-Semibold",
-              textAlign: "center",
-              marginBottom: 20,
-            }}
-          >
-            Nearby Mosques
-          </Text>
-
-          {MOCK_MOSQUES.map(({ name, address }) => (
-            <View
-              key={name}
-              style={{
-                backgroundColor: "#134b0a",
-                borderRadius: 14,
-                padding: 16,
-                marginBottom: 15,
-                shadowColor: "#000",
-                shadowOpacity: 0.08,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
-            >
-              <Text
-                style={{
-                  color: "white",
-                  fontFamily: "SFProDisplay-Semibold",
-                  fontSize: 20,
-                }}
-              >
-                {name}
-              </Text>
-              <Text
-                style={{
-                  color: "white",
-                  fontFamily: "SFProDisplay-Regular",
-                  fontSize: 16,
-                  marginTop: 4,
-                  opacity: 0.85,
-                }}
-              >
-                {address}
-              </Text>
-            </View>
-          ))}
-        </View>
       </ScrollView>
     </SafeAreaView>
   );

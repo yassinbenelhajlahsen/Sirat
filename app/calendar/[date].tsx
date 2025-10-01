@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // <-- update this line
+import { SafeAreaView } from "react-native-safe-area-context"; 
 
 import getTimeUntil from "../util/getTimeUntil";
 
