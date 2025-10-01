@@ -6,6 +6,7 @@ import {
   Pressable,
   Switch,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -257,6 +258,7 @@ export default function Settings() {
           </Pressable>
         </View>
       )}
+
 
       {/* City search modal */}
       <CitySearchModal

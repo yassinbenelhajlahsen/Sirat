@@ -57,7 +57,9 @@ async function loadFromStorage(
   settingsKey: string
 ): Promise<CalendarCache | null> {
   try {
-    const val = await AsyncStorage.getItem(`prayerCalendar-${year}-${settingsKey}`);
+    const val = await AsyncStorage.getItem(
+      `prayerCalendar-${year}-${settingsKey}`
+    );
     if (!val) return null;
     return JSON.parse(val);
   } catch (e) {
@@ -98,26 +100,44 @@ async function fetchYearCalendar(
   const allTimes: Record<string, PrayerTime[]> = {};
 
   for (let month = 1; month <= 12; month++) {
-    const res = await fetch(
-      `https://api.aladhan.com/v1/calendar?latitude=${latitude}&longitude=${longitude}&method=${method}&month=${month}&year=${year}`
-    );
-    const data = await res.json();
-    if (!data?.data) throw new Error("Invalid response from API");
+    const url = `https://api.aladhan.com/v1/calendar?latitude=${latitude}&longitude=${longitude}&method=${method}&month=${month}&year=${year}`;
+    console.log(`📡 Fetching prayer times: ${url}`);
 
-    data.data.forEach((day: any) => {
-      const greg = day.date.gregorian.date; // "01-01-2025"
-      const [d, m, y] = greg.split("-").map((x: string) => parseInt(x));
-      const isoKey = new Date(y, m - 1, d).toISOString().split("T")[0];
+    try {
+      const res = await fetch(url);
 
-      allTimes[isoKey] = [
-        { label: "Fajr", time: formatTo12Hour(day.timings.Fajr) },
-        { label: "Sunrise", time: formatTo12Hour(day.timings.Sunrise) },
-        { label: "Dhuhr", time: formatTo12Hour(day.timings.Dhuhr) },
-        { label: "Asr", time: formatTo12Hour(day.timings.Asr) },
-        { label: "Maghrib", time: formatTo12Hour(day.timings.Maghrib) },
-        { label: "Isha", time: formatTo12Hour(day.timings.Isha) },
-      ];
-    });
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error("Too many requests — please try again later.");
+        }
+        throw new Error(`Failed to fetch prayer times: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      if (!data?.data) {
+        console.error("❌ Invalid response for", { month, year, data });
+        throw new Error("Invalid response from API");
+      }
+
+      data.data.forEach((day: any) => {
+        const greg = day.date.gregorian.date; // "01-01-2025"
+        const [d, m, y] = greg.split("-").map((x: string) => parseInt(x));
+        const isoKey = new Date(y, m - 1, d).toISOString().split("T")[0];
+
+        allTimes[isoKey] = [
+          { label: "Fajr", time: formatTo12Hour(day.timings.Fajr) },
+          { label: "Sunrise", time: formatTo12Hour(day.timings.Sunrise) },
+          { label: "Dhuhr", time: formatTo12Hour(day.timings.Dhuhr) },
+          { label: "Asr", time: formatTo12Hour(day.timings.Asr) },
+          { label: "Maghrib", time: formatTo12Hour(day.timings.Maghrib) },
+          { label: "Isha", time: formatTo12Hour(day.timings.Isha) },
+        ];
+      });
+    } catch (err) {
+      console.error(`🚨 Error fetching month ${month}:`, err);
+      throw err; // propagate so UI can show message
+    }
   }
 
   const cache: CalendarCache = {
@@ -131,6 +151,7 @@ async function fetchYearCalendar(
   return cache;
 }
 
+
 export async function getPrayerTimesForDate(
   settings: PrayerSettings,
   date: Date
@@ -139,26 +160,32 @@ export async function getPrayerTimesForDate(
   const isoKey = date.toISOString().split("T")[0];
   const settingsKey = settingsToKey(settings);
 
+  console.log("🔑 Looking up prayer times", { year, isoKey, settingsKey });
+
   // 1. In-memory
   if (
     cachedCalendars[year] &&
     cachedCalendars[year].settingsKey === settingsKey
   ) {
+    console.log("⚡ Using in-memory cache");
     return cachedCalendars[year].data[isoKey] || [];
   }
 
   // 2. AsyncStorage
   const stored = await loadFromStorage(year, settingsKey);
   if (stored && stored.settingsKey === settingsKey) {
+    console.log("💾 Loaded from AsyncStorage");
     cachedCalendars[year] = stored;
     return stored.data[isoKey] || [];
   }
 
   // 3. API
+  console.log("🌐 Fetching fresh data from API");
   const fresh = await fetchYearCalendar(year, settings);
   return fresh.data[isoKey] || [];
 }
 
 export async function clearPrayerCache() {
+  console.log("🧹 Clearing prayer cache");
   cachedCalendars = {};
 }

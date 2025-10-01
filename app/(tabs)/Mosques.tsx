@@ -56,7 +56,7 @@ const router = useRouter();
         />
         <Text style={styles.header}>Map</Text>
 
-        <TouchableOpacity style={styles.mapContainer} onPress={() => router.push("/mosque/map")}>
+        <TouchableOpacity style={styles.mapContainer} onPress={() => router.push("/components/map")}>
           <MapView
             style={StyleSheet.absoluteFillObject}
             initialRegion={

@@ -1,14 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import {
-  Animated,
-  DeviceEventEmitter,
-  Easing,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { DeviceEventEmitter, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PrayerTimesList from "../components/PrayerTimesList";
 import {
   getPrayerTimesToday,
   PrayerSettings,
@@ -24,59 +18,11 @@ function parseTimeToDate(timeStr: string): Date {
   const [hoursStr, minutesStr] = time.split(":");
   let hours = parseInt(hoursStr);
   const minutes = parseInt(minutesStr);
-
   if (modifier === "PM" && hours !== 12) hours += 12;
   if (modifier === "AM" && hours === 12) hours = 0;
-
   const date = new Date(now);
   date.setHours(hours, minutes, 0, 0);
   return date;
-}
-
-function Skeleton({ width = "100%", height = 24, style = {} }) {
-  const shimmer = useState(new Animated.Value(0))[0];
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(shimmer, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, [shimmer]);
-
-  const translateX = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-100, 300],
-  });
-
-  return (
-    <View
-      style={[
-        {
-          backgroundColor: "#184d1a",
-          borderRadius: 8,
-          overflow: "hidden",
-          width,
-          height,
-          marginBottom: 12,
-        },
-        style,
-      ]}
-    >
-      <Animated.View
-        style={{
-          width: "60%",
-          height: "100%",
-          backgroundColor: "#236c2a",
-          opacity: 0.5,
-          transform: [{ translateX }],
-        }}
-      />
-    </View>
-  );
 }
 
 export default function Home() {
@@ -92,25 +38,16 @@ export default function Home() {
   const DEFAULT_METHOD = 2;
   const DEFAULT_CITY: City = CITIES[0];
 
-  // Helper to get settings, using selected city if location is off
   async function getSettings(): Promise<PrayerSettings> {
     const stored = await AsyncStorage.getItem("prayerSettings");
     const base: PrayerSettings = stored
       ? JSON.parse(stored)
       : { useLocation: true, method: DEFAULT_METHOD, city: DEFAULT_CITY };
 
-    // If using GPS, no manual city is required
-    if (base.useLocation) {
+    if (base.useLocation)
       return { useLocation: true, method: base.method ?? DEFAULT_METHOD };
-    }
 
-    // If not using GPS, resolve a City object robustly
-    // 1) Already have a full city object saved
-    if (
-      base.city &&
-      typeof base.city.lat === "number" &&
-      typeof base.city.lng === "number"
-    ) {
+    if (base.city && typeof base.city.lat === "number") {
       return {
         useLocation: false,
         method: base.method ?? DEFAULT_METHOD,
@@ -118,48 +55,24 @@ export default function Home() {
       };
     }
 
-    // 2) Try a saved cityKey inside prayerSettings
     const savedKey = (base as any).cityKey as string | undefined;
     if (savedKey) {
       const byKey = CITIES.find((c) => cityKey(c) === savedKey);
-      if (byKey) {
+      if (byKey)
         return {
           useLocation: false,
           method: base.method ?? DEFAULT_METHOD,
           city: byKey,
         };
-      }
     }
 
-    // 3) Legacy support: read "selectedCity" which might be a key or a plain name
-    const legacy = await AsyncStorage.getItem("selectedCity");
-    if (legacy) {
-      const byExactKey = CITIES.find((c) => cityKey(c) === legacy);
-      if (byExactKey) {
-        return {
-          useLocation: false,
-          method: base.method ?? DEFAULT_METHOD,
-          city: byExactKey,
-        };
-      }
-      const byName = CITIES.find((c) => c.name === legacy);
-      if (byName) {
-        return {
-          useLocation: false,
-          method: base.method ?? DEFAULT_METHOD,
-          city: byName,
-        };
-      }
-    }
-
-    // 4) Final fallback to a known city to avoid crashes
     return {
       useLocation: false,
       method: base.method ?? DEFAULT_METHOD,
       city: DEFAULT_CITY,
     };
   }
-  // Update page when any settings are changed
+
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
       setLoading(true);
@@ -171,7 +84,6 @@ export default function Home() {
     return () => sub.remove();
   }, []);
 
-  // Load prayer times
   useEffect(() => {
     setLoading(true);
     (async () => {
@@ -180,7 +92,6 @@ export default function Home() {
         const times = await getPrayerTimesToday(settings);
         setPrayerTimes(times);
 
-        // Find next prayer
         const now = new Date();
         for (let pt of times) {
           const timeObj = parseTimeToDate(pt.time);
@@ -197,20 +108,17 @@ export default function Home() {
     })();
   }, []);
 
-  // Update countdown
   useEffect(() => {
     if (!nextPrayer) return;
-
     setTimeLeft(getTimeUntil(nextPrayer.dateObj));
     const interval = setInterval(() => {
       setTimeLeft(getTimeUntil(nextPrayer.dateObj));
     }, 1000);
-
     return () => clearInterval(interval);
   }, [nextPrayer]);
 
-  let today = new Date();
-  let islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
+  const today = new Date();
+  const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -219,111 +127,70 @@ export default function Home() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
       <ScrollView
-        contentContainerStyle={{
-          paddingTop: 20,
-          paddingHorizontal: 20,
-          paddingBottom: 40,
-        }}
+        contentContainerStyle={{ padding: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <Text
           style={{
             color: "white",
-            fontFamily: "SFProDisplay-Bold",
             fontSize: 42,
-            marginBottom: 10,
+            fontFamily: "SFProDisplay-Bold",
           }}
         >
           Home
         </Text>
 
-        {/* Date */}
         <View style={{ marginTop: 30, alignItems: "center" }}>
           <Text
             style={{
               color: "white",
-              fontSize: 24,
+              fontSize: 28,
               fontFamily: "SFProDisplay-Semibold",
             }}
           >
             Today's Prayer Times
           </Text>
-          <Text
-            style={{
-              color: "white",
-              fontSize: 20,
-              fontFamily: "SFProDisplay-Regular",
-              marginTop: 5,
-              opacity: 0.9,
-            }}
-          >
-            {today.toDateString()}
-          </Text>
-          <Text
-            style={{
-              color: "white",
-              fontSize: 20,
-              fontFamily: "SFProDisplay-Regular",
-              marginTop: 2,
-              opacity: 0.9,
-            }}
-          >
-            {islamicDate}
-          </Text>
+          <View style={{ marginTop: 30, alignItems: "center" }}>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 22,
+                fontFamily: "SFProDisplay-Bold",
+                textAlign: "center",
+              }}
+            >
+              {today.toDateString()}
+            </Text>
+            <Text
+              style={{
+                color: "#DABA69",
+                fontSize: 16,
+                fontFamily: "SFProDisplay-Semibold",
+                marginTop: 4,
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              {islamicDate}
+            </Text>
+          </View>
         </View>
 
-        {/* Prayer Times */}
         <View
           style={{
-            marginTop: 30,
+            marginTop: 20,
             backgroundColor: "#1a5f0e",
             borderRadius: 16,
             padding: 20,
-            shadowColor: "#000",
-            shadowRadius: 6,
-            shadowOpacity: 0.1,
-            elevation: 4,
-            minHeight: 220,
-            justifyContent: "center",
           }}
         >
-          {loading ? (
-            [...Array(6)].map((_, i) => (
-              <Skeleton key={i} height={28} style={{ width: "100%" }} />
-            ))
-          ) : (
-            <Animated.View style={{ opacity: loading ? 0 : 1 }}>
-              {prayerTimes.map(({ label, time }) => {
-                const isNext = nextPrayer?.label === label;
-                return (
-                  <View
-                    key={label}
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      backgroundColor: isNext ? "#1b5e11" : "transparent",
-                      borderColor: isNext ? "#DABA69" : "transparent",
-                      borderWidth: isNext ? 2 : 0,
-                      borderRadius: 12,
-                      paddingVertical: 12,
-                      paddingHorizontal: 12,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <Text style={{ color: "white", fontSize: 20 }}>
-                      {label}
-                    </Text>
-                    <Text style={{ color: "white", fontSize: 20 }}>{time}</Text>
-                  </View>
-                );
-              })}
-            </Animated.View>
-          )}
+          <PrayerTimesList
+            loading={loading}
+            prayerTimes={prayerTimes}
+            nextPrayerLabel={nextPrayer?.label ?? null}
+          />
         </View>
 
-        {/* Countdown */}
         {nextPrayer && (
           <View style={{ marginTop: 10, alignItems: "center" }}>
             <Text
