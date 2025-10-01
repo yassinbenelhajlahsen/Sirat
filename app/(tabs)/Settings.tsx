@@ -17,7 +17,7 @@ import CITIES, { City, cityKey } from "../util/cities";
 
 export default function Settings() {
   const colors = {
-    bg: "#0c3605",
+    bg: "#134b0a",
     card: "#134b0a",
     cardAlt: "#1e5c1a",
     text: "#ffffff",
@@ -39,7 +39,7 @@ export default function Settings() {
   const cityItems = useMemo(
     () =>
       CITIES.map((c) => ({
-        label: `${c.name}${c.country ? ", " + c.country : ""}`,
+        label: `${c.name}`,
         value: cityKey(c),
       })),
     []
@@ -135,20 +135,50 @@ export default function Settings() {
           setValue={setMethod}
           setItems={setMethodItems}
           style={{
-            backgroundColor: colors.card,
-            borderColor: colors.border,
+            backgroundColor: colors.cardAlt,
+            borderColor: colors.accent,
             minHeight: 50,
+            borderRadius: 12,
+            marginBottom: methodOpen ? 12 : 0,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 4,
           }}
           dropDownContainerStyle={{
-            backgroundColor: colors.card,
-            borderColor: colors.border,
+            backgroundColor: colors.cardAlt,
+            borderColor: colors.accent,
+            borderRadius: 12,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 4,
           }}
-          textStyle={{ color: colors.text, fontSize: 16 }}
-          arrowIconStyle={{ tintColor: colors.text }}
-          labelStyle={{ color: colors.text }}
+          textStyle={{
+            color: colors.text,
+            fontSize: 16,
+            fontFamily: "SFProDisplay-Semibold",
+          }}
+          arrowIconStyle={{ tintColor: colors.accent }}
+          labelStyle={{ color: colors.text, fontSize: 16 }}
+          selectedItemLabelStyle={{
+            color: colors.accent,
+            fontFamily: "SFProDisplay-Bold",
+          }}
+          listItemLabelStyle={{
+            color: colors.text,
+            fontFamily: "SFProDisplay-Regular",
+          }}
           listMode="SCROLLVIEW"
           animationDuration={250}
           animationType="fade"
+          placeholder="Select calculation method"
+          placeholderStyle={{
+            color: "#aaa",
+            fontFamily: "SFProDisplay-Regular",
+          }}
+          showTickIcon={true}
+          tickIconStyle={{ tintColor: colors.accent }}
         />
       </View>
 

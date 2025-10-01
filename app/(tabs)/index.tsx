@@ -1,6 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { DeviceEventEmitter, ScrollView, Text, View } from "react-native";
+import {
+  Animated,
+  DeviceEventEmitter,
+  Easing,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   getPrayerTimes,
@@ -26,6 +33,52 @@ function parseTimeToDate(timeStr: string): Date {
   return date;
 }
 
+function Skeleton({ width = "100%", height = 24, style = {} }) {
+  const shimmer = useState(new Animated.Value(0))[0];
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(shimmer, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [shimmer]);
+
+  const translateX = shimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-100, 300],
+  });
+
+  return (
+    <View
+      style={[
+        {
+          backgroundColor: "#184d1a",
+          borderRadius: 8,
+          overflow: "hidden",
+          width,
+          height,
+          marginBottom: 12,
+        },
+        style,
+      ]}
+    >
+      <Animated.View
+        style={{
+          width: "60%",
+          height: "100%",
+          backgroundColor: "#236c2a",
+          opacity: 0.5,
+          transform: [{ translateX }],
+        }}
+      />
+    </View>
+  );
+}
+
 export default function Home() {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [nextPrayer, setNextPrayer] = useState<null | {
@@ -34,6 +87,7 @@ export default function Home() {
     dateObj: Date;
   }>(null);
   const [timeLeft, setTimeLeft] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const DEFAULT_METHOD = 2;
   const DEFAULT_CITY: City = CITIES[0];
@@ -108,15 +162,18 @@ export default function Home() {
   // Update page when any settings are changed
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
+      setLoading(true);
       const settings = await getSettings();
       const times = await getPrayerTimes(settings);
       setPrayerTimes(times);
+      setLoading(false);
     });
     return () => sub.remove();
   }, []);
 
   // Load prayer times
   useEffect(() => {
+    setLoading(true);
     (async () => {
       try {
         const settings = await getSettings();
@@ -134,6 +191,8 @@ export default function Home() {
         }
       } catch (err) {
         console.error("Error fetching prayer times:", err);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -158,7 +217,7 @@ export default function Home() {
   }).format(today);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
       <ScrollView
         contentContainerStyle={{
           paddingTop: 20,
@@ -218,58 +277,50 @@ export default function Home() {
         <View
           style={{
             marginTop: 30,
-            backgroundColor: "#134b0a",
+            backgroundColor: "#1a5f0e",
             borderRadius: 16,
             padding: 20,
             shadowColor: "#000",
-            shadowOpacity: 0.1,
             shadowRadius: 6,
+            shadowOpacity: 0.1,
             elevation: 4,
+            minHeight: 220,
+            justifyContent: "center",
           }}
         >
-          {prayerTimes.map(({ label, time }) => {
-            const isNext = nextPrayer?.label === label;
-            return (
-              <View
-                key={label}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  backgroundColor: isNext ? "#1b5e11" : "transparent",
-                  borderColor: isNext ? "#DABA69" : "transparent",
-                  borderWidth: isNext ? 2 : 0,
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  paddingHorizontal: 12,
-                  marginBottom: 12,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "white",
-                    fontFamily: isNext
-                      ? "SFProDisplay-Semibold"
-                      : "SFProDisplay-Regular",
-                    fontSize: 20,
-                  }}
-                >
-                  {label}
-                </Text>
-                <Text
-                  style={{
-                    color: "white",
-                    fontFamily: isNext
-                      ? "SFProDisplay-Semibold"
-                      : "SFProDisplay-Regular",
-                    fontSize: 20,
-                  }}
-                >
-                  {time}
-                </Text>
-              </View>
-            );
-          })}
+          {loading ? (
+            [...Array(6)].map((_, i) => (
+              <Skeleton key={i} height={28} style={{ width: "100%" }} />
+            ))
+          ) : (
+            <Animated.View style={{ opacity: loading ? 0 : 1 }}>
+              {prayerTimes.map(({ label, time }) => {
+                const isNext = nextPrayer?.label === label;
+                return (
+                  <View
+                    key={label}
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      backgroundColor: isNext ? "#1b5e11" : "transparent",
+                      borderColor: isNext ? "#DABA69" : "transparent",
+                      borderWidth: isNext ? 2 : 0,
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Text style={{ color: "white", fontSize: 20 }}>
+                      {label}
+                    </Text>
+                    <Text style={{ color: "white", fontSize: 20 }}>{time}</Text>
+                  </View>
+                );
+              })}
+            </Animated.View>
+          )}
         </View>
 
         {/* Countdown */}

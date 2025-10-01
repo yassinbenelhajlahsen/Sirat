@@ -66,7 +66,7 @@ const [viewMonth, setViewMonth] = useState(initialMonth);
 
   return (
     
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
       <View style={{ flex: 1, padding: 16, justifyContent: "flex-start" }}>
         {/* Header */}
            <Text style= {{color: "white", fontFamily: "SFProDisplay-Bold", fontSize: 45, marginBottom: 20}}>Calendar</Text>

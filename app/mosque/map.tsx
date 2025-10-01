@@ -46,7 +46,7 @@ export default function MapScreen() {
   return (
     <View style={{ flex: 1 }}>
 
-              {/* Back Button */}
+      {/* Back Button */}
       <TouchableOpacity
         onPress={() => router.push("/Mosques")}
         style={{
@@ -54,7 +54,7 @@ export default function MapScreen() {
           top: 50,
           left: 20,
           zIndex: 10,
-          backgroundColor: "#0c3605",
+          backgroundColor: "#134b0a",
           borderRadius: 30,
           padding: 8,
           elevation: 5,

@@ -68,7 +68,6 @@ export async function getPrayerTimes(
     }
     latitude = settings.city.lat;
     longitude = settings.city.lng;
-    country = settings.city.country ?? "";
   }
 
   // --- NEW: resolve Auto method ---

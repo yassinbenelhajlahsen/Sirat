@@ -27,27 +27,6 @@
 
 ---
 
-### 📸 Screenshots
-
-<details>
-  <summary>(click to expand)</summary>
-
-### Today's Prayer Times
-
-![Today's Prayer Times](screenshots/homePrayerTimes.png)
-
-### Nearby Mosques
-
-![Nearby Mosques](screenshots/homeMasjid.png)
-
-### Functional Qibla
-
-![Qibla](screenshots/qibla.png)
-
-</details>
-
----
-
 ## 📚 APIs Used
 
 Aladhan API – prayer times & calender

@@ -94,7 +94,7 @@ const router = useRouter();
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#0c3605",
+    backgroundColor: "#134b0a",
   },
   title: {
     color: "white",
@@ -109,13 +109,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: "#134b0a",
+    backgroundColor: "#1a5f0e",
     borderRadius: 14,
     padding: 16,
     marginBottom: 15,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
     shadowRadius: 4,
+    shadowOpacity: 0.15,
     elevation: 2,
   },
   name: {

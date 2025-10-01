@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; 
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import getTimeUntil from "../util/getTimeUntil";
 
@@ -21,10 +21,6 @@ const ISLAMIC_HOLIDAYS: Record<string, string> = {
   "2025-04-09": "Laylat al-Qadr",
   "2025-05-01": "Eid al-Fitr",
 };
-
-function formatHijriMock(date: Date): string {
-  return "Dhuʻl-Hijjah 19, 1446 AH";
-}
 
 export default function CalendarDetail() {
   const { date, month, year } = useLocalSearchParams();
@@ -95,6 +91,12 @@ export default function CalendarDetail() {
   }, [nextPrayer]);
   if (!selectedDate) return null;
 
+  let islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(selectedDate);
+
   const minDate = new Date(today.getFullYear() - 1, 0); // Jan of last year
   const maxDate = new Date(today.getFullYear() + 1, 11, 31);
   const prevDate = new Date(selectedDate);
@@ -119,7 +121,7 @@ export default function CalendarDetail() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0c3605" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
       <View style={{ padding: 20 }}>
         {/* Back to Calendar */}
         <TouchableOpacity
@@ -148,11 +150,12 @@ export default function CalendarDetail() {
             onPress={() => !isPrevDisabled && changeDate(-1)}
             disabled={isPrevDisabled}
             style={{
-              backgroundColor: "#1f4e17",
+              backgroundColor: "#1a5f0e",
               padding: 12,
               borderRadius: 10,
               flexDirection: "row",
               alignItems: "center",
+              shadowOpacity: 0.1,
               opacity: isPrevDisabled ? 0.4 : 1,
             }}
           >
@@ -173,12 +176,13 @@ export default function CalendarDetail() {
             onPress={() => !isNextDisabled && changeDate(1)}
             disabled={isNextDisabled}
             style={{
-              backgroundColor: "#1f4e17",
+              backgroundColor: "#1a5f0e",
               padding: 12,
               borderRadius: 10,
               flexDirection: "row",
               alignItems: "center",
               opacity: isNextDisabled ? 0.4 : 1,
+              shadowOpacity: 0.1,
             }}
           >
             <Text
@@ -201,6 +205,7 @@ export default function CalendarDetail() {
             color: "white",
             fontSize: 26,
             fontFamily: "SFProDisplay-Bold",
+            textAlign: "center",
           }}
         >
           {selectedDate.toDateString()}
@@ -213,9 +218,10 @@ export default function CalendarDetail() {
             fontFamily: "SFProDisplay-Semibold",
             marginTop: 4,
             marginBottom: 24,
+            textAlign: "center",
           }}
         >
-          {formatHijriMock(selectedDate)}
+          {islamicDate}
         </Text>
 
         {/* Holiday Info */}
@@ -251,13 +257,13 @@ export default function CalendarDetail() {
         )}
 
         {/* Prayer Times */}
-        {/* Prayer Times */}
         <Text
           style={{
             color: "white",
             fontSize: 20,
             fontFamily: "SFProDisplay-Semibold",
             marginBottom: 10,
+            textAlign: "center",
           }}
         >
           Prayer Times
@@ -268,12 +274,12 @@ export default function CalendarDetail() {
             <View
               style={{
                 marginTop: 10,
-                backgroundColor: "#134b0a",
+                backgroundColor: "#1a5f0e",
                 borderRadius: 16,
                 padding: 20,
                 shadowColor: "#000",
-                shadowOpacity: 0.1,
                 shadowRadius: 6,
+                shadowOpacity: 0.15,
                 elevation: 4,
                 marginBottom: 10,
               }}
@@ -340,10 +346,12 @@ export default function CalendarDetail() {
         ) : (
           <View
             style={{
-              backgroundColor: "#134b0a",
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 20,
+              backgroundColor: "#1a5f0e",
+              borderRadius: 16,
+              padding: 20,
+              marginBottom: 10,
+              marginTop: 10,
+              shadowOpacity: 0.15
             }}
           >
             {Object.entries(MOCK_PRAYER_TIMES).map(([label, time]) => (
@@ -363,7 +371,7 @@ export default function CalendarDetail() {
                   style={{
                     color: "white",
                     fontFamily: "SFProDisplay-Regular",
-                    fontSize: 18,
+                    fontSize: 20,
                   }}
                 >
                   {label}
@@ -372,7 +380,7 @@ export default function CalendarDetail() {
                   style={{
                     color: "white",
                     fontFamily: "SFProDisplay-Regular",
-                    fontSize: 18,
+                    fontSize: 20,
                   }}
                 >
                   {time}

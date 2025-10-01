@@ -63,7 +63,7 @@ export default function Qibla() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#0c3605",
+    backgroundColor: "#134b0a",
   },
   titleContainer: {
     paddingTop: 10,
