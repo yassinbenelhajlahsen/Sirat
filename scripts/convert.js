@@ -36,7 +36,7 @@ fs.createReadStream(__dirname + "/worldcities.csv")
     cities.sort((a, b) => b.population - a.population);
 
     // Step 2: keep top 1000
-    const topCities = cities.slice(0, 1000);
+    const topCities = cities.slice(0, 3000);
 
     // Step 3: sort alphabetically
     topCities.sort((a, b) => a.name.localeCompare(b.name));
@@ -50,14 +50,10 @@ fs.createReadStream(__dirname + "/worldcities.csv")
     }));
 
     fs.writeFileSync(
-      __dirname + "/top_1000_cities.json",
+      "cities.json",
       JSON.stringify(finalOutput, null, 2),
       "utf-8"
     );
 
-    console.log(
-      "✅ Saved top_1000_cities.json with",
-      finalOutput.length,
-      "unique cities (alphabetical order, with country)"
-    );
+    console.log("✅ cities.json with", finalOutput.length);
   });
