@@ -29,20 +29,22 @@
 
 ### 📸 Screenshots
 
-
 <details>
   <summary>(click to expand)</summary>
 
-  ### Today's Prayer Times
-  <img src="screenshots/homePrayerTimes.png" width="400"/>
+### Today's Prayer Times
 
-  ### Nearby Mosques 
-  <img src="screenshots/homeMasjid.png" width="400"/>
+![Today's Prayer Times](screenshots/homePrayerTimes.png)
 
-  ### Functional Qibla  
-  <img src="screenshots/qibla.png" width="400"/>
+### Nearby Mosques
+
+![Nearby Mosques](screenshots/homeMasjid.png)
+
+### Functional Qibla
+
+![Qibla](screenshots/qibla.png)
+
 </details>
-
 
 ---
 

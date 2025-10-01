@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, Text, View } from "react-native";
 import getTimeUntil from "../util/getTimeUntil";
+import MOCK_MOSQUES from "../util/mock_mosques";
+
 const prayerTimes = [
   { label: "Fajr", time: "3:45 AM" },
   { label: "Sunrise", time: "5:24 AM" },
@@ -10,17 +12,6 @@ const prayerTimes = [
   { label: "Isha", time: "10:09 PM" },
 ];
 
-const nearbyMosques = [
-  { name: "Ar-Rahman", address: "333 86th St, Brooklyn, NY 11209" },
-  {
-    name: "Islamic Society of Bay Ridge",
-    address: "6807 5th Ave, Brooklyn, NY 11220",
-  },
-  {
-    name: "Maryam Mosque",
-    address: "7307 5th Ave, Brooklyn, NY 11209",
-  },
-];
 
 function parseTimeToDate(timeStr: string): Date {
   const now = new Date();
@@ -216,7 +207,7 @@ useEffect(() => {
             Nearby Mosques
           </Text>
 
-          {nearbyMosques.map(({ name, address }) => (
+          {MOCK_MOSQUES.map(({ name, address }) => (
             <View
               key={name}
               style={{
