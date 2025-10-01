@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // <-- update this line
+
 import getTimeUntil from "../util/getTimeUntil";
 
 const MOCK_PRAYER_TIMES = {
@@ -79,18 +81,18 @@ export default function CalendarDetail() {
       }
     }
   }, [isToday]);
-useEffect(() => {
-  if (!nextPrayer) return;
+  useEffect(() => {
+    if (!nextPrayer) return;
 
-  // Set initial value right away
-  setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-
-  const interval = setInterval(() => {
+    // Set initial value right away
     setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-  }, 1000);
 
-  return () => clearInterval(interval);
-}, [nextPrayer]);
+    const interval = setInterval(() => {
+      setTimeLeft(getTimeUntil(nextPrayer.dateObj));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [nextPrayer]);
   if (!selectedDate) return null;
 
   const minDate = new Date(today.getFullYear() - 1, 0); // Jan of last year

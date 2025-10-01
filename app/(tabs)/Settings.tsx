@@ -1,4 +1,6 @@
-import { Text, View, SafeAreaView } from "react-native";
+import { Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // <-- update this line
+
 export default function Settings() {
   return (
     <SafeAreaView style={{ flex: 1}}>

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
-import { Animated, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // <-- update this line
+
 import useQibla from "../util/useQibla";
 
 function getMinimalRotation(from: number, to: number): number {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, Text, View } from "react-native";
 import getTimeUntil from "../util/getTimeUntil";
 import MOCK_MOSQUES from "../util/mock_mosques";
 

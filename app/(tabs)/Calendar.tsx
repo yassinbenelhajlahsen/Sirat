@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter,useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import {Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const ISLAMIC_HOLIDAYS: Record<string, string> = {
   "2025-06-06": "Eid al-Adha",
