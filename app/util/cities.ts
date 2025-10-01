@@ -2,6 +2,7 @@ import topCities from "../../assets/data/cities.json";
 
 export interface City {
   name: string;
+  country: string;
   lat: number;
   lng: number;
 }

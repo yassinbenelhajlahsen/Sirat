@@ -1,19 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import {
+  getPrayerTimesForDate,
+  PrayerSettings,
+  PrayerTime,
+} from "../services/yearlyPrayerTimes";
 import getTimeUntil from "../util/getTimeUntil";
-
-const MOCK_PRAYER_TIMES = {
-  Fajr: "3:45 AM",
-  Sunrise: "5:24 AM",
-  Dhuhr: "12:57 PM",
-  Asr: "4:57 PM",
-  Maghrib: "8:29 PM",
-  Isha: "10:09 PM",
-};
 
 const ISLAMIC_HOLIDAYS: Record<string, string> = {
   "2025-06-06": "Eid al-Adha",
@@ -28,7 +24,16 @@ export default function CalendarDetail() {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [holiday, setHoliday] = useState<string | null>(null);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
+  const [nextPrayer, setNextPrayer] = useState<null | {
+    label: string;
+    time: string;
+    dateObj: Date;
+  }>(null);
+  const [timeLeft, setTimeLeft] = useState("");
+  const [loading, setLoading] = useState(true);
 
+  // Parse date param and detect holiday
   useEffect(() => {
     if (typeof date === "string") {
       const decoded = new Date(decodeURIComponent(date));
@@ -38,49 +43,61 @@ export default function CalendarDetail() {
       setHoliday(ISLAMIC_HOLIDAYS[iso] || null);
     }
   }, [date]);
+
   const today = new Date();
   const isToday = selectedDate?.toDateString() === today.toDateString();
-  const [nextPrayer, setNextPrayer] = useState<null | {
-    label: string;
-    time: string;
-    dateObj: Date;
-  }>(null);
 
-  const [timeLeft, setTimeLeft] = useState("");
+  // Fetch prayer times for selected date
   useEffect(() => {
-    if (!isToday) return;
+    if (!selectedDate) return;
+
+    async function loadTimes() {
+      setLoading(true);
+      try {
+        const settings: PrayerSettings = {
+          useLocation: true, // or false if you want manual city selection
+          method: 2, // Karachi method, or -1 for auto
+        };
+        const times = await getPrayerTimesForDate(settings, selectedDate);
+        setPrayerTimes(times);
+      } catch (err) {
+        console.error("Error fetching prayer times:", err);
+        setPrayerTimes([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadTimes();
+  }, [selectedDate]);
+
+  // Figure out next prayer (for today only)
+  useEffect(() => {
+    if (!isToday || prayerTimes.length === 0) return;
 
     const now = new Date();
+    for (let { label, time } of prayerTimes) {
+      const [hoursMinutes, ampm] = time.split(" ");
+      const [h, m] = hoursMinutes.split(":");
+      let hours = parseInt(h);
+      const minutes = parseInt(m);
 
-    for (let [label, time] of Object.entries(MOCK_PRAYER_TIMES)) {
-      const [hourStr, minStrPart] = time.split(":");
-      const hour = parseInt(hourStr);
-      const [minStr, ampm] = minStrPart.split(" ");
-      let minute = parseInt(minStr);
-
-      let prayerHour = hour;
-      if (ampm.toLowerCase() === "pm" && hour !== 12) {
-        prayerHour += 12;
-      }
-      if (ampm.toLowerCase() === "am" && hour === 12) {
-        prayerHour = 0;
-      }
+      if (ampm.toLowerCase() === "pm" && hours !== 12) hours += 12;
+      if (ampm.toLowerCase() === "am" && hours === 12) hours = 0;
 
       const dateObj = new Date(today);
-      dateObj.setHours(prayerHour);
-      dateObj.setMinutes(minute);
-      dateObj.setSeconds(0);
+      dateObj.setHours(hours, minutes, 0, 0);
 
       if (dateObj > now) {
         setNextPrayer({ label, time, dateObj });
         break;
       }
     }
-  }, [isToday]);
+  }, [isToday, prayerTimes]);
+
+  // Countdown timer
   useEffect(() => {
     if (!nextPrayer) return;
-
-    // Set initial value right away
     setTimeLeft(getTimeUntil(nextPrayer.dateObj));
 
     const interval = setInterval(() => {
@@ -89,6 +106,7 @@ export default function CalendarDetail() {
 
     return () => clearInterval(interval);
   }, [nextPrayer]);
+
   if (!selectedDate) return null;
 
   let islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
@@ -97,7 +115,8 @@ export default function CalendarDetail() {
     year: "numeric",
   }).format(selectedDate);
 
-  const minDate = new Date(today.getFullYear() - 1, 0); // Jan of last year
+  // Navigation between days
+  const minDate = new Date(today.getFullYear() - 1, 0);
   const maxDate = new Date(today.getFullYear() + 1, 11, 31);
   const prevDate = new Date(selectedDate);
   prevDate.setDate(prevDate.getDate() - 1);
@@ -137,7 +156,7 @@ export default function CalendarDetail() {
           <Ionicons name="chevron-back" size={24} color="#DABA69" />
         </TouchableOpacity>
 
-        {/* Prev / Next Day Buttons */}
+        {/* Prev / Next Day */}
         <View
           style={{
             flexDirection: "row",
@@ -210,7 +229,6 @@ export default function CalendarDetail() {
         >
           {selectedDate.toDateString()}
         </Text>
-
         <Text
           style={{
             color: "#DABA69",
@@ -224,7 +242,7 @@ export default function CalendarDetail() {
           {islamicDate}
         </Text>
 
-        {/* Holiday Info */}
+        {/* Holiday */}
         {holiday && (
           <View
             style={{
@@ -269,124 +287,83 @@ export default function CalendarDetail() {
           Prayer Times
         </Text>
 
-        {isToday ? (
-          <>
-            <View
-              style={{
-                marginTop: 10,
-                backgroundColor: "#1a5f0e",
-                borderRadius: 16,
-                padding: 20,
-                shadowColor: "#000",
-                shadowRadius: 6,
-                shadowOpacity: 0.15,
-                elevation: 4,
-                marginBottom: 10,
-              }}
-            >
-              {Object.entries(MOCK_PRAYER_TIMES).map(([label, time]) => {
-                const isNext = nextPrayer?.label === label;
-                return (
-                  <View
-                    key={label}
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      backgroundColor: isNext ? "#1b5e11" : "transparent",
-                      borderColor: isNext ? "#DABA69" : "transparent",
-                      borderWidth: isNext ? 2 : 0,
-                      borderRadius: 12,
-                      paddingVertical: 12,
-                      paddingHorizontal: 12,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "white",
-                        fontFamily: isNext
-                          ? "SFProDisplay-Semibold"
-                          : "SFProDisplay-Regular",
-                        fontSize: 20,
-                      }}
-                    >
-                      {label}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "white",
-                        fontFamily: isNext
-                          ? "SFProDisplay-Semibold"
-                          : "SFProDisplay-Regular",
-                        fontSize: 20,
-                      }}
-                    >
-                      {time}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-
-            {nextPrayer && (
-              <View style={{ marginTop: 10, alignItems: "center" }}>
-                <Text
-                  style={{
-                    color: "#DABA69",
-                    fontSize: 17,
-                    fontFamily: "SFProDisplay-Semibold",
-                  }}
-                >
-                  Next: {nextPrayer.label} in {timeLeft}
-                </Text>
-              </View>
-            )}
-          </>
+        {loading ? (
+          <ActivityIndicator
+            size="large"
+            color="#DABA69"
+            style={{ marginTop: 20 }}
+          />
         ) : (
           <View
             style={{
+              marginTop: 10,
               backgroundColor: "#1a5f0e",
               borderRadius: 16,
               padding: 20,
+              shadowColor: "#000",
+              shadowRadius: 6,
+              shadowOpacity: 0.15,
+              elevation: 4,
               marginBottom: 10,
-              marginTop: 10,
-              shadowOpacity: 0.15
             }}
           >
-            {Object.entries(MOCK_PRAYER_TIMES).map(([label, time]) => (
-              <View
-                key={label}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  paddingHorizontal: 12,
-                  marginBottom: 12,
-                }}
-              >
-                <Text
+            {prayerTimes.map(({ label, time }) => {
+              const isNext = nextPrayer?.label === label;
+              return (
+                <View
+                  key={label}
                   style={{
-                    color: "white",
-                    fontFamily: "SFProDisplay-Regular",
-                    fontSize: 20,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    backgroundColor: isNext ? "#1b5e11" : "transparent",
+                    borderColor: isNext ? "#DABA69" : "transparent",
+                    borderWidth: isNext ? 2 : 0,
+                    borderRadius: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    marginBottom: 12,
                   }}
                 >
-                  {label}
-                </Text>
-                <Text
-                  style={{
-                    color: "white",
-                    fontFamily: "SFProDisplay-Regular",
-                    fontSize: 20,
-                  }}
-                >
-                  {time}
-                </Text>
-              </View>
-            ))}
+                  <Text
+                    style={{
+                      color: "white",
+                      fontFamily: isNext
+                        ? "SFProDisplay-Semibold"
+                        : "SFProDisplay-Regular",
+                      fontSize: 20,
+                    }}
+                  >
+                    {label}
+                  </Text>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontFamily: isNext
+                        ? "SFProDisplay-Semibold"
+                        : "SFProDisplay-Regular",
+                      fontSize: 20,
+                    }}
+                  >
+                    {time}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {nextPrayer && isToday && (
+          <View style={{ marginTop: 10, alignItems: "center" }}>
+            <Text
+              style={{
+                color: "#DABA69",
+                fontSize: 17,
+                fontFamily: "SFProDisplay-Semibold",
+              }}
+            >
+              Next: {nextPrayer.label} in {timeLeft}
+            </Text>
           </View>
         )}
       </View>

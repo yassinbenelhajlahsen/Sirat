@@ -11,7 +11,7 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CitySearchModal from "../components/CitySearchModal";
-import { clearPrayerCache } from "../services/prayerTimesService";
+import { clearPrayerCache } from "../services/yearlyPrayerTimes";
 import CALCULATION_METHODS from "../util/calculationMethods";
 import CITIES, { City, cityKey } from "../util/cities";
 
@@ -39,7 +39,7 @@ export default function Settings() {
   const cityItems = useMemo(
     () =>
       CITIES.map((c) => ({
-        label: `${c.name}`,
+        label: `${c.name}, ${c.country}`,
         value: cityKey(c),
       })),
     []

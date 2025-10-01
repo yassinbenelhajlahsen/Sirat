@@ -10,10 +10,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  getPrayerTimes,
+  getPrayerTimesToday,
   PrayerSettings,
   PrayerTime,
-} from "../services/prayerTimesService";
+} from "../services/dailyPrayerTimes";
 import CITIES, { City, cityKey } from "../util/cities";
 import getTimeUntil from "../util/getTimeUntil";
 
@@ -164,7 +164,7 @@ export default function Home() {
     const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
       setLoading(true);
       const settings = await getSettings();
-      const times = await getPrayerTimes(settings);
+      const times = await getPrayerTimesToday(settings);
       setPrayerTimes(times);
       setLoading(false);
     });
@@ -177,7 +177,7 @@ export default function Home() {
     (async () => {
       try {
         const settings = await getSettings();
-        const times = await getPrayerTimes(settings);
+        const times = await getPrayerTimesToday(settings);
         setPrayerTimes(times);
 
         // Find next prayer

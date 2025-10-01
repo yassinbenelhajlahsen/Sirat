@@ -1,5 +1,3 @@
-import { City } from "./cities";
-
 // crude country mapping
 export function resolveAutoMethod(countryName: string): number {
   const country = countryName.toLowerCase();

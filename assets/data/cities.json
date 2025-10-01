@@ -1,5001 +1,6001 @@
 [
   {
     "name": "Aba",
+    "country": "Nigeria",
     "lat": 5.1167,
     "lng": 7.3667
   },
   {
     "name": "Abeokuta",
+    "country": "Nigeria",
     "lat": 7.1608,
     "lng": 3.3483
   },
   {
     "name": "Abhepur",
+    "country": "India",
     "lat": 39.41,
     "lng": 116.38
   },
   {
     "name": "Abidjan",
+    "country": "Côte d’Ivoire",
     "lat": 5.3364,
     "lng": -4.0267
   },
   {
     "name": "Abu Dhabi",
+    "country": "United Arab Emirates",
     "lat": 24.4667,
     "lng": 54.3667
   },
   {
     "name": "Abuja",
+    "country": "Nigeria",
     "lat": 9.0667,
     "lng": 7.4833
   },
   {
     "name": "Ad Dammām",
+    "country": "Saudi Arabia",
     "lat": 26.4333,
     "lng": 50.1
   },
   {
     "name": "Adana",
+    "country": "Turkey",
     "lat": 37,
     "lng": 35.3213
   },
   {
     "name": "Addis Ababa",
+    "country": "Ethiopia",
     "lat": 9.03,
     "lng": 38.74
   },
   {
     "name": "Adelaide",
+    "country": "Australia",
     "lat": -34.9275,
     "lng": 138.6
   },
   {
     "name": "Aden",
+    "country": "Yemen",
     "lat": 12.8,
     "lng": 45.0333
   },
   {
     "name": "Āgra",
+    "country": "India",
     "lat": 27.18,
     "lng": 78.02
   },
   {
     "name": "Aguascalientes",
+    "country": "Mexico",
     "lat": 21.876,
     "lng": -102.296
   },
   {
     "name": "Ahmedabad",
+    "country": "India",
     "lat": 23.0225,
     "lng": 72.5714
   },
   {
     "name": "Ahvāz",
+    "country": "Iran",
     "lat": 31.3047,
     "lng": 48.6783
   },
   {
     "name": "Ailan Mubage",
+    "country": "China",
     "lat": 43.908,
     "lng": 81.2777
   },
   {
     "name": "Akure",
+    "country": "Nigeria",
     "lat": 7.25,
     "lng": 5.195
   },
   {
     "name": "Al ‘Ayn",
+    "country": "United Arab Emirates",
     "lat": 24.2075,
     "lng": 55.7447
   },
   {
     "name": "Al Başrah",
+    "country": "Iraq",
     "lat": 30.515,
     "lng": 47.81
   },
   {
     "name": "Albuquerque",
+    "country": "United States",
     "lat": 35.1054,
     "lng": -106.6465
   },
   {
     "name": "Aleppo",
+    "country": "Syria",
     "lat": 36.2319,
     "lng": 37.1681
   },
   {
     "name": "Alexandria",
+    "country": "Egypt",
     "lat": 31.1975,
     "lng": 29.8925
   },
   {
     "name": "Algiers",
+    "country": "Algeria",
     "lat": 36.7325,
     "lng": 3.0872
   },
   {
     "name": "Alīgarh",
+    "country": "India",
     "lat": 27.88,
     "lng": 78.08
   },
   {
     "name": "Almaty",
+    "country": "Kazakhstan",
     "lat": 43.24,
     "lng": 76.915
   },
   {
     "name": "Amman",
+    "country": "Jordan",
     "lat": 31.9497,
     "lng": 35.9328
   },
   {
     "name": "Amritsar",
+    "country": "India",
     "lat": 31.64,
     "lng": 74.86
   },
   {
     "name": "Amsterdam",
+    "country": "Netherlands",
     "lat": 52.3728,
     "lng": 4.8936
   },
   {
     "name": "An Najaf",
+    "country": "Iraq",
     "lat": 32.029,
     "lng": 44.3396
   },
   {
     "name": "Andijon",
+    "country": "Uzbekistan",
     "lat": 40.7833,
     "lng": 72.3333
   },
   {
     "name": "Ankang",
+    "country": "China",
     "lat": 32.6854,
     "lng": 109.029
   },
   {
     "name": "Ankara",
+    "country": "Turkey",
     "lat": 39.93,
     "lng": 32.85
   },
   {
     "name": "Anqing",
+    "country": "China",
     "lat": 30.5318,
     "lng": 117.1153
   },
   {
     "name": "Anqiu",
+    "country": "China",
     "lat": 36.478,
     "lng": 119.219
   },
   {
     "name": "Anshan",
+    "country": "China",
     "lat": 41.108,
     "lng": 122.994
   },
   {
     "name": "Anshun",
+    "country": "China",
     "lat": 26.2531,
     "lng": 105.9476
   },
   {
     "name": "Antalya",
+    "country": "Turkey",
     "lat": 36.8874,
     "lng": 30.7075
   },
   {
     "name": "Antananarivo",
+    "country": "Madagascar",
     "lat": -18.91,
     "lng": 47.525
   },
   {
     "name": "Antipolo",
+    "country": "Philippines",
     "lat": 14.5842,
     "lng": 121.1763
   },
   {
     "name": "Āqchah",
+    "country": "Afghanistan",
     "lat": 36.9114,
     "lng": 66.1858
   },
   {
     "name": "Ar Ramādī",
+    "country": "Iraq",
     "lat": 33.4258,
     "lng": 43.2992
   },
   {
     "name": "Arequipa",
+    "country": "Peru",
     "lat": -16.3989,
     "lng": -71.5369
   },
   {
     "name": "As Sulaymānīyah",
+    "country": "Iraq",
     "lat": 35.55,
     "lng": 45.4333
   },
   {
     "name": "Ashgabat",
+    "country": "Turkmenistan",
     "lat": 37.9375,
     "lng": 58.38
   },
   {
     "name": "Ashmūn",
+    "country": "Egypt",
     "lat": 30.2974,
     "lng": 30.9764
   },
   {
     "name": "Asmara",
+    "country": "Eritrea",
     "lat": 15.3358,
     "lng": 38.9411
   },
   {
     "name": "Astana",
+    "country": "Kazakhstan",
     "lat": 51.1472,
     "lng": 71.4222
   },
   {
     "name": "Athens",
+    "country": "Greece",
     "lat": 37.9842,
     "lng": 23.7281
   },
   {
     "name": "Atlanta",
+    "country": "United States",
     "lat": 33.7628,
     "lng": -84.422
   },
   {
     "name": "Attadappa",
+    "country": "India",
     "lat": 11.8689,
     "lng": 75.3555
   },
   {
     "name": "Auckland",
+    "country": "New Zealand",
     "lat": -36.8492,
     "lng": 174.7653
   },
   {
     "name": "Aurangābād",
+    "country": "India",
     "lat": 19.88,
     "lng": 75.32
   },
   {
     "name": "Austin",
+    "country": "United States",
     "lat": 30.3005,
     "lng": -97.7522
   },
   {
     "name": "Awka",
+    "country": "Nigeria",
     "lat": 6.2069,
     "lng": 7.0678
   },
   {
     "name": "Baardheere",
+    "country": "Somalia",
     "lat": 2.3447,
     "lng": 42.2764
   },
   {
     "name": "Bagam",
+    "country": "Indonesia",
     "lat": 1.13,
     "lng": 104.0531
   },
   {
     "name": "Bağcılar",
+    "country": "Turkey",
     "lat": 41.0344,
     "lng": 28.8564
   },
   {
     "name": "Baghdad",
+    "country": "Iraq",
     "lat": 33.3153,
     "lng": 44.3661
   },
   {
     "name": "Bahawalpur",
+    "country": "Pakistan",
     "lat": 29.3956,
     "lng": 71.6836
   },
   {
     "name": "Baicheng",
+    "country": "China",
     "lat": 23.903,
     "lng": 106.619
   },
   {
     "name": "Baidoa",
+    "country": "Somalia",
     "lat": 3.1167,
     "lng": 43.65
   },
   {
     "name": "Baishan",
+    "country": "China",
     "lat": 41.944,
     "lng": 126.4147
   },
   {
     "name": "Baiyin",
+    "country": "China",
     "lat": 36.5451,
     "lng": 104.1389
   },
   {
     "name": "Baku",
+    "country": "Azerbaijan",
     "lat": 40.3667,
     "lng": 49.8352
   },
   {
     "name": "Baltimore",
+    "country": "United States",
     "lat": 39.3051,
     "lng": -76.6144
   },
   {
     "name": "Bamako",
+    "country": "Mali",
     "lat": 12.6458,
     "lng": -7.9922
   },
   {
     "name": "Bandar Lampung",
+    "country": "Indonesia",
     "lat": -5.45,
     "lng": 105.2667
   },
   {
     "name": "Bangalore",
+    "country": "India",
     "lat": 12.9789,
     "lng": 77.5917
   },
   {
     "name": "Bangkok",
+    "country": "Thailand",
     "lat": 13.7525,
     "lng": 100.4942
   },
   {
     "name": "Bangui",
+    "country": "Central African Republic",
     "lat": 4.3733,
     "lng": 18.5628
   },
   {
     "name": "Baoding",
+    "country": "China",
     "lat": 38.874,
     "lng": 115.464
   },
   {
     "name": "Baojishi",
+    "country": "China",
     "lat": 34.363,
     "lng": 107.238
   },
   {
     "name": "Baoshan",
+    "country": "China",
     "lat": 25.112,
     "lng": 99.161
   },
   {
     "name": "Baotou",
+    "country": "China",
     "lat": 40.6213,
     "lng": 109.9532
   },
   {
     "name": "Barcelona",
+    "country": "Spain",
     "lat": 41.3833,
     "lng": 2.1833
   },
   {
     "name": "Barcelona",
+    "country": "Venezuela",
     "lat": 10.1403,
     "lng": -64.6833
   },
   {
     "name": "Bareilly",
+    "country": "India",
     "lat": 28.3667,
     "lng": 79.4306
   },
   {
     "name": "Barmhān Kalān",
+    "country": "India",
     "lat": 19.1972,
     "lng": 72.9722
   },
   {
     "name": "Barquisimeto",
+    "country": "Venezuela",
     "lat": 10.0636,
     "lng": -69.3347
   },
   {
     "name": "Barranquilla",
+    "country": "Colombia",
     "lat": 10.9833,
     "lng": -74.8019
   },
   {
     "name": "Batam Centre",
+    "country": "Indonesia",
     "lat": 1.1272,
     "lng": 104.0556
   },
   {
     "name": "Bazhou",
+    "country": "China",
     "lat": 31.868,
     "lng": 106.748
   },
   {
     "name": "Beihai",
+    "country": "China",
     "lat": 21.481,
     "lng": 109.12
   },
   {
     "name": "Beijing",
+    "country": "China",
     "lat": 39.9067,
     "lng": 116.3975
   },
   {
     "name": "Beirut",
+    "country": "Lebanon",
     "lat": 33.8981,
     "lng": 35.5058
   },
   {
     "name": "Bekasi",
+    "country": "Indonesia",
     "lat": -6.2333,
     "lng": 107
   },
   {
     "name": "Belāhi",
+    "country": "India",
     "lat": 26.4,
     "lng": 86.25
   },
   {
     "name": "Belém",
+    "country": "Brazil",
     "lat": -1.4558,
     "lng": -48.5039
   },
   {
     "name": "Belgrade",
+    "country": "Serbia",
     "lat": 44.8178,
     "lng": 20.4569
   },
   {
     "name": "Belo Horizonte",
+    "country": "Brazil",
     "lat": -19.9281,
     "lng": -43.9419
   },
   {
     "name": "Bengbu",
+    "country": "China",
     "lat": 32.917,
     "lng": 117.389
   },
   {
     "name": "Benin City",
+    "country": "Nigeria",
     "lat": 6.3333,
     "lng": 5.6222
   },
   {
     "name": "Benxi",
+    "country": "China",
     "lat": 41.3039,
     "lng": 123.7649
   },
   {
     "name": "Berlin",
+    "country": "Germany",
     "lat": 52.52,
     "lng": 13.405
   },
   {
     "name": "Bhayandar",
+    "country": "India",
     "lat": 19.29,
     "lng": 72.85
   },
   {
     "name": "Bhopāl",
+    "country": "India",
     "lat": 23.2599,
     "lng": 77.4126
   },
   {
     "name": "Bhubaneshwar",
+    "country": "India",
     "lat": 20.27,
     "lng": 85.84
   },
   {
     "name": "Biên Hòa",
+    "country": "Vietnam",
     "lat": 10.95,
     "lng": 106.8167
   },
   {
     "name": "Bijie",
+    "country": "China",
     "lat": 27.284,
     "lng": 105.292
   },
   {
     "name": "Bilāspur",
+    "country": "India",
     "lat": 22.09,
     "lng": 82.15
   },
   {
     "name": "Bilbao",
+    "country": "Spain",
     "lat": 43.2569,
     "lng": -2.9236
   },
   {
     "name": "Binzhou",
+    "country": "China",
     "lat": 37.383,
     "lng": 117.971
   },
   {
     "name": "Birmingham",
+    "country": "United Kingdom",
     "lat": 52.48,
     "lng": -1.9025
   },
   {
     "name": "Birmingham",
+    "country": "United States",
     "lat": 33.5279,
     "lng": -86.7971
   },
   {
     "name": "Bishkek",
+    "country": "Kyrgyzstan",
     "lat": 42.8667,
     "lng": 74.5667
   },
   {
     "name": "Blantyre",
+    "country": "Malawi",
     "lat": -15.7861,
     "lng": 35.0058
   },
   {
     "name": "Boankra",
+    "country": "Ghana",
     "lat": 6.6919,
     "lng": -1.4051
   },
   {
     "name": "Bobo-Dioulasso",
+    "country": "Burkina Faso",
     "lat": 11.1833,
     "lng": -4.2833
   },
   {
     "name": "Bogor",
+    "country": "Indonesia",
     "lat": -6.5966,
     "lng": 106.7972
   },
   {
     "name": "Bogotá",
+    "country": "Colombia",
     "lat": 4.7111,
     "lng": -74.0722
   },
   {
     "name": "Bordeaux",
+    "country": "France",
     "lat": 44.84,
     "lng": -0.58
   },
   {
     "name": "Boston",
+    "country": "United States",
     "lat": 42.3188,
     "lng": -71.0852
   },
   {
     "name": "Bouaké",
+    "country": "Côte d’Ivoire",
     "lat": 7.6833,
     "lng": -5.0331
   },
   {
     "name": "Bozhou",
+    "country": "China",
     "lat": 33.8463,
     "lng": 115.7786
   },
   {
     "name": "Brazzaville",
+    "country": "Congo (Brazzaville)",
     "lat": -4.2667,
     "lng": 15.2667
   },
   {
     "name": "Bridgeport",
+    "country": "United States",
     "lat": 41.1918,
     "lng": -73.1954
   },
   {
     "name": "Brisbane",
+    "country": "Australia",
     "lat": -27.4678,
     "lng": 153.0281
   },
   {
     "name": "Bronx",
+    "country": "United States",
     "lat": 40.8501,
     "lng": -73.8662
   },
   {
     "name": "Brooklyn",
+    "country": "United States",
     "lat": 40.6501,
     "lng": -73.9496
   },
   {
     "name": "Brussels",
+    "country": "Belgium",
     "lat": 50.8467,
     "lng": 4.3525
   },
   {
     "name": "Bucaramanga",
+    "country": "Colombia",
     "lat": 7.1333,
     "lng": -73
   },
   {
     "name": "Bucharest",
+    "country": "Romania",
     "lat": 44.4325,
     "lng": 26.1039
   },
   {
     "name": "Bucheon",
+    "country": "Korea, South",
     "lat": 37.5,
     "lng": 126.7833
   },
   {
     "name": "Budapest",
+    "country": "Hungary",
     "lat": 47.4983,
     "lng": 19.0408
   },
   {
     "name": "Buenos Aires",
+    "country": "Argentina",
     "lat": -34.6036,
     "lng": -58.3814
   },
   {
     "name": "Buffalo",
+    "country": "United States",
     "lat": 42.9018,
     "lng": -78.8487
   },
   {
     "name": "Bujumbura",
+    "country": "Burundi",
     "lat": -3.3833,
     "lng": 29.3667
   },
   {
     "name": "Bukavu",
+    "country": "Congo (Kinshasa)",
     "lat": -2.5061,
     "lng": 28.8608
   },
   {
     "name": "Bunia",
+    "country": "Congo (Kinshasa)",
     "lat": 1.5667,
     "lng": 30.25
   },
   {
     "name": "Bursa",
+    "country": "Turkey",
     "lat": 40.1833,
     "lng": 29.05
   },
   {
     "name": "Busan",
+    "country": "Korea, South",
     "lat": 35.18,
     "lng": 129.075
   },
   {
     "name": "Cabinda",
+    "country": "Angola",
     "lat": -5.56,
     "lng": 12.19
   },
   {
     "name": "Cacuaco",
+    "country": "Angola",
     "lat": -8.8053,
     "lng": 13.2444
   },
   {
     "name": "Cagayan de Oro",
+    "country": "Philippines",
     "lat": 8.48,
     "lng": 124.65
   },
   {
     "name": "Cairo",
+    "country": "Egypt",
     "lat": 30.0444,
     "lng": 31.2358
   },
   {
     "name": "Calgary",
+    "country": "Canada",
     "lat": 51.05,
     "lng": -114.0667
   },
   {
     "name": "Cali",
+    "country": "Colombia",
     "lat": 3.4206,
     "lng": -76.5222
   },
   {
     "name": "Caloocan City",
+    "country": "Philippines",
     "lat": 14.65,
     "lng": 120.97
   },
   {
     "name": "Campinas",
+    "country": "Brazil",
     "lat": -22.9009,
     "lng": -47.0573
   },
   {
     "name": "Cần Thơ",
+    "country": "Vietnam",
     "lat": 10.0333,
     "lng": 105.7833
   },
   {
     "name": "Canagatan",
+    "country": "Philippines",
     "lat": 18,
     "lng": 121.8
   },
   {
     "name": "Cancún",
+    "country": "Mexico",
     "lat": 21.1606,
     "lng": -86.8475
   },
   {
     "name": "Cangzhou",
+    "country": "China",
     "lat": 38.3047,
     "lng": 116.8387
   },
   {
     "name": "Çankaya",
+    "country": "Turkey",
     "lat": 39.9244,
     "lng": 32.8856
   },
   {
     "name": "Cape Town",
+    "country": "South Africa",
     "lat": -33.9253,
     "lng": 18.4239
   },
   {
     "name": "Caracas",
+    "country": "Venezuela",
     "lat": 10.4806,
     "lng": -66.9036
   },
   {
     "name": "Cartagena",
+    "country": "Colombia",
     "lat": 10.4,
     "lng": -75.5
   },
   {
     "name": "Casablanca",
+    "country": "Morocco",
     "lat": 33.5333,
     "lng": -7.5833
   },
   {
     "name": "Cazenga",
+    "country": "Angola",
     "lat": -8.8214,
     "lng": 13.2911
   },
   {
     "name": "Cebu City",
+    "country": "Philippines",
     "lat": 10.32,
     "lng": 123.75
   },
   {
     "name": "Chandīgarh",
+    "country": "India",
     "lat": 30.75,
     "lng": 76.78
   },
   {
     "name": "Changchun",
+    "country": "China",
     "lat": 43.897,
     "lng": 125.326
   },
   {
     "name": "Changde",
+    "country": "China",
     "lat": 29.031,
     "lng": 111.699
   },
   {
     "name": "Changsha",
+    "country": "China",
     "lat": 28.228,
     "lng": 112.939
   },
   {
     "name": "Changshu",
+    "country": "China",
     "lat": 31.656,
     "lng": 120.753
   },
   {
     "name": "Changwon",
+    "country": "Korea, South",
     "lat": 35.2708,
     "lng": 128.6631
   },
   {
     "name": "Changzhi",
+    "country": "China",
     "lat": 36.195,
     "lng": 113.117
   },
   {
     "name": "Changzhou",
+    "country": "China",
     "lat": 31.811,
     "lng": 119.974
   },
   {
     "name": "Chaohucun",
+    "country": "China",
     "lat": 31.6244,
     "lng": 117.8902
   },
   {
     "name": "Chaoyang",
+    "country": "China",
     "lat": 41.571,
     "lng": 120.453
   },
   {
     "name": "Chaozhou",
+    "country": "China",
     "lat": 23.658,
     "lng": 116.622
   },
   {
     "name": "Charleston",
+    "country": "United States",
     "lat": 32.8168,
     "lng": -79.9687
   },
   {
     "name": "Charlotte",
+    "country": "United States",
     "lat": 35.2083,
     "lng": -80.8303
   },
   {
     "name": "Chattogram",
+    "country": "Bangladesh",
     "lat": 22.335,
     "lng": 91.8325
   },
   {
     "name": "Chelyabinsk",
+    "country": "Russia",
     "lat": 55.1547,
     "lng": 61.3758
   },
   {
     "name": "Chengdu",
+    "country": "China",
     "lat": 30.66,
     "lng": 104.0633
   },
   {
     "name": "Chengguan",
+    "country": "China",
     "lat": 35.4623,
     "lng": 113.8054
   },
   {
     "name": "Chengtangcun",
+    "country": "China",
     "lat": 35.0833,
     "lng": 117.15
   },
   {
     "name": "Chennai",
+    "country": "India",
     "lat": 13.0825,
     "lng": 80.275
   },
   {
     "name": "Chenzhou",
+    "country": "China",
     "lat": 25.77,
     "lng": 113.016
   },
   {
     "name": "Cheongju",
+    "country": "Korea, South",
     "lat": 36.6333,
     "lng": 127.4833
   },
   {
     "name": "Chiang Mai",
+    "country": "Thailand",
     "lat": 18.7953,
     "lng": 98.9986
   },
   {
     "name": "Chiba",
+    "country": "Japan",
     "lat": 35.6073,
     "lng": 140.1064
   },
   {
     "name": "Chicago",
+    "country": "United States",
     "lat": 41.8375,
     "lng": -87.6866
   },
   {
     "name": "Chifeng",
+    "country": "China",
     "lat": 42.255,
     "lng": 118.8825
   },
   {
     "name": "Chihuahua",
+    "country": "Mexico",
     "lat": 28.6369,
     "lng": -106.0769
   },
   {
     "name": "Chizhou",
+    "country": "China",
     "lat": 30.6654,
     "lng": 117.4916
   },
   {
     "name": "Chongqing",
+    "country": "China",
     "lat": 29.5637,
     "lng": 106.5504
   },
   {
     "name": "Chongzuo",
+    "country": "China",
     "lat": 22.377,
     "lng": 107.365
   },
   {
     "name": "Chuzhou",
+    "country": "China",
     "lat": 32.256,
     "lng": 118.333
   },
   {
     "name": "Cilacap",
+    "country": "Indonesia",
     "lat": -7.7167,
     "lng": 109.017
   },
   {
     "name": "Cincinnati",
+    "country": "United States",
     "lat": 39.1413,
     "lng": -84.506
   },
   {
     "name": "Ciudad Guayana",
+    "country": "Venezuela",
     "lat": 8.3667,
     "lng": -62.65
   },
   {
     "name": "Ciudad Nezahualcóyotl",
+    "country": "Mexico",
     "lat": 19.4006,
     "lng": -99.0148
   },
   {
     "name": "Cleveland",
+    "country": "United States",
     "lat": 41.4764,
     "lng": -81.6805
   },
   {
     "name": "Cochabamba",
+    "country": "Bolivia",
     "lat": -17.3883,
     "lng": -66.1597
   },
   {
     "name": "Coimbatore",
+    "country": "India",
     "lat": 11.0008,
     "lng": 76.9633
   },
   {
     "name": "Cologne",
+    "country": "Germany",
     "lat": 50.9364,
     "lng": 6.9528
   },
   {
     "name": "Colombo",
+    "country": "Sri Lanka",
     "lat": 6.9167,
     "lng": 79.8333
   },
   {
     "name": "Columbus",
+    "country": "United States",
     "lat": 39.9862,
     "lng": -82.9855
   },
   {
     "name": "Comayagüela",
+    "country": "Honduras",
     "lat": 14.098,
     "lng": -87.21
   },
   {
     "name": "Conakry",
+    "country": "Guinea",
     "lat": 9.5092,
     "lng": -13.7122
   },
   {
     "name": "Copenhagen",
+    "country": "Denmark",
     "lat": 55.6805,
     "lng": 12.5615
   },
   {
     "name": "Córdoba",
+    "country": "Argentina",
     "lat": -31.4167,
     "lng": -64.1833
   },
   {
     "name": "Cúcuta",
+    "country": "Colombia",
     "lat": 7.8942,
     "lng": -72.5039
   },
   {
     "name": "Culiacán",
+    "country": "Mexico",
     "lat": 24.8069,
     "lng": -107.3939
   },
   {
     "name": "Curitiba",
+    "country": "Brazil",
     "lat": -25.4297,
     "lng": -49.2719
   },
   {
     "name": "Dadukou",
+    "country": "China",
     "lat": 26.5824,
     "lng": 101.7184
   },
   {
     "name": "Daegu",
+    "country": "Korea, South",
     "lat": 35.8717,
     "lng": 128.6017
   },
   {
     "name": "Daejeon",
+    "country": "Korea, South",
     "lat": 36.35,
     "lng": 127.385
   },
   {
     "name": "Dakar",
+    "country": "Senegal",
     "lat": 14.6726,
     "lng": -17.432
   },
   {
     "name": "Dalian",
+    "country": "China",
     "lat": 38.9,
     "lng": 121.6
   },
   {
     "name": "Dallas",
+    "country": "United States",
     "lat": 32.7935,
     "lng": -96.7667
   },
   {
     "name": "Damascus",
+    "country": "Syria",
     "lat": 33.502,
     "lng": 36.2981
   },
   {
     "name": "Dandong",
+    "country": "China",
     "lat": 40.1167,
     "lng": 124.3833
   },
   {
     "name": "Danyang",
+    "country": "China",
     "lat": 32,
     "lng": 119.586
   },
   {
     "name": "Daqing",
+    "country": "China",
     "lat": 46.589,
     "lng": 125.104
   },
   {
     "name": "Dar es Salaam",
+    "country": "Tanzania",
     "lat": -6.8161,
     "lng": 39.2803
   },
   {
     "name": "Davao",
+    "country": "Philippines",
     "lat": 7.07,
     "lng": 125.6
   },
   {
     "name": "Dayan",
+    "country": "China",
     "lat": 26.8552,
     "lng": 100.2259
   },
   {
     "name": "Daye",
+    "country": "China",
     "lat": 30.0961,
     "lng": 114.9804
   },
   {
     "name": "Dazhou",
+    "country": "China",
     "lat": 31.2093,
     "lng": 107.4678
   },
   {
     "name": "Dehui",
+    "country": "China",
     "lat": 44.535,
     "lng": 125.703
   },
   {
     "name": "Delhi",
+    "country": "India",
     "lat": 28.61,
     "lng": 77.23
   },
   {
     "name": "Denver",
+    "country": "United States",
     "lat": 39.762,
     "lng": -104.8758
   },
   {
     "name": "Depok",
+    "country": "Indonesia",
     "lat": -6.394,
     "lng": 106.8225
   },
   {
     "name": "Detroit",
+    "country": "United States",
     "lat": 42.3834,
     "lng": -83.1024
   },
   {
     "name": "Deyang",
+    "country": "China",
     "lat": 31.127,
     "lng": 104.398
   },
   {
     "name": "Dezhou",
+    "country": "China",
     "lat": 37.436,
     "lng": 116.359
   },
   {
     "name": "Dhaka",
+    "country": "Bangladesh",
     "lat": 23.7289,
     "lng": 90.3944
   },
   {
     "name": "Dhanbād",
+    "country": "India",
     "lat": 23.7998,
     "lng": 86.4305
   },
   {
     "name": "Dingxi",
+    "country": "China",
     "lat": 35.608,
     "lng": 104.592
   },
   {
     "name": "Dingzhou",
+    "country": "China",
     "lat": 38.516,
     "lng": 114.99
   },
   {
     "name": "Diyarbakır",
+    "country": "Turkey",
     "lat": 37.91,
     "lng": 40.24
   },
   {
     "name": "Dnipro",
+    "country": "Ukraine",
     "lat": 48.4675,
     "lng": 35.04
   },
   {
     "name": "Dodoma",
+    "country": "Tanzania",
     "lat": -6.1731,
     "lng": 35.7419
   },
   {
     "name": "Doha",
+    "country": "Qatar",
     "lat": 25.2867,
     "lng": 51.5333
   },
   {
     "name": "Domaa-Ahenkro",
+    "country": "Ghana",
     "lat": 7.2739,
     "lng": -2.8735
   },
   {
     "name": "Donetsk",
+    "country": "Ukraine",
     "lat": 48.0028,
     "lng": 37.8053
   },
   {
     "name": "Dongguan",
+    "country": "China",
     "lat": 23.021,
     "lng": 113.752
   },
   {
     "name": "Dongtai",
+    "country": "China",
     "lat": 32.795,
     "lng": 120.519
   },
   {
     "name": "Dongyang",
+    "country": "China",
     "lat": 29.2667,
     "lng": 120.2167
   },
   {
     "name": "Douala",
+    "country": "Cameroon",
     "lat": 4.05,
     "lng": 9.7
   },
   {
     "name": "Dubai",
+    "country": "United Arab Emirates",
     "lat": 25.2631,
     "lng": 55.2972
   },
   {
     "name": "Durban",
+    "country": "South Africa",
     "lat": -29.8833,
     "lng": 31.05
   },
   {
     "name": "Durgāpur",
+    "country": "India",
     "lat": 23.55,
     "lng": 87.32
   },
   {
     "name": "Dushanbe",
+    "country": "Tajikistan",
     "lat": 38.5367,
     "lng": 68.78
   },
   {
     "name": "Ecatepec",
+    "country": "Mexico",
     "lat": 19.6097,
     "lng": -99.06
   },
   {
     "name": "Edmonton",
+    "country": "Canada",
     "lat": 53.5344,
     "lng": -113.4903
   },
   {
     "name": "El Alto",
+    "country": "Bolivia",
     "lat": -16.5047,
     "lng": -68.1633
   },
   {
     "name": "El Paso",
+    "country": "United States",
     "lat": 31.8476,
     "lng": -106.43
   },
   {
     "name": "Enugu",
+    "country": "Nigeria",
     "lat": 6.5,
     "lng": 7.5
   },
   {
     "name": "Erbil",
+    "country": "Iraq",
     "lat": 36.1911,
     "lng": 44.0094
   },
   {
     "name": "Erzurum",
+    "country": "Turkey",
     "lat": 39.9086,
     "lng": 41.2769
   },
   {
     "name": "Esenyurt",
+    "country": "Turkey",
     "lat": 41.0342,
     "lng": 28.68
   },
   {
     "name": "Eşfahān",
+    "country": "Iran",
     "lat": 32.6653,
     "lng": 51.6703
   },
   {
     "name": "Eskişehir",
+    "country": "Turkey",
     "lat": 39.7767,
     "lng": 30.5206
   },
   {
     "name": "Ezhou",
+    "country": "China",
     "lat": 30.3914,
     "lng": 114.8949
   },
   {
     "name": "Faisalabad",
+    "country": "Pakistan",
     "lat": 31.4167,
     "lng": 73.0911
   },
   {
     "name": "Fangchenggang",
+    "country": "China",
     "lat": 21.6867,
     "lng": 108.3547
   },
   {
     "name": "Farīdābād",
+    "country": "India",
     "lat": 28.4211,
     "lng": 77.3078
   },
   {
     "name": "Feicheng",
+    "country": "China",
     "lat": 36.1861,
     "lng": 116.7719
   },
   {
     "name": "Fès",
+    "country": "Morocco",
     "lat": 34.0433,
     "lng": -5.0033
   },
   {
     "name": "Fort Worth",
+    "country": "United States",
     "lat": 32.7817,
     "lng": -97.3474
   },
   {
     "name": "Fortaleza",
+    "country": "Brazil",
     "lat": -3.7275,
     "lng": -38.5275
   },
   {
     "name": "Foshan",
+    "country": "China",
     "lat": 23.0214,
     "lng": 113.1216
   },
   {
     "name": "Frankfurt",
+    "country": "Germany",
     "lat": 50.1106,
     "lng": 8.6822
   },
   {
     "name": "Freetown",
+    "country": "Sierra Leone",
     "lat": 8.4833,
     "lng": -13.2331
   },
   {
     "name": "Fukuoka",
+    "country": "Japan",
     "lat": 33.59,
     "lng": 130.4017
   },
   {
     "name": "Fuqing",
+    "country": "China",
     "lat": 25.7167,
     "lng": 119.3833
   },
   {
     "name": "Fushun",
+    "country": "China",
     "lat": 41.881,
     "lng": 123.957
   },
   {
     "name": "Fuxin",
+    "country": "China",
     "lat": 42.022,
     "lng": 121.67
   },
   {
     "name": "Fuyang",
+    "country": "China",
     "lat": 32.89,
     "lng": 115.814
   },
   {
     "name": "Fuzhou",
+    "country": "China",
     "lat": 26.0743,
     "lng": 119.2964
   },
   {
     "name": "Gaalkacyo",
+    "country": "Somalia",
     "lat": 6.7697,
     "lng": 47.4308
   },
   {
     "name": "Ganzhou",
+    "country": "China",
     "lat": 25.831,
     "lng": 114.933
   },
   {
     "name": "Gaomi",
+    "country": "China",
     "lat": 36.3833,
     "lng": 119.75
   },
   {
     "name": "Gaoping",
+    "country": "China",
     "lat": 30.7824,
     "lng": 106.1281
   },
   {
     "name": "Gaozhou",
+    "country": "China",
     "lat": 21.9244,
     "lng": 110.8422
   },
   {
     "name": "Gaziantep",
+    "country": "Turkey",
     "lat": 37.0628,
     "lng": 37.3792
   },
   {
     "name": "Gāzipura",
+    "country": "Bangladesh",
     "lat": 23.9234,
     "lng": 90.3959
   },
   {
     "name": "Gdańsk",
+    "country": "Poland",
     "lat": 54.3475,
     "lng": 18.6453
   },
   {
     "name": "Ghāziābād",
+    "country": "India",
     "lat": 28.67,
     "lng": 77.42
   },
   {
     "name": "Giza",
+    "country": "Egypt",
     "lat": 29.987,
     "lng": 31.2118
   },
   {
     "name": "Goiânia",
+    "country": "Brazil",
     "lat": -16.6806,
     "lng": -49.2564
   },
   {
     "name": "Gongzhuling",
+    "country": "China",
     "lat": 43.5053,
     "lng": 124.8224
   },
   {
     "name": "Goyang",
+    "country": "Korea, South",
     "lat": 37.65,
     "lng": 126.8
   },
   {
     "name": "Gqeberha",
+    "country": "South Africa",
     "lat": -33.9581,
     "lng": 25.6
   },
   {
     "name": "Guadalajara",
+    "country": "Mexico",
     "lat": 20.6767,
     "lng": -103.3475
   },
   {
     "name": "Guang’an",
+    "country": "China",
     "lat": 30.4564,
     "lng": 106.6326
   },
   {
     "name": "Guangyuan",
+    "country": "China",
     "lat": 32.436,
     "lng": 105.844
   },
   {
     "name": "Guangzhou",
+    "country": "China",
     "lat": 23.13,
     "lng": 113.26
   },
   {
     "name": "Guankou",
+    "country": "China",
     "lat": 28.1637,
     "lng": 113.6433
   },
   {
     "name": "Guarulhos",
+    "country": "Brazil",
     "lat": -23.4667,
     "lng": -46.5333
   },
   {
     "name": "Guatemala City",
+    "country": "Guatemala",
     "lat": 14.6417,
     "lng": -90.5133
   },
   {
     "name": "Guayaquil",
+    "country": "Ecuador",
     "lat": -2.19,
     "lng": -79.8875
   },
   {
     "name": "Guigang",
+    "country": "China",
     "lat": 23.112,
     "lng": 109.599
   },
   {
     "name": "Guilin",
+    "country": "China",
     "lat": 25.275,
     "lng": 110.296
   },
   {
     "name": "Guiping",
+    "country": "China",
     "lat": 23.4,
     "lng": 110.0833
   },
   {
     "name": "Guiyang",
+    "country": "China",
     "lat": 26.647,
     "lng": 106.63
   },
   {
     "name": "Gujranwala",
+    "country": "Pakistan",
     "lat": 32.1567,
     "lng": 74.19
   },
   {
     "name": "Gulou",
+    "country": "China",
     "lat": 26.0865,
     "lng": 119.298
   },
   {
     "name": "Guozhen",
+    "country": "China",
     "lat": 34.3609,
     "lng": 107.1751
   },
   {
     "name": "Gurgaon",
+    "country": "India",
     "lat": 28.456,
     "lng": 77.029
   },
   {
     "name": "Guwāhāti",
+    "country": "India",
     "lat": 26.1722,
     "lng": 91.7458
   },
   {
     "name": "Guyuan",
+    "country": "China",
     "lat": 36.01,
     "lng": 106.257
   },
   {
     "name": "Gwalior",
+    "country": "India",
     "lat": 26.2125,
     "lng": 78.1775
   },
   {
     "name": "Gwangju",
+    "country": "Korea, South",
     "lat": 35.1653,
     "lng": 126.8486
   },
   {
     "name": "Hai’an",
+    "country": "China",
     "lat": 32.535,
     "lng": 120.563
   },
   {
     "name": "Haicheng",
+    "country": "China",
     "lat": 40.8824,
     "lng": 122.6852
   },
   {
     "name": "Haikou",
+    "country": "China",
     "lat": 20.0186,
     "lng": 110.3488
   },
   {
     "name": "Haiphong",
+    "country": "Vietnam",
     "lat": 20.8651,
     "lng": 106.6838
   },
   {
     "name": "Hamamatsu",
+    "country": "Japan",
     "lat": 34.7108,
     "lng": 137.7275
   },
   {
     "name": "Hamburg",
+    "country": "Germany",
     "lat": 53.55,
     "lng": 10
   },
   {
     "name": "Hamhŭng",
+    "country": "Korea, North",
     "lat": 39.9167,
     "lng": 127.5333
   },
   {
     "name": "Hamilton",
+    "country": "Canada",
     "lat": 43.2567,
     "lng": -79.8692
   },
   {
     "name": "Hanchuan",
+    "country": "China",
     "lat": 30.6667,
     "lng": 113.8333
   },
   {
     "name": "Handan",
+    "country": "China",
     "lat": 36.601,
     "lng": 114.487
   },
   {
     "name": "Hangzhou",
+    "country": "China",
     "lat": 30.267,
     "lng": 120.153
   },
   {
     "name": "Hanoi",
+    "country": "Vietnam",
     "lat": 21,
     "lng": 105.85
   },
   {
     "name": "Hanzhong",
+    "country": "China",
     "lat": 33.0664,
     "lng": 107.0232
   },
   {
     "name": "Hāora",
+    "country": "India",
     "lat": 22.58,
     "lng": 88.3294
   },
   {
     "name": "Harare",
+    "country": "Zimbabwe",
     "lat": -17.8292,
     "lng": 31.0522
   },
   {
     "name": "Harbin",
+    "country": "China",
     "lat": 45.7576,
     "lng": 126.6409
   },
   {
     "name": "Hargeysa",
+    "country": "Somalia",
     "lat": 9.56,
     "lng": 44.065
   },
   {
     "name": "Hartford",
+    "country": "United States",
     "lat": 41.7661,
     "lng": -72.6834
   },
   {
     "name": "Havana",
+    "country": "Cuba",
     "lat": 23.1367,
     "lng": -82.3589
   },
   {
     "name": "Hebi",
+    "country": "China",
     "lat": 35.748,
     "lng": 114.297
   },
   {
     "name": "Hechi",
+    "country": "China",
     "lat": 24.693,
     "lng": 108.085
   },
   {
     "name": "Hefei",
+    "country": "China",
     "lat": 31.8206,
     "lng": 117.2273
   },
   {
     "name": "Hegang",
+    "country": "China",
     "lat": 47.3501,
     "lng": 130.298
   },
   {
     "name": "Hejian",
+    "country": "China",
     "lat": 38.4466,
     "lng": 116.0995
   },
   {
     "name": "Helsinki",
+    "country": "Finland",
     "lat": 60.1708,
     "lng": 24.9375
   },
   {
     "name": "Hempstead",
+    "country": "United States",
     "lat": 40.6629,
     "lng": -73.6089
   },
   {
     "name": "Hengshui",
+    "country": "China",
     "lat": 37.739,
     "lng": 115.669
   },
   {
     "name": "Hengyang",
+    "country": "China",
     "lat": 26.894,
     "lng": 112.572
   },
   {
     "name": "Hengzhou",
+    "country": "China",
     "lat": 22.6799,
     "lng": 109.2614
   },
   {
     "name": "Hermosillo",
+    "country": "Mexico",
     "lat": 29.0989,
     "lng": -110.9542
   },
   {
     "name": "Heyuan",
+    "country": "China",
     "lat": 23.7443,
     "lng": 114.7002
   },
   {
     "name": "Heze",
+    "country": "China",
     "lat": 35.2343,
     "lng": 115.4796
   },
   {
     "name": "Hezhou",
+    "country": "China",
     "lat": 24.4042,
     "lng": 111.5672
   },
   {
     "name": "Hiroshima",
+    "country": "Japan",
     "lat": 34.3914,
     "lng": 132.4519
   },
   {
     "name": "Ho Chi Minh City",
+    "country": "Vietnam",
     "lat": 10.7756,
     "lng": 106.7019
   },
   {
     "name": "Hohhot",
+    "country": "China",
     "lat": 40.842,
     "lng": 111.749
   },
   {
     "name": "Homs",
+    "country": "Syria",
     "lat": 34.7319,
     "lng": 36.7181
   },
   {
     "name": "Hong Kong",
+    "country": "Hong Kong",
     "lat": 22.3,
     "lng": 114.2
   },
   {
     "name": "Houston",
+    "country": "United States",
     "lat": 29.786,
     "lng": -95.3885
   },
   {
     "name": "Huai’an",
+    "country": "China",
     "lat": 33.551,
     "lng": 119.113
   },
   {
     "name": "Huaibei",
+    "country": "China",
     "lat": 33.956,
     "lng": 116.798
   },
   {
     "name": "Huaihua",
+    "country": "China",
     "lat": 27.5698,
     "lng": 110.0016
   },
   {
     "name": "Huainan",
+    "country": "China",
     "lat": 32.6314,
     "lng": 117.0194
   },
   {
     "name": "Huaiyin",
+    "country": "China",
     "lat": 33.5819,
     "lng": 119.028
   },
   {
     "name": "Huanggang",
+    "country": "China",
     "lat": 30.4537,
     "lng": 114.8724
   },
   {
     "name": "Huanglongsi",
+    "country": "China",
     "lat": 34.795,
     "lng": 114.345
   },
   {
     "name": "Huangshan",
+    "country": "China",
     "lat": 29.7149,
     "lng": 118.3376
   },
   {
     "name": "Huangshi",
+    "country": "China",
     "lat": 30.2011,
     "lng": 115.039
   },
   {
     "name": "Huazhou",
+    "country": "China",
     "lat": 21.664,
     "lng": 110.6396
   },
   {
     "name": "Hubli",
+    "country": "India",
     "lat": 15.3502,
     "lng": 75.1376
   },
   {
     "name": "Huilong",
+    "country": "China",
     "lat": 31.87,
     "lng": 121.703
   },
   {
     "name": "Huizhou",
+    "country": "China",
     "lat": 23.112,
     "lng": 114.416
   },
   {
     "name": "Huludao",
+    "country": "China",
     "lat": 40.711,
     "lng": 120.837
   },
   {
     "name": "Huzhou",
+    "country": "China",
     "lat": 30.8925,
     "lng": 120.0875
   },
   {
     "name": "Hwasu-dong",
+    "country": "Korea, South",
     "lat": 37.1997,
     "lng": 126.8314
   },
   {
     "name": "Hyderābād",
+    "country": "India",
     "lat": 17.3617,
     "lng": 78.4747
   },
   {
     "name": "Hyderabad City",
+    "country": "Pakistan",
     "lat": 25.3792,
     "lng": 68.3683
   },
   {
     "name": "Ibadan",
+    "country": "Nigeria",
     "lat": 7.3964,
     "lng": 3.9167
   },
   {
     "name": "Ikare",
+    "country": "Nigeria",
     "lat": 7.5167,
     "lng": 5.75
   },
   {
     "name": "Ikeja",
+    "country": "Nigeria",
     "lat": 6.6,
     "lng": 3.35
   },
   {
     "name": "Ilorin",
+    "country": "Nigeria",
     "lat": 8.5,
     "lng": 4.55
   },
   {
     "name": "Incheon",
+    "country": "Korea, South",
     "lat": 37.4833,
     "lng": 126.6333
   },
   {
     "name": "Indianapolis",
+    "country": "United States",
     "lat": 39.7771,
     "lng": -86.1458
   },
   {
     "name": "Indore",
+    "country": "India",
     "lat": 22.7167,
     "lng": 75.8472
   },
   {
     "name": "Ipoh",
+    "country": "Malaysia",
     "lat": 4.6,
     "lng": 101.065
   },
   {
     "name": "Islamabad",
+    "country": "Pakistan",
     "lat": 33.6931,
     "lng": 73.0639
   },
   {
     "name": "Istanbul",
+    "country": "Turkey",
     "lat": 41.0136,
     "lng": 28.955
   },
   {
     "name": "İzmir",
+    "country": "Turkey",
     "lat": 38.42,
     "lng": 27.14
   },
   {
     "name": "Jabalpur",
+    "country": "India",
     "lat": 23.1667,
     "lng": 79.9333
   },
   {
     "name": "Jacksonville",
+    "country": "United States",
     "lat": 30.3322,
     "lng": -81.6749
   },
   {
     "name": "Jaipur",
+    "country": "India",
     "lat": 26.9,
     "lng": 75.8
   },
   {
     "name": "Jakarta",
+    "country": "Indonesia",
     "lat": -6.175,
     "lng": 106.8275
   },
   {
     "name": "Jalandhar",
+    "country": "India",
     "lat": 31.326,
     "lng": 75.5762
   },
   {
     "name": "Jamshedpur",
+    "country": "India",
     "lat": 22.7925,
     "lng": 86.1842
   },
   {
     "name": "Jeddah",
+    "country": "Saudi Arabia",
     "lat": 21.5428,
     "lng": 39.1728
   },
   {
     "name": "Jerusalem",
+    "country": "Israel",
     "lat": 31.7789,
     "lng": 35.2256
   },
   {
     "name": "Ji’an",
+    "country": "China",
     "lat": 27.0912,
     "lng": 114.9668
   },
   {
     "name": "Jiamusi",
+    "country": "China",
     "lat": 46.8,
     "lng": 130.319
   },
   {
     "name": "Jiancheng",
+    "country": "China",
     "lat": 30.38,
     "lng": 104.53
   },
   {
     "name": "Jiangguanchi",
+    "country": "China",
     "lat": 34.037,
     "lng": 113.852
   },
   {
     "name": "Jiangmen",
+    "country": "China",
     "lat": 22.5789,
     "lng": 113.0815
   },
   {
     "name": "Jianguang",
+    "country": "China",
     "lat": 28.1958,
     "lng": 115.7833
   },
   {
     "name": "Jiangyin",
+    "country": "China",
     "lat": 31.839,
     "lng": 120.295
   },
   {
     "name": "Jiaozhou",
+    "country": "China",
     "lat": 36.2647,
     "lng": 120.0334
   },
   {
     "name": "Jiaozuo",
+    "country": "China",
     "lat": 35.2157,
     "lng": 113.2419
   },
   {
     "name": "Jiaxing",
+    "country": "China",
     "lat": 30.747,
     "lng": 120.756
   },
   {
     "name": "Jieyang",
+    "country": "China",
     "lat": 23.551,
     "lng": 116.3727
   },
   {
     "name": "Jinan",
+    "country": "China",
     "lat": 36.6702,
     "lng": 117.0207
   },
   {
     "name": "Jincheng",
+    "country": "China",
     "lat": 35.491,
     "lng": 112.852
   },
   {
     "name": "Jingdezhen",
+    "country": "China",
     "lat": 29.2917,
     "lng": 117.1986
   },
   {
     "name": "Jingling",
+    "country": "China",
     "lat": 30.664,
     "lng": 113.167
   },
   {
     "name": "Jinhua",
+    "country": "China",
     "lat": 29.079,
     "lng": 119.647
   },
   {
     "name": "Jining",
+    "country": "China",
     "lat": 35.4151,
     "lng": 116.5871
   },
   {
     "name": "Jinzhou",
+    "country": "China",
     "lat": 41.129,
     "lng": 121.148
   },
   {
     "name": "Jiujiang",
+    "country": "China",
     "lat": 29.661,
     "lng": 115.954
   },
   {
     "name": "Jixi",
+    "country": "China",
     "lat": 45.295,
     "lng": 130.969
   },
   {
     "name": "João Pessoa",
+    "country": "Brazil",
     "lat": -7.12,
     "lng": -34.88
   },
   {
     "name": "Jodhpur",
+    "country": "India",
     "lat": 26.28,
     "lng": 73.02
   },
   {
     "name": "Johannesburg",
+    "country": "South Africa",
     "lat": -26.2044,
     "lng": 28.0456
   },
   {
     "name": "Juárez",
+    "country": "Mexico",
     "lat": 31.745,
     "lng": -106.485
   },
   {
     "name": "Kabul",
+    "country": "Afghanistan",
     "lat": 34.5253,
     "lng": 69.1783
   },
   {
     "name": "Kaduna",
+    "country": "Nigeria",
     "lat": 10.5167,
     "lng": 7.4333
   },
   {
     "name": "Kaiyuan",
+    "country": "China",
     "lat": 36.0193,
     "lng": 113.86
   },
   {
     "name": "Kalleli",
+    "country": "India",
     "lat": 9.2807,
     "lng": 76.8697
   },
   {
     "name": "Kalyān",
+    "country": "India",
     "lat": 19.24,
     "lng": 73.13
   },
   {
     "name": "Kampala",
+    "country": "Uganda",
     "lat": 0.3136,
     "lng": 32.5811
   },
   {
     "name": "Kananga",
+    "country": "Congo (Kinshasa)",
     "lat": -5.897,
     "lng": 22.4488
   },
   {
     "name": "Kannankulam",
+    "country": "India",
     "lat": 10.52,
     "lng": 76.21
   },
   {
     "name": "Kano",
+    "country": "Nigeria",
     "lat": 12,
     "lng": 8.5167
   },
   {
     "name": "Kansas City",
+    "country": "United States",
     "lat": 39.1238,
     "lng": -94.5541
   },
   {
     "name": "Kaohsiung",
+    "country": "Taiwan",
     "lat": 22.615,
     "lng": 120.2975
   },
   {
     "name": "Karachi",
+    "country": "Pakistan",
     "lat": 24.86,
     "lng": 67.01
   },
   {
     "name": "Karaj",
+    "country": "Iran",
     "lat": 35.8292,
     "lng": 50.9675
   },
   {
     "name": "Karīmnagar",
+    "country": "India",
     "lat": 18.4386,
     "lng": 79.1288
   },
   {
     "name": "Kashgar",
+    "country": "China",
     "lat": 39.4681,
     "lng": 75.9938
   },
   {
     "name": "Kathmandu",
+    "country": "Nepal",
     "lat": 27.71,
     "lng": 85.32
   },
   {
     "name": "Kawasaki",
+    "country": "Japan",
     "lat": 35.5167,
     "lng": 139.7
   },
   {
     "name": "Kayseri",
+    "country": "Turkey",
     "lat": 38.7225,
     "lng": 35.4875
   },
   {
     "name": "Kazan",
+    "country": "Russia",
     "lat": 55.7964,
     "lng": 49.1089
   },
   {
     "name": "Keçiören",
+    "country": "Turkey",
     "lat": 40,
     "lng": 32.8667
   },
   {
     "name": "Kermān",
+    "country": "Iran",
     "lat": 30.2625,
     "lng": 57.0575
   },
   {
     "name": "Kermānshāh",
+    "country": "Iran",
     "lat": 34.3369,
     "lng": 47.0911
   },
   {
     "name": "Kharkiv",
+    "country": "Ukraine",
     "lat": 49.9925,
     "lng": 36.2311
   },
   {
     "name": "Khartoum",
+    "country": "Sudan",
     "lat": 15.6031,
     "lng": 32.5265
   },
   {
     "name": "Khartoum North",
+    "country": "Sudan",
     "lat": 15.6333,
     "lng": 32.6333
   },
   {
     "name": "Khŭjand",
+    "country": "Tajikistan",
     "lat": 40.2833,
     "lng": 69.6333
   },
   {
     "name": "Khulna",
+    "country": "Bangladesh",
     "lat": 22.8167,
     "lng": 89.55
   },
   {
     "name": "Kibanseke Première",
+    "country": "Congo (Kinshasa)",
     "lat": -4.4419,
     "lng": 15.395
   },
   {
     "name": "Kigali",
+    "country": "Rwanda",
     "lat": -1.9536,
     "lng": 30.0606
   },
   {
     "name": "Kinshasa",
+    "country": "Congo (Kinshasa)",
     "lat": -4.3219,
     "lng": 15.3119
   },
   {
     "name": "Kirkuk",
+    "country": "Iraq",
     "lat": 35.4667,
     "lng": 44.4
   },
   {
     "name": "Kisangani",
+    "country": "Congo (Kinshasa)",
     "lat": 0.5167,
     "lng": 25.2
   },
   {
     "name": "Kitakyūshū",
+    "country": "Japan",
     "lat": 33.8833,
     "lng": 130.8833
   },
   {
     "name": "Klang",
+    "country": "Malaysia",
     "lat": 3.0223,
     "lng": 101.5481
   },
   {
     "name": "Kōbe",
+    "country": "Japan",
     "lat": 34.69,
     "lng": 135.1956
   },
   {
     "name": "Kolkāta",
+    "country": "India",
     "lat": 22.5675,
     "lng": 88.37
   },
   {
     "name": "Konya",
+    "country": "Turkey",
     "lat": 37.8667,
     "lng": 32.4833
   },
   {
     "name": "Korla",
+    "country": "China",
     "lat": 41.7259,
     "lng": 86.1746
   },
   {
     "name": "Kota",
+    "country": "India",
     "lat": 25.18,
     "lng": 75.83
   },
   {
     "name": "Kotla Qasim Khan",
+    "country": "Pakistan",
     "lat": 32.5833,
     "lng": 73.75
   },
   {
     "name": "Kottārasshēri",
+    "country": "India",
     "lat": 10.775,
     "lng": 76.651
   },
   {
     "name": "Kowloon",
+    "country": "Hong Kong",
     "lat": 22.3167,
     "lng": 114.1833
   },
   {
     "name": "Kraków",
+    "country": "Poland",
     "lat": 50.0614,
     "lng": 19.9372
   },
   {
     "name": "Krasnodar",
+    "country": "Russia",
     "lat": 45.0333,
     "lng": 38.9667
   },
   {
     "name": "Krasnoyarsk",
+    "country": "Russia",
     "lat": 56.0089,
     "lng": 92.8719
   },
   {
     "name": "Kuaidamao",
+    "country": "China",
     "lat": 41.7283,
     "lng": 125.9397
   },
   {
     "name": "Kuala Lumpur",
+    "country": "Malaysia",
     "lat": 3.1686,
     "lng": 101.698
   },
   {
     "name": "Kumamoto",
+    "country": "Japan",
     "lat": 32.8031,
     "lng": 130.7078
   },
   {
     "name": "Kumasi",
+    "country": "Ghana",
     "lat": 6.7,
     "lng": -1.625
   },
   {
     "name": "Kumila",
+    "country": "Pakistan",
     "lat": 35.25,
     "lng": 73.5
   },
   {
     "name": "Kunming",
+    "country": "China",
     "lat": 25.0464,
     "lng": 102.7094
   },
   {
     "name": "Kuwait City",
+    "country": "Kuwait",
     "lat": 29.3697,
     "lng": 47.9783
   },
   {
     "name": "Kyaukse",
+    "country": "Burma",
     "lat": 21.6131,
     "lng": 96.1303
   },
   {
     "name": "Kyiv",
+    "country": "Ukraine",
     "lat": 50.45,
     "lng": 30.5233
   },
   {
     "name": "Kyōto",
+    "country": "Japan",
     "lat": 35.0117,
     "lng": 135.7683
   },
   {
     "name": "La Plata",
+    "country": "Argentina",
     "lat": -34.9211,
     "lng": -57.9544
   },
   {
     "name": "Lagos",
+    "country": "Nigeria",
     "lat": 6.455,
     "lng": 3.3841
   },
   {
     "name": "Lahore",
+    "country": "Pakistan",
     "lat": 31.5497,
     "lng": 74.3436
   },
   {
     "name": "Laibin",
+    "country": "China",
     "lat": 23.7501,
     "lng": 109.2212
   },
   {
     "name": "Laiwu",
+    "country": "China",
     "lat": 36.1833,
     "lng": 117.6667
   },
   {
     "name": "Laiyang",
+    "country": "China",
     "lat": 36.9758,
     "lng": 120.7136
   },
   {
     "name": "Langfang",
+    "country": "China",
     "lat": 39.5383,
     "lng": 116.6835
   },
   {
     "name": "Lanzhou",
+    "country": "China",
     "lat": 36.0606,
     "lng": 103.8268
   },
   {
     "name": "Las Vegas",
+    "country": "United States",
     "lat": 36.2333,
     "lng": -115.2654
   },
   {
     "name": "Leiyang",
+    "country": "China",
     "lat": 26.4223,
     "lng": 112.8598
   },
   {
     "name": "Leizhou",
+    "country": "China",
     "lat": 20.9143,
     "lng": 110.0967
   },
   {
     "name": "León de los Aldama",
+    "country": "Mexico",
     "lat": 21.1167,
     "lng": -101.6833
   },
   {
     "name": "Leping",
+    "country": "China",
     "lat": 28.978,
     "lng": 117.152
   },
   {
     "name": "Leshan",
+    "country": "China",
     "lat": 29.552,
     "lng": 103.766
   },
   {
     "name": "Lhasa",
+    "country": "China",
     "lat": 29.6534,
     "lng": 91.1719
   },
   {
     "name": "Liangshi",
+    "country": "China",
     "lat": 27.26,
     "lng": 111.7442
   },
   {
     "name": "Lianjiang",
+    "country": "China",
     "lat": 21.7333,
     "lng": 110.2833
   },
   {
     "name": "Lianshan",
+    "country": "China",
     "lat": 40.7523,
     "lng": 120.828
   },
   {
     "name": "Lianyuan",
+    "country": "China",
     "lat": 27.692,
     "lng": 111.664
   },
   {
     "name": "Liaocheng",
+    "country": "China",
     "lat": 36.4559,
     "lng": 115.9852
   },
   {
     "name": "Liaoyang",
+    "country": "China",
     "lat": 41.279,
     "lng": 123.176
   },
   {
     "name": "Liaoyuan",
+    "country": "China",
     "lat": 42.888,
     "lng": 125.1447
   },
   {
     "name": "Libreville",
+    "country": "Gabon",
     "lat": 0.3901,
     "lng": 9.4544
   },
   {
     "name": "Licheng",
+    "country": "China",
     "lat": 31.4306,
     "lng": 119.4788
   },
   {
     "name": "Lichuan",
+    "country": "China",
     "lat": 30.291,
     "lng": 108.9364
   },
   {
     "name": "Lilongwe",
+    "country": "Malawi",
     "lat": -13.9669,
     "lng": 33.7873
   },
   {
     "name": "Lima",
+    "country": "Peru",
     "lat": -12.06,
     "lng": -77.0375
   },
   {
     "name": "Lincang",
+    "country": "China",
     "lat": 23.884,
     "lng": 100.089
   },
   {
     "name": "Linfen",
+    "country": "China",
     "lat": 36.088,
     "lng": 111.519
   },
   {
     "name": "Lingbao Chengguanzhen",
+    "country": "China",
     "lat": 34.5176,
     "lng": 110.8942
   },
   {
     "name": "Lingcheng",
+    "country": "China",
     "lat": 22.708,
     "lng": 110.354
   },
   {
     "name": "Linhai",
+    "country": "China",
     "lat": 28.85,
     "lng": 121.1167
   },
   {
     "name": "Linyi",
+    "country": "China",
     "lat": 35.1038,
     "lng": 118.3564
   },
   {
     "name": "Lishui",
+    "country": "China",
     "lat": 28.468,
     "lng": 119.923
   },
   {
     "name": "Liuzhou",
+    "country": "China",
     "lat": 24.3278,
     "lng": 109.4278
   },
   {
     "name": "Lomé",
+    "country": "Togo",
     "lat": 6.1308,
     "lng": 1.2153
   },
   {
     "name": "London",
+    "country": "United Kingdom",
     "lat": 51.5072,
     "lng": -0.1275
   },
   {
     "name": "Longba",
+    "country": "China",
     "lat": 33.3702,
     "lng": 104.9603
   },
   {
     "name": "Longyan",
+    "country": "China",
     "lat": 25.076,
     "lng": 117.017
   },
   {
     "name": "Los Angeles",
+    "country": "United States",
     "lat": 34.1141,
     "lng": -118.4068
   },
   {
     "name": "Loudi",
+    "country": "China",
     "lat": 27.6998,
     "lng": 111.9944
   },
   {
     "name": "Louisville",
+    "country": "United States",
     "lat": 38.1663,
     "lng": -85.6485
   },
   {
     "name": "Lu’an",
+    "country": "China",
     "lat": 31.736,
     "lng": 116.52
   },
   {
     "name": "Luanda",
+    "country": "Angola",
     "lat": -8.8383,
     "lng": 13.2344
   },
   {
     "name": "Lubango",
+    "country": "Angola",
     "lat": -14.9167,
     "lng": 13.5
   },
   {
     "name": "Lubumbashi",
+    "country": "Congo (Kinshasa)",
     "lat": -11.6647,
     "lng": 27.4794
   },
   {
     "name": "Lucknow",
+    "country": "India",
     "lat": 26.85,
     "lng": 80.95
   },
   {
     "name": "Ludhiāna",
+    "country": "India",
     "lat": 30.91,
     "lng": 75.85
   },
   {
     "name": "Luocheng",
+    "country": "China",
     "lat": 22.7689,
     "lng": 111.5697
   },
   {
     "name": "Luohe",
+    "country": "China",
     "lat": 33.5804,
     "lng": 114.0166
   },
   {
     "name": "Luoyang",
+    "country": "China",
     "lat": 34.6197,
     "lng": 112.4539
   },
   {
     "name": "Lusaka",
+    "country": "Zambia",
     "lat": -15.4167,
     "lng": 28.2833
   },
   {
     "name": "Luzhou",
+    "country": "China",
     "lat": 28.871,
     "lng": 105.442
   },
   {
     "name": "Ma’anshan",
+    "country": "China",
     "lat": 31.669,
     "lng": 118.507
   },
   {
     "name": "Maceió",
+    "country": "Brazil",
     "lat": -9.6658,
     "lng": -35.735
   },
   {
     "name": "Macheng",
+    "country": "China",
     "lat": 31.173,
     "lng": 115.008
   },
   {
     "name": "Madrid",
+    "country": "Spain",
     "lat": 40.4169,
     "lng": -3.7033
   },
   {
     "name": "Madurai",
+    "country": "India",
     "lat": 9.9252,
     "lng": 78.1198
   },
   {
     "name": "Maiduguri",
+    "country": "Nigeria",
     "lat": 11.8372,
     "lng": 13.1542
   },
   {
     "name": "Makassar",
+    "country": "Indonesia",
     "lat": -5.1331,
     "lng": 119.4136
   },
   {
     "name": "Málaga",
+    "country": "Spain",
     "lat": 36.7194,
     "lng": -4.42
   },
   {
     "name": "Malang",
+    "country": "Indonesia",
     "lat": -7.98,
     "lng": 112.62
   },
   {
     "name": "Managua",
+    "country": "Nicaragua",
     "lat": 12.1364,
     "lng": -86.2514
   },
   {
     "name": "Manama",
+    "country": "Bahrain",
     "lat": 26.2233,
     "lng": 50.5875
   },
   {
     "name": "Mandalay",
+    "country": "Burma",
     "lat": 21.9831,
     "lng": 96.0844
   },
   {
     "name": "Manhattan",
+    "country": "United States",
     "lat": 40.7834,
     "lng": -73.9662
   },
   {
     "name": "Manila",
+    "country": "Philippines",
     "lat": 14.5958,
     "lng": 120.9772
   },
   {
     "name": "Maoming",
+    "country": "China",
     "lat": 21.6627,
     "lng": 110.9255
   },
   {
     "name": "Maputo",
+    "country": "Mozambique",
     "lat": -25.9153,
     "lng": 32.5764
   },
   {
     "name": "Maracaibo",
+    "country": "Venezuela",
     "lat": 10.6333,
     "lng": -71.6333
   },
   {
     "name": "Maracay",
+    "country": "Venezuela",
     "lat": 10.2469,
     "lng": -67.5961
   },
   {
     "name": "Marrakech",
+    "country": "Morocco",
     "lat": 31.63,
     "lng": -8.0089
   },
   {
     "name": "Marseille",
+    "country": "France",
     "lat": 43.2964,
     "lng": 5.37
   },
   {
     "name": "Masbate",
+    "country": "Philippines",
     "lat": 12.27,
     "lng": 123.58
   },
   {
     "name": "Mashhad",
+    "country": "Iran",
     "lat": 36.3264,
     "lng": 59.5433
   },
   {
     "name": "Masqaţ",
+    "country": "Oman",
     "lat": 23.614,
     "lng": 58.5911
   },
   {
     "name": "Matola",
+    "country": "Mozambique",
     "lat": -25.9667,
     "lng": 32.4667
   },
   {
     "name": "Mbandaka",
+    "country": "Congo (Kinshasa)",
     "lat": 0.0478,
     "lng": 18.2558
   },
   {
     "name": "Mbuji-Mayi",
+    "country": "Congo (Kinshasa)",
     "lat": -6.15,
     "lng": 23.6
   },
   {
     "name": "McAllen",
+    "country": "United States",
     "lat": 26.2252,
     "lng": -98.2467
   },
   {
     "name": "Mecca",
+    "country": "Saudi Arabia",
     "lat": 21.4225,
     "lng": 39.8261
   },
   {
     "name": "Medan",
+    "country": "Indonesia",
     "lat": 3.5894,
     "lng": 98.6739
   },
   {
     "name": "Medellín",
+    "country": "Colombia",
     "lat": 6.2308,
     "lng": -75.5906
   },
   {
     "name": "Medina",
+    "country": "Saudi Arabia",
     "lat": 24.47,
     "lng": 39.61
   },
   {
     "name": "Meerut",
+    "country": "India",
     "lat": 28.98,
     "lng": 77.71
   },
   {
     "name": "Meishan",
+    "country": "China",
     "lat": 30.0771,
     "lng": 103.8484
   },
   {
     "name": "Meizhou",
+    "country": "China",
     "lat": 24.289,
     "lng": 116.122
   },
   {
     "name": "Melbourne",
+    "country": "Australia",
     "lat": -37.8142,
     "lng": 144.9631
   },
   {
     "name": "Memphis",
+    "country": "United States",
     "lat": 35.1087,
     "lng": -89.9663
   },
   {
     "name": "Mérida",
+    "country": "Mexico",
     "lat": 20.9667,
     "lng": -89.6167
   },
   {
     "name": "Mersin",
+    "country": "Turkey",
     "lat": 36.8,
     "lng": 34.6333
   },
   {
     "name": "Mexicali",
+    "country": "Mexico",
     "lat": 32.6633,
     "lng": -115.4678
   },
   {
     "name": "Mexico City",
+    "country": "Mexico",
     "lat": 19.4333,
     "lng": -99.1333
   },
   {
     "name": "Miami",
+    "country": "United States",
     "lat": 25.784,
     "lng": -80.2101
   },
   {
     "name": "Mianyang",
+    "country": "China",
     "lat": 31.468,
     "lng": 104.679
   },
   {
     "name": "Milan",
+    "country": "Italy",
     "lat": 45.4669,
     "lng": 9.19
   },
   {
     "name": "Milwaukee",
+    "country": "United States",
     "lat": 43.0642,
     "lng": -87.9675
   },
   {
     "name": "Minneapolis",
+    "country": "United States",
     "lat": 44.9635,
     "lng": -93.2678
   },
   {
     "name": "Minsk",
+    "country": "Belarus",
     "lat": 53.9006,
     "lng": 27.5586
   },
   {
     "name": "Mirzāpur",
+    "country": "India",
     "lat": 25.146,
     "lng": 82.569
   },
   {
     "name": "Mogadishu",
+    "country": "Somalia",
     "lat": 2.0392,
     "lng": 45.3419
   },
   {
     "name": "Mombasa",
+    "country": "Kenya",
     "lat": -4.05,
     "lng": 39.6667
   },
   {
     "name": "Monrovia",
+    "country": "Liberia",
     "lat": 6.3133,
     "lng": -10.8014
   },
   {
     "name": "Monterrey",
+    "country": "Mexico",
     "lat": 25.6844,
     "lng": -100.3181
   },
   {
     "name": "Montevideo",
+    "country": "Uruguay",
     "lat": -34.9056,
     "lng": -56.1842
   },
   {
     "name": "Montréal",
+    "country": "Canada",
     "lat": 45.5089,
     "lng": -73.5617
   },
   {
     "name": "Morādābād",
+    "country": "India",
     "lat": 28.8319,
     "lng": 78.7764
   },
   {
     "name": "Morelia",
+    "country": "Mexico",
     "lat": 19.7683,
     "lng": -101.1894
   },
   {
     "name": "Moscow",
+    "country": "Russia",
     "lat": 55.7506,
     "lng": 37.6175
   },
   {
     "name": "Mosul",
+    "country": "Iraq",
     "lat": 36.3667,
     "lng": 43.1167
   },
   {
     "name": "Mudanjiang",
+    "country": "China",
     "lat": 44.5514,
     "lng": 129.6329
   },
   {
     "name": "Multan",
+    "country": "Pakistan",
     "lat": 30.1978,
     "lng": 71.4697
   },
   {
     "name": "Mumbai",
+    "country": "India",
     "lat": 19.0761,
     "lng": 72.8775
   },
   {
     "name": "Munich",
+    "country": "Germany",
     "lat": 48.1375,
     "lng": 11.575
   },
   {
     "name": "Muscat",
+    "country": "Oman",
     "lat": 23.6139,
     "lng": 58.5922
   },
   {
     "name": "Mushin",
+    "country": "Nigeria",
     "lat": 6.5333,
     "lng": 3.35
   },
   {
     "name": "Mwanza",
+    "country": "Tanzania",
     "lat": -2.5167,
     "lng": 32.9
   },
   {
     "name": "Mysore",
+    "country": "India",
     "lat": 12.3086,
     "lng": 76.6531
   },
   {
     "name": "N’Djamena",
+    "country": "Chad",
     "lat": 12.1053,
     "lng": 15.0447
   },
   {
     "name": "Nada",
+    "country": "China",
     "lat": 19.5209,
     "lng": 109.5808
   },
   {
     "name": "Nādampālaiyam",
+    "country": "India",
     "lat": 11.0125,
     "lng": 76.9714
   },
   {
     "name": "Nagoya",
+    "country": "Japan",
     "lat": 35.1833,
     "lng": 136.9
   },
   {
     "name": "Nāgpur",
+    "country": "India",
     "lat": 21.1497,
     "lng": 79.0806
   },
   {
     "name": "Nairobi",
+    "country": "Kenya",
     "lat": -1.2864,
     "lng": 36.8172
   },
   {
     "name": "Najafgarh",
+    "country": "India",
     "lat": 28.6125,
     "lng": 76.9847
   },
   {
     "name": "Namangan",
+    "country": "Uzbekistan",
     "lat": 41.0011,
     "lng": 71.6683
   },
   {
     "name": "Nampula",
+    "country": "Mozambique",
     "lat": -15.1167,
     "lng": 39.2667
   },
   {
     "name": "Nanchang",
+    "country": "China",
     "lat": 28.683,
     "lng": 115.858
   },
   {
     "name": "Nanchong",
+    "country": "China",
     "lat": 30.8372,
     "lng": 106.1106
   },
   {
     "name": "Nangandao",
+    "country": "China",
     "lat": 35.3036,
     "lng": 113.9268
   },
   {
     "name": "Nanjing",
+    "country": "China",
     "lat": 32.0608,
     "lng": 118.7789
   },
   {
     "name": "Nanning",
+    "country": "China",
     "lat": 22.8167,
     "lng": 108.3275
   },
   {
     "name": "Nanping",
+    "country": "China",
     "lat": 26.6418,
     "lng": 118.1774
   },
   {
     "name": "Nantong",
+    "country": "China",
     "lat": 31.981,
     "lng": 120.894
   },
   {
     "name": "Nanyang",
+    "country": "China",
     "lat": 32.9902,
     "lng": 112.5285
   },
   {
     "name": "Naples",
+    "country": "Italy",
     "lat": 40.8358,
     "lng": 14.2486
   },
   {
     "name": "Nārāyanganj",
+    "country": "Bangladesh",
     "lat": 23.6167,
     "lng": 90.5
   },
   {
     "name": "Narela",
+    "country": "India",
     "lat": 28.85,
     "lng": 77.1
   },
   {
     "name": "Nashville",
+    "country": "United States",
     "lat": 36.1715,
     "lng": -86.7842
   },
   {
     "name": "Nāsik",
+    "country": "India",
     "lat": 19.9975,
     "lng": 73.7898
   },
   {
     "name": "Natal",
+    "country": "Brazil",
     "lat": -5.795,
     "lng": -35.2089
   },
   {
     "name": "Naucalpan de Juárez",
+    "country": "Mexico",
     "lat": 19.4753,
     "lng": -99.2378
   },
   {
     "name": "Nay Pyi Taw",
+    "country": "Burma",
     "lat": 19.7475,
     "lng": 96.115
   },
   {
     "name": "Neijiang",
+    "country": "China",
     "lat": 29.5802,
     "lng": 105.058
   },
   {
     "name": "Nerima",
+    "country": "Japan",
     "lat": 35.7356,
     "lng": 139.6517
   },
   {
     "name": "New Orleans",
+    "country": "United States",
     "lat": 30.0687,
     "lng": -89.9288
   },
   {
     "name": "New York",
+    "country": "United States",
     "lat": 40.6943,
     "lng": -73.9249
   },
   {
     "name": "Nezahualcóyotl",
+    "country": "Mexico",
     "lat": 19.4081,
     "lng": -99.0186
   },
   {
     "name": "Niamey",
+    "country": "Niger",
     "lat": 13.515,
     "lng": 2.1175
   },
   {
     "name": "Niigata",
+    "country": "Japan",
     "lat": 37.9161,
     "lng": 139.0364
   },
   {
     "name": "Ningbo",
+    "country": "China",
     "lat": 29.8603,
     "lng": 121.6245
   },
   {
     "name": "Ningde",
+    "country": "China",
     "lat": 26.6662,
     "lng": 119.5477
   },
   {
     "name": "Ninh Bình",
+    "country": "Vietnam",
     "lat": 20.25,
     "lng": 105.8333
   },
   {
     "name": "Nizhniy Novgorod",
+    "country": "Russia",
     "lat": 56.3269,
     "lng": 44.0075
   },
   {
     "name": "Nouakchott",
+    "country": "Mauritania",
     "lat": 18.0858,
     "lng": -15.9785
   },
   {
     "name": "Novosibirsk",
+    "country": "Russia",
     "lat": 55.05,
     "lng": 82.95
   },
   {
     "name": "Odesa",
+    "country": "Ukraine",
     "lat": 46.492,
     "lng": 30.7081
   },
   {
     "name": "Ogbomoso",
+    "country": "Nigeria",
     "lat": 8.1333,
     "lng": 4.25
   },
   {
     "name": "Oklahoma City",
+    "country": "United States",
     "lat": 35.4676,
     "lng": -97.5136
   },
   {
     "name": "Omaha",
+    "country": "United States",
     "lat": 41.2627,
     "lng": -96.0529
   },
   {
     "name": "Omdurman",
+    "country": "Sudan",
     "lat": 15.6835,
     "lng": 32.4629
   },
   {
     "name": "Omsk",
+    "country": "Russia",
     "lat": 54.9833,
     "lng": 73.3667
   },
   {
     "name": "Onitsha",
+    "country": "Nigeria",
     "lat": 6.1667,
     "lng": 6.7833
   },
   {
     "name": "Oran",
+    "country": "Algeria",
     "lat": 35.6969,
     "lng": -0.6331
   },
   {
     "name": "Orlando",
+    "country": "United States",
     "lat": 28.4773,
     "lng": -81.337
   },
   {
     "name": "Orūmīyeh",
+    "country": "Iran",
     "lat": 37.5439,
     "lng": 45.0647
   },
   {
     "name": "Ōsaka",
+    "country": "Japan",
     "lat": 34.6939,
     "lng": 135.5022
   },
   {
     "name": "Osmangazi",
+    "country": "Turkey",
     "lat": 40.1983,
     "lng": 29.06
   },
   {
     "name": "Osogbo",
+    "country": "Nigeria",
     "lat": 7.7667,
     "lng": 4.5667
   },
   {
     "name": "Ōta-ku",
+    "country": "Japan",
     "lat": 35.5614,
     "lng": 139.7161
   },
   {
     "name": "Ottawa",
+    "country": "Canada",
     "lat": 45.4247,
     "lng": -75.695
   },
   {
     "name": "Ouagadougou",
+    "country": "Burkina Faso",
     "lat": 12.3686,
     "lng": -1.5275
   },
   {
     "name": "Owerri",
+    "country": "Nigeria",
     "lat": 5.485,
     "lng": 7.035
   },
   {
     "name": "Palembang",
+    "country": "Indonesia",
     "lat": -2.9861,
     "lng": 104.7556
   },
   {
     "name": "Palermo",
+    "country": "Colombia",
     "lat": 2.8917,
     "lng": -75.4375
   },
   {
     "name": "Panama City",
+    "country": "Panama",
     "lat": 8.9711,
     "lng": -79.5347
   },
   {
     "name": "Pānīpat",
+    "country": "India",
     "lat": 29.3875,
     "lng": 76.97
   },
   {
     "name": "Paris",
+    "country": "France",
     "lat": 48.8567,
     "lng": 2.3522
   },
   {
     "name": "Pasig City",
+    "country": "Philippines",
     "lat": 14.5605,
     "lng": 121.0765
   },
   {
     "name": "Patiāla",
+    "country": "India",
     "lat": 30.34,
     "lng": 76.38
   },
   {
     "name": "Patna",
+    "country": "India",
     "lat": 25.594,
     "lng": 85.1376
   },
   {
     "name": "Pekanbaru",
+    "country": "Indonesia",
     "lat": 0.5092,
     "lng": 101.4453
   },
   {
     "name": "Pendik",
+    "country": "Turkey",
     "lat": 40.8747,
     "lng": 29.235
   },
   {
     "name": "Perm",
+    "country": "Russia",
     "lat": 58,
     "lng": 56.3167
   },
   {
     "name": "Perth",
+    "country": "Australia",
     "lat": -31.9558,
     "lng": 115.8597
   },
   {
     "name": "Peshawar",
+    "country": "Pakistan",
     "lat": 34.0144,
     "lng": 71.5675
   },
   {
     "name": "Peyanvilai",
+    "country": "India",
     "lat": 8.9,
     "lng": 77.9833
   },
   {
     "name": "Philadelphia",
+    "country": "United States",
     "lat": 40.0077,
     "lng": -75.1339
   },
   {
     "name": "Phnom Penh",
+    "country": "Cambodia",
     "lat": 11.5696,
     "lng": 104.921
   },
   {
     "name": "Phoenix",
+    "country": "United States",
     "lat": 33.5722,
     "lng": -112.0892
   },
   {
     "name": "Pietermaritzburg",
+    "country": "South Africa",
     "lat": -29.6167,
     "lng": 30.3833
   },
   {
     "name": "Pikine",
+    "country": "Senegal",
     "lat": 14.744,
     "lng": -17.4021
   },
   {
     "name": "Pimpri-Chinchwad",
+    "country": "India",
     "lat": 18.6186,
     "lng": 73.8037
   },
   {
     "name": "Pingdingshan",
+    "country": "China",
     "lat": 33.7666,
     "lng": 113.1926
   },
   {
     "name": "Pingdu",
+    "country": "China",
     "lat": 36.7769,
     "lng": 119.9884
   },
   {
     "name": "Pingliang",
+    "country": "China",
     "lat": 35.5424,
     "lng": 106.6649
   },
   {
     "name": "Pingxiang",
+    "country": "China",
     "lat": 27.659,
     "lng": 113.887
   },
   {
     "name": "Pittsburgh",
+    "country": "United States",
     "lat": 40.4397,
     "lng": -79.9763
   },
   {
     "name": "Pizhou",
+    "country": "China",
     "lat": 34.398,
     "lng": 117.89
   },
   {
     "name": "Pointe-Noire",
+    "country": "Congo (Brazzaville)",
     "lat": -4.7975,
     "lng": 11.8503
   },
   {
     "name": "Port Harcourt",
+    "country": "Nigeria",
     "lat": 4.8242,
     "lng": 7.0336
   },
   {
     "name": "Port-au-Prince",
+    "country": "Haiti",
     "lat": 18.5425,
     "lng": -72.3386
   },
   {
     "name": "Portland",
+    "country": "United States",
     "lat": 45.5371,
     "lng": -122.65
   },
   {
     "name": "Porto Alegre",
+    "country": "Brazil",
     "lat": -30.0328,
     "lng": -51.23
   },
   {
     "name": "Portsmouth",
+    "country": "United Kingdom",
     "lat": 50.8058,
     "lng": -1.0872
   },
   {
     "name": "Prague",
+    "country": "Czechia",
     "lat": 50.0875,
     "lng": 14.4214
   },
   {
     "name": "Prayagraj",
+    "country": "India",
     "lat": 25.4358,
     "lng": 81.8464
   },
   {
     "name": "Pretoria",
+    "country": "South Africa",
     "lat": -25.7461,
     "lng": 28.1881
   },
   {
     "name": "Providence",
+    "country": "United States",
     "lat": 41.823,
     "lng": -71.4187
   },
   {
     "name": "Pudong",
+    "country": "China",
     "lat": 31.2347,
     "lng": 121.5064
   },
   {
     "name": "Puebla",
+    "country": "Mexico",
     "lat": 19.0333,
     "lng": -98.1833
   },
   {
     "name": "Pune",
+    "country": "India",
     "lat": 18.5203,
     "lng": 73.8567
   },
   {
     "name": "Puning",
+    "country": "China",
     "lat": 23.298,
     "lng": 116.166
   },
   {
     "name": "Putian",
+    "country": "China",
     "lat": 25.4526,
     "lng": 119.0078
   },
   {
     "name": "Puxi",
+    "country": "China",
     "lat": 35.2125,
     "lng": 114.735
   },
   {
     "name": "Puyang",
+    "country": "China",
     "lat": 35.7627,
     "lng": 115.0292
   },
   {
     "name": "Pyongyang",
+    "country": "Korea, North",
     "lat": 39.0167,
     "lng": 125.7475
   },
   {
     "name": "Qamdo",
+    "country": "China",
     "lat": 31.143,
     "lng": 97.17
   },
   {
     "name": "Qian’an",
+    "country": "China",
     "lat": 39.999,
     "lng": 118.701
   },
   {
     "name": "Qianxi",
+    "country": "China",
     "lat": 27.0087,
     "lng": 106.0323
   },
   {
     "name": "Qinbaling",
+    "country": "China",
     "lat": 35.7091,
     "lng": 107.6436
   },
   {
     "name": "Qincheng",
+    "country": "China",
     "lat": 34.5815,
     "lng": 105.7248
   },
   {
     "name": "Qingdao",
+    "country": "China",
     "lat": 36.0669,
     "lng": 120.3827
   },
   {
     "name": "Qingnian",
+    "country": "China",
     "lat": 36.8494,
     "lng": 115.7061
   },
   {
     "name": "Qingping",
+    "country": "China",
     "lat": 34.539,
     "lng": 113.391
   },
   {
     "name": "Qingyang",
+    "country": "China",
     "lat": 24.7816,
     "lng": 118.5517
   },
   {
     "name": "Qingyuan",
+    "country": "China",
     "lat": 23.682,
     "lng": 113.056
   },
   {
     "name": "Qingzhou",
+    "country": "China",
     "lat": 36.6853,
     "lng": 118.4796
   },
   {
     "name": "Qinhuangdao",
+    "country": "China",
     "lat": 39.8882,
     "lng": 119.5202
   },
   {
     "name": "Qinzhou",
+    "country": "China",
     "lat": 21.981,
     "lng": 108.654
   },
   {
     "name": "Qiqihar",
+    "country": "China",
     "lat": 47.3549,
     "lng": 123.9182
   },
   {
     "name": "Qom",
+    "country": "Iran",
     "lat": 34.64,
     "lng": 50.8764
   },
   {
     "name": "Quanzhou",
+    "country": "China",
     "lat": 24.8744,
     "lng": 118.6757
   },
   {
     "name": "Quebec City",
+    "country": "Canada",
     "lat": 46.8139,
     "lng": -71.2081
   },
   {
     "name": "Queens",
+    "country": "United States",
     "lat": 40.7498,
     "lng": -73.7976
   },
   {
     "name": "Querétaro",
+    "country": "Mexico",
     "lat": 20.5875,
     "lng": -100.3928
   },
   {
     "name": "Quetta",
+    "country": "Pakistan",
     "lat": 30.1833,
     "lng": 67
   },
   {
     "name": "Quezon City",
+    "country": "Philippines",
     "lat": 14.65,
     "lng": 121.0475
   },
   {
     "name": "Quito",
+    "country": "Ecuador",
     "lat": -0.22,
     "lng": -78.5125
   },
   {
     "name": "Qujing",
+    "country": "China",
     "lat": 25.491,
     "lng": 103.796
   },
   {
     "name": "Quzhou",
+    "country": "China",
     "lat": 28.9702,
     "lng": 118.8593
   },
   {
     "name": "Raipur",
+    "country": "India",
     "lat": 21.2444,
     "lng": 81.6306
   },
   {
     "name": "Rājkot",
+    "country": "India",
     "lat": 22.3,
     "lng": 70.7833
   },
   {
     "name": "Raleigh",
+    "country": "United States",
     "lat": 35.8324,
     "lng": -78.6429
   },
   {
     "name": "Rānchi",
+    "country": "India",
     "lat": 23.36,
     "lng": 85.33
   },
   {
     "name": "Rangapukur",
+    "country": "Bangladesh",
     "lat": 25.5206,
     "lng": 89.2147
   },
   {
     "name": "Rangoon",
+    "country": "Burma",
     "lat": 16.795,
     "lng": 96.16
   },
   {
     "name": "Rawalpindi",
+    "country": "Pakistan",
     "lat": 33.6,
     "lng": 73.0333
   },
   {
     "name": "Recife",
+    "country": "Brazil",
     "lat": -8.0539,
     "lng": -34.8808
   },
   {
     "name": "Renqiu",
+    "country": "China",
     "lat": 38.686,
     "lng": 116.084
   },
   {
     "name": "Richmond",
+    "country": "United States",
     "lat": 37.5295,
     "lng": -77.4756
   },
   {
     "name": "Rio de Janeiro",
+    "country": "Brazil",
     "lat": -22.9111,
     "lng": -43.2056
   },
   {
     "name": "Riverside",
+    "country": "United States",
     "lat": 33.9381,
     "lng": -117.3949
   },
   {
     "name": "Riyadh",
+    "country": "Saudi Arabia",
     "lat": 24.65,
     "lng": 46.71
   },
   {
     "name": "Rizhao",
+    "country": "China",
     "lat": 35.417,
     "lng": 119.527
   },
   {
     "name": "Rome",
+    "country": "Italy",
     "lat": 41.8931,
     "lng": 12.4828
   },
   {
     "name": "Rongcheng",
+    "country": "China",
     "lat": 26.218,
     "lng": 104.103
   },
   {
     "name": "Rongjiawan",
+    "country": "China",
     "lat": 29.15,
     "lng": 113.1024
   },
   {
     "name": "Rosario",
+    "country": "Argentina",
     "lat": -32.9575,
     "lng": -60.6394
   },
   {
     "name": "Rostov",
+    "country": "Russia",
     "lat": 47.2225,
     "lng": 39.71
   },
   {
     "name": "Rucheng",
+    "country": "China",
     "lat": 32.246,
     "lng": 120.591
   },
   {
     "name": "Rui’an",
+    "country": "China",
     "lat": 27.7833,
     "lng": 120.625
   },
   {
     "name": "Sacramento",
+    "country": "United States",
     "lat": 38.5677,
     "lng": -121.4685
   },
   {
     "name": "Saint Petersburg",
+    "country": "Russia",
     "lat": 59.9375,
     "lng": 30.3086
   },
   {
     "name": "Saitama",
+    "country": "Japan",
     "lat": 35.8614,
     "lng": 139.6456
   },
   {
     "name": "Sakai",
+    "country": "Japan",
     "lat": 34.5733,
     "lng": 135.4831
   },
   {
     "name": "Sale",
+    "country": "Morocco",
     "lat": 34.0333,
     "lng": -6.8
   },
   {
     "name": "Salt Lake City",
+    "country": "United States",
     "lat": 40.7776,
     "lng": -111.9311
   },
   {
     "name": "Saltillo",
+    "country": "Mexico",
     "lat": 25.4231,
     "lng": -100.9919
   },
   {
     "name": "Salvador",
+    "country": "Brazil",
     "lat": -12.9831,
     "lng": -38.4928
   },
   {
     "name": "Samara",
+    "country": "Russia",
     "lat": 53.2028,
     "lng": 50.1408
   },
   {
     "name": "Samarinda",
+    "country": "Indonesia",
     "lat": -0.5,
     "lng": 117.1378
   },
   {
     "name": "Samsun",
+    "country": "Turkey",
     "lat": 41.2903,
     "lng": 36.3336
   },
   {
     "name": "San Antonio",
+    "country": "United States",
     "lat": 29.4632,
     "lng": -98.5238
   },
   {
     "name": "San Diego",
+    "country": "United States",
     "lat": 32.8313,
     "lng": -117.1222
   },
   {
     "name": "San Francisco",
+    "country": "United States",
     "lat": 37.7558,
     "lng": -122.4449
   },
   {
     "name": "San Jose",
+    "country": "United States",
     "lat": 37.3012,
     "lng": -121.848
   },
   {
     "name": "San José",
+    "country": "Costa Rica",
     "lat": 9.9325,
     "lng": -84.08
   },
   {
     "name": "San Juan",
+    "country": "Puerto Rico",
     "lat": 18.3985,
     "lng": -66.061
   },
   {
     "name": "San Luis Potosí",
+    "country": "Mexico",
     "lat": 22.1511,
     "lng": -100.9761
   },
   {
     "name": "San Salvador",
+    "country": "El Salvador",
     "lat": 13.6989,
     "lng": -89.1914
   },
   {
     "name": "Sanaa",
+    "country": "Yemen",
     "lat": 15.3483,
     "lng": 44.2064
   },
   {
     "name": "Sangereng",
+    "country": "Indonesia",
     "lat": -6.2889,
     "lng": 106.7181
   },
   {
     "name": "Sanhe",
+    "country": "China",
     "lat": 40.0167,
     "lng": 117.0833
   },
   {
     "name": "Sanmenxia",
+    "country": "China",
     "lat": 34.7732,
     "lng": 111.2004
   },
   {
     "name": "Sanming",
+    "country": "China",
     "lat": 26.2634,
     "lng": 117.6389
   },
   {
     "name": "Santa Cruz de la Sierra",
+    "country": "Bolivia",
     "lat": -17.7892,
     "lng": -63.1975
   },
   {
     "name": "Santiago",
+    "country": "Chile",
     "lat": -33.4372,
     "lng": -70.6506
   },
   {
     "name": "Santiago",
+    "country": "Dominican Republic",
     "lat": 19.4572,
     "lng": -70.6889
   },
   {
     "name": "Santiago del Estero",
+    "country": "Argentina",
     "lat": -27.7833,
     "lng": -64.2667
   },
   {
     "name": "Santo André",
+    "country": "Brazil",
     "lat": -23.6533,
     "lng": -46.528
   },
   {
     "name": "Santo Domingo",
+    "country": "Dominican Republic",
     "lat": 18.4764,
     "lng": -69.8933
   },
   {
     "name": "Santo Domingo Este",
+    "country": "Dominican Republic",
     "lat": 18.4855,
     "lng": -69.8734
   },
   {
     "name": "Sanya",
+    "country": "China",
     "lat": 18.2533,
     "lng": 109.5036
   },
   {
     "name": "Sanzhou",
+    "country": "China",
     "lat": 30.82,
     "lng": 108.4
   },
   {
     "name": "São Bernardo do Campo",
+    "country": "Brazil",
     "lat": -23.6939,
     "lng": -46.565
   },
   {
     "name": "São Gonçalo",
+    "country": "Brazil",
     "lat": -22.8269,
     "lng": -43.0539
   },
   {
     "name": "São Luís",
+    "country": "Brazil",
     "lat": -2.53,
     "lng": -44.3028
   },
   {
     "name": "São Paulo",
+    "country": "Brazil",
     "lat": -23.5504,
     "lng": -46.6339
   },
   {
     "name": "Sapporo",
+    "country": "Japan",
     "lat": 43.0619,
     "lng": 141.3544
   },
   {
     "name": "Saratov",
+    "country": "Russia",
     "lat": 51.53,
     "lng": 46.035
   },
   {
     "name": "Seattle",
+    "country": "United States",
     "lat": 47.6211,
     "lng": -122.3244
   },
   {
     "name": "Seberang Jaya",
+    "country": "Malaysia",
     "lat": 5.3909,
     "lng": 100.4104
   },
   {
     "name": "Semarang",
+    "country": "Indonesia",
     "lat": -6.99,
     "lng": 110.4225
   },
   {
     "name": "Sendai",
+    "country": "Japan",
     "lat": 38.2682,
     "lng": 140.8694
   },
   {
     "name": "Seoul",
+    "country": "Korea, South",
     "lat": 37.5667,
     "lng": 126.9833
   },
   {
     "name": "Setagaya",
+    "country": "Japan",
     "lat": 35.6466,
     "lng": 139.6532
   },
   {
     "name": "Sevilla",
+    "country": "Spain",
     "lat": 37.39,
     "lng": -5.99
   },
   {
     "name": "Seyhan",
+    "country": "Turkey",
     "lat": 36.9831,
     "lng": 35.3328
   },
   {
     "name": "Shache",
+    "country": "China",
     "lat": 38.4261,
     "lng": 77.25
   },
   {
     "name": "Shagamu",
+    "country": "Nigeria",
     "lat": 6.8333,
     "lng": 3.65
   },
   {
     "name": "Shanghai",
+    "country": "China",
     "lat": 31.2286,
     "lng": 121.4747
   },
   {
     "name": "Shangqiu",
+    "country": "China",
     "lat": 34.415,
     "lng": 115.656
   },
   {
     "name": "Shangrao",
+    "country": "China",
     "lat": 28.4551,
     "lng": 117.9431
   },
   {
     "name": "Shangzhou",
+    "country": "China",
     "lat": 33.8734,
     "lng": 109.9186
   },
   {
     "name": "Shantou",
+    "country": "China",
     "lat": 23.354,
     "lng": 116.682
   },
   {
     "name": "Shanwei",
+    "country": "China",
     "lat": 22.7872,
     "lng": 115.3756
   },
   {
     "name": "Shaoguan",
+    "country": "China",
     "lat": 24.811,
     "lng": 113.597
   },
   {
     "name": "Shaoxing",
+    "country": "China",
     "lat": 30.0511,
     "lng": 120.5833
   },
   {
     "name": "Shaoyang",
+    "country": "China",
     "lat": 27.2395,
     "lng": 111.4679
   },
   {
     "name": "Sharjah",
+    "country": "United Arab Emirates",
     "lat": 25.3575,
     "lng": 55.3908
   },
   {
     "name": "Shengli",
+    "country": "China",
     "lat": 37.434,
     "lng": 118.6746
   },
   {
     "name": "Shenyang",
+    "country": "China",
     "lat": 41.8025,
     "lng": 123.4281
   },
   {
     "name": "Shenzhen",
+    "country": "China",
     "lat": 22.5415,
     "lng": 114.0596
   },
   {
     "name": "Shijiazhuang",
+    "country": "China",
     "lat": 38.0425,
     "lng": 114.51
   },
   {
     "name": "Shīrāz",
+    "country": "Iran",
     "lat": 29.61,
     "lng": 52.5425
   },
   {
     "name": "Shīshgarh",
+    "country": "India",
     "lat": 28.72,
     "lng": 79.32
   },
   {
     "name": "Shiyan",
+    "country": "China",
     "lat": 32.629,
     "lng": 110.7987
   },
   {
     "name": "Shouguang",
+    "country": "China",
     "lat": 36.857,
     "lng": 118.791
   },
   {
     "name": "Shuangqiao",
+    "country": "China",
     "lat": 35.067,
     "lng": 112.602
   },
   {
     "name": "Shuangyashan",
+    "country": "China",
     "lat": 46.6762,
     "lng": 131.1416
   },
   {
     "name": "Shubrā al Khaymah",
+    "country": "Egypt",
     "lat": 30.1286,
     "lng": 31.2422
   },
   {
     "name": "Shuizhai",
+    "country": "China",
     "lat": 33.4658,
     "lng": 114.8753
   },
   {
     "name": "Shuozhou",
+    "country": "China",
     "lat": 39.3317,
     "lng": 112.4329
   },
   {
     "name": "Shuyangzha",
+    "country": "China",
     "lat": 34.1299,
     "lng": 118.7734
   },
   {
     "name": "Shymkent",
+    "country": "Kazakhstan",
     "lat": 42.3167,
     "lng": 69.5958
   },
   {
     "name": "Singapore",
+    "country": "Singapore",
     "lat": 1.3,
     "lng": 103.8
   },
   {
     "name": "Siping",
+    "country": "China",
     "lat": 43.1668,
     "lng": 124.3506
   },
   {
     "name": "Sizhan",
+    "country": "China",
     "lat": 38.9846,
     "lng": 106.3828
   },
   {
     "name": "Sofia",
+    "country": "Bulgaria",
     "lat": 42.6979,
     "lng": 23.3217
   },
   {
     "name": "Solāpur",
+    "country": "India",
     "lat": 17.68,
     "lng": 75.92
   },
   {
     "name": "Songjiang",
+    "country": "China",
     "lat": 31.0058,
     "lng": 121.2333
   },
   {
     "name": "Sŏngnam",
+    "country": "Korea, South",
     "lat": 37.4333,
     "lng": 127.15
   },
   {
     "name": "Songyang",
+    "country": "China",
     "lat": 34.4553,
     "lng": 113.0253
   },
   {
     "name": "Southampton",
+    "country": "United Kingdom",
     "lat": 50.9025,
     "lng": -1.4042
   },
   {
     "name": "Soweto",
+    "country": "South Africa",
     "lat": -26.2678,
     "lng": 27.8585
   },
   {
     "name": "Srīnagar",
+    "country": "India",
     "lat": 34.09,
     "lng": 74.79
   },
   {
     "name": "St. Louis",
+    "country": "United States",
     "lat": 38.6359,
     "lng": -90.2451
   },
   {
     "name": "Stockholm",
+    "country": "Sweden",
     "lat": 59.3275,
     "lng": 18.0547
   },
   {
     "name": "Stuttgart",
+    "country": "Germany",
     "lat": 48.7775,
     "lng": 9.18
   },
   {
     "name": "Suihua",
+    "country": "China",
     "lat": 46.654,
     "lng": 126.969
   },
   {
     "name": "Suining",
+    "country": "China",
     "lat": 30.533,
     "lng": 105.593
   },
   {
     "name": "Sumedang",
+    "country": "Indonesia",
     "lat": -6.84,
     "lng": 107.9208
   },
   {
     "name": "Suohe",
+    "country": "China",
     "lat": 34.7833,
     "lng": 113.35
   },
   {
     "name": "Supaul",
+    "country": "India",
     "lat": 26.126,
     "lng": 86.605
   },
   {
     "name": "Suqian",
+    "country": "China",
     "lat": 33.963,
     "lng": 118.275
   },
   {
     "name": "Surabaya",
+    "country": "Indonesia",
     "lat": -7.2458,
     "lng": 112.7378
   },
   {
     "name": "Sūrat",
+    "country": "India",
     "lat": 21.205,
     "lng": 72.84
   },
   {
     "name": "Suwon",
+    "country": "Korea, South",
     "lat": 37.2667,
     "lng": 127.0167
   },
   {
     "name": "Suzhou",
+    "country": "China",
     "lat": 33.648,
     "lng": 116.964
   },
   {
     "name": "Sydney",
+    "country": "Australia",
     "lat": -33.8667,
     "lng": 151.2
   },
   {
     "name": "Tabrīz",
+    "country": "Iran",
     "lat": 38.0817,
     "lng": 46.2992
   },
   {
     "name": "Tabūk",
+    "country": "Saudi Arabia",
     "lat": 28.3972,
     "lng": 36.5789
   },
   {
     "name": "Taguig City",
+    "country": "Philippines",
     "lat": 14.52,
     "lng": 121.05
   },
   {
     "name": "Tai’an",
+    "country": "China",
     "lat": 36.202,
     "lng": 117.087
   },
   {
     "name": "Taichung",
+    "country": "Taiwan",
     "lat": 24.1439,
     "lng": 120.6794
   },
   {
     "name": "Taihe",
+    "country": "China",
     "lat": 30.871,
     "lng": 105.388
   },
   {
     "name": "Tainan",
+    "country": "Taiwan",
     "lat": 22.9833,
     "lng": 120.1833
   },
   {
     "name": "Taipei",
+    "country": "Taiwan",
     "lat": 25.0375,
     "lng": 121.5625
   },
   {
     "name": "Taishan",
+    "country": "China",
     "lat": 22.252,
     "lng": 112.794
   },
   {
     "name": "Taixing",
+    "country": "China",
     "lat": 32.159,
     "lng": 120.029
   },
   {
     "name": "Taiyuan",
+    "country": "China",
     "lat": 37.8704,
     "lng": 112.5497
   },
   {
     "name": "Taizhou",
+    "country": "China",
     "lat": 32.4567,
     "lng": 119.9229
   },
   {
     "name": "Tamale",
+    "country": "Ghana",
     "lat": 9.4075,
     "lng": -0.8533
   },
   {
     "name": "Tampa",
+    "country": "United States",
     "lat": 27.9945,
     "lng": -82.4447
   },
   {
     "name": "Tangerang",
+    "country": "Indonesia",
     "lat": -6.1703,
     "lng": 106.6403
   },
   {
     "name": "Tangier",
+    "country": "Morocco",
     "lat": 35.7767,
     "lng": -5.8039
   },
   {
     "name": "Tangshan",
+    "country": "China",
     "lat": 39.6294,
     "lng": 118.1739
   },
   {
     "name": "Tashkent",
+    "country": "Uzbekistan",
     "lat": 41.3111,
     "lng": 69.2797
   },
   {
     "name": "Tbilisi",
+    "country": "Georgia",
     "lat": 41.7225,
     "lng": 44.7925
   },
   {
     "name": "Tegucigalpa",
+    "country": "Honduras",
     "lat": 14.1057,
     "lng": -87.204
   },
   {
     "name": "Tehran",
+    "country": "Iran",
     "lat": 35.6889,
     "lng": 51.3897
   },
   {
     "name": "Teresina",
+    "country": "Brazil",
     "lat": -5.0903,
     "lng": -42.8167
   },
   {
     "name": "Thāne",
+    "country": "India",
     "lat": 19.1972,
     "lng": 72.9722
   },
   {
     "name": "Thanh Hóa",
+    "country": "Vietnam",
     "lat": 19.8075,
     "lng": 105.7764
   },
   {
     "name": "Thessaloníki",
+    "country": "Greece",
     "lat": 40.6403,
     "lng": 22.9356
   },
   {
     "name": "Thiruvananthapuram",
+    "country": "India",
     "lat": 8.5241,
     "lng": 76.9366
   },
   {
     "name": "Thủ Đức",
+    "country": "Vietnam",
     "lat": 10.8266,
     "lng": 106.7609
   },
   {
     "name": "Tianjin",
+    "country": "China",
     "lat": 39.1336,
     "lng": 117.2054
   },
   {
     "name": "Tieling",
+    "country": "China",
     "lat": 42.2237,
     "lng": 123.726
   },
   {
     "name": "Tijuana",
+    "country": "Mexico",
     "lat": 32.525,
     "lng": -117.0333
   },
   {
     "name": "Tilburg",
+    "country": "Netherlands",
     "lat": 51.5572,
     "lng": 5.0911
   },
   {
     "name": "Tiruppūr",
+    "country": "India",
     "lat": 11.1085,
     "lng": 77.3411
   },
   {
     "name": "Tokyo",
+    "country": "Japan",
     "lat": 35.687,
     "lng": 139.7495
   },
   {
     "name": "Toluca",
+    "country": "Mexico",
     "lat": 19.2925,
     "lng": -99.6569
   },
   {
     "name": "Tongjin",
+    "country": "Korea, South",
     "lat": 37.2333,
     "lng": 127.2
   },
   {
     "name": "Tongliao",
+    "country": "China",
     "lat": 43.654,
     "lng": 122.243
   },
   {
     "name": "Tongling",
+    "country": "China",
     "lat": 30.9456,
     "lng": 117.8114
   },
   {
     "name": "Tongren",
+    "country": "China",
     "lat": 27.7316,
     "lng": 109.1895
   },
   {
     "name": "Tongshan",
+    "country": "China",
     "lat": 34.261,
     "lng": 117.1859
   },
   {
     "name": "Toronto",
+    "country": "Canada",
     "lat": 43.7417,
     "lng": -79.3733
   },
   {
     "name": "Trichinopoly",
+    "country": "India",
     "lat": 10.7903,
     "lng": 78.7047
   },
   {
     "name": "Tripoli",
+    "country": "Libya",
     "lat": 32.8872,
     "lng": 13.1914
   },
   {
     "name": "Trujillo",
+    "country": "Peru",
     "lat": -8.112,
     "lng": -79.0288
   },
   {
     "name": "Tshikapa",
+    "country": "Congo (Kinshasa)",
     "lat": -6.4167,
     "lng": 20.8
   },
   {
     "name": "Tucson",
+    "country": "United States",
     "lat": 32.1541,
     "lng": -110.8787
   },
   {
     "name": "Tulsa",
+    "country": "United States",
     "lat": 36.1283,
     "lng": -95.9042
   },
   {
     "name": "Turin",
+    "country": "Italy",
     "lat": 45.0792,
     "lng": 7.6761
   },
   {
     "name": "Tyumen",
+    "country": "Russia",
     "lat": 57.15,
     "lng": 65.5333
   },
   {
     "name": "Ubungo",
+    "country": "Tanzania",
     "lat": -6.7889,
     "lng": 39.2056
   },
   {
     "name": "Ufa",
+    "country": "Russia",
     "lat": 54.7261,
     "lng": 55.9475
   },
   {
     "name": "Ulaanbaatar",
+    "country": "Mongolia",
     "lat": 47.9214,
     "lng": 106.9055
   },
   {
     "name": "Ulsan",
+    "country": "Korea, South",
     "lat": 35.55,
     "lng": 129.3167
   },
   {
     "name": "Ürümqi",
+    "country": "China",
     "lat": 43.8225,
     "lng": 87.6125
   },
   {
     "name": "Uvira",
+    "country": "Congo (Kinshasa)",
     "lat": -3.4,
     "lng": 29.15
   },
   {
     "name": "Vadodara",
+    "country": "India",
     "lat": 22.3,
     "lng": 73.2
   },
   {
     "name": "Valencia",
+    "country": "Venezuela",
     "lat": 10.1833,
     "lng": -68
   },
   {
     "name": "Valencia",
+    "country": "Spain",
     "lat": 39.47,
     "lng": -0.3764
   },
   {
     "name": "Vancouver",
+    "country": "Canada",
     "lat": 49.25,
     "lng": -123.1
   },
   {
     "name": "Vārānasi",
+    "country": "India",
     "lat": 25.3189,
     "lng": 83.0128
   },
   {
     "name": "Vasai-Virar",
+    "country": "India",
     "lat": 19.47,
     "lng": 72.8
   },
   {
     "name": "Vienna",
+    "country": "Austria",
     "lat": 48.2083,
     "lng": 16.3725
   },
   {
     "name": "Vientiane",
+    "country": "Laos",
     "lat": 17.98,
     "lng": 102.63
   },
   {
     "name": "Vijayavāda",
+    "country": "India",
     "lat": 16.5193,
     "lng": 80.6305
   },
   {
     "name": "Vinh",
+    "country": "Vietnam",
     "lat": 18.6667,
     "lng": 105.6667
   },
   {
     "name": "Virginia Beach",
+    "country": "United States",
     "lat": 36.7335,
     "lng": -76.0435
   },
   {
     "name": "Vishākhapatnam",
+    "country": "India",
     "lat": 17.7042,
     "lng": 83.2978
   },
   {
     "name": "Volgograd",
+    "country": "Russia",
     "lat": 48.7086,
     "lng": 44.5147
   },
   {
     "name": "Voronezh",
+    "country": "Russia",
     "lat": 51.6717,
     "lng": 39.2106
   },
   {
     "name": "Wafangdian",
+    "country": "China",
     "lat": 39.6271,
     "lng": 121.9796
   },
   {
     "name": "Warsaw",
+    "country": "Poland",
     "lat": 52.23,
     "lng": 21.0111
   },
   {
     "name": "Washington",
+    "country": "United States",
     "lat": 38.9047,
     "lng": -77.0163
   },
   {
     "name": "Weichanglu",
+    "country": "China",
     "lat": 37.1792,
     "lng": 119.9333
   },
   {
     "name": "Weifang",
+    "country": "China",
     "lat": 36.708,
     "lng": 119.162
   },
   {
     "name": "Weihai",
+    "country": "China",
     "lat": 37.5133,
     "lng": 122.1205
   },
   {
     "name": "Weinan",
+    "country": "China",
     "lat": 34.5206,
     "lng": 109.471
   },
   {
     "name": "Wenling",
+    "country": "China",
     "lat": 28.3667,
     "lng": 121.3667
   },
   {
     "name": "Wenzhou",
+    "country": "China",
     "lat": 27.9938,
     "lng": 120.6993
   },
   {
     "name": "Winnipeg",
+    "country": "Canada",
     "lat": 49.8844,
     "lng": -97.1464
   },
   {
     "name": "Wu’an",
+    "country": "China",
     "lat": 36.697,
     "lng": 114.204
   },
   {
     "name": "Wuchang",
+    "country": "China",
     "lat": 44.924,
     "lng": 127.158
   },
   {
     "name": "Wuchuan",
+    "country": "China",
     "lat": 21.441,
     "lng": 110.779
   },
   {
     "name": "Wuhan",
+    "country": "China",
     "lat": 30.5934,
     "lng": 114.3046
   },
   {
     "name": "Wuhu",
+    "country": "China",
     "lat": 31.3526,
     "lng": 118.4331
   },
   {
     "name": "Wusong",
+    "country": "China",
     "lat": 30.945,
     "lng": 117.811
   },
   {
     "name": "Wutong",
+    "country": "China",
     "lat": 30.6333,
     "lng": 120.5333
   },
   {
     "name": "Wuwei",
+    "country": "China",
     "lat": 37.929,
     "lng": 102.638
   },
   {
     "name": "Wuxi",
+    "country": "China",
     "lat": 31.5667,
     "lng": 120.2833
   },
   {
     "name": "Wuzhong",
+    "country": "China",
     "lat": 37.9978,
     "lng": 106.1986
   },
   {
     "name": "Wuzhou",
+    "country": "China",
     "lat": 23.4767,
     "lng": 111.279
   },
   {
     "name": "Xi’an",
+    "country": "China",
     "lat": 34.2611,
     "lng": 108.9422
   },
   {
     "name": "Xiamen",
+    "country": "China",
     "lat": 24.4796,
     "lng": 118.0889
   },
   {
     "name": "Xiangtan",
+    "country": "China",
     "lat": 27.8313,
     "lng": 112.9454
   },
   {
     "name": "Xiangxiang",
+    "country": "China",
     "lat": 27.7186,
     "lng": 112.5502
   },
   {
     "name": "Xiangyang",
+    "country": "China",
     "lat": 32.01,
     "lng": 112.122
   },
   {
     "name": "Xiantao",
+    "country": "China",
     "lat": 30.328,
     "lng": 113.443
   },
   {
     "name": "Xianyang",
+    "country": "China",
     "lat": 34.3299,
     "lng": 108.7088
   },
   {
     "name": "Xiaoganzhan",
+    "country": "China",
     "lat": 30.918,
     "lng": 113.957
   },
   {
     "name": "Xiaoxita",
+    "country": "China",
     "lat": 30.692,
     "lng": 111.287
   },
   {
     "name": "Xiashi",
+    "country": "China",
     "lat": 30.5333,
     "lng": 120.6833
   },
   {
     "name": "Xibeijie",
+    "country": "China",
     "lat": 39.7334,
     "lng": 98.4943
   },
   {
     "name": "Ximeicun",
+    "country": "China",
     "lat": 24.9612,
     "lng": 118.3849
   },
   {
     "name": "Xin’an",
+    "country": "China",
     "lat": 34.286,
     "lng": 118.355
   },
   {
     "name": "Xingcheng",
+    "country": "China",
     "lat": 24.1347,
     "lng": 115.73
   },
   {
     "name": "Xingtai",
+    "country": "China",
     "lat": 37.0717,
     "lng": 114.5048
   },
   {
     "name": "Xingyi",
+    "country": "China",
     "lat": 25.092,
     "lng": 104.8955
   },
   {
     "name": "Xinhualu",
+    "country": "China",
     "lat": 34.3964,
     "lng": 113.7402
   },
   {
     "name": "Xining",
+    "country": "China",
     "lat": 36.6224,
     "lng": 101.7804
   },
   {
     "name": "Xinpu",
+    "country": "China",
     "lat": 34.5966,
     "lng": 119.2214
   },
   {
     "name": "Xintai",
+    "country": "China",
     "lat": 35.909,
     "lng": 117.768
   },
   {
     "name": "Xinyang",
+    "country": "China",
     "lat": 32.149,
     "lng": 114.091
   },
   {
     "name": "Xinyi",
+    "country": "China",
     "lat": 22.3549,
     "lng": 110.9468
   },
   {
     "name": "Xinyu",
+    "country": "China",
     "lat": 27.8186,
     "lng": 114.9167
   },
   {
     "name": "Xinzhou",
+    "country": "China",
     "lat": 38.416,
     "lng": 112.734
   },
   {
     "name": "Xishan",
+    "country": "China",
     "lat": 27.6461,
     "lng": 113.497
   },
   {
     "name": "Xuanzhou",
+    "country": "China",
     "lat": 30.939,
     "lng": 118.759
   },
   {
     "name": "Xushan",
+    "country": "China",
     "lat": 30.1667,
     "lng": 121.2333
   },
   {
     "name": "Yan’an",
+    "country": "China",
     "lat": 36.65,
     "lng": 109.494
   },
   {
     "name": "Yancheng",
+    "country": "China",
     "lat": 33.35,
     "lng": 120.1569
   },
   {
     "name": "Yangchun",
+    "country": "China",
     "lat": 22.1704,
     "lng": 111.7916
   },
   {
     "name": "Yanggok",
+    "country": "Korea, South",
     "lat": 37.6333,
     "lng": 127.2167
   },
   {
     "name": "Yangjiang",
+    "country": "China",
     "lat": 21.857,
     "lng": 111.983
   },
   {
     "name": "Yangquan",
+    "country": "China",
     "lat": 37.8571,
     "lng": 113.5804
   },
   {
     "name": "Yangshe",
+    "country": "China",
     "lat": 31.8767,
     "lng": 120.556
   },
   {
     "name": "Yangzhou",
+    "country": "China",
     "lat": 32.3944,
     "lng": 119.4128
   },
   {
     "name": "Yanjiang",
+    "country": "China",
     "lat": 30.129,
     "lng": 104.627
   },
   {
     "name": "Yantai",
+    "country": "China",
     "lat": 37.4646,
     "lng": 121.4478
   },
   {
     "name": "Yaoundé",
+    "country": "Cameroon",
     "lat": 3.8667,
     "lng": 11.5167
   },
   {
     "name": "Yekaterinburg",
+    "country": "Russia",
     "lat": 56.8356,
     "lng": 60.6128
   },
   {
     "name": "Yerevan",
+    "country": "Armenia",
     "lat": 40.1814,
     "lng": 44.5144
   },
   {
     "name": "Yibin",
+    "country": "China",
     "lat": 28.752,
     "lng": 104.643
   },
   {
     "name": "Yicheng",
+    "country": "China",
     "lat": 31.36,
     "lng": 119.815
   },
   {
     "name": "Yichun",
+    "country": "China",
     "lat": 27.816,
     "lng": 114.417
   },
   {
     "name": "Yinchuan",
+    "country": "China",
     "lat": 38.485,
     "lng": 106.225
   },
   {
     "name": "Yingcheng",
+    "country": "China",
     "lat": 24.21,
     "lng": 113.401
   },
   {
     "name": "Yingchuan",
+    "country": "China",
     "lat": 34.142,
     "lng": 113.489
   },
   {
     "name": "Yingkou",
+    "country": "China",
     "lat": 40.625,
     "lng": 122.219
   },
   {
     "name": "Yingtan",
+    "country": "China",
     "lat": 28.2721,
     "lng": 117.0395
   },
   {
     "name": "Yiwu",
+    "country": "China",
     "lat": 29.3069,
     "lng": 120.0753
   },
   {
     "name": "Yiyang",
+    "country": "China",
     "lat": 28.5549,
     "lng": 112.356
   },
   {
     "name": "Yokohama",
+    "country": "Japan",
     "lat": 35.4442,
     "lng": 139.6381
   },
   {
     "name": "Yongcheng",
+    "country": "China",
     "lat": 33.9299,
     "lng": 116.45
   },
   {
     "name": "Yongzhou",
+    "country": "China",
     "lat": 26.42,
     "lng": 111.613
   },
   {
     "name": "Yopougon",
+    "country": "Côte d’Ivoire",
     "lat": 5.3748,
     "lng": -4.0867
   },
   {
     "name": "Yucheng",
+    "country": "China",
     "lat": 30.01,
     "lng": 103.0415
   },
   {
     "name": "Yuci",
+    "country": "China",
     "lat": 37.6823,
     "lng": 112.7281
   },
   {
     "name": "Yueyang",
+    "country": "China",
     "lat": 29.3647,
     "lng": 113.1309
   },
   {
     "name": "Yulin",
+    "country": "China",
     "lat": 22.654,
     "lng": 110.181
   },
   {
     "name": "Yulinshi",
+    "country": "China",
     "lat": 38.2858,
     "lng": 109.7341
   },
   {
     "name": "Yuncheng",
+    "country": "China",
     "lat": 35.0267,
     "lng": 111.007
   },
   {
     "name": "Yunfu",
+    "country": "China",
     "lat": 22.9152,
     "lng": 112.0445
   },
   {
     "name": "Yushan",
+    "country": "China",
     "lat": 31.322,
     "lng": 120.985
   },
   {
     "name": "Yushu",
+    "country": "China",
     "lat": 44.826,
     "lng": 126.55
   },
   {
     "name": "Yutan",
+    "country": "China",
     "lat": 28.278,
     "lng": 112.552
   },
   {
     "name": "Yuxi",
+    "country": "China",
     "lat": 24.347,
     "lng": 102.527
   },
   {
     "name": "Yuyao",
+    "country": "China",
     "lat": 30.05,
     "lng": 121.15
   },
   {
     "name": "Zagreb",
+    "country": "Croatia",
     "lat": 45.8131,
     "lng": 15.9772
   },
   {
     "name": "Zamboanga City",
+    "country": "Philippines",
     "lat": 6.9042,
     "lng": 122.0761
   },
   {
     "name": "Zaoyang",
+    "country": "China",
     "lat": 32.129,
     "lng": 112.772
   },
   {
     "name": "Zaozhuang",
+    "country": "China",
     "lat": 34.8109,
     "lng": 117.3238
   },
   {
     "name": "Zapopan",
+    "country": "Mexico",
     "lat": 20.7167,
     "lng": -103.4
   },
   {
     "name": "Zhangjiajie",
+    "country": "China",
     "lat": 29.117,
     "lng": 110.479
   },
   {
     "name": "Zhangjiakou",
+    "country": "China",
     "lat": 40.769,
     "lng": 114.886
   },
   {
     "name": "Zhangye",
+    "country": "China",
     "lat": 38.9248,
     "lng": 100.4499
   },
   {
     "name": "Zhangzhou",
+    "country": "China",
     "lat": 24.513,
     "lng": 117.647
   },
   {
     "name": "Zhanjiang",
+    "country": "China",
     "lat": 21.2701,
     "lng": 110.3575
   },
   {
     "name": "Zhaoqing",
+    "country": "China",
     "lat": 23.05,
     "lng": 112.4667
   },
   {
     "name": "Zhaotong",
+    "country": "China",
     "lat": 27.338,
     "lng": 103.717
   },
   {
     "name": "Zhengzhou",
+    "country": "China",
     "lat": 34.764,
     "lng": 113.684
   },
   {
     "name": "Zhenjiang",
+    "country": "China",
     "lat": 32.188,
     "lng": 119.424
   },
   {
     "name": "Zhongba",
+    "country": "China",
     "lat": 31.771,
     "lng": 104.755
   },
   {
     "name": "Zhongshan",
+    "country": "China",
     "lat": 22.517,
     "lng": 113.3925
   },
   {
     "name": "Zhongwei",
+    "country": "China",
     "lat": 37.5002,
     "lng": 105.1968
   },
   {
     "name": "Zhongxiang",
+    "country": "China",
     "lat": 31.168,
     "lng": 112.588
   },
   {
     "name": "Zhoukou",
+    "country": "China",
     "lat": 33.6367,
     "lng": 114.7014
   },
   {
     "name": "Zhoushan",
+    "country": "China",
     "lat": 29.9856,
     "lng": 122.2074
   },
   {
     "name": "Zhuanghe",
+    "country": "China",
     "lat": 39.681,
     "lng": 122.967
   },
   {
     "name": "Zhufeng",
+    "country": "China",
     "lat": 36,
     "lng": 119.4167
   },
   {
     "name": "Zhuhai",
+    "country": "China",
     "lat": 22.2742,
     "lng": 113.5719
   },
   {
     "name": "Zhuji",
+    "country": "China",
     "lat": 29.7167,
     "lng": 120.2333
   },
   {
     "name": "Zhumadian",
+    "country": "China",
     "lat": 33.014,
     "lng": 114.022
   },
   {
     "name": "Zhuzhou",
+    "country": "China",
     "lat": 27.829,
     "lng": 113.133
   },
   {
     "name": "Zibo",
+    "country": "China",
     "lat": 36.8138,
     "lng": 118.055
   },
   {
     "name": "Zigong",
+    "country": "China",
     "lat": 29.339,
     "lng": 104.779
   },
   {
     "name": "Zijinglu",
+    "country": "China",
     "lat": 34.7667,
     "lng": 112.9667
   },
   {
     "name": "Zouping",
+    "country": "China",
     "lat": 36.863,
     "lng": 117.743
   },
   {
     "name": "Zunyi",
+    "country": "China",
     "lat": 27.722,
     "lng": 107.031
   }

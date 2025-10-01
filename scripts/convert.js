@@ -11,6 +11,7 @@ fs.createReadStream(__dirname + "/worldcities.csv")
 
       const cityObj = {
         name: row.city,
+        country: row.country, // ✅ preserve country
         lat: parseFloat(row.lat),
         lng: parseFloat(row.lng),
         population: parseInt(row.population, 10),
@@ -40,9 +41,10 @@ fs.createReadStream(__dirname + "/worldcities.csv")
     // Step 3: sort alphabetically
     topCities.sort((a, b) => a.name.localeCompare(b.name));
 
-    // Step 4: final output without population
-    const finalOutput = topCities.map(({ name, lat, lng }) => ({
+    // Step 4: final output WITHOUT population (but WITH country)
+    const finalOutput = topCities.map(({ name, country, lat, lng }) => ({
       name,
+      country, // ✅ keep country
       lat,
       lng,
     }));
@@ -56,6 +58,6 @@ fs.createReadStream(__dirname + "/worldcities.csv")
     console.log(
       "✅ Saved top_1000_cities.json with",
       finalOutput.length,
-      "unique cities (alphabetical order)"
+      "unique cities (alphabetical order, with country)"
     );
   });
