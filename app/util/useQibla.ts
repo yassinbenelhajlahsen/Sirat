@@ -52,9 +52,7 @@ export default function useQibla() {
           KAABA_LON
         );
         setQiblaAngle(bearing);
-      } catch (e: any) {
-        setError("Failed to get location: " + e.message);
-      }
+      } catch (e: any) {}
     })();
   }, []);
 
@@ -74,9 +72,7 @@ export default function useQibla() {
       try {
         const headingData = await Location.getHeadingAsync();
         setHeading(headingData.trueHeading ?? headingData.magHeading);
-      } catch (e) {
-        setError("Failed to get heading: " + (e as Error).message);
-      }
+      } catch (e) {}
     }, 150); // refresh rate, higher number for smoother, lower for accuracy
 
     return () => clearInterval(interval);
