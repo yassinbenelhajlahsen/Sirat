@@ -1,12 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   dateKeyFromDate,
   getHolidayMapForYear,
-} from "../services/holidayService";
+} from "../../services/holidayService";
 
 const getMonthMatrix = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1).getDay();
@@ -42,6 +49,9 @@ export default function CalendarScreen() {
   const [viewMonth, setViewMonth] = useState(initialMonth);
   const [holidayMap, setHolidayMap] = useState<Record<string, string>>({});
   const [loadingHolidays, setLoadingHolidays] = useState(false);
+  const [navigating, setNavigating] = useState(false);
+
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const isViewingToday =
     viewMonth === today.getMonth() && viewYear === today.getFullYear();
@@ -57,6 +67,7 @@ export default function CalendarScreen() {
       }),
     [viewYear, viewMonth]
   );
+
   // Load holidays for the visible year
   useEffect(() => {
     let mounted = true;
@@ -77,25 +88,84 @@ export default function CalendarScreen() {
     };
   }, [viewYear]);
 
+  // Month fade animation
+  const animateMonthChange = (newYear: number, newMonth: number) => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setViewYear(newYear);
+      setViewMonth(newMonth);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
   const goToPreviousMonth = () => {
     const prev = new Date(viewYear, viewMonth - 1);
     if (prev >= minDate) {
-      setViewYear(prev.getFullYear());
-      setViewMonth(prev.getMonth());
+      animateMonthChange(prev.getFullYear(), prev.getMonth());
     }
   };
 
   const goToNextMonth = () => {
     const next = new Date(viewYear, viewMonth + 1);
     if (next <= maxDate) {
-      setViewYear(next.getFullYear());
-      setViewMonth(next.getMonth());
+      animateMonthChange(next.getFullYear(), next.getMonth());
     }
+  };
+
+  // Animate fade-out before navigating to date details
+  const handleDatePress = (selectedDate: Date, holidayName?: string) => {
+    if (navigating) return; // prevent double-press
+    setNavigating(true);
+
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 140,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        // delay slightly to ensure animation finishes visually
+        setTimeout(() => {
+          router.push({
+            pathname: "/components/[date]",
+            params: {
+              date: selectedDate.toISOString(),
+              month: viewMonth.toString(),
+              year: viewYear.toString(),
+              holiday: holidayName || "",
+            },
+          });
+          // do NOT reset fadeAnim immediately; let new screen take over
+          setNavigating(false);
+        }, 50);
+      }
+    });
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
-      <View style={{ flex: 1, padding: 16, justifyContent: "flex-start" }}>
+      <Animated.View
+        style={{
+          flex: 1,
+          padding: 16,
+          opacity: fadeAnim,
+          transform: [
+            {
+              scale: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.98, 1],
+              }),
+            },
+          ],
+        }}
+      >
         {/* Header */}
         <Text
           style={{
@@ -154,7 +224,7 @@ export default function CalendarScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Grid */}
+        {/* Calendar Grid */}
         <View style={{ flex: 1, justifyContent: "flex-start" }}>
           {/* Day of week */}
           <View
@@ -204,10 +274,9 @@ export default function CalendarScreen() {
                       viewYear === today.getFullYear();
 
                     let holidayName: string | null = null;
-
                     if (day > 0) {
                       const dateObj = new Date(viewYear, viewMonth, day);
-                      const key = dateKeyFromDate(dateObj); // local-safe key
+                      const key = dateKeyFromDate(dateObj);
                       holidayName = holidayMap[key] ?? null;
                     }
 
@@ -223,17 +292,10 @@ export default function CalendarScreen() {
                               viewMonth,
                               day
                             );
-                            router.push({
-                              pathname: "/components/[date]",
-                              params: {
-                                date: selectedDate.toISOString(), // ok for navigation
-                                month: viewMonth.toString(),
-                                year: viewYear.toString(),
-                                holiday: holidayName || "", // optional
-                              },
-                            });
+                            handleDatePress(selectedDate, holidayName || "");
                           }
                         }}
+                        disabled={navigating}
                         style={{
                           width: 32,
                           height: 32,
@@ -274,10 +336,9 @@ export default function CalendarScreen() {
         {/* Back to Today */}
         {!isViewingToday && (
           <TouchableOpacity
-            onPress={() => {
-              setViewYear(today.getFullYear());
-              setViewMonth(today.getMonth());
-            }}
+            onPress={() =>
+              animateMonthChange(today.getFullYear(), today.getMonth())
+            }
             style={{
               marginTop: 24,
               alignSelf: "center",
@@ -298,7 +359,7 @@ export default function CalendarScreen() {
             </Text>
           </TouchableOpacity>
         )}
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

@@ -15,9 +15,9 @@ import {
   getPrayerTimesToday,
   PrayerSettings,
   PrayerTime,
-} from "../services/dailyPrayerTimes";
-import CITIES, { City, cityKey } from "../util/cities";
-import getTimeUntil from "../util/getTimeUntil";
+} from "../../services/dailyPrayerTimes";
+import CITIES, { City, cityKey } from "../../util/cities";
+import getTimeUntil from "../../util/getTimeUntil";
 
 function parseTimeToDate(timeStr: string): Date {
   const now = new Date();
@@ -226,54 +226,12 @@ export default function Home() {
           />
         </View>
 
-        {/* Active next prayer countdown */}
         {nextPrayer && (
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              marginTop: 20,
-              backgroundColor: "#1a5f0e",
-              borderRadius: 16,
-              paddingVertical: 16,
-              paddingHorizontal: 24,
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.3,
-              shadowRadius: 6,
-              elevation: 4,
-            }}
-          >
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 18,
-                fontFamily: "SFProDisplay-Semibold",
-                marginBottom: 6,
-              }}
-            >
-              Next Prayer
+          <View style={{ marginTop: 10, alignItems: "center" }}>
+            <Text style={{ color: "#DABA69", fontSize: 16 }}>
+              Next: {nextPrayer.label} in {timeLeft}
             </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 24,
-                fontFamily: "SFProDisplay-Bold",
-              }}
-            >
-              {nextPrayer.label}
-            </Text>
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                marginTop: 4,
-              }}
-            >
-              in {timeLeft}
-            </Text>
-          </Animated.View>
+          </View>
         )}
 
         {/* After Isha: clickable box matching holiday style */}

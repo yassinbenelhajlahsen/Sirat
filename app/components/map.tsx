@@ -1,22 +1,28 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Linking,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Callout, Marker, Region } from "react-native-maps";
+import MapView, {
+  Callout,
+  CalloutSubview,
+  Marker,
+  Region,
+} from "react-native-maps";
 import {
   getCachedMosques,
   getNearbyMosques,
   Mosque,
-} from "../services/getNearbyMosques";
+} from "../../services/getNearbyMosques";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -81,12 +87,21 @@ export default function MapScreen() {
   };
 
   const openDirections = async (lat: number, lng: number) => {
-    const url =
-      Platform.OS === "ios"
-        ? `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`
-        : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-    const supported = await Linking.canOpenURL(url);
-    if (supported) await Linking.openURL(url);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+
+    const nativeApple = `maps://?daddr=${lat},${lng}&dirflg=d`;
+    const webApple = `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
+
+    try {
+      if (await Linking.canOpenURL(nativeApple)) {
+        await Linking.openURL(nativeApple);
+        return;
+      }
+      await Linking.openURL(webApple);
+    } catch (err) {
+      console.warn("openDirections error:", err);
+      Alert.alert("Error", "Unable to open Apple Maps for directions");
+    }
   };
 
   if (loading && !location) {
@@ -130,13 +145,15 @@ export default function MapScreen() {
                 <View style={styles.callout}>
                   <Text style={styles.calloutTitle}>{mosque.name}</Text>
                   <Text style={styles.calloutAddress}>{mosque.address}</Text>
-                  <TouchableOpacity
-                    style={styles.directionButton}
+
+                  <CalloutSubview
                     onPress={() => openDirections(mosque.lat, mosque.lng)}
                   >
-                    <Ionicons name="navigate" size={14} color="#134b0a" />
-                    <Text style={styles.directionText}>Directions</Text>
-                  </TouchableOpacity>
+                    <View style={styles.directionButton}>
+                      <Ionicons name="navigate" size={14} color="#134b0a" />
+                      <Text style={styles.directionText}>Directions</Text>
+                    </View>
+                  </CalloutSubview>
                 </View>
               </Callout>
             </Marker>

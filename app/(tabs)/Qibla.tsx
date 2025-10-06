@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import useQibla from "../util/useQibla";
+import useQibla from "../../util/useQibla";
 
 function minimalTarget(from: number, to: number) {
   const delta = ((to - from + 540) % 360) - 180;
@@ -80,10 +80,6 @@ export default function Qibla() {
                 resizeMode="contain"
               />
             </View>
-
-            <Text style={styles.helper}>
-              Haptic click means you’re aligned.
-            </Text>
           </>
         )}
       </View>

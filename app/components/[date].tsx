@@ -1,20 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import PrayerTimesList from "../components/PrayerTimesList";
 import {
   dateKeyFromDate,
   getHolidayMapForYear,
-} from "../services/holidayService";
+} from "../../services/holidayService";
 import {
   getPrayerTimesForDate,
   PrayerSettings,
   PrayerTime,
-} from "../services/yearlyPrayerTimes";
-import getTimeUntil from "../util/getTimeUntil";
+} from "../../services/yearlyPrayerTimes";
+import getTimeUntil from "../../util/getTimeUntil";
+
+const screenWidth = Dimensions.get("window").width;
 
 export default function CalendarDetail() {
   const { date, month, year, holiday: holidayParam } = useLocalSearchParams();
@@ -31,29 +38,23 @@ export default function CalendarDetail() {
   const [timeLeft, setTimeLeft] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Parse incoming date and holiday
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     if (typeof date === "string") {
-      const decoded = new Date(decodeURIComponent(date));
-      setSelectedDate(decoded);
-    } else {
-      setSelectedDate(null);
+      setSelectedDate(new Date(decodeURIComponent(date)));
     }
-
     if (typeof holidayParam === "string" && holidayParam.trim() !== "") {
       setHoliday(holidayParam);
-    } else {
-      setHoliday(null);
     }
   }, [date, holidayParam]);
 
-  // Fallback: compute holiday for date if not passed
   useEffect(() => {
     let mounted = true;
     (async () => {
-      if (!selectedDate) return;
-      if (holidayParam && holidayParam.trim() !== "") return;
-
+      if (!selectedDate || (holidayParam && holidayParam.trim() !== "")) return;
       try {
         const map = await getHolidayMapForYear(selectedDate.getFullYear());
         const key = dateKeyFromDate(selectedDate);
@@ -71,37 +72,27 @@ export default function CalendarDetail() {
   const today = new Date();
   const isToday = selectedDate?.toDateString() === today.toDateString();
 
-  // Fetch prayer times
   useEffect(() => {
     if (!selectedDate) return;
     let mounted = true;
-
-    async function loadTimes() {
+    (async () => {
       setLoading(true);
       try {
         const settings: PrayerSettings = { useLocation: true, method: 2 };
-        try {
-          const times = await getPrayerTimesForDate(settings, selectedDate);
-          if (mounted) setPrayerTimes(times);
-        } catch (err: any) {
-          console.error("Prayer API error:", err.message);
-          Alert.alert("Something went wrong. Try again later.");
-        }
+        const times = await getPrayerTimesForDate(settings, selectedDate);
+        if (mounted) setPrayerTimes(times);
       } catch (err) {
         console.error("Error fetching prayer times:", err);
         if (mounted) setPrayerTimes([]);
       } finally {
         if (mounted) setLoading(false);
       }
-    }
-
-    loadTimes();
+    })();
     return () => {
       mounted = false;
     };
   }, [selectedDate]);
 
-  // Next prayer countdown (only for today)
   useEffect(() => {
     if (!isToday || prayerTimes.length === 0) return;
     const now = new Date();
@@ -141,7 +132,6 @@ export default function CalendarDetail() {
     year: "numeric",
   }).format(selectedDate);
 
-  // Navigation
   const minDate = new Date(today.getFullYear() - 1, 0);
   const maxDate = new Date(today.getFullYear() + 1, 11, 31);
   const prevDate = new Date(selectedDate);
@@ -151,16 +141,59 @@ export default function CalendarDetail() {
   const isPrevDisabled = prevDate < minDate;
   const isNextDisabled = nextDate > maxDate;
 
-  const changeDate = (daysOffset: number) => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() + daysOffset);
-    router.replace({
-      pathname: "/components/[date]",
-      params: {
-        date: newDate.toISOString(),
-        month: newDate.getMonth().toString(),
-        year: newDate.getFullYear().toString(),
-      },
+  // Transition when changing day
+  const animateDateChange = (
+    direction: "next" | "prev",
+    daysOffset: number
+  ) => {
+    const offset = direction === "next" ? -screenWidth : screenWidth;
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: offset,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      const newDate = new Date(selectedDate);
+      newDate.setDate(newDate.getDate() + daysOffset);
+      router.replace({
+        pathname: "/components/[date]",
+        params: {
+          date: newDate.toISOString(),
+          month: newDate.getMonth().toString(),
+          year: newDate.getFullYear().toString(),
+        },
+      });
+      fadeAnim.setValue(0);
+      slideAnim.setValue(direction === "next" ? screenWidth : -screenWidth);
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  };
+
+  // Smooth fade when going "Back to Calendar"
+  const animateBackToCalendar = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => {
+      router.replace(`/Calendar?month=${month}&year=${year}`);
     });
   };
 
@@ -169,43 +202,59 @@ export default function CalendarDetail() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
-      <View style={{ padding: 20 }}>
-        {/* Top Navigation Bar */}
-        <View
+      {/* Top Navigation Bar - stays fixed */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 20,
+          padding: 20,
+          paddingBottom: 0,
+        }}
+      >
+        <TouchableOpacity
+          onPress={animateBackToCalendar}
           style={{
             flexDirection: "row",
             alignItems: "center",
-            marginBottom: 20,
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            backgroundColor: "#1a5f0e",
+            borderRadius: 8,
           }}
         >
-          <TouchableOpacity
-            onPress={() =>
-              router.replace(`/Calendar?month=${month}&year=${year}`)
-            }
+          <Ionicons name="chevron-back" size={20} color="#DABA69" />
+          <Text
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingVertical: 6,
-              paddingHorizontal: 10,
-              backgroundColor: "#1a5f0e",
-              borderRadius: 8,
+              color: "#DABA69",
+              fontSize: 16,
+              fontFamily: "SFProDisplay-Semibold",
+              marginLeft: 4,
             }}
           >
-            <Ionicons name="chevron-back" size={20} color="#DABA69" />
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                marginLeft: 4,
-              }}
-            >
-              Calendar
-            </Text>
-          </TouchableOpacity>
-        </View>
+            Calendar
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* Prev / Date / Next row */}
+      {/* Animated Date Content */}
+      <Animated.View
+        style={{
+          flex: 1,
+          padding: 20,
+          opacity: fadeAnim,
+          transform: [
+            {
+              scale: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.98, 1],
+              }),
+            },
+            { translateX: slideAnim },
+          ],
+        }}
+      >
+        {/* Prev / Next Row */}
         <View
           style={{
             flexDirection: "row",
@@ -216,7 +265,7 @@ export default function CalendarDetail() {
         >
           {/* Prev */}
           <TouchableOpacity
-            onPress={() => !isPrevDisabled && changeDate(-1)}
+            onPress={() => !isPrevDisabled && animateDateChange("prev", -1)}
             disabled={isPrevDisabled}
             style={{
               width: 90,
@@ -225,24 +274,9 @@ export default function CalendarDetail() {
             }}
           >
             <Ionicons name="chevron-back" size={20} color="#DABA69" />
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 14,
-                fontFamily: "SFProDisplay-Semibold",
-              }}
-            >
-              Previous
-            </Text>
+            <Text style={{ color: "#DABA69", fontSize: 14 }}>Previous</Text>
             {!isPrevDisabled && (
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 12,
-                  marginTop: 2,
-                  fontFamily: "SFProDisplay-Regular",
-                }}
-              >
+              <Text style={{ color: "white", fontSize: 12, marginTop: 2 }}>
                 {formatShort(prevDate)}
               </Text>
             )}
@@ -250,21 +284,13 @@ export default function CalendarDetail() {
 
           {/* Date Info */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 22,
-                fontFamily: "SFProDisplay-Bold",
-                textAlign: "center",
-              }}
-            >
+            <Text style={{ color: "white", fontSize: 22, textAlign: "center" }}>
               {selectedDate.toDateString()}
             </Text>
             <Text
               style={{
                 color: "#DABA69",
                 fontSize: 15,
-                fontFamily: "SFProDisplay-Semibold",
                 marginTop: 4,
                 textAlign: "center",
               }}
@@ -275,7 +301,7 @@ export default function CalendarDetail() {
 
           {/* Next */}
           <TouchableOpacity
-            onPress={() => !isNextDisabled && changeDate(1)}
+            onPress={() => !isNextDisabled && animateDateChange("next", 1)}
             disabled={isNextDisabled}
             style={{
               width: 90,
@@ -284,31 +310,16 @@ export default function CalendarDetail() {
             }}
           >
             <Ionicons name="chevron-forward" size={20} color="#DABA69" />
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 14,
-                fontFamily: "SFProDisplay-Semibold",
-              }}
-            >
-              Next
-            </Text>
+            <Text style={{ color: "#DABA69", fontSize: 14 }}>Next</Text>
             {!isNextDisabled && (
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: 12,
-                  marginTop: 2,
-                  fontFamily: "SFProDisplay-Regular",
-                }}
-              >
+              <Text style={{ color: "white", fontSize: 12, marginTop: 2 }}>
                 {formatShort(nextDate)}
               </Text>
             )}
           </TouchableOpacity>
         </View>
 
-        {/* Holiday */}
+        {/* Holiday Box */}
         {holiday && (
           <View
             style={{
@@ -328,7 +339,6 @@ export default function CalendarDetail() {
               style={{
                 color: "#DABA69",
                 fontSize: 18,
-                fontFamily: "SFProDisplay-Bold",
                 textAlign: "center",
               }}
             >
@@ -342,7 +352,6 @@ export default function CalendarDetail() {
           style={{
             color: "white",
             fontSize: 20,
-            fontFamily: "SFProDisplay-Semibold",
             marginBottom: 10,
             textAlign: "center",
           }}
@@ -368,18 +377,12 @@ export default function CalendarDetail() {
 
         {isToday && nextPrayer && (
           <View style={{ marginTop: 10, alignItems: "center" }}>
-            <Text
-              style={{
-                color: "#DABA69",
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-              }}
-            >
+            <Text style={{ color: "#DABA69", fontSize: 16 }}>
               Next: {nextPrayer.label} in {timeLeft}
             </Text>
           </View>
         )}
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

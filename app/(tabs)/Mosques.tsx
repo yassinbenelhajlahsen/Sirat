@@ -1,4 +1,5 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -20,7 +21,7 @@ import {
   getCachedMosques,
   getNearbyMosques,
   Mosque,
-} from "../services/getNearbyMosques";
+} from "../../services/getNearbyMosques";
 
 export default function MosqueScreen() {
   const router = useRouter();
@@ -56,15 +57,24 @@ export default function MosqueScreen() {
     })();
   }, []);
 
-  const openDirections = async (mosque: Mosque) => {
-    const url =
-      Platform.OS === "ios"
-        ? `http://maps.apple.com/?daddr=${mosque.lat},${mosque.lng}&dirflg=d`
-        : `https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lng}&travelmode=driving`;
+  const openDirections = async (lat: number, lng: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
 
-    const supported = await Linking.canOpenURL(url);
-    if (supported) await Linking.openURL(url);
-    else Alert.alert("Error", "Unable to open map directions");
+    const nativeApple = `maps://?daddr=${lat},${lng}&dirflg=d`;
+    const webApple = `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
+
+    try {
+      // check native maps first to avoid long rejection time
+      if (await Linking.canOpenURL(nativeApple)) {
+        await Linking.openURL(nativeApple);
+        return;
+      }
+      // fallback to web (fast)
+      await Linking.openURL(webApple);
+    } catch (err) {
+      console.warn("openDirections error:", err);
+      Alert.alert("Error", "Unable to open Maps for directions");
+    }
   };
 
   if (loading || !location) {
@@ -87,7 +97,7 @@ export default function MosqueScreen() {
       <Animated.View style={{ transform: [{ scale }] }}>
         <TouchableOpacity
           activeOpacity={0.85}
-          onPress={() => openDirections(item)}
+          onPress={() => openDirections(item.lat, item.lng)}
           onPressIn={onPressIn}
           onPressOut={onPressOut}
           style={styles.card}
@@ -150,7 +160,7 @@ export default function MosqueScreen() {
                     <Text style={styles.calloutAddress}>{mosque.address}</Text>
                     <TouchableOpacity
                       style={styles.directionButton}
-                      onPress={() => openDirections(mosque)}
+                      onPress={() => openDirections(mosque.lat, mosque.lng)}
                     >
                       <Ionicons name="navigate" size={14} color="#134b0a" />
                       <Text style={styles.directionText}>Directions</Text>
@@ -230,6 +240,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     opacity: 0.85,
     marginBottom: 4,
+    alignItems: "center",
   },
   mapContainer: {
     height: 230,

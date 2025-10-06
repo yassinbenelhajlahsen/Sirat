@@ -7,7 +7,7 @@ import {
   StyleProp,
   ViewStyle,
 } from "react-native";
-import { PrayerTime } from "../services/yearlyPrayerTimes";
+import { PrayerTime } from "../../services/yearlyPrayerTimes";
 
 function Skeleton({
   width = "100%",

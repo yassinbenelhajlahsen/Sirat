@@ -1,4 +1,4 @@
-import topCities from "../../assets/data/cities.json";
+import topCities from "../assets/data/cities.json";
 
 export interface City {
   name: string;

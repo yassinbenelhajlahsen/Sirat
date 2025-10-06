@@ -70,7 +70,6 @@ export async function getCachedMosques(
     if (cached) {
       const { data, timestamp } = JSON.parse(cached);
       if (Date.now() - timestamp < cacheDurationMs) {
-        console.log("Using cached mosque data");
         return data;
       }
     }

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import GlobalTransition from "./components/GlobalTransition"; // add import
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -15,7 +16,9 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <Slot />
+      <GlobalTransition>
+        <Slot />
+      </GlobalTransition>
     </SafeAreaProvider>
   );
 }
