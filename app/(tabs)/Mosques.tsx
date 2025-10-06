@@ -16,7 +16,11 @@ import {
 } from "react-native";
 import MapView, { Callout, Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getNearbyMosques, Mosque } from "../services/getNearbyMosques";
+import {
+  getCachedMosques,
+  getNearbyMosques,
+  Mosque,
+} from "../services/getNearbyMosques";
 
 export default function MosqueScreen() {
   const router = useRouter();
@@ -34,15 +38,18 @@ export default function MosqueScreen() {
         if (status !== "granted") return;
 
         const loc = await Location.getCurrentPositionAsync({});
-        setLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        });
+        const { latitude, longitude } = loc.coords;
+        setLocation({ latitude, longitude });
 
-        const data = await getNearbyMosques();
-        setMosques(data);
+        // Load cached instantly
+        const cached = await getCachedMosques(latitude, longitude);
+        setMosques(cached);
+
+        // Then refresh in background
+        const fresh = await getNearbyMosques(latitude, longitude);
+        setMosques(fresh);
       } catch (err) {
-        console.error(err);
+        console.error("Mosque fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -50,13 +57,10 @@ export default function MosqueScreen() {
   }, []);
 
   const openDirections = async (mosque: Mosque) => {
-    let url = "";
-
-    if (Platform.OS === "ios") {
-      url = `http://maps.apple.com/?daddr=${mosque.lat},${mosque.lng}&dirflg=d`;
-    } else {
-      url = `https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lng}&travelmode=driving`;
-    }
+    const url =
+      Platform.OS === "ios"
+        ? `http://maps.apple.com/?daddr=${mosque.lat},${mosque.lng}&dirflg=d`
+        : `https://www.google.com/maps/dir/?api=1&destination=${mosque.lat},${mosque.lng}&travelmode=driving`;
 
     const supported = await Linking.canOpenURL(url);
     if (supported) await Linking.openURL(url);
@@ -114,7 +118,6 @@ export default function MosqueScreen() {
 
         <Text style={styles.header}>Map</Text>
 
-        {/* --- Map Preview --- */}
         <TouchableOpacity
           style={styles.mapContainer}
           onPress={() => router.push("/components/map")}
@@ -173,7 +176,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#134b0a" },
   container: { flex: 1, padding: 20 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
   title: {
     color: "white",
     fontFamily: "SFProDisplay-Bold",
@@ -193,7 +195,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-
   card: {
     backgroundColor: "#1a5f0e",
     borderRadius: 18,
@@ -230,7 +231,6 @@ const styles = StyleSheet.create({
     opacity: 0.85,
     marginBottom: 4,
   },
-
   mapContainer: {
     height: 230,
     borderRadius: 16,
@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 8,
   },
-
   pinContainer: {
     backgroundColor: "#DABA69",
     borderRadius: 30,

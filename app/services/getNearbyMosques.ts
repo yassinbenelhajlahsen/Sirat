@@ -1,5 +1,7 @@
 import Constants from "expo-constants";
 import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const { GOOGLE_MAPS_API_KEY } = Constants.expoConfig.extra;
 
 export interface Mosque {
@@ -39,4 +41,49 @@ export async function getNearbyMosques(
     lat: r.geometry.location.lat,
     lng: r.geometry.location.lng,
   }));
+}
+
+/**
+ * Cached wrapper for getNearbyMosques()
+ * - Stores results in AsyncStorage
+ * - Returns cached data instantly if still valid
+ * - Falls back to live fetch if expired or not found
+ */
+export async function getCachedMosques(
+  lat?: number,
+  lng?: number,
+  cacheDurationMs = 86400000
+): Promise<Mosque[]> {
+  try {
+    let latitude = lat;
+    let longitude = lng;
+
+    if (!latitude || !longitude) {
+      const loc = await Location.getCurrentPositionAsync({});
+      latitude = loc.coords.latitude;
+      longitude = loc.coords.longitude;
+    }
+
+    const cacheKey = `mosques_${latitude.toFixed(2)}_${longitude.toFixed(2)}`;
+    const cached = await AsyncStorage.getItem(cacheKey);
+
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < cacheDurationMs) {
+        console.log("Using cached mosque data");
+        return data;
+      }
+    }
+
+    console.log("Fetching fresh mosque data");
+    const freshData = await getNearbyMosques(latitude, longitude);
+    await AsyncStorage.setItem(
+      cacheKey,
+      JSON.stringify({ data: freshData, timestamp: Date.now() })
+    );
+    return freshData;
+  } catch (error) {
+    console.error("Error fetching cached mosques:", error);
+    return [];
+  }
 }

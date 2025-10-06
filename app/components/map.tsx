@@ -12,7 +12,11 @@ import {
   View,
 } from "react-native";
 import MapView, { Callout, Marker, Region } from "react-native-maps";
-import { getNearbyMosques, Mosque } from "../services/getNearbyMosques";
+import {
+  getCachedMosques,
+  getNearbyMosques,
+  Mosque,
+} from "../services/getNearbyMosques";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -42,8 +46,15 @@ export default function MapScreen() {
           longitudeDelta: 0.02,
         });
 
-        const data = await getNearbyMosques();
-        setMosques(data);
+        // Load cached data instantly
+        const cached = await getCachedMosques(latitude, longitude);
+        setMosques(cached);
+
+        // Fetch new data in background
+        const fresh = await getNearbyMosques(latitude, longitude);
+        setMosques(fresh);
+      } catch (error) {
+        console.error("Error initializing map:", error);
       } finally {
         setLoading(false);
       }
@@ -60,7 +71,7 @@ export default function MapScreen() {
     setLoading(true);
     setShowSearchButton(false);
     try {
-      const data = await getNearbyMosques(region.latitude, region.longitude);
+      const data = await getCachedMosques(region.latitude, region.longitude);
       setMosques(data);
     } catch (e) {
       console.warn("Error fetching mosques:", e);
@@ -70,11 +81,10 @@ export default function MapScreen() {
   };
 
   const openDirections = async (lat: number, lng: number) => {
-    let url = "";
-    if (Platform.OS === "ios")
-      url = `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
-    else
-      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    const url =
+      Platform.OS === "ios"
+        ? `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`
+        : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
     const supported = await Linking.canOpenURL(url);
     if (supported) await Linking.openURL(url);
   };
@@ -90,7 +100,10 @@ export default function MapScreen() {
   return (
     <View style={{ flex: 1 }}>
       {/* Back button */}
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <TouchableOpacity
+        onPress={() => router.push("/(tabs)/Mosques")}
+        style={styles.backButton}
+      >
         <Ionicons name="arrow-back" size={22} color="#DABA69" />
       </TouchableOpacity>
 
@@ -150,25 +163,14 @@ export default function MapScreen() {
   );
 }
 
-/* Optional custom green-gold map palette */
 const customMapStyle = [
-  {
-    elementType: "geometry",
-    stylers: [{ color: "#0c3605" }],
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#DABA69" }],
-  },
-  {
-    featureType: "poi.place_of_worship",
-    stylers: [{ color: "#134b0a" }],
-  },
+  { elementType: "geometry", stylers: [{ color: "#0c3605" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#DABA69" }] },
+  { featureType: "poi.place_of_worship", stylers: [{ color: "#134b0a" }] },
 ];
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
   backButton: {
     position: "absolute",
     top: 50,
@@ -183,7 +185,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
-
   pinContainer: {
     backgroundColor: "#DABA69",
     borderRadius: 30,
@@ -195,7 +196,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
-
   callout: {
     backgroundColor: "#134b0a",
     borderRadius: 12,
@@ -206,15 +206,15 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.4,
     shadowRadius: 8,
-    alignItems: "center", // Center contents horizontally
-    justifyContent: "center", // Center vertically
+    alignItems: "center",
+    justifyContent: "center",
   },
   calloutTitle: {
     color: "#DABA69",
     fontFamily: "SFProDisplay-Bold",
     fontSize: 16,
     marginBottom: 4,
-    textAlign: "center", // Center text horizontally
+    textAlign: "center",
   },
   calloutAddress: {
     color: "white",
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     opacity: 0.9,
     marginBottom: 8,
-    textAlign: "center", // Center address text
+    textAlign: "center",
   },
   directionButton: {
     flexDirection: "row",
@@ -231,16 +231,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    justifyContent: "center", // Center contents inside the button
+    justifyContent: "center",
   },
   directionText: {
     color: "#134b0a",
     fontWeight: "600",
     marginLeft: 5,
     fontSize: 13,
-    textAlign: "center", // Ensures proper alignment across devices
+    textAlign: "center",
   },
-
   searchButton: {
     position: "absolute",
     bottom: 40,
@@ -256,7 +255,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
     elevation: 5,
-    backdropFilter: "blur(8px)",
   },
   searchButtonText: {
     marginLeft: 6,
@@ -264,7 +262,6 @@ const styles = StyleSheet.create({
     color: "#134b0a",
     fontSize: 15,
   },
-
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.25)",
