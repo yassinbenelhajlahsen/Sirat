@@ -101,8 +101,6 @@ async function fetchYearCalendar(
 
   for (let month = 1; month <= 12; month++) {
     const url = `https://api.aladhan.com/v1/calendar?latitude=${latitude}&longitude=${longitude}&method=${method}&month=${month}&year=${year}`;
-    console.log(`📡 Fetching prayer times: ${url}`);
-
     try {
       const res = await fetch(url);
 
@@ -160,32 +158,26 @@ export async function getPrayerTimesForDate(
   const isoKey = date.toISOString().split("T")[0];
   const settingsKey = settingsToKey(settings);
 
-  console.log("🔑 Looking up prayer times", { year, isoKey, settingsKey });
-
   // 1. In-memory
   if (
     cachedCalendars[year] &&
     cachedCalendars[year].settingsKey === settingsKey
   ) {
-    console.log("⚡ Using in-memory cache");
     return cachedCalendars[year].data[isoKey] || [];
   }
 
   // 2. AsyncStorage
   const stored = await loadFromStorage(year, settingsKey);
   if (stored && stored.settingsKey === settingsKey) {
-    console.log("💾 Loaded from AsyncStorage");
     cachedCalendars[year] = stored;
     return stored.data[isoKey] || [];
   }
 
   // 3. API
-  console.log("🌐 Fetching fresh data from API");
   const fresh = await fetchYearCalendar(year, settings);
   return fresh.data[isoKey] || [];
 }
 
 export async function clearPrayerCache() {
-  console.log("🧹 Clearing prayer cache");
   cachedCalendars = {};
 }

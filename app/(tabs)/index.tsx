@@ -1,6 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
-import { DeviceEventEmitter, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  DeviceEventEmitter,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrayerTimesList from "../components/PrayerTimesList";
 import {
@@ -11,7 +19,6 @@ import {
 import CITIES, { City, cityKey } from "../util/cities";
 import getTimeUntil from "../util/getTimeUntil";
 
-// Helper: parse "3:45 PM" into Date
 function parseTimeToDate(timeStr: string): Date {
   const now = new Date();
   const [time, modifier] = timeStr.split(" ");
@@ -26,14 +33,18 @@ function parseTimeToDate(timeStr: string): Date {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [nextPrayer, setNextPrayer] = useState<null | {
     label: string;
     time: string;
     dateObj: Date;
   }>(null);
+  const [nextDayFajr, setNextDayFajr] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const DEFAULT_METHOD = 2;
   const DEFAULT_CITY: City = CITIES[0];
@@ -85,20 +96,30 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
     (async () => {
       try {
+        setLoading(true);
         const settings = await getSettings();
         const times = await getPrayerTimesToday(settings);
         setPrayerTimes(times);
 
         const now = new Date();
+        let foundNext = false;
         for (let pt of times) {
           const timeObj = parseTimeToDate(pt.time);
           if (timeObj > now) {
             setNextPrayer({ ...pt, dateObj: timeObj });
+            foundNext = true;
             break;
           }
+        }
+
+        if (!foundNext) {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const nextDayTimes = await getPrayerTimesToday(settings);
+          const fajr = nextDayTimes.find((p) => p.label === "Fajr");
+          if (fajr) setNextDayFajr(fajr.time);
         }
       } catch (err) {
         console.error("Error fetching prayer times:", err);
@@ -117,6 +138,16 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [nextPrayer]);
 
+  useEffect(() => {
+    if (nextDayFajr || nextPrayer) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [nextDayFajr, nextPrayer]);
+
   const today = new Date();
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric",
@@ -124,10 +155,14 @@ export default function Home() {
     year: "numeric",
   }).format(today);
 
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const tomorrowParam = encodeURIComponent(tomorrow.toISOString());
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
       <ScrollView
-        contentContainerStyle={{ padding: 20 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       >
         <Text
@@ -191,18 +226,108 @@ export default function Home() {
           />
         </View>
 
+        {/* Active next prayer countdown */}
         {nextPrayer && (
-          <View style={{ marginTop: 10, alignItems: "center" }}>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              marginTop: 20,
+              backgroundColor: "#1a5f0e",
+              borderRadius: 16,
+              paddingVertical: 16,
+              paddingHorizontal: 24,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+          >
             <Text
               style={{
                 color: "#DABA69",
-                fontSize: 17,
+                fontSize: 18,
                 fontFamily: "SFProDisplay-Semibold",
+                marginBottom: 6,
               }}
             >
-              Next: {nextPrayer.label} in {timeLeft}
+              Next Prayer
             </Text>
-          </View>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 24,
+                fontFamily: "SFProDisplay-Bold",
+              }}
+            >
+              {nextPrayer.label}
+            </Text>
+            <Text
+              style={{
+                color: "#DABA69",
+                fontSize: 16,
+                fontFamily: "SFProDisplay-Semibold",
+                marginTop: 4,
+              }}
+            >
+              in {timeLeft}
+            </Text>
+          </Animated.View>
+        )}
+
+        {/* After Isha: clickable box matching holiday style */}
+        {!nextPrayer && nextDayFajr && (
+          <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                router.push({
+                  pathname: "/components/[date]",
+                  params: {
+                    date: tomorrowParam,
+                    month: tomorrow.getMonth().toString(),
+                    year: tomorrow.getFullYear().toString(),
+                  },
+                })
+              }
+              style={{
+                backgroundColor: "#1a5f0e",
+                borderRadius: 12,
+                paddingVertical: 18,
+                paddingHorizontal: 24,
+                borderWidth: 2,
+                borderColor: "#DABA69",
+                shadowColor: "#DABA69",
+                shadowOpacity: 0.6,
+                shadowRadius: 8,
+                elevation: 5,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color: "#DABA69",
+                  fontSize: 18,
+                  fontFamily: "SFProDisplay-Bold",
+                  textAlign: "center",
+                  marginBottom: 4,
+                }}
+              >
+                Finished all prayers!
+              </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 16,
+                  fontFamily: "SFProDisplay-Semibold",
+                  textAlign: "center",
+                }}
+              >
+                Tap to see tomorrow’s prayer times
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
         )}
       </ScrollView>
     </SafeAreaView>
