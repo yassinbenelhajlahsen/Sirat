@@ -1,83 +1,274 @@
-// app/mosque/map.tsx
-
-import { useEffect, useState } from "react";
-import { StyleSheet, View, TouchableOpacity, ActivityIndicator } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { Ionicons } from "@expo/vector-icons";
-import MOCK_MOSQUES from "../util/mock_mosques";
 import { useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Linking,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Callout, Marker, Region } from "react-native-maps";
+import { getNearbyMosques, Mosque } from "../services/getNearbyMosques";
 
 export default function MapScreen() {
-      const router = useRouter();
-
+  const router = useRouter();
   const [location, setLocation] = useState<null | {
     latitude: number;
     longitude: number;
   }>(null);
+  const [mosques, setMosques] = useState<Mosque[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showSearchButton, setShowSearchButton] = useState(false);
+  const [region, setRegion] = useState<Region | null>(null);
+  const mapRef = useRef<MapView | null>(null);
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
 
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      });
+        const loc = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = loc.coords;
+        setLocation({ latitude, longitude });
+        setRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        });
+
+        const data = await getNearbyMosques();
+        setMosques(data);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
-  const region = location
-    ? {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.015,
-        longitudeDelta: 0.015,
-      }
-    : {
-        latitude: 40.634,
-        longitude: -74.026,
-        latitudeDelta: 0.015,
-        longitudeDelta: 0.015,
-      };
-      if (!location) {
-  return <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <ActivityIndicator size="large" color="#DABA69" />
-  </View>
-}
+  const handleRegionChange = (newRegion: Region) => {
+    setRegion(newRegion);
+    setShowSearchButton(true);
+  };
+
+  const handleSearchThisArea = async () => {
+    if (!region) return;
+    setLoading(true);
+    setShowSearchButton(false);
+    try {
+      const data = await getNearbyMosques(region.latitude, region.longitude);
+      setMosques(data);
+    } catch (e) {
+      console.warn("Error fetching mosques:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDirections = async (lat: number, lng: number) => {
+    let url = "";
+    if (Platform.OS === "ios")
+      url = `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
+    else
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    const supported = await Linking.canOpenURL(url);
+    if (supported) await Linking.openURL(url);
+  };
+
+  if (loading && !location) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#DABA69" />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
-
-      {/* Back Button */}
-      <TouchableOpacity
-        onPress={() => router.push("/Mosques")}
-        style={{
-          position: "absolute",
-          top: 50,
-          left: 20,
-          zIndex: 10,
-          backgroundColor: "#134b0a",
-          borderRadius: 30,
-          padding: 8,
-          elevation: 5,
-        }}
-      >
-        <Ionicons name="arrow-back" size={24} color="#DABA69" />
+      {/* Back button */}
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={22} color="#DABA69" />
       </TouchableOpacity>
 
-      <MapView style={StyleSheet.absoluteFillObject} region={region} showsUserLocation>
-        {MOCK_MOSQUES.map((mosque) => (
-          <Marker
-            key={mosque.id}
-            coordinate={{ latitude: mosque.lat, longitude: mosque.lng }}
-            title={mosque.name}
-            description={mosque.address}
-          />
-        ))}
-      </MapView>
+      {location && (
+        <MapView
+          ref={mapRef}
+          style={StyleSheet.absoluteFillObject}
+          customMapStyle={customMapStyle}
+          initialRegion={region!}
+          onRegionChangeComplete={handleRegionChange}
+          showsUserLocation
+        >
+          {mosques.map((mosque) => (
+            <Marker
+              key={mosque.id}
+              coordinate={{ latitude: mosque.lat, longitude: mosque.lng }}
+              tracksViewChanges={false}
+            >
+              <View style={styles.pinContainer}>
+                <FontAwesome5 name="mosque" size={20} color="#134b0a" />
+              </View>
+
+              <Callout tooltip>
+                <View style={styles.callout}>
+                  <Text style={styles.calloutTitle}>{mosque.name}</Text>
+                  <Text style={styles.calloutAddress}>{mosque.address}</Text>
+                  <TouchableOpacity
+                    style={styles.directionButton}
+                    onPress={() => openDirections(mosque.lat, mosque.lng)}
+                  >
+                    <Ionicons name="navigate" size={14} color="#134b0a" />
+                    <Text style={styles.directionText}>Directions</Text>
+                  </TouchableOpacity>
+                </View>
+              </Callout>
+            </Marker>
+          ))}
+        </MapView>
+      )}
+
+      {showSearchButton && (
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={handleSearchThisArea}
+        >
+          <Ionicons name="search" size={18} color="#134b0a" />
+          <Text style={styles.searchButtonText}>Search this area</Text>
+        </TouchableOpacity>
+      )}
+
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#DABA69" />
+        </View>
+      )}
     </View>
   );
 }
+
+/* Optional custom green-gold map palette */
+const customMapStyle = [
+  {
+    elementType: "geometry",
+    stylers: [{ color: "#0c3605" }],
+  },
+  {
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#DABA69" }],
+  },
+  {
+    featureType: "poi.place_of_worship",
+    stylers: [{ color: "#134b0a" }],
+  },
+];
+
+const styles = StyleSheet.create({
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: "rgba(19,75,10,0.85)",
+    borderRadius: 30,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 5,
+  },
+
+  pinContainer: {
+    backgroundColor: "#DABA69",
+    borderRadius: 30,
+    padding: 6,
+    borderWidth: 2,
+    borderColor: "#134b0a",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+
+  callout: {
+    backgroundColor: "#134b0a",
+    borderRadius: 12,
+    padding: 12,
+    width: 210,
+    borderColor: "#DABA69",
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    alignItems: "center", // Center contents horizontally
+    justifyContent: "center", // Center vertically
+  },
+  calloutTitle: {
+    color: "#DABA69",
+    fontFamily: "SFProDisplay-Bold",
+    fontSize: 16,
+    marginBottom: 4,
+    textAlign: "center", // Center text horizontally
+  },
+  calloutAddress: {
+    color: "white",
+    fontFamily: "SFProDisplay-Regular",
+    fontSize: 13,
+    opacity: 0.9,
+    marginBottom: 8,
+    textAlign: "center", // Center address text
+  },
+  directionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#DABA69",
+    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    justifyContent: "center", // Center contents inside the button
+  },
+  directionText: {
+    color: "#134b0a",
+    fontWeight: "600",
+    marginLeft: 5,
+    fontSize: 13,
+    textAlign: "center", // Ensures proper alignment across devices
+  },
+
+  searchButton: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    flexDirection: "row",
+    backgroundColor: "rgba(218,186,105,0.95)",
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 25,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 5,
+    backdropFilter: "blur(8px)",
+  },
+  searchButtonText: {
+    marginLeft: 6,
+    fontWeight: "600",
+    color: "#134b0a",
+    fontSize: 15,
+  },
+
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
