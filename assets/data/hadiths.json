@@ -1,0 +1,157 @@
+[
+  {
+    "day": 1,
+    "arabic": "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ",
+    "english": "Actions are judged by intentions."
+  },
+  {
+    "day": 2,
+    "arabic": "مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ",
+    "english": "Whoever believes in Allah and the Last Day should speak good or remain silent."
+  },
+  {
+    "day": 3,
+    "arabic": "الدِّينُ النَّصِيحَةُ",
+    "english": "Religion is sincere advice."
+  },
+  {
+    "day": 4,
+    "arabic": "لَا يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ",
+    "english": "None of you truly believes until he loves for his brother what he loves for himself."
+  },
+  {
+    "day": 5,
+    "arabic": "مَنْ لَا يَرْحَمُ لَا يُرْحَمُ",
+    "english": "He who does not show mercy will not be shown mercy."
+  },
+  {
+    "day": 6,
+    "arabic": "الطُّهُورُ شَطْرُ الإِيمَانِ",
+    "english": "Purity is half of faith."
+  },
+  {
+    "day": 7,
+    "arabic": "الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ",
+    "english": "A Muslim is one from whose tongue and hand other Muslims are safe."
+  },
+  {
+    "day": 8,
+    "arabic": "الدُّعَاءُ هُوَ الْعِبَادَةُ",
+    "english": "Supplication is the essence of worship."
+  },
+  {
+    "day": 9,
+    "arabic": "يَسِّرُوا وَلَا تُعَسِّرُوا",
+    "english": "Make things easy and do not make them difficult."
+  },
+  {
+    "day": 10,
+    "arabic": "مَن تَوَاضَعَ لِلَّهِ رَفَعَهُ اللَّهُ",
+    "english": "Whoever humbles himself for Allah, Allah will raise him."
+  },
+  {
+    "day": 11,
+    "arabic": "أَفْشُوا السَّلَامَ بَيْنَكُمْ",
+    "english": "Spread peace among yourselves."
+  },
+  {
+    "day": 12,
+    "arabic": "اتَّقِ اللَّهَ حَيْثُمَا كُنتَ",
+    "english": "Fear Allah wherever you are."
+  },
+  {
+    "day": 13,
+    "arabic": "سِدَادًا وَقَصْدًا",
+    "english": "Be moderate and seek what is right."
+  },
+  {
+    "day": 14,
+    "arabic": "الكَلِمَةُ الطَّيِّبَةُ صَدَقَةٌ",
+    "english": "A kind word is charity."
+  },
+  {
+    "day": 15,
+    "arabic": "لَا تَغْضَبْ",
+    "english": "Do not become angry."
+  },
+  {
+    "day": 16,
+    "arabic": "أَحِبَّ لِلنَّاسِ مَا تُحِبُّ لِنَفْسِكَ",
+    "english": "Love for people what you love for yourself."
+  },
+  {
+    "day": 17,
+    "arabic": "مَنْ صَمَتَ نَجَا",
+    "english": "Whoever remains silent is saved."
+  },
+  {
+    "day": 18,
+    "arabic": "الْمُؤْمِنُ مِرْآةُ أَخِيهِ",
+    "english": "The believer is the mirror of his brother."
+  },
+  {
+    "day": 19,
+    "arabic": "الدُّنْيَا سِجْنُ الْمُؤْمِنِ وَجَنَّةُ الْكَافِرِ",
+    "english": "The world is a prison for the believer and a paradise for the disbeliever."
+  },
+  {
+    "day": 20,
+    "arabic": "أَحْسِنُوا إِذَا قَتَلْتُمْ وَأَحْسِنُوا إِذَا ذَبَحْتُمْ",
+    "english": "When you kill, kill well; when you slaughter, slaughter well."
+  },
+  {
+    "day": 21,
+    "arabic": "الْحَيَاءُ شُعْبَةٌ مِنَ الإِيمَانِ",
+    "english": "Modesty is a branch of faith."
+  },
+  {
+    "day": 22,
+    "arabic": "خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ",
+    "english": "The best of you are those who learn the Quran and teach it."
+  },
+  {
+    "day": 23,
+    "arabic": "الْمُسْتَشَارُ مُؤْتَمَنٌ",
+    "english": "The one consulted is entrusted."
+  },
+  {
+    "day": 24,
+    "arabic": "لَا يَدْخُلُ الْجَنَّةَ مَنْ كَانَ فِي قَلْبِهِ مِثْقَالُ ذَرَّةٍ مِنْ كِبْرٍ",
+    "english": "No one who has an atom’s weight of arrogance in his heart will enter Paradise."
+  },
+  {
+    "day": 25,
+    "arabic": "مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ",
+    "english": "Whoever travels a path seeking knowledge, Allah will make easy for him a path to Paradise."
+  },
+  {
+    "day": 26,
+    "arabic": "المُؤْمِنُ القَوِيُّ خَيْرٌ وَأَحَبُّ إِلَى اللَّهِ مِنَ المُؤْمِنِ الضَّعِيفِ",
+    "english": "The strong believer is better and more beloved to Allah than the weak believer."
+  },
+  {
+    "day": 27,
+    "arabic": "إِنَّ اللَّهَ جَمِيلٌ يُحِبُّ الْجَمَالَ",
+    "english": "Allah is beautiful and loves beauty."
+  },
+  {
+    "day": 28,
+    "arabic": "مَنْ لَا يَشْكُرِ النَّاسَ لَا يَشْكُرِ اللَّهَ",
+    "english": "Whoever does not thank people does not thank Allah."
+  },
+  {
+    "day": 29,
+    "arabic": "الرَّاحِمُونَ يَرْحَمُهُمُ الرَّحْمَنُ",
+    "english": "The merciful are shown mercy by the Most Merciful."
+  },
+  {
+    "day": 30,
+    "arabic": "اتْرُكْ مَا يَرِيبُكَ إِلَى مَا لَا يَرِيبُكَ",
+    "english": "Leave what makes you doubt for what does not make you doubt."
+  },
+  {
+    "day": 31,
+    "arabic": "الْمُسْلِمُونَ كَرَجُلٍ وَاحِدٍ، إِذَا اشْتَكَى عُضْوٌ تَدَاعَى لَهُ سَائِرُ الْجَسَدِ بِالسَّهَرِ وَالْحُمَّى",
+    "english": "The believers are like one body; if one part suffers, the whole body feels pain."
+  }
+]
