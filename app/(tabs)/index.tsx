@@ -10,7 +10,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PrayerTimesList from "../components/PrayerTimesList";
 import {
   getPrayerTimesToday,
   PrayerSettings,
@@ -18,6 +17,9 @@ import {
 } from "../../services/dailyPrayerTimes";
 import CITIES, { City, cityKey } from "../../util/cities";
 import getTimeUntil from "../../util/getTimeUntil";
+import PrayerTimesList from "../components/PrayerTimesList";
+
+import * as Notifications from "expo-notifications";
 
 function parseTimeToDate(timeStr: string): Date {
   const now = new Date();
@@ -83,7 +85,12 @@ export default function Home() {
       city: DEFAULT_CITY,
     };
   }
-
+  useEffect(() => {
+    (async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      console.log("Notification permission:", status);
+    })();
+  }, []);
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
       setLoading(true);

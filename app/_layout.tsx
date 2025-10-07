@@ -6,10 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, Easing } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { NotificationService } from "../services/notificationService";
 import GlobalTransition from "./components/GlobalTransition";
 import SplashScreen from "./components/SplashScreen";
-
-// Keep native splash until ready
 ExpoSplash.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -22,14 +21,16 @@ export default function RootLayout() {
 
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(0)).current; // start hidden (we'll fade in)
-
+  const fadeAnim = useRef(new Animated.Value(0)).current; 
+  useEffect(() => {
+    NotificationService.init();
+  }, []);
   // Wait for fonts to load, then trigger transition
   useEffect(() => {
     if (fontsLoaded) {
       setTimeout(() => {
         setAppReady(true);
-      }, 1800); 
+      }, 1800);
     }
   }, [fontsLoaded]);
 
@@ -40,8 +41,7 @@ export default function RootLayout() {
     (async () => {
       try {
         await ExpoSplash.hideAsync();
-      } catch (e) {
-      }
+      } catch (e) {}
       Animated.sequence([
         Animated.timing(fadeAnim, {
           toValue: 1,

@@ -8,9 +8,7 @@ export default {
     orientation: "portrait",
     icon: "./assets/icon.png",
     splash: {
-      image: "./assets/images/sirat_splash.png",
-      resizeMode: "contain",
-      backgroundColor: "#0c3605",
+      backgroundColor: "#134b0a",
     },
     scheme: "sirat",
     userInterfaceStyle: "automatic",
@@ -19,10 +17,20 @@ export default {
     ios: {
       userInterfaceStyle: "dark",
       supportsTablet: true,
-      bundleIdentifier: "com.anonymous.Sirat",
+      bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
+      buildNumber: "1.0.0",
+      infoPlist: {
+        CFBundleDisplayName: "Sirat",
+      },
+      teamId: "5AN795CL7Z",
     },
     android: {
-      package: "com.anonymous.Sirat",
+      package: "com.yassinbenelhajlahsen.sirat",
+      versionCode: 1,
+      adaptiveIcon: {
+        foregroundImage: "./assets/icon.png",
+        backgroundColor: "#134b0a",
+      },
     },
     plugins: ["expo-router", "expo-font"],
     experiments: {

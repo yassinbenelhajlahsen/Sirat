@@ -2,19 +2,22 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  I18nManager,
   StyleSheet,
   Text,
   View,
-  I18nManager,
 } from "react-native";
-import hadiths from "../../assets/data/hadiths.json"; 
+import hadiths from "../../assets/data/hadiths.json";
 
 export default function SplashScreen() {
-  const [hadith, setHadith] = useState<{ arabic: string; english: string } | null>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [hadith, setHadith] = useState<{
+    arabic: string;
+    english: string;
+  } | null>(null);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    I18nManager.allowRTL(true); 
+    I18nManager.allowRTL(true);
     const today = new Date().getDate();
     const todayHadith = hadiths.find((h) => h.day === today);
     setHadith(todayHadith || null);
@@ -30,8 +33,8 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Text style={styles.title}>سُنَّة اليوم</Text>
-
+        <Text style={styles.appName}>Sirat</Text>
+        <Text style={styles.tagline}>The Path to Your Deen</Text>
         {hadith ? (
           <>
             <Text style={styles.arabic} numberOfLines={3} adjustsFontSizeToFit>
@@ -61,34 +64,41 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 28,
+    transform: [{ translateY: -40 }], // move name/subtext a bit higher
   },
-  title: {
+  appName: {
     color: "#DABA69",
-    fontSize: 24,
+    fontSize: 60,
     fontFamily: "SFProDisplay-Bold",
-    marginBottom: 20,
-    textShadowColor: "rgba(0,0,0,0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    marginBottom: 6,
+    letterSpacing: 0.6,
+  },
+  tagline: {
+    color: "#fff",
+    opacity: 0.85,
+    fontSize: 30,
+    fontFamily: "SFProDisplay-Regular",
+    marginBottom: 85,
   },
   arabic: {
     color: "#ffffff",
-    fontSize: 26,
+    fontSize: 36,
     textAlign: "center",
-    fontFamily: "GeezaPro", // iOS built-in Arabic font
-    lineHeight: 40,
-    marginBottom: 10,
+    fontFamily: "GeezaPro",
+    lineHeight: 54,
+    marginTop: 8,
+    marginBottom: 18,
   },
   divider: {
     width: 60,
     height: 2,
     backgroundColor: "#DABA69",
-    marginVertical: 12,
+    marginVertical: 20,
     borderRadius: 2,
   },
   english: {
     color: "#DABA69",
-    fontSize: 17,
+    fontSize: 18,
     textAlign: "center",
     fontFamily: "SFProDisplay-Semibold",
     lineHeight: 26,
