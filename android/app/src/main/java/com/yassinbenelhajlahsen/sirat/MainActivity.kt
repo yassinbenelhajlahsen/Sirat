@@ -1,4 +1,4 @@
-package com.anonymous.Sirat
+package com.yassinbenelhajlahsen.sirat
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -28,12 +28,18 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>sirat</string>
-          <string>com.anonymous.Sirat</string>
+          <string>com.yassinbenelhajlahsen.sirat</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>exp+sirat</string>
         </array>
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>1.0.0</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
