@@ -8,28 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		218ECF505078ACF6177E4B8D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B11E81A79C93C0997F7145 /* ExpoModulesProvider.swift */; };
+		1C9F37CEE7C1452C9880A4A9 /* libPods-Sirat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DD7FB3DA2D4CD821850D3C /* libPods-Sirat.a */; };
+		20423651EEE29563AEA964DE /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0F17BE9F7EB59C690678EB /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		4BF29488A4CF479016E7AFC2 /* libPods-Sirat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EA98F7D0A23133EF2BD3B5F7 /* libPods-Sirat.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		D712BD37AB79617A821F1EBA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B63C44882D916C863BB778FE /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F3912DAFD8679965CF5FF307 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FC63EB67F91764E7465BFA5E /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* Sirat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sirat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Sirat/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Sirat/Info.plist; sourceTree = "<group>"; };
-		47D18A79111798B5DA7DD8D8 /* Pods-Sirat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sirat.debug.xcconfig"; path = "Target Support Files/Pods-Sirat/Pods-Sirat.debug.xcconfig"; sourceTree = "<group>"; };
-		62565A5DCE8A354CDD86121C /* Pods-Sirat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sirat.release.xcconfig"; path = "Target Support Files/Pods-Sirat/Pods-Sirat.release.xcconfig"; sourceTree = "<group>"; };
+		27DD7FB3DA2D4CD821850D3C /* libPods-Sirat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Sirat.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		50342CC728C0F2B3D6F18A4A /* Pods-Sirat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sirat.release.xcconfig"; path = "Target Support Files/Pods-Sirat/Pods-Sirat.release.xcconfig"; sourceTree = "<group>"; };
+		8B0F17BE9F7EB59C690678EB /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Sirat/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Sirat/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B8B11E81A79C93C0997F7145 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Sirat/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		B63C44882D916C863BB778FE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Sirat/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		EA98F7D0A23133EF2BD3B5F7 /* libPods-Sirat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Sirat.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA8B5425FB7CA638ED49B220 /* Pods-Sirat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Sirat.debug.xcconfig"; path = "Target Support Files/Pods-Sirat/Pods-Sirat.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Sirat/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Sirat-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Sirat-Bridging-Header.h"; path = "Sirat/Sirat-Bridging-Header.h"; sourceTree = "<group>"; };
-		FC63EB67F91764E7465BFA5E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Sirat/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4BF29488A4CF479016E7AFC2 /* libPods-Sirat.a in Frameworks */,
+				1C9F37CEE7C1452C9880A4A9 /* libPods-Sirat.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				FC63EB67F91764E7465BFA5E /* PrivacyInfo.xcprivacy */,
+				B63C44882D916C863BB778FE /* PrivacyInfo.xcprivacy */,
 			);
 			name = Sirat;
 			sourceTree = "<group>";
@@ -62,17 +62,35 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				EA98F7D0A23133EF2BD3B5F7 /* libPods-Sirat.a */,
+				27DD7FB3DA2D4CD821850D3C /* libPods-Sirat.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4F28A1EC31847B0EB9D2906A /* Sirat */ = {
+		34AFF9B39708488BF9320E32 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				B8B11E81A79C93C0997F7145 /* ExpoModulesProvider.swift */,
+				DA8B5425FB7CA638ED49B220 /* Pods-Sirat.debug.xcconfig */,
+				50342CC728C0F2B3D6F18A4A /* Pods-Sirat.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		5E6288A98EC3A0146D7DBAAA /* Sirat */ = {
+			isa = PBXGroup;
+			children = (
+				8B0F17BE9F7EB59C690678EB /* ExpoModulesProvider.swift */,
 			);
 			name = Sirat;
+			sourceTree = "<group>";
+		};
+		5FE25B4E1A32E92EAC67400F /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				5E6288A98EC3A0146D7DBAAA /* Sirat */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -89,8 +107,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				DF4B68BCF9BAEFF78213C677 /* ExpoModulesProviders */,
-				9A4483D89AACA6D2B8F5583A /* Pods */,
+				5FE25B4E1A32E92EAC67400F /* ExpoModulesProviders */,
+				34AFF9B39708488BF9320E32 /* Pods */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -105,16 +123,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		9A4483D89AACA6D2B8F5583A /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				47D18A79111798B5DA7DD8D8 /* Pods-Sirat.debug.xcconfig */,
-				62565A5DCE8A354CDD86121C /* Pods-Sirat.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -124,14 +132,6 @@
 			path = Sirat/Supporting;
 			sourceTree = "<group>";
 		};
-		DF4B68BCF9BAEFF78213C677 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				4F28A1EC31847B0EB9D2906A /* Sirat */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -139,14 +139,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Sirat" */;
 			buildPhases = (
-				9DF013B2BCFBD997B53327AE /* [CP] Check Pods Manifest.lock */,
-				204FBFC5136125CDA8C769C0 /* [Expo] Configure project */,
+				3D0207C0F35F0BBB88D5C69C /* [CP] Check Pods Manifest.lock */,
+				137A792F01495FFB582A507F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				18B1967BD912ADBE30C9DA7F /* [CP] Embed Pods Frameworks */,
-				216DA85725471A4327D57AE4 /* [CP] Copy Pods Resources */,
+				5EDE723D80D37E7BAF7F5696 /* [CP] Embed Pods Frameworks */,
+				16781B46B343F1DCBC3DAB07 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				F3912DAFD8679965CF5FF307 /* PrivacyInfo.xcprivacy in Resources */,
+				D712BD37AB79617A821F1EBA /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,29 +220,7 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		18B1967BD912ADBE30C9DA7F /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Sirat/Pods-Sirat-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Sirat/Pods-Sirat-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		204FBFC5136125CDA8C769C0 /* [Expo] Configure project */ = {
+		137A792F01495FFB582A507F /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -266,7 +244,7 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Sirat/expo-configure-project.sh\"\n";
 		};
-		216DA85725471A4327D57AE4 /* [CP] Copy Pods Resources */ = {
+		16781B46B343F1DCBC3DAB07 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -312,7 +290,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Sirat/Pods-Sirat-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		9DF013B2BCFBD997B53327AE /* [CP] Check Pods Manifest.lock */ = {
+		3D0207C0F35F0BBB88D5C69C /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -334,6 +312,28 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		5EDE723D80D37E7BAF7F5696 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Sirat/Pods-Sirat-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Sirat/Pods-Sirat-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -342,7 +342,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				218ECF505078ACF6177E4B8D /* ExpoModulesProvider.swift in Sources */,
+				20423651EEE29563AEA964DE /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,7 +351,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 47D18A79111798B5DA7DD8D8 /* Pods-Sirat.debug.xcconfig */;
+			baseConfigurationReference = DA8B5425FB7CA638ED49B220 /* Pods-Sirat.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -387,7 +387,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 62565A5DCE8A354CDD86121C /* Pods-Sirat.release.xcconfig */;
+			baseConfigurationReference = 50342CC728C0F2B3D6F18A4A /* Pods-Sirat.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
