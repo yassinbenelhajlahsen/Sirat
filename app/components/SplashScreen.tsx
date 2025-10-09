@@ -25,7 +25,10 @@ export default function SplashScreen({
   onReadyToHideNative,
   onFinished,
 }: Props) {
-  const [hadith, setHadith] = useState<{ arabic: string; english: string } | null>(null);
+  const [hadith, setHadith] = useState<{
+    arabic: string;
+    english: string;
+  } | null>(null);
 
   // Opaque at start so nothing beneath is visible
   const opacity = useRef(new Animated.Value(1)).current;
@@ -60,14 +63,20 @@ export default function SplashScreen({
   // When parent marks ready, fade out and notify completion
   useEffect(() => {
     if (!ready) return;
-    Animated.timing(opacity, {
-      toValue: 0,
-      duration: 450,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished && onFinished) onFinished();
-    });
+
+    // wait extra time before fade starts (e.g., 1500 ms)
+    const timeout = setTimeout(() => {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 450,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished && onFinished) onFinished();
+      });
+    }, 2000); // <-- extend splash visibility here
+
+    return () => clearTimeout(timeout);
   }, [ready]);
 
   // Hide native splash once this component has a frame on screen

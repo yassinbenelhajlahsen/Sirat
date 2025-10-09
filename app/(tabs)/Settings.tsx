@@ -1,9 +1,12 @@
+// app/(tabs)/Settings.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  AppState,
   DeviceEventEmitter,
   Easing,
   Linking,
@@ -42,9 +45,10 @@ export default function Settings() {
 
   const [useLocation, setUseLocation] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null); // "granted" | "denied" | "undetermined" | null
+  const [notifStatus, setNotifStatus] = useState<string | null>(null); // notification permission sync
 
   const [methodOpen, setMethodOpen] = useState(false);
-  const [method, setMethod] = useState(2);
+  const [method, setMethod] = useState(-1);
   const [methodItems, setMethodItems] = useState(
     CALCULATION_METHODS.map((m) => ({ label: m.name, value: m.id }))
   );
@@ -87,7 +91,6 @@ export default function Settings() {
     ]).start();
 
     if (val) {
-      // Turning ON -> ensure device services then request permission
       try {
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         if (!servicesEnabled) {
@@ -112,7 +115,6 @@ export default function Settings() {
         if (perm.status === "granted") {
           setUseLocation(true);
         } else {
-          // If denied, offer quick path to Settings so user can grant
           Alert.alert(
             "Permission needed",
             "Sirat needs Location permission to use automatic prayer times and nearby mosque features. Grant permission in Settings or try again.",
@@ -129,16 +131,13 @@ export default function Settings() {
         setUseLocation(false);
       }
     } else {
-      // Turning OFF -> let user pick whether to just disable in-app use or open OS Settings to revoke permission
       Alert.alert(
         "Disable location",
-        "Do you want to stop using Location in the app only, or open device Settings to revoke Sirat's location permission?",
+        "Do you want to stop using Location in the app only, or open device Settings to revoke permission?",
         [
           {
             text: "Disable in app",
-            onPress: () => {
-              setUseLocation(false);
-            },
+            onPress: () => setUseLocation(false),
             style: "default",
           },
           {
@@ -149,7 +148,7 @@ export default function Settings() {
               } catch {
                 Alert.alert(
                   "Open Settings",
-                  "Unable to open device Settings. Please revoke Location permission manually."
+                  "Unable to open device Settings. Please revoke permission manually."
                 );
               }
               setUseLocation(false);
@@ -181,7 +180,7 @@ export default function Settings() {
       if (storedSettings) {
         const parsed = JSON.parse(storedSettings);
         setUseLocation(parsed.useLocation ?? true);
-        setMethod(parsed.method ?? 2);
+        setMethod(parsed.method ?? -1);
         if (parsed.cityKey) {
           const found = CITIES.find((c) => cityKey(c) === parsed.cityKey);
           if (found) setCity(found);
@@ -202,13 +201,17 @@ export default function Settings() {
     })();
   }, []);
 
+  // Initial permission checks
   useEffect(() => {
     (async () => {
       try {
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         const perm = await Location.getForegroundPermissionsAsync();
+        const notifPerm = await Notifications.getPermissionsAsync();
+
         setPermissionStatus(perm.status);
-        // default to false if either services or permission not available
+        setNotifStatus(notifPerm.granted ? "granted" : "denied");
+
         if (!servicesEnabled || perm.status !== "granted") {
           setUseLocation(false);
         } else {
@@ -219,6 +222,29 @@ export default function Settings() {
         setUseLocation(false);
       }
     })();
+  }, []);
+
+  // Recheck both permissions when app returns from background
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (state) => {
+      if (state === "active") {
+        try {
+          const perm = await Location.getForegroundPermissionsAsync();
+          const notifPerm = await Notifications.getPermissionsAsync();
+
+          setPermissionStatus(perm.status);
+          setNotifStatus(notifPerm.granted ? "granted" : "denied");
+
+          const servicesEnabled = await Location.hasServicesEnabledAsync();
+          if (!servicesEnabled || perm.status !== "granted") {
+            setUseLocation(false);
+          }
+        } catch (e) {
+          console.warn("Recheck permissions failed:", e);
+        }
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   // Persist + notify
@@ -288,10 +314,6 @@ export default function Settings() {
                   }),
                 },
               ],
-              opacity: methodAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [1, 1],
-              }),
             }}
           >
             <DropDownPicker
@@ -307,19 +329,11 @@ export default function Settings() {
                 minHeight: 50,
                 borderRadius: 12,
                 marginBottom: methodOpen ? 12 : 0,
-                shadowColor: "#000",
-                shadowOpacity: 0.1,
-                shadowRadius: 6,
-                elevation: 4,
               }}
               dropDownContainerStyle={{
                 backgroundColor: colors.cardAlt,
                 borderColor: colors.accent,
                 borderRadius: 12,
-                shadowColor: "#000",
-                shadowOpacity: 0.1,
-                shadowRadius: 6,
-                elevation: 4,
               }}
               textStyle={{
                 color: colors.text,
@@ -327,7 +341,6 @@ export default function Settings() {
                 fontFamily: "SFProDisplay-Semibold",
               }}
               arrowIconStyle={{ tintColor: colors.accent }}
-              labelStyle={{ color: colors.text, fontSize: 16 }}
               selectedItemLabelStyle={{
                 color: colors.accent,
                 fontFamily: "SFProDisplay-Bold",
@@ -344,7 +357,7 @@ export default function Settings() {
                 color: "#aaa",
                 fontFamily: "SFProDisplay-Regular",
               }}
-              showTickIcon={true}
+              showTickIcon
               tickIconStyle={{ tintColor: colors.accent }}
             />
           </Animated.View>
@@ -462,10 +475,10 @@ export default function Settings() {
         />
 
         {/* Notifications section */}
-        <NotificationSettings />
+        <NotificationSettings notifStatus={notifStatus} />
       </ScrollView>
 
-      {/* Footer (absolute) */}
+      {/* Footer */}
       <SupportFooter
         email="yassinbenelhajlahsen@gmail.com"
         textColor={colors.text}

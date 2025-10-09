@@ -5,9 +5,9 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.0.0",
+    version: "1.0.3",
     orientation: "portrait",
-    icon: "./assets/Sirat-Icon.png",
+    icon: "./assets/Icon.jpg",
     splash: {
       backgroundColor: "#134b0a",
     },

@@ -6,29 +6,32 @@ import * as Notifications from "expo-notifications";
 import { AppState, DeviceEventEmitter, Platform } from "react-native";
 import { getPrayerTimesToday, PrayerTime } from "./dailyPrayerTimes";
 
+// -----------------------------
 // Events your app already emits
+// -----------------------------
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED"; // from NotificationSettings.tsx
 const SETTINGS_CHANGED_EVENT = "settingsChanged"; // from Settings screen
 
+// -----------------------------
 // Storage keys
+// -----------------------------
 const STORAGE_ENABLED = "notif_enabled_v1";
 const STORAGE_MAP = "notif_map_v1";
 const STORAGE_SCHEDULE_IDS = "notif_schedule_ids_v1";
-
-// Duplicate protection keys
 const STORAGE_DAYKEY = "notif_daykey_v1";
 const STORAGE_SEEN_KEYS = "notif_seen_keys_v1"; // set of "Label_YYYY-MM-DDTHH:MM"
+const STORAGE_CITY_DISPLAY = "notif_last_city_v1"; // Display label cache for titles when using location
+const STORAGE_LAST_MANUAL_CITY = "notif_last_manual_city_v1"; // Full manual city cache
 
-// Cache for display city when using location mode
-const STORAGE_CITY_DISPLAY = "notif_last_city_v1";
-
-// Fire at 12:05 AM local to refresh next day
-const MIDNIGHT_REFRESH_MINUTES = 5;
-
-// Android channel
+// -----------------------------
+// Scheduling constants
+// -----------------------------
+const MIDNIGHT_REFRESH_MINUTES = 5; // Fire at 12:05 AM local to refresh next day
 const ANDROID_CHANNEL_ID = "prayer-reminders";
 
-// Types
+// -----------------------------
+// Types & defaults
+// -----------------------------
 type PrayerKey = "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 type PrefMap = Record<PrayerKey, boolean>;
 
@@ -50,6 +53,34 @@ const PRAYER_EMOJI: Record<PrayerKey, string> = {
   Isha: "🌙",
 };
 
+type CityLike = { name: string; lat: number; lng: number; country?: string; id?: string };
+
+function isCityLike(x: any): x is CityLike {
+  return (
+    !!x &&
+    typeof x === "object" &&
+    typeof x.name === "string" &&
+    typeof x.lat !== "undefined" &&
+    typeof x.lng !== "undefined" &&
+    !Number.isNaN(Number(x.lat)) &&
+    !Number.isNaN(Number(x.lng))
+  );
+}
+
+function normalizeCity(raw: any): CityLike | null {
+  if (!raw) return null;
+  const candidate = Array.isArray(raw) ? raw[0] : raw;
+  const lat = Number(candidate?.lat);
+  const lng = Number(candidate?.lng);
+  if (typeof candidate?.name === "string" && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+    return { name: candidate.name.trim(), lat, lng, country: candidate.country, id: candidate.id };
+  }
+  return null;
+}
+
+// -----------------------------
+// Utils
+// -----------------------------
 function parse12hToTodayDate(timeStr: string): Date {
   // input like "5:23 AM"
   const [hm, ampm] = timeStr.split(" ");
@@ -85,6 +116,15 @@ function msUntilNextLocalMidnightPlus(minutes: number): number {
   return Math.max(1000, next.getTime() - now.getTime());
 }
 
+function makeSeenKey(label: PrayerKey, fireDate: Date): string {
+  // Use minute precision to avoid trivial clock drift
+  const k = fireDate.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+  return `${label}_${k}`;
+}
+
+// -----------------------------
+// Permissions & channels
+// -----------------------------
 async function ensurePermissions(): Promise<boolean> {
   if (!Device.isDevice) return true; // allow on simulators
   const settings = await Notifications.getPermissionsAsync();
@@ -115,6 +155,9 @@ async function configureAndroidChannel() {
   });
 }
 
+// -----------------------------
+// Settings & prefs reads
+// -----------------------------
 async function readMasterEnabled(): Promise<boolean> {
   const raw = await AsyncStorage.getItem(STORAGE_ENABLED);
   return raw === "1";
@@ -128,35 +171,59 @@ async function readPrefs(): Promise<PrefMap> {
 async function readPrayerSettings(): Promise<{
   useLocation: boolean;
   method: number;
-  city?: any;
+  city?: CityLike | null;
 }> {
   const raw = await AsyncStorage.getItem("prayerSettings");
-  if (!raw) return { useLocation: true, method: 2 };
+  if (!raw) return { useLocation: true, method: -1, city: null };
   const parsed = JSON.parse(raw);
   return {
-    useLocation: parsed.useLocation ?? true,
-    method: parsed.method ?? 2,
-    city: parsed.city,
+    useLocation: Boolean(parsed.useLocation ?? true),
+    method: parsed.method ?? -1,
+    city: normalizeCity(parsed.city),
   };
 }
 
-// Try to get a nice display location for the notification title
+// -----------------------------
+// City label resolver (manual vs location)
+// -----------------------------
+/**
+ * Resolve a short city-only label for notification titles.
+ * Manual mode: use saved manual city or last known manual city.
+ * Location mode: use reverse geocode or cached display.
+ */
 async function resolveCityDisplay(): Promise<string> {
-  // 1) manual city if set
   const s = await readPrayerSettings();
-  if (s.city?.name) {
-    const region = s.city?.region || s.city?.state || s.city?.country || "";
-    const regionPart = region ? `, ${region}` : "";
-    const label = `${s.city.name}${regionPart}`;
-    await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, label);
-    return label;
+
+  // Manual mode: only use manual city
+  if (!s.useLocation) {
+    if (s.city && s.city.name) {
+      const label = s.city.name;
+      await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, label);
+      await AsyncStorage.setItem(STORAGE_LAST_MANUAL_CITY, JSON.stringify(s.city));
+      return label;
+    }
+    const lastManualRaw = await AsyncStorage.getItem(STORAGE_LAST_MANUAL_CITY);
+    if (lastManualRaw) {
+      try {
+        const lastManual = JSON.parse(lastManualRaw);
+        const c = normalizeCity(lastManual);
+        if (c?.name) {
+          await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, c.name);
+          return c.name;
+        }
+      } catch {}
+    }
+    return "your area";
   }
 
-  // 2) cached from previous reverse geocode
+  // Location mode: prefer cached
   const cached = await AsyncStorage.getItem(STORAGE_CITY_DISPLAY);
-  if (cached) return cached;
+  if (cached) {
+    const cityOnly = cached.split(",")[0].trim();
+    if (cityOnly) return cityOnly;
+  }
 
-  // 3) best effort reverse geocode once, cache it
+  // Reverse geocode and cache
   try {
     const last = await Location.getLastKnownPositionAsync({});
     if (last) {
@@ -165,22 +232,25 @@ async function resolveCityDisplay(): Promise<string> {
         longitude: last.coords.longitude,
       });
       if (place) {
-        const city = place.city || place.subregion || place.region || "";
-        const region = place.region || place.country || "";
-        const label = city ? `${city}${region ? `, ${region}` : ""}` : region;
-        if (label) {
-          await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, label);
-          return label;
-        }
+        const locality =
+          place.city ||
+          (place as any).subregion ||
+          (place as any).district ||
+          (place as any).name ||
+          "";
+        const label = String(locality).trim() || "your area";
+        await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, label);
+        return label;
       }
     }
-  } catch {
-    // ignore failures, we will fall back
-  }
+  } catch {}
 
   return "your area";
 }
 
+// -----------------------------
+// Scheduling helpers
+// -----------------------------
 async function cancelPreviouslyScheduled() {
   // Clear OS scheduled notifications
   try {
@@ -201,12 +271,6 @@ async function cancelPreviouslyScheduled() {
   }
 
   await AsyncStorage.multiRemove([STORAGE_SCHEDULE_IDS, STORAGE_SEEN_KEYS]);
-}
-
-function makeSeenKey(label: PrayerKey, fireDate: Date): string {
-  // Use minute precision to avoid trivial clock drift
-  const k = fireDate.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
-  return `${label}_${k}`;
 }
 
 async function scheduleForToday(
@@ -241,7 +305,9 @@ async function scheduleForToday(
     if (seen.has(sk)) continue;
 
     const emoji = PRAYER_EMOJI[label] || "🕌";
-    const titleParts = [emoji, label, p.time, cityDisplay].filter(Boolean);
+    const titleParts = [emoji, label, p.time, cityDisplay]
+      .map((x) => String(x || "").trim())
+      .filter(Boolean);
     const title = titleParts.join(" • ");
 
     const id = await Notifications.scheduleNotificationAsync({
@@ -272,10 +338,47 @@ async function scheduleForToday(
   if (ids.length) {
     await AsyncStorage.setItem(STORAGE_SCHEDULE_IDS, JSON.stringify(ids));
   }
-  await AsyncStorage.setItem(STORAGE_DAYKEY, dayKey);
-  await AsyncStorage.setItem(STORAGE_SEEN_KEYS, JSON.stringify([...seen]));
+  // NOTE: Do NOT write STORAGE_DAYKEY here; rescheduleAll() is the single source of truth.
 }
 
+// -----------------------------
+// Fetch today's times with strict manual-vs-location handling
+// -----------------------------
+async function fetchTodayTimes(): Promise<PrayerTime[]> {
+  const s = await readPrayerSettings();
+
+  // Manual mode: guarantee a city object, do not silently substitute
+  if (!s.useLocation) {
+    let city = s.city;
+    if (!city) {
+      const lastManualRaw = await AsyncStorage.getItem(STORAGE_LAST_MANUAL_CITY);
+      if (lastManualRaw) {
+        try {
+          city = normalizeCity(JSON.parse(lastManualRaw));
+        } catch {}
+      }
+    }
+    if (!city) {
+      throw new Error("Manual city is not set. Please choose a city in Settings.");
+    }
+    return getPrayerTimesToday({
+      useLocation: false,
+      method: s.method,
+      city,
+    });
+  }
+
+  // Location mode
+  return getPrayerTimesToday({
+    useLocation: true,
+    method: s.method,
+    city: undefined,
+  });
+}
+
+// -----------------------------
+// Midnight rescheduler & listeners
+// -----------------------------
 let midnightTimer: number | null = null;
 let rescheduleInProgress = false;
 let initDone = false; // prevents double init and duplicate listeners
@@ -285,16 +388,7 @@ function startMidnightRescheduler() {
   midnightTimer = setTimeout(async () => {
     await NotificationService.rescheduleAll("midnight");
     startMidnightRescheduler();
-  }, msUntilNextLocalMidnightPlus(MIDNIGHT_REFRESH_MINUTES));
-}
-
-async function fetchTodayTimes(): Promise<PrayerTime[]> {
-  const s = await readPrayerSettings();
-  return getPrayerTimesToday({
-    useLocation: s.useLocation,
-    method: s.method,
-    city: s.city,
-  });
+  }, msUntilNextLocalMidnightPlus(MIDNIGHT_REFRESH_MINUTES)) as unknown as number;
 }
 
 function attachEventListeners() {
@@ -314,6 +408,9 @@ function attachEventListeners() {
   });
 }
 
+// -----------------------------
+// Public service
+// -----------------------------
 export const NotificationService = {
   /**
    * Call once on app startup, for example in your root layout.
@@ -330,8 +427,9 @@ export const NotificationService = {
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
+        // Below two are iOS-specific; Expo ignores when not applicable
+        shouldShowBanner: true as any,
+        shouldShowList: true as any,
       }),
     });
 
@@ -370,9 +468,9 @@ export const NotificationService = {
       const times = await fetchTodayTimes();
       const cityDisplay = await resolveCityDisplay();
 
-      // Shortcut to avoid needless churn when nothing changed
       const today = yyyymmdd();
-      const nextDayKey = `day_${today}_${JSON.stringify(prefs)}_${cityDisplay}`;
+      const timesFingerprint = JSON.stringify(times.map((t) => [t.label, t.time]));
+      const nextDayKey = `day_${today}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}`;
       const lastDayKey = (await AsyncStorage.getItem(STORAGE_DAYKEY)) || "";
 
       // Only skip on light triggers to avoid missing changes

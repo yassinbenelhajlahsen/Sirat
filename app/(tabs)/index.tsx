@@ -193,7 +193,18 @@ export default function Home() {
 
   useEffect(() => {
     (async () => {
-      await Notifications.requestPermissionsAsync();
+      try {
+        // Ask for notifications
+        await Notifications.requestPermissionsAsync();
+
+        // Ask for location permissions next
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.warn("Location permission not granted.");
+        }
+      } catch (e) {
+        console.error("Permission request failed:", e);
+      }
     })();
   }, []);
 
@@ -206,7 +217,6 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

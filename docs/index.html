@@ -7,6 +7,25 @@
     <link rel="icon" href="assets/Sirat-Icon.png" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: linear-gradient(
+          180deg,
+          #08260b 0%,
+          #0c3605 50%,
+          #06280a 100%
+        );
+      }
+
+      body {
+        /* allow content to avoid the notch and home indicator */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        box-sizing: border-box;
+      }
+
       /* subtle glass card */
       .glass {
         background: linear-gradient(
@@ -116,16 +135,6 @@
               >Privacy Policy</a
             >
           </div>
-        </div>
-
-        <div
-          class="w-44 h-44 sm:w-56 sm:h-56 rounded-xl bg-white/5 flex items-center justify-center"
-        >
-          <img
-            src="assets/Sirat-Icon.png"
-            alt="Sirat app"
-            class="w-28 h-28 sm:w-36 sm:h-36"
-          />
         </div>
       </header>
 
