@@ -6,58 +6,221 @@
     <title>Sirat – Your Daily Companion</title>
     <link rel="icon" href="assets/Sirat-Icon.png" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* subtle glass card */
+      .glass {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.02)
+        );
+        backdrop-filter: blur(6px);
+      }
+    </style>
   </head>
 
-  <body class="bg-[#0c3605] text-white font-sans flex flex-col min-h-screen">
-    <!-- Header -->
-    <header class="text-center py-10">
-      <img
-        src="assets/Sirat-Icon.png"
-        alt="Sirat App Logo"
-        class="mx-auto w-24 h-24 mb-6 rounded-xl"
-      />
-      <h1 class="text-4xl font-semibold text-[#f5d36e]">Sirat</h1>
-      <p class="mt-3 text-lg text-gray-200 max-w-xl mx-auto px-4">
-        Sirat helps Muslims stay connected with prayer times, Qibla direction, and nearby mosques — all in one elegant mobile app.
-      </p>
-    </header>
+  <body
+    class="bg-gradient-to-b from-[#08260b] via-[#0c3605] to-[#06280a] text-white font-sans flex flex-col min-h-screen"
+  >
+    <div class="max-w-5xl mx-auto w-full px-6">
+      <!-- Top navigation -->
+      <nav class="flex items-center justify-between py-6">
+        <a href="/" class="flex items-center gap-3">
+          <img
+            src="assets/Sirat-Icon.png"
+            alt="Sirat"
+            class="w-12 h-12 rounded-lg shadow-sm"
+          />
+          <div>
+            <span class="block text-xl font-semibold text-[#f5d36e]"
+              >Sirat</span
+            >
+            <span class="block text-xs text-gray-300 -mt-1"
+              >Your Daily Companion</span
+            >
+          </div>
+        </a>
 
-    <!-- Features -->
-    <section class="flex-1 px-6 text-center">
-      <h2 class="text-2xl text-[#f5d36e] font-semibold mb-4">Features</h2>
-      <ul class="space-y-2 text-gray-100">
-        <li>🕋 Accurate daily prayer times based on your location</li>
-        <li>🧭 Real-time Qibla compass with smooth calibration</li>
-        <li>🏙️ Mosque discovery with live map previews</li>
-        <li>🔔 Custom notifications for each prayer</li>
-        <li>📅 Dynamic Islamic holiday calendar</li>
-      </ul>
-    </section>
+        <div class="hidden sm:flex items-center gap-3">
+          <a
+            href="privacy.html"
+            class="text-sm text-gray-300 hover:text-[#f5d36e] transition"
+            >Privacy</a
+          >
+          <a
+            href="https://github.com/yassinbenelhajlahsen/sirat"
+            target="_blank"
+            class="text-sm border border-transparent hover:border-[#f5d36e] px-3 py-1 rounded-md transition text-[#f5d36e]"
+            >GitHub</a
+          >
+          <a
+            href="https://your-download-link.com"
+            target="_blank"
+            class="ml-2 inline-flex items-center gap-2 bg-[#f5d36e] text-[#0c3605] px-4 py-2 rounded-lg font-medium hover:scale-[1.02] transition shadow-md"
+            >Download</a
+          >
+        </div>
 
-    <!-- Links -->
-    <section class="text-center mt-10 space-x-6">
-      <a
-        href="https://your-download-link.com"
-        class="inline-block bg-[#f5d36e] text-[#0c3605] px-5 py-2 rounded-lg font-medium hover:bg-yellow-400 transition"
-        target="_blank"
-        >Download App</a
-      >
-      <a
-        href="https://github.com/your-username/sirat"
-        class="inline-block border border-[#f5d36e] text-[#f5d36e] px-5 py-2 rounded-lg font-medium hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
-        target="_blank"
-        >View on GitHub</a
-      >
-      <a
-        href="privacy.html"
-        class="block mt-6 text-sm underline text-gray-300 hover:text-[#f5d36e]"
-        >Privacy Policy</a
-      >
-    </section>
+        <button
+          id="mobile-menu-btn"
+          class="sm:hidden p-2 rounded-md bg-white/5"
+        >
+          <svg
+            class="w-6 h-6 text-gray-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+      </nav>
 
-    <!-- Footer -->
-    <footer class="text-center text-sm text-gray-400 mt-auto pb-6">
-      © 2025 Sirat by Yassin Benelhajlahsen. All rights reserved.
-    </footer>
+      <!-- Hero -->
+      <header
+        class="glass rounded-2xl p-8 sm:p-12 flex flex-col sm:flex-row items-center gap-8 shadow-xl"
+      >
+        <div class="flex-1">
+          <h1
+            class="text-4xl sm:text-5xl font-extrabold text-[#f5d36e] leading-tight"
+          >
+            Stay connected with prayer times, Qibla, and mosques — beautifully.
+          </h1>
+          <p class="mt-4 text-gray-200 max-w-lg">
+            Sirat provides precise prayer times, a smooth Qibla compass, and
+            nearby mosque discovery — all optimized for privacy and on-device
+            processing.
+          </p>
+
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a
+              href="https://your-download-link.com"
+              target="_blank"
+              class="inline-flex items-center gap-2 bg-[#f5d36e] text-[#0c3605] px-5 py-3 rounded-lg font-medium hover:shadow-lg transition"
+              >Download App</a
+            >
+            <a
+              href="https://github.com/yassinbenelhajlahsen/sirat"
+              target="_blank"
+              class="inline-flex items-center gap-2 border border-[#f5d36e] text-[#f5d36e] px-4 py-3 rounded-lg hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
+              >View on GitHub</a
+            >
+            <a
+              href="privacy.html"
+              class="mt-2 sm:mt-0 text-sm underline text-gray-300 hover:text-[#f5d36e]"
+              >Privacy Policy</a
+            >
+          </div>
+        </div>
+
+        <div
+          class="w-44 h-44 sm:w-56 sm:h-56 rounded-xl bg-white/5 flex items-center justify-center"
+        >
+          <img
+            src="assets/Sirat-Icon.png"
+            alt="Sirat app"
+            class="w-28 h-28 sm:w-36 sm:h-36"
+          />
+        </div>
+      </header>
+
+      <!-- Features grid -->
+      <section class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-[#f5d36e]">
+            Accurate Prayer Times
+          </h3>
+          <p class="mt-2 text-gray-200 text-sm">
+            Automatic location-based calculations with configurable calculation
+            methods and offsets.
+          </p>
+        </div>
+
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-[#f5d36e]">Real-time Qibla</h3>
+          <p class="mt-2 text-gray-200 text-sm">
+            Smooth compass with calibration guidance and degree readout.
+          </p>
+        </div>
+
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-[#f5d36e]">Mosque Discovery</h3>
+          <p class="mt-2 text-gray-200 text-sm">
+            Find nearby mosques with live map previews and distance estimations.
+          </p>
+        </div>
+
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-[#f5d36e]">
+            Custom Notifications
+          </h3>
+          <p class="mt-2 text-gray-200 text-sm">
+            Granular alert settings for each prayer, silent modes, and snooze.
+          </p>
+        </div>
+
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-[#f5d36e]">Holiday Calendar</h3>
+          <p class="mt-2 text-gray-200 text-sm">
+            Dynamic Islamic calendar with major holidays and local observances.
+          </p>
+        </div>
+
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-[#f5d36e]">Privacy-first</h3>
+          <p class="mt-2 text-gray-200 text-sm">
+            Most processing is local — no personal data stored on remote
+            servers.
+          </p>
+        </div>
+      </section>
+
+      <!-- CTA strip -->
+      <section
+        class="mt-10 glass rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+      >
+        <div>
+          <h4 class="text-lg font-semibold text-[#f5d36e]">
+            Ready to try Sirat?
+          </h4>
+          <p class="text-sm text-gray-200 mt-1">
+            Install the app and keep your worship schedule reliable and private.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <a
+            href="https://your-download-link.com"
+            target="_blank"
+            class="bg-[#f5d36e] text-[#0c3605] px-4 py-2 rounded-md font-medium hover:scale-105 transition"
+            >Download</a
+          >
+          <a
+            href="https://github.com/yassinbenelhajlahsen/sirat"
+            target="_blank"
+            class="px-4 py-2 rounded-md border border-[#f5d36e] text-[#f5d36e] hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
+            >View Source</a
+          >
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="text-center text-sm text-gray-400 mt-12 pb-10">
+        © 2025 Sirat by Yassin Benelhajlahsen. All rights reserved.
+      </footer>
+    </div>
+
+    <script>
+      // minimal mobile menu toggle
+      const btn = document.getElementById("mobile-menu-btn");
+      btn?.addEventListener("click", () => {
+        const menu = document.querySelector("nav > .sm\\:flex");
+        menu?.classList.toggle("hidden");
+      });
+    </script>
   </body>
 </html>

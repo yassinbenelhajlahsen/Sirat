@@ -5,79 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Privacy Policy | Sirat</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .glass {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.02)
+        );
+        backdrop-filter: blur(6px);
+      }
+    </style>
   </head>
 
-  <body class="bg-[#0c3605] text-white font-sans px-6 py-10 max-w-3xl mx-auto">
-    <h1 class="text-3xl text-[#f5d36e] font-semibold mb-6 text-center">
-      Privacy Policy
-    </h1>
-
-    <p class="mb-4">
-      Sirat respects your privacy and is committed to protecting your personal
-      data. This policy explains how your information is handled when you use
-      the app.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">1. Location Data</h2>
-    <p class="mb-4">
-      Sirat uses your location only to calculate accurate prayer times and
-      display nearby mosques. Location data is never stored, shared, or
-      transmitted to any third-party server.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">2. Device Information</h2>
-    <p class="mb-4">
-      Sirat may access basic device data (such as timezone and language
-      settings) to personalize your experience. This data is processed locally
-      on your device and not uploaded anywhere.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">3. Prayer Notifications</h2>
-    <p class="mb-4">
-      Notification preferences are stored securely on your device using local
-      storage. Sirat does not track or collect any information about your
-      notification usage.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">4. Internet Access</h2>
-    <p class="mb-4">
-      Sirat connects to trusted APIs (such as Aladhan and Google Places) to
-      fetch accurate prayer times and mosque data. These requests are anonymous
-      and do not include personal identifiers.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">5. Data Retention</h2>
-    <p class="mb-4">
-      Sirat does not store any personal data on remote servers. All preferences
-      and cached prayer times are stored locally and can be deleted by
-      uninstalling the app.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">6. Third-Party Services</h2>
-    <p class="mb-4">
-      Sirat may use APIs from Google Maps, Aladhan, and Expo for functionality.
-      These services have their own privacy policies, which you can review on
-      their websites.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">7. Your Consent</h2>
-    <p class="mb-4">
-      By using Sirat, you consent to this privacy policy. If you do not agree,
-      please discontinue use of the app.
-    </p>
-
-    <h2 class="text-xl text-[#f5d36e] mt-6 mb-2">8. Contact</h2>
-    <p>
-      For questions or privacy concerns, contact:
+  <body
+    class="bg-gradient-to-b from-[#08260b] via-[#0c3605] to-[#06280a] text-white font-sans px-6 py-12"
+  >
+    <div class="max-w-3xl mx-auto">
       <a
-        href="mailto:support@siratapp.com"
-        class="underline text-[#f5d36e]"
-        >support@siratapp.com</a
+        href="index.html"
+        class="inline-flex items-center gap-2 text-gray-200 bg-white/5 hover:bg-white/10 px-3 py-2 rounded-md mb-6 transition-transform duration-200 ease-in-out transform hover:-translate-y-1 hover:text-[#f5d36e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#f5d36e]"
+        aria-label="Return to home"
       >
-    </p>
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back to Home
+      </a>
 
-    <footer class="text-center text-sm text-gray-400 mt-10">
-      © 2025 Sirat by Yassin Benelhajlahsen
-    </footer>
+      <main class="glass rounded-2xl p-8 shadow-lg">
+        <header class="text-center mb-6">
+          <img
+            src="assets/Sirat-Icon.png"
+            alt="Sirat"
+            class="mx-auto w-20 h-20 rounded-lg"
+          />
+          <h1 class="text-3xl text-[#f5d36e] font-semibold mt-4">
+            Privacy Policy
+          </h1>
+          <p class="text-sm text-gray-300 mt-2">
+            How Sirat handles your data — simple and privacy-first.
+          </p>
+        </header>
+
+        <section class="space-y-6 text-gray-200">
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">
+              1. Location Data
+            </h2>
+            <p class="mt-2 text-sm">
+              Sirat uses your location only to calculate accurate prayer times
+              and show nearby mosques. Location data is processed on-device and
+              not stored or shared without your consent.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">
+              2. Device Information
+            </h2>
+            <p class="mt-2 text-sm">
+              Basic device info (timezone, language) may be used to personalize
+              the app. This is processed locally and not uploaded.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">
+              3. Prayer Notifications
+            </h2>
+            <p class="mt-2 text-sm">
+              Notification preferences are saved locally on your device. Sirat
+              does not collect usage telemetry related to notifications.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">
+              4. Internet Access
+            </h2>
+            <p class="mt-2 text-sm">
+              Sirat fetches data from trusted APIs (Aladhan, Google Places)
+              where needed. Requests are anonymous and do not include personal
+              identifiers from the app.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">
+              5. Data Retention
+            </h2>
+            <p class="mt-2 text-sm">
+              No personal data is stored on remote servers by Sirat. Cached
+              preferences and prayer times remain on your device and can be
+              cleared by uninstalling the app.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">
+              6. Third-Party Services
+            </h2>
+            <p class="mt-2 text-sm">
+              Third-party APIs (Google Maps, Aladhan, Expo) are used; review
+              their privacy policies for details.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">
+              7. Your Consent
+            </h2>
+            <p class="mt-2 text-sm">
+              Using Sirat indicates acceptance of this policy. If you disagree,
+              discontinue use of the app.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="text-lg text-[#f5d36e] font-semibold">8. Contact</h2>
+            <p class="mt-2 text-sm">
+              Questions? Contact
+              <a
+                href="mailto:yassinbenelhajlahsen@gmail.com"
+                class="underline text-[#f5d36e]"
+                >yassinbenelhajlahsen@gmail.com</a
+              >
+            </p>
+          </div>
+        </section>
+
+        <footer class="text-center text-sm text-gray-400 mt-8">
+          © 2025 Sirat by Yassin Benelhajlahsen
+        </footer>
+      </main>
+    </div>
   </body>
 </html>

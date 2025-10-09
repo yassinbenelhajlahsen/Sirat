@@ -30,11 +30,7 @@ function SupportFooter({
       <Pressable
         accessibilityRole="link"
         accessibilityLabel="Open Sirat website"
-        onPress={() =>
-          Linking.openURL("https://yassinbenelhajlahsen.github.io/sirat").catch(
-            () => {}
-          )
-        }
+        onPress={() => Linking.openURL("https://sirat.dev").catch(() => {})}
         style={{
           backgroundColor: "rgba(255,255,255,0.03)",
           borderRadius: 12,
@@ -50,14 +46,14 @@ function SupportFooter({
         }}
       >
         <Text style={{ color: textColor, fontSize: 13, textAlign: "center" }}>
-          Visit:{" "}
+          Questions?{" "}
           <Text
             style={{
               color: accentColor,
               fontFamily: "SFProDisplay-Semibold",
             }}
           >
-            https://yassinbenelhajlahsen.github.io/sirat
+            Visit our site!
           </Text>
         </Text>
       </Pressable>

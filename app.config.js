@@ -7,7 +7,7 @@ export default {
     slug: "Sirat",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/Sirat-.png",
+    icon: "./assets/Sirat-Icon.png",
     splash: {
       backgroundColor: "#134b0a",
     },
