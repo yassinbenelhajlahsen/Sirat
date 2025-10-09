@@ -1,3 +1,4 @@
+// app.config.js
 import "dotenv/config";
 
 export default {
@@ -6,7 +7,7 @@ export default {
     slug: "Sirat",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/Sirat-.png",
     splash: {
       backgroundColor: "#134b0a",
     },
@@ -23,14 +24,6 @@ export default {
         CFBundleDisplayName: "Sirat",
       },
       teamId: "5AN795CL7Z",
-    },
-    android: {
-      package: "com.yassinbenelhajlahsen.sirat",
-      versionCode: 1,
-      adaptiveIcon: {
-        foregroundImage: "./assets/icon.png",
-        backgroundColor: "#134b0a",
-      },
     },
     plugins: ["expo-router", "expo-font"],
     experiments: {

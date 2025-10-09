@@ -1,14 +1,15 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useFonts } from "expo-font";
+// app/_layout.tsx
 import { Slot } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
-import { useEffect, useRef, useState } from "react";
-import { Animated, Easing } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useFonts } from "expo-font";
+import { Ionicons } from "@expo/vector-icons";
 
 import { NotificationService } from "../services/notificationService";
-import GlobalTransition from "./components/GlobalTransition";
 import SplashScreen from "./components/SplashScreen";
+
+// Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -19,70 +20,38 @@ export default function RootLayout() {
     ...Ionicons.font,
   });
 
-  const [appReady, setAppReady] = useState(false);
+  // Render the dynamic splash until the app is ready
   const [showSplash, setShowSplash] = useState(true);
-  const fadeAnim = useRef(new Animated.Value(0)).current; 
+
+  // If you add more boot tasks, flip this when they are done
+  const appReady = fontsLoaded;
+
+  // Optional non-blocking init that should not delay first paint
   useEffect(() => {
     NotificationService.init();
   }, []);
-  // Wait for fonts to load, then trigger transition
-  useEffect(() => {
-    if (fontsLoaded) {
-      setTimeout(() => {
-        setAppReady(true);
-      }, 1800);
-    }
-  }, [fontsLoaded]);
 
-  // Fade splash out when ready
-  useEffect(() => {
-    if (!appReady) return;
-
-    (async () => {
-      try {
-        await ExpoSplash.hideAsync();
-      } catch (e) {}
-      Animated.sequence([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.delay(2200),
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 700,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setShowSplash(false);
-      });
-    })();
-  }, [appReady]);
+  // Hide native splash only after our React splash has mounted
+  const hasHiddenNative = useRef(false);
+  const hideNativeSplash = useCallback(async () => {
+    if (hasHiddenNative.current) return;
+    hasHiddenNative.current = true;
+    try {
+      await ExpoSplash.hideAsync();
+    } catch {}
+  }, []);
 
   return (
     <SafeAreaProvider>
-      {/* Hadith splash overlay with fade-out */}
-      {showSplash && (
-        <Animated.View
-          style={{
-            position: "absolute",
-            zIndex: 99,
-            width: "100%",
-            height: "100%",
-            opacity: fadeAnim,
-          }}
-        >
-          <SplashScreen />
-        </Animated.View>
-      )}
-
-      {/* Main app layout */}
-      <GlobalTransition>
+      {showSplash ? (
+        <SplashScreen
+          ready={appReady}
+          onReadyToHideNative={hideNativeSplash}
+          onFinished={() => setShowSplash(false)}
+        />
+      ) : (
         <Slot />
-      </GlobalTransition>
+      )}
     </SafeAreaProvider>
   );
 }

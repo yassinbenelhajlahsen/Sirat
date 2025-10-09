@@ -5,9 +5,11 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  PanResponder,
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -52,6 +54,16 @@ export default function CalendarScreen() {
   const [navigating, setNavigating] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const { width: screenWidth } = useWindowDimensions();
+
+  // keep refs for current viewMonth/viewYear so PanResponder callbacks read fresh values
+  const viewMonthRef = useRef(viewMonth);
+  const viewYearRef = useRef(viewYear);
+  useEffect(() => {
+    viewMonthRef.current = viewMonth;
+    viewYearRef.current = viewYear;
+  }, [viewMonth, viewYear]);
 
   const isViewingToday =
     viewMonth === today.getMonth() && viewYear === today.getFullYear();
@@ -88,36 +100,142 @@ export default function CalendarScreen() {
     };
   }, [viewYear]);
 
-  // Month fade animation
-  const animateMonthChange = (newYear: number, newMonth: number) => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 150,
-      useNativeDriver: true,
-    }).start(() => {
-      setViewYear(newYear);
-      setViewMonth(newMonth);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 200,
+  // Slide + fade animation helper. dir = 1 => next month (slide left), dir = -1 => previous month (slide right)
+  const animateSlideChange = (
+    dir: 1 | -1,
+    targetYear: number,
+    targetMonth: number
+  ) => {
+    // if already animating, ignore
+    if (navigating) return;
+    setNavigating(true);
+
+    // slide out in the swipe direction + slight fade
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: -dir * screenWidth,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-      }).start();
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0.9,
+        duration: 180,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // set new month/year
+      setViewYear(targetYear);
+      setViewMonth(targetMonth);
+
+      // prepare incoming position (opposite side) and animate back to center
+      translateX.setValue(dir * screenWidth);
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration: 240,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setNavigating(false);
+      });
     });
   };
 
+  // Updated button handlers to use slide animation
   const goToPreviousMonth = () => {
     const prev = new Date(viewYear, viewMonth - 1);
     if (prev >= minDate) {
-      animateMonthChange(prev.getFullYear(), prev.getMonth());
+      animateSlideChange(-1, prev.getFullYear(), prev.getMonth());
     }
   };
 
   const goToNextMonth = () => {
     const next = new Date(viewYear, viewMonth + 1);
     if (next <= maxDate) {
-      animateMonthChange(next.getFullYear(), next.getMonth());
+      animateSlideChange(1, next.getFullYear(), next.getMonth());
     }
   };
+
+  // PanResponder for horizontal swipes
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dx) > 8 && Math.abs(gestureState.dy) < 20,
+      onPanResponderGrant: () => {
+        // stop any ongoing animations and use translateX directly
+        translateX.stopAnimation();
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // follow finger
+        translateX.setValue(gestureState.dx);
+        // subtle fade while dragging
+        const fade =
+          1 - Math.min(Math.abs(gestureState.dx) / screenWidth, 0.25);
+        fadeAnim.setValue(fade);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const dx = gestureState.dx;
+        const vx = gestureState.vx;
+        const threshold = Math.min(0.25 * screenWidth, 80); // threshold to trigger
+        // determine direction: left swipe (next) if dx < -threshold OR high left velocity
+        if (dx < -threshold || (vx < -0.8 && Math.abs(dx) > 20)) {
+          // next month
+          const currentYear = viewYearRef.current;
+          const currentMonth = viewMonthRef.current;
+          const next = new Date(currentYear, currentMonth + 1);
+          if (next <= maxDate) {
+            animateSlideChange(1, next.getFullYear(), next.getMonth());
+            return;
+          }
+        } else if (dx > threshold || (vx > 0.8 && Math.abs(dx) > 20)) {
+          // previous month
+          const currentYear = viewYearRef.current;
+          const currentMonth = viewMonthRef.current;
+          const prev = new Date(currentYear, currentMonth - 1);
+          if (prev >= minDate) {
+            animateSlideChange(-1, prev.getFullYear(), prev.getMonth());
+            return;
+          }
+        }
+
+        // otherwise snap back to center
+        Animated.parallel([
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 180,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 160,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      },
+      onPanResponderTerminate: () => {
+        // snap back
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration: 160,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 140,
+          useNativeDriver: true,
+        }).start();
+      },
+    })
+  ).current;
 
   // Animate fade-out before navigating to date details
   const handleDatePress = (selectedDate: Date, holidayName?: string) => {
@@ -151,22 +269,8 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
-      <Animated.View
-        style={{
-          flex: 1,
-          padding: 16,
-          opacity: fadeAnim,
-          transform: [
-            {
-              scale: fadeAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.98, 1],
-              }),
-            },
-          ],
-        }}
-      >
-        {/* Header */}
+      {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
+      <View style={{ padding: 16 }}>
         <Text
           style={{
             color: "white",
@@ -178,7 +282,6 @@ export default function CalendarScreen() {
           Calendar
         </Text>
 
-        {/* Month Navigation */}
         <View
           style={{
             flexDirection: "row",
@@ -223,7 +326,28 @@ export default function CalendarScreen() {
             />
           </TouchableOpacity>
         </View>
+      </View>
 
+      {/* Animated calendar area (swipe + slide animations applied here only) */}
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={{
+          flex: 1,
+          padding: 16,
+          opacity: fadeAnim,
+          transform: [
+            {
+              translateX: translateX,
+            },
+            {
+              scale: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.98, 1],
+              }),
+            },
+          ],
+        }}
+      >
         {/* Calendar Grid */}
         <View style={{ flex: 1, justifyContent: "flex-start" }}>
           {/* Day of week */}
@@ -336,9 +460,15 @@ export default function CalendarScreen() {
         {/* Back to Today */}
         {!isViewingToday && (
           <TouchableOpacity
-            onPress={() =>
-              animateMonthChange(today.getFullYear(), today.getMonth())
-            }
+            onPress={() => {
+              const targetYear = today.getFullYear();
+              const targetMonth = today.getMonth();
+              if (targetYear === viewYear && targetMonth === viewMonth) return;
+              const targetDate = new Date(targetYear, targetMonth);
+              const currentDate = new Date(viewYear, viewMonth);
+              const dir = targetDate > currentDate ? 1 : -1;
+              animateSlideChange(dir, targetYear, targetMonth);
+            }}
             style={{
               marginTop: 24,
               alignSelf: "center",

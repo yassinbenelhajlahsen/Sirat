@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   DeviceEventEmitter,
   Easing,
@@ -41,6 +42,7 @@ export default function NotificationSettings() {
   );
 
   const [enabled, setEnabled] = useState<boolean>(false);
+  const [loaded, setLoaded] = useState(false);
   const [prefs, setPrefs] = useState<Record<PrayerKey, boolean>>({
     Fajr: true,
     Sunrise: false,
@@ -70,7 +72,11 @@ export default function NotificationSettings() {
         ]);
         if (rawEnabled !== null) setEnabled(rawEnabled === "1");
         if (rawMap) setPrefs((p) => ({ ...p, ...JSON.parse(rawMap) }));
-      } catch {}
+      } catch (e) {
+        // ignore load errors but ensure UI unblocks
+      } finally {
+        setLoaded(true);
+      }
     })();
   }, []);
 
@@ -156,20 +162,27 @@ export default function NotificationSettings() {
         </View>
 
         {/* Master switch (native iOS-style) */}
-        <Switch
-          value={enabled}
-          onValueChange={(val) => persistEnabled(val)}
-          trackColor={{ false: "rgba(255,255,255,0.08)", true: colors.accent }}
-          thumbColor={enabled ? "#ffffff" : "#f4f3f4"}
-          ios_backgroundColor="rgba(255,255,255,0.08)"
-          accessibilityLabel={
-            enabled ? "Disable notifications" : "Enable notifications"
-          }
-        />
+        {!loaded ? (
+          <ActivityIndicator size="small" color={colors.accent} />
+        ) : (
+          <Switch
+            value={enabled}
+            onValueChange={(val) => persistEnabled(val)}
+            trackColor={{
+              false: "rgba(255,255,255,0.08)",
+              true: colors.accent,
+            }}
+            thumbColor={enabled ? "#ffffff" : "#f4f3f4"}
+            ios_backgroundColor="rgba(255,255,255,0.08)"
+            accessibilityLabel={
+              enabled ? "Disable notifications" : "Enable notifications"
+            }
+          />
+        )}
       </View>
 
       {/* Always-open list when enabled */}
-      {enabled ? (
+      {loaded && enabled ? (
         <View
           style={[
             styles.card,
@@ -180,49 +193,56 @@ export default function NotificationSettings() {
             const isOn = prefs[p];
             const anim = bellAnimRef.current[p];
             return (
-              <View
+              <Animated.View
                 key={p}
                 style={[
-                  styles.row,
+                  styles.itemCard,
                   {
                     backgroundColor:
                       idx % 2 === 0 ? colors.cardAlt : colors.card,
                     borderColor: colors.divider,
+                    transform: [{ scale: anim }],
                   },
                 ]}
               >
-                {/* Left: prayer name */}
-                <Text style={[styles.label, { color: colors.text }]}>{p}</Text>
+                <View style={styles.itemRow}>
+                  {/* Title + subtitle */}
+                  <View style={styles.meta}>
+                    <Text style={[styles.title, { color: colors.text }]}>
+                      {p}
+                    </Text>
+                  </View>
 
-                {/* Right: bell button (replaces iOS switch) */}
-                <Animated.View style={{ transform: [{ scale: anim }] }}>
-                  <Pressable
-                    onPress={() => togglePrayer(p)}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${p} alert ${
-                      isOn ? "on" : "off"
-                    }. Toggle`}
-                    style={[
-                      styles.bellBtn,
-                      {
-                        borderColor: isOn ? colors.accent : colors.divider,
-                        backgroundColor: isOn
-                          ? "rgba(218,186,105,0.15)"
-                          : "transparent",
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={
-                        isOn ? "notifications" : "notifications-off-outline"
-                      }
-                      size={18}
-                      color={isOn ? colors.accent : colors.subtext}
-                    />
-                  </Pressable>
-                </Animated.View>
-              </View>
+                  {/* Right: rounded toggle pill */}
+                  <Animated.View>
+                    <Pressable
+                      onPress={() => togglePrayer(p)}
+                      hitSlop={10}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${p} alert ${
+                        isOn ? "on" : "off"
+                      }. Toggle`}
+                      style={[
+                        styles.togglePill,
+                        {
+                          backgroundColor: isOn
+                            ? colors.accent
+                            : "rgba(255,255,255,0.04)",
+                          borderColor: isOn ? "transparent" : colors.divider,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={
+                          isOn ? "notifications" : "notifications-off-outline"
+                        }
+                        size={16}
+                        color={isOn ? "#0c3605" : colors.subtext}
+                      />
+                    </Pressable>
+                  </Animated.View>
+                </View>
+              </Animated.View>
             );
           })}
         </View>
@@ -247,23 +267,48 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
   },
-  row: {
+  itemCard: {
     paddingHorizontal: 14,
     paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  itemRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  label: {
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    borderWidth: 1,
+  },
+  meta: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  title: {
     fontSize: 15,
     fontFamily: "SFProDisplay-Semibold",
   },
-  bellBtn: {
-    paddingHorizontal: 10,
+  subtitle: {
+    fontSize: 12,
+    marginTop: 3,
+    fontFamily: "SFProDisplay-Regular",
+    opacity: 0.9,
+  },
+  togglePill: {
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: 20,
     borderWidth: StyleSheet.hairlineWidth,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 12,
+    minWidth: 44,
   },
   noteWrap: {
     paddingHorizontal: 14,

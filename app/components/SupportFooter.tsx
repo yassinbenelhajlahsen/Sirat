@@ -1,17 +1,15 @@
-import React, { memo } from "react";
-import { Pressable, Text, View, Linking } from "react-native";
+import { memo } from "react";
+import { Linking, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
-  email?: string;
   textColor?: string;
   accentColor?: string;
-  tabBarHeight?: number; 
-  gapAboveTab?: number;  
+  tabBarHeight?: number;
+  gapAboveTab?: number;
 };
 
 function SupportFooter({
-  email = "yassinbenelhajlahsen@gmail.com",
   textColor = "#ffffff",
   accentColor = "#DABA69",
 }: Props) {
@@ -31,9 +29,11 @@ function SupportFooter({
     >
       <Pressable
         accessibilityRole="link"
-        accessibilityLabel="Contact support via email"
+        accessibilityLabel="Open Sirat website"
         onPress={() =>
-          Linking.openURL(`mailto:${email}`).catch(() => {})
+          Linking.openURL("https://yassinbenelhajlahsen.github.io/sirat").catch(
+            () => {}
+          )
         }
         style={{
           backgroundColor: "rgba(255,255,255,0.03)",
@@ -50,14 +50,14 @@ function SupportFooter({
         }}
       >
         <Text style={{ color: textColor, fontSize: 13, textAlign: "center" }}>
-          Questions? Email:{" "}
+          Visit:{" "}
           <Text
             style={{
               color: accentColor,
               fontFamily: "SFProDisplay-Semibold",
             }}
           >
-            {email}
+            https://yassinbenelhajlahsen.github.io/sirat
           </Text>
         </Text>
       </Pressable>

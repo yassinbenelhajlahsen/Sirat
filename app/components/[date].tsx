@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
+  Linking,
+  Platform,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PrayerTimesList from "../components/PrayerTimesList";
 import {
   dateKeyFromDate,
   getHolidayMapForYear,
@@ -20,8 +21,13 @@ import {
   PrayerTime,
 } from "../../services/yearlyPrayerTimes";
 import getTimeUntil from "../../util/getTimeUntil";
+import PrayerTimesList from "../components/PrayerTimesList";
 
 const screenWidth = Dimensions.get("window").width;
+
+type UIError =
+  | { code: "PERMISSION"; message: string }
+  | { code: "GENERIC"; message: string };
 
 export default function CalendarDetail() {
   const { date, month, year, holiday: holidayParam } = useLocalSearchParams();
@@ -37,6 +43,17 @@ export default function CalendarDetail() {
   }>(null);
   const [timeLeft, setTimeLeft] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<UIError | null>(null);
+  const [fetchNonce, setFetchNonce] = useState(0);
+
+  // retry control for silent spinner mode
+  const retryRef = useRef<{
+    attempt: number;
+    t: ReturnType<typeof setTimeout> | null;
+  }>({
+    attempt: 0,
+    t: null,
+  });
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -72,26 +89,106 @@ export default function CalendarDetail() {
   const today = new Date();
   const isToday = selectedDate?.toDateString() === today.toDateString();
 
+  // Helpers
+  const clearRetry = () => {
+    if (retryRef.current.t) clearTimeout(retryRef.current.t);
+    retryRef.current.t = null;
+  };
+  const resetRetry = () => {
+    clearRetry();
+    retryRef.current.attempt = 0;
+  };
+  const scheduleRetry = () => {
+    const base = 2000; // 2s
+    const delay = Math.min(30000, base * Math.pow(2, retryRef.current.attempt)); // cap at 30s
+    const jitter = Math.floor(Math.random() * 500); // small jitter
+    clearRetry();
+    retryRef.current.t = setTimeout(() => {
+      setFetchNonce((n) => n + 1);
+    }, delay + jitter);
+    retryRef.current.attempt += 1;
+  };
+
+  const isPermissionError = (e: unknown) => {
+    const msg =
+      e && typeof e === "object" && "message" in e
+        ? String((e as any).message)
+        : String(e ?? "");
+    return /Location permission not granted/i.test(msg);
+  };
+
+  // Treat these as transient and keep spinner up
+  const isTransient = (e: unknown) => {
+    const msg =
+      e && typeof e === "object" && "message" in e
+        ? String((e as any).message)
+        : String(e ?? "");
+    // do not mention exact cause in UI
+    return (
+      /Too many requests/i.test(msg) || // service throttling
+      /Failed to fetch|Network request failed|NetworkError/i.test(msg)
+    );
+  };
+
+  // Fetch times for the selected date
   useEffect(() => {
     if (!selectedDate) return;
     let mounted = true;
+
     (async () => {
       setLoading(true);
+      setError(null);
+
       try {
         const settings: PrayerSettings = { useLocation: true, method: 2 };
         const times = await getPrayerTimesForDate(settings, selectedDate);
-        if (mounted) setPrayerTimes(times);
+        if (!mounted) return;
+
+        resetRetry();
+        setPrayerTimes(times);
+        setLoading(false);
       } catch (err) {
-        console.error("Error fetching prayer times:", err);
-        if (mounted) setPrayerTimes([]);
-      } finally {
-        if (mounted) setLoading(false);
+        if (!mounted) return;
+        console.warn("Prayer times fetch error:", err);
+
+        if (isPermissionError(err)) {
+          resetRetry();
+          setError({
+            code: "PERMISSION",
+            message:
+              "Location is off. Turn it on in Settings or choose a saved city, then try again.",
+          });
+          setPrayerTimes([]);
+          setLoading(false);
+          return;
+        }
+
+        if (isTransient(err)) {
+          // stay in spinner mode and silently retry until it works
+          setError(null);
+          setPrayerTimes([]);
+          setLoading(true);
+          scheduleRetry();
+          return;
+        }
+
+        // generic visible error
+        resetRetry();
+        setError({
+          code: "GENERIC",
+          message: "Could not load prayer times. Please try again later.",
+        });
+        setPrayerTimes([]);
+        setLoading(false);
       }
     })();
+
     return () => {
       mounted = false;
+      clearRetry();
     };
-  }, [selectedDate]);
+    // include nonce so manual retrys happen
+  }, [selectedDate, fetchNonce]);
 
   useEffect(() => {
     if (!isToday || prayerTimes.length === 0) return;
@@ -186,7 +283,7 @@ export default function CalendarDetail() {
     });
   };
 
-  // Smooth fade when going "Back to Calendar"
+  // Smooth fade when going Back to Calendar
   const animateBackToCalendar = () => {
     Animated.timing(fadeAnim, {
       toValue: 0,
@@ -199,6 +296,132 @@ export default function CalendarDetail() {
 
   const formatShort = (d: Date) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  const handleRetry = () => {
+    resetRetry();
+    setFetchNonce((n) => n + 1);
+  };
+
+  const openSettings = async () => {
+    try {
+      if (Platform.OS === "ios") {
+        await Linking.openURL("app-settings:");
+      } else {
+        await Linking.openSettings();
+      }
+    } catch {}
+  };
+
+  const ErrorBox = () =>
+    !error ? null : (
+      <View
+        style={{
+          backgroundColor: "#1a5f0e",
+          borderRadius: 12,
+          padding: 14,
+          marginTop: 8,
+          marginBottom: 14,
+          borderWidth: 2,
+          borderColor: "#DABA69",
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Ionicons name="alert-circle" size={20} color="#DABA69" />
+          <Text
+            style={{
+              color: "#DABA69",
+              fontSize: 16,
+              marginLeft: 8,
+              fontFamily: "SFProDisplay-Semibold",
+            }}
+          >
+            Problem loading prayer times
+          </Text>
+        </View>
+        <Text style={{ color: "white", marginTop: 8, lineHeight: 20 }}>
+          {error.message}
+        </Text>
+
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}
+        >
+          <TouchableOpacity
+            onPress={handleRetry}
+            style={{
+              backgroundColor: "#DABA69",
+              paddingVertical: 8,
+              paddingHorizontal: 14,
+              borderRadius: 8,
+              marginRight: 10,
+            }}
+          >
+            <Text
+              style={{
+                color: "#1a5f0e",
+                fontSize: 14,
+                fontFamily: "SFProDisplay-Semibold",
+              }}
+            >
+              Try again
+            </Text>
+          </TouchableOpacity>
+
+          {error.code === "PERMISSION" && (
+            <TouchableOpacity
+              onPress={openSettings}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: "#DABA69",
+              }}
+            >
+              <Text
+                style={{
+                  color: "#DABA69",
+                  fontSize: 14,
+                  fontFamily: "SFProDisplay-Semibold",
+                }}
+              >
+                Open Settings
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+
+  const EmptyBox = () => (
+    <View
+      style={{
+        backgroundColor: "#1a5f0e",
+        borderRadius: 12,
+        padding: 16,
+        marginTop: 8,
+        marginBottom: 14,
+        borderWidth: 2,
+        borderColor: "#1a5f0e",
+      }}
+    >
+      <Text style={{ color: "white", textAlign: "center" }}>
+        No prayer times available for this date.
+      </Text>
+      <TouchableOpacity
+        onPress={handleRetry}
+        style={{
+          alignSelf: "center",
+          marginTop: 10,
+          backgroundColor: "#DABA69",
+          paddingVertical: 6,
+          paddingHorizontal: 12,
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: "#1a5f0e", fontWeight: "600" }}>Try again</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
@@ -347,7 +570,7 @@ export default function CalendarDetail() {
           </View>
         )}
 
-        {/* Prayer Times */}
+        {/* Section title */}
         <Text
           style={{
             color: "white",
@@ -359,6 +582,9 @@ export default function CalendarDetail() {
           Prayer Times
         </Text>
 
+        {/* Error or Empty states */}
+        {error && <ErrorBox />}
+
         <View
           style={{
             marginTop: 10,
@@ -368,14 +594,18 @@ export default function CalendarDetail() {
             marginBottom: 10,
           }}
         >
-          <PrayerTimesList
-            loading={loading}
-            prayerTimes={prayerTimes}
-            nextPrayerLabel={isToday ? nextPrayer?.label ?? null : null}
-          />
+          {!loading && !error && prayerTimes.length === 0 ? (
+            <EmptyBox />
+          ) : (
+            <PrayerTimesList
+              loading={loading}
+              prayerTimes={prayerTimes}
+              nextPrayerLabel={isToday ? nextPrayer?.label ?? null : null}
+            />
+          )}
         </View>
 
-        {isToday && nextPrayer && (
+        {isToday && nextPrayer && !error && (
           <View style={{ marginTop: 10, alignItems: "center" }}>
             <Text style={{ color: "#DABA69", fontSize: 16 }}>
               Next: {nextPrayer.label} in {timeLeft}

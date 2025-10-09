@@ -1,9 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   DeviceEventEmitter,
   Easing,
+  Linking,
   Pressable,
   ScrollView,
   Switch,
@@ -15,7 +18,6 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-
 import { clearPrayerCache } from "../../services/yearlyPrayerTimes";
 import CALCULATION_METHODS from "../../util/calculationMethods";
 import CITIES, { City, cityKey } from "../../util/cities";
@@ -39,6 +41,7 @@ export default function Settings() {
   };
 
   const [useLocation, setUseLocation] = useState(true);
+  const [permissionStatus, setPermissionStatus] = useState<string | null>(null); // "granted" | "denied" | "undetermined" | null
 
   const [methodOpen, setMethodOpen] = useState(false);
   const [method, setMethod] = useState(2);
@@ -56,7 +59,8 @@ export default function Settings() {
     }).start();
   }, [methodOpen, methodAnim]);
 
-  const locationAnim = useRef(new Animated.Value(useLocation ? 1 : 0)).current;
+  // initialize to 0 when useLocation is true (hidden), 1 when false (visible)
+  const locationAnim = useRef(new Animated.Value(useLocation ? 0 : 1)).current;
   const toggleScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -68,7 +72,7 @@ export default function Settings() {
     }).start();
   }, [useLocation, locationAnim]);
 
-  const handleToggle = (val: boolean) => {
+  const handleToggle = async (val: boolean) => {
     Animated.sequence([
       Animated.timing(toggleScale, {
         toValue: 0.96,
@@ -81,7 +85,81 @@ export default function Settings() {
         useNativeDriver: true,
       }),
     ]).start();
-    setUseLocation(val);
+
+    if (val) {
+      // Turning ON -> ensure device services then request permission
+      try {
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        if (!servicesEnabled) {
+          Alert.alert(
+            "Location is off",
+            "Please enable Location Services on your device (Settings → Privacy & Security → Location Services), then try again.",
+            [
+              { text: "Open Settings", onPress: () => Linking.openSettings() },
+              { text: "Cancel", style: "cancel" },
+            ]
+          );
+          setUseLocation(false);
+          return;
+        }
+
+        let perm = await Location.getForegroundPermissionsAsync();
+        if (perm.status !== "granted") {
+          const requested = await Location.requestForegroundPermissionsAsync();
+          perm = requested;
+        }
+        setPermissionStatus(perm.status);
+        if (perm.status === "granted") {
+          setUseLocation(true);
+        } else {
+          // If denied, offer quick path to Settings so user can grant
+          Alert.alert(
+            "Permission needed",
+            "Sirat needs Location permission to use automatic prayer times and nearby mosque features. Grant permission in Settings or try again.",
+            [
+              { text: "Open Settings", onPress: () => Linking.openSettings() },
+              { text: "Try again", onPress: () => handleToggle(true) },
+              { text: "Cancel", style: "cancel" },
+            ]
+          );
+          setUseLocation(false);
+        }
+      } catch (err) {
+        console.warn("handleToggle enable error:", err);
+        setUseLocation(false);
+      }
+    } else {
+      // Turning OFF -> let user pick whether to just disable in-app use or open OS Settings to revoke permission
+      Alert.alert(
+        "Disable location",
+        "Do you want to stop using Location in the app only, or open device Settings to revoke Sirat's location permission?",
+        [
+          {
+            text: "Disable in app",
+            onPress: () => {
+              setUseLocation(false);
+            },
+            style: "default",
+          },
+          {
+            text: "Open Settings",
+            onPress: async () => {
+              try {
+                await Linking.openSettings();
+              } catch {
+                Alert.alert(
+                  "Open Settings",
+                  "Unable to open device Settings. Please revoke Location permission manually."
+                );
+              }
+              setUseLocation(false);
+            },
+            style: "destructive",
+          },
+          { text: "Cancel", style: "cancel" },
+        ]
+      );
+    }
   };
 
   const [city, setCity] = useState<City>(CITIES[0]);
@@ -120,6 +198,25 @@ export default function Settings() {
           const byName = CITIES.find((c) => c.name === legacy);
           if (byName) setCity(byName);
         }
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        const perm = await Location.getForegroundPermissionsAsync();
+        setPermissionStatus(perm.status);
+        // default to false if either services or permission not available
+        if (!servicesEnabled || perm.status !== "granted") {
+          setUseLocation(false);
+        } else {
+          setUseLocation(true);
+        }
+      } catch {
+        setPermissionStatus("denied");
+        setUseLocation(false);
       }
     })();
   }, []);
@@ -260,17 +357,18 @@ export default function Settings() {
             marginTop: 18,
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
             transform: [{ scale: toggleScale }],
           }}
         >
-          <View>
+          <View style={{ flex: 1, marginRight: 12 }}>
             <Text
               style={{
                 color: colors.text,
                 fontSize: 16,
                 fontFamily: "SFProDisplay-Semibold",
+                flexShrink: 1,
               }}
+              numberOfLines={1}
             >
               Use My Location
             </Text>
@@ -280,19 +378,25 @@ export default function Settings() {
                 opacity: 0.8,
                 fontSize: 13,
                 marginTop: 2,
+                flexShrink: 1,
               }}
+              numberOfLines={2}
             >
-              Turn off to select a city manually
+              {permissionStatus === "granted"
+                ? "Location permission granted. Turn off to select a city manually."
+                : "Tap to enable Location (app will request permission). Turn off to select a city manually."}
             </Text>
           </View>
 
-          <Switch
-            accessibilityLabel="Use my location"
-            value={useLocation}
-            onValueChange={handleToggle}
-            trackColor={{ false: "#555", true: colors.accent }}
-            thumbColor={useLocation ? "#fff" : "#888"}
-          />
+          <View style={{ width: 64, alignItems: "flex-end" }}>
+            <Switch
+              accessibilityLabel="Use my location"
+              value={useLocation}
+              onValueChange={handleToggle}
+              trackColor={{ false: "#555", true: colors.accent }}
+              thumbColor={useLocation ? "#fff" : "#888"}
+            />
+          </View>
         </Animated.View>
 
         {/* Manual city selector */}

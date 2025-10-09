@@ -77,8 +77,6 @@ export async function getHolidaysForYear(year: number): Promise<Holiday[]> {
 
           h.holidays.forEach((name: string) => {
             collected.push({ date: isoLocal, name });
-            // Debug:
-            // console.log("📅 Added holiday:", isoLocal, name);
           });
         }
       });

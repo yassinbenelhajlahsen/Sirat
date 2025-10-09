@@ -30,15 +30,65 @@ export async function getPrayerTimesToday(
   let country: string = "";
 
   if (settings.useLocation) {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") throw new Error("Location permission not granted");
+    // If device location services are off, fall back to manual city if provided.
+    try {
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      if (!servicesEnabled) {
+        if (settings.city) {
+          latitude = settings.city.lat;
+          longitude = settings.city.lng;
+        } else {
+          throw new Error(
+            "Location services are disabled. Enable Location Services or set a manual city in Settings."
+          );
+        }
+      } else {
+        // Request/verify permission; if denied, fall back to manual city when available.
+        let { status } = await Location.getForegroundPermissionsAsync();
+        if (status !== "granted") {
+          const requested = await Location.requestForegroundPermissionsAsync();
+          status = requested.status;
+        }
 
-    const loc = await Location.getCurrentPositionAsync({});
-    latitude = loc.coords.latitude;
-    longitude = loc.coords.longitude;
+        if (status !== "granted") {
+          if (settings.city) {
+            latitude = settings.city.lat;
+            longitude = settings.city.lng;
+          } else {
+            throw new Error(
+              "Location permission not granted. Grant permission or set a manual city in Settings."
+            );
+          }
+        } else {
+          // Permission granted — attempt to read location, but handle failures gracefully.
+          try {
+            const loc = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            });
+            latitude = loc.coords.latitude;
+            longitude = loc.coords.longitude;
 
-    const geo = await Location.reverseGeocodeAsync(loc.coords);
-    if (geo.length > 0 && geo[0].country) country = geo[0].country;
+            const geo = await Location.reverseGeocodeAsync(loc.coords);
+            if (geo.length > 0 && geo[0].country) country = geo[0].country;
+          } catch (err) {
+            // If retrieving position fails, fallback to manual city if available.
+            console.warn("getCurrentPositionAsync failed:", err);
+            if (settings.city) {
+              latitude = settings.city.lat;
+              longitude = settings.city.lng;
+            } else {
+              throw new Error(
+                "Unable to obtain current location. Please try again or set a manual city in Settings."
+              );
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // Bubble up a clear error message
+      if (err instanceof Error) throw err;
+      throw new Error("Location unavailable and no manual city configured.");
+    }
   } else {
     if (!settings.city)
       throw new Error("City must be provided when location is disabled");

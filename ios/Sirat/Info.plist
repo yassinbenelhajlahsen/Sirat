@@ -52,13 +52,13 @@
       <true/>
     </dict>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <string>This key is present for optional background scenarios. Sirat uses location primarily while the app is open to compute local prayer times, show nearby mosques, and center maps. Sirat does not track your location in the background by default.</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <string>Optional background location access. Sirat only requests this if you explicitly enable a background feature; otherwise location is used only while the app is in use.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <string>Allow Sirat to access your location while the app is open so it can calculate accurate prayer times, show nearby mosques on the map, and provide correct Qibla direction.</string>
     <key>NSMotionUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your device motion</string>
+    <string>Allow Sirat to access device motion sensors (compass/gyro) to determine device heading for the Qibla compass and improve alignment accuracy.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

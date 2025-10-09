@@ -1,9 +1,13 @@
+// app/(tabs)/Home.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   DeviceEventEmitter,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -18,8 +22,6 @@ import {
 import CITIES, { City, cityKey } from "../../util/cities";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
-
-import * as Notifications from "expo-notifications";
 
 function parseTimeToDate(timeStr: string): Date {
   const now = new Date();
@@ -45,6 +47,8 @@ export default function Home() {
   const [nextDayFajr, setNextDayFajr] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [banner, setBanner] = useState<string>("");
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -57,83 +61,152 @@ export default function Home() {
       ? JSON.parse(stored)
       : { useLocation: true, method: DEFAULT_METHOD, city: DEFAULT_CITY };
 
-    if (base.useLocation)
-      return { useLocation: true, method: base.method ?? DEFAULT_METHOD };
-
-    if (base.city && typeof base.city.lat === "number") {
-      return {
-        useLocation: false,
-        method: base.method ?? DEFAULT_METHOD,
-        city: base.city,
-      };
+    // Ensure we always have a city when useLocation is false
+    if (!base.useLocation) {
+      if (base.city && typeof base.city.lat === "number") return base;
+      const savedKey = (base as any).cityKey as string | undefined;
+      if (savedKey) {
+        const byKey = CITIES.find((c) => cityKey(c) === savedKey);
+        if (byKey) return { ...base, city: byKey };
+      }
+      return { ...base, city: DEFAULT_CITY };
     }
 
-    const savedKey = (base as any).cityKey as string | undefined;
-    if (savedKey) {
-      const byKey = CITIES.find((c) => cityKey(c) === savedKey);
-      if (byKey)
-        return {
-          useLocation: false,
-          method: base.method ?? DEFAULT_METHOD,
-          city: byKey,
-        };
-    }
-
+    // If useLocation true, city is optional
     return {
-      useLocation: false,
+      useLocation: true,
       method: base.method ?? DEFAULT_METHOD,
-      city: DEFAULT_CITY,
+      city: base.city ?? DEFAULT_CITY,
     };
   }
-  useEffect(() => {
-    (async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      console.log("Notification permission:", status);
-    })();
-  }, []);
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
+
+  async function persistSettings(payload: PrayerSettings) {
+    const save = {
+      useLocation: payload.useLocation,
+      method: payload.method,
+      cityKey: payload.city ? cityKey(payload.city) : undefined,
+      city: payload.city,
+    };
+    await AsyncStorage.setItem("prayerSettings", JSON.stringify(save));
+    if (!payload.useLocation && payload.city) {
+      await AsyncStorage.setItem("selectedCity", cityKey(payload.city));
+    }
+    // Keep the rest of the app in sync
+    DeviceEventEmitter.emit("settingsChanged", save);
+  }
+
+  // If iOS Location Services are off or permission is not granted,
+  // flip to manual city and show a banner.
+  async function syncUseLocationWithOSIfNeeded(
+    settings: PrayerSettings
+  ): Promise<PrayerSettings> {
+    if (!settings.useLocation) return settings;
+
+    try {
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      const perm = await Location.getForegroundPermissionsAsync();
+
+      const permitted = servicesEnabled && perm.status === "granted";
+      if (!permitted) {
+        const manualCity = settings.city ?? DEFAULT_CITY;
+        const updated: PrayerSettings = {
+          useLocation: false,
+          method: settings.method ?? DEFAULT_METHOD,
+          city: manualCity,
+        };
+        await persistSettings(updated);
+        setBanner(
+          `Location is off, so we are using your manual city: ${manualCity.name}. You can turn Location back on in iOS Settings or in Sirat Settings.`
+        );
+        return updated;
+      }
+    } catch (e) {
+      // If anything goes wrong, be safe and fall back to manual city
+      const manualCity = settings.city ?? DEFAULT_CITY;
+      const updated: PrayerSettings = {
+        useLocation: false,
+        method: settings.method ?? DEFAULT_METHOD,
+        city: manualCity,
+      };
+      await persistSettings(updated);
+      setBanner(
+        `We could not read your location. Using manual city: ${manualCity.name}.`
+      );
+      return updated;
+    }
+
+    // All good, keep using location
+    setBanner("");
+    return settings;
+  }
+
+  const loadData = async () => {
+    try {
       setLoading(true);
-      const settings = await getSettings();
+
+      // Reset transient UI state
+      setPrayerTimes([]);
+      setNextPrayer(null);
+      setNextDayFajr(null);
+      setTimeLeft("");
+      fadeAnim.setValue(0);
+
+      // Read settings and reconcile with OS
+      let settings = await getSettings();
+      settings = await syncUseLocationWithOSIfNeeded(settings);
+
       const times = await getPrayerTimesToday(settings);
       setPrayerTimes(times);
+
+      const now = new Date();
+      let foundNext = false;
+      for (let pt of times) {
+        const timeObj = parseTimeToDate(pt.time);
+        if (timeObj > now) {
+          setNextPrayer({ ...pt, dateObj: timeObj });
+          foundNext = true;
+          break;
+        }
+      }
+
+      if (!foundNext) {
+        // End of day peek
+        const tomorrowTimes = await getPrayerTimesToday(settings);
+        const fajr = tomorrowTimes.find((p) => p.label === "Fajr");
+        if (fajr) setNextDayFajr(fajr.time);
+      }
+    } catch (err) {
+      console.error("Error fetching prayer times:", err);
+      setBanner(
+        "We could not load prayer times right now. Please try again later or set a manual city in Settings."
+      );
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    (async () => {
+      await Notifications.requestPermissionsAsync();
+    })();
+  }, []);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
+      await loadData();
     });
     return () => sub.remove();
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const settings = await getSettings();
-        const times = await getPrayerTimesToday(settings);
-        setPrayerTimes(times);
-
-        const now = new Date();
-        let foundNext = false;
-        for (let pt of times) {
-          const timeObj = parseTimeToDate(pt.time);
-          if (timeObj > now) {
-            setNextPrayer({ ...pt, dateObj: timeObj });
-            foundNext = true;
-            break;
-          }
-        }
-
-        if (!foundNext) {
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          const nextDayTimes = await getPrayerTimesToday(settings);
-          const fajr = nextDayTimes.find((p) => p.label === "Fajr");
-          if (fajr) setNextDayFajr(fajr.time);
-        }
-      } catch (err) {
-        console.error("Error fetching prayer times:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -155,6 +228,13 @@ export default function Home() {
     }
   }, [nextDayFajr, nextPrayer]);
 
+  const colors = {
+    bg: "#134b0a",
+    card: "#1a5f0e",
+    text: "#ffffff",
+    accent: "#DABA69",
+  };
+
   const today = new Date();
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric",
@@ -167,11 +247,45 @@ export default function Home() {
   const tomorrowParam = encodeURIComponent(tomorrow.toISOString());
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.accent}
+            title="Refreshing…"
+            titleColor={colors.accent}
+          />
+        }
       >
+        {/* Banner when falling back to manual city or on errors */}
+        {!!banner && (
+          <View
+            style={{
+              backgroundColor: "#2a7520",
+              borderColor: colors.accent,
+              borderWidth: 1,
+              borderRadius: 12,
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{
+                color: colors.accent,
+                fontFamily: "SFProDisplay-Semibold",
+                fontSize: 14,
+              }}
+            >
+              {banner}
+            </Text>
+          </View>
+        )}
+
         <Text
           style={{
             color: "white",
@@ -205,7 +319,7 @@ export default function Home() {
             </Text>
             <Text
               style={{
-                color: "#DABA69",
+                color: colors.accent,
                 fontSize: 16,
                 fontFamily: "SFProDisplay-Semibold",
                 marginTop: 4,
@@ -221,7 +335,7 @@ export default function Home() {
         <View
           style={{
             marginTop: 20,
-            backgroundColor: "#1a5f0e",
+            backgroundColor: colors.card,
             borderRadius: 16,
             padding: 20,
           }}
@@ -235,13 +349,12 @@ export default function Home() {
 
         {nextPrayer && (
           <View style={{ marginTop: 10, alignItems: "center" }}>
-            <Text style={{ color: "#DABA69", fontSize: 16 }}>
+            <Text style={{ color: colors.accent, fontSize: 16 }}>
               Next: {nextPrayer.label} in {timeLeft}
             </Text>
           </View>
         )}
 
-        {/* After Isha: clickable box matching holiday style */}
         {!nextPrayer && nextDayFajr && (
           <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
             <TouchableOpacity
@@ -257,13 +370,13 @@ export default function Home() {
                 })
               }
               style={{
-                backgroundColor: "#1a5f0e",
+                backgroundColor: colors.card,
                 borderRadius: 12,
                 paddingVertical: 18,
                 paddingHorizontal: 24,
                 borderWidth: 2,
-                borderColor: "#DABA69",
-                shadowColor: "#DABA69",
+                borderColor: colors.accent,
+                shadowColor: colors.accent,
                 shadowOpacity: 0.6,
                 shadowRadius: 8,
                 elevation: 5,
@@ -272,7 +385,7 @@ export default function Home() {
             >
               <Text
                 style={{
-                  color: "#DABA69",
+                  color: colors.accent,
                   fontSize: 18,
                   fontFamily: "SFProDisplay-Bold",
                   textAlign: "center",
