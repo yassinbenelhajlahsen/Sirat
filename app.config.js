@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.0.3",
+    version: "1.0.4",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
@@ -23,6 +23,10 @@ export default {
       infoPlist: {
         CFBundleDisplayName: "Sirat",
         ITSAppUsesNonExemptEncryption: false,
+        NSLocationWhenInUseUsageDescription:
+          "Sirat uses your location to show accurate prayer times for your area, determine the Qibla direction, and find nearby mosques.",
+        NSUserNotificationsUsageDescription:
+          "Sirat sends prayer time reminders and notifications you enable in the app settings.",
       },
     },
     plugins: ["expo-router", "expo-font"],
