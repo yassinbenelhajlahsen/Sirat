@@ -2,10 +2,92 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Edge-to-edge on iOS -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <!-- Match the browser UI color on mobile -->
+    <meta
+      name="theme-color"
+      content="#08260b"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#08260b"
+      media="(prefers-color-scheme: light)"
+    />
+
+    <!-- Optional PWA status bar style -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+
     <title>Privacy Policy | Sirat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      :root {
+        --bg-top: #08260b;
+        --bg-mid: #0c3605;
+        --bg-bottom: #06280a;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      html {
+        background-color: var(--bg-top);
+        background: linear-gradient(
+          180deg,
+          var(--bg-top) 0%,
+          var(--bg-mid) 50%,
+          var(--bg-bottom) 100%
+        );
+        background-attachment: fixed;
+        background-size: cover;
+        height: 100%;
+      }
+
+      body {
+        color: #fff;
+
+        /* Safe-area padding */
+        padding-top: env(safe-area-inset-top);
+        padding-top: constant(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-bottom: constant(safe-area-inset-bottom);
+
+        min-height: 100svh;
+        min-height: 100dvh;
+        min-height: 100vh;
+        box-sizing: border-box;
+        overflow-x: hidden;
+
+        background: transparent;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(
+          180deg,
+          var(--bg-top) 0%,
+          var(--bg-mid) 50%,
+          var(--bg-bottom) 100%
+        );
+        background-size: cover;
+      }
+
       .glass {
         background: linear-gradient(
           135deg,
@@ -17,9 +99,7 @@
     </style>
   </head>
 
-  <body
-    class="bg-gradient-to-b from-[#08260b] via-[#0c3605] to-[#06280a] text-white font-sans px-6 py-12"
-  >
+  <body class="px-6 py-12">
     <div class="max-w-3xl mx-auto">
       <a
         href="index.html"
@@ -54,7 +134,7 @@
             Privacy Policy
           </h1>
           <p class="text-sm text-gray-300 mt-2">
-            How Sirat handles your data — simple and privacy-first.
+            How Sirat handles your data in a simple, privacy-first way.
           </p>
         </header>
 
@@ -75,8 +155,8 @@
               2. Device Information
             </h2>
             <p class="mt-2 text-sm">
-              Basic device info (timezone, language) may be used to personalize
-              the app. This is processed locally and not uploaded.
+              Basic device info such as timezone and language may be used to
+              personalize the app. This is processed locally and not uploaded.
             </p>
           </div>
 
@@ -86,7 +166,7 @@
             </h2>
             <p class="mt-2 text-sm">
               Notification preferences are saved locally on your device. Sirat
-              does not collect usage telemetry related to notifications.
+              does not collect usage telemetry for notifications.
             </p>
           </div>
 
@@ -95,9 +175,9 @@
               4. Internet Access
             </h2>
             <p class="mt-2 text-sm">
-              Sirat fetches data from trusted APIs (Aladhan, Google Places)
-              where needed. Requests are anonymous and do not include personal
-              identifiers from the app.
+              Sirat fetches data from trusted APIs like Aladhan and Google
+              Places where needed. Requests are anonymous and do not include
+              personal identifiers from the app.
             </p>
           </div>
 
@@ -117,8 +197,8 @@
               6. Third-Party Services
             </h2>
             <p class="mt-2 text-sm">
-              Third-party APIs (Google Maps, Aladhan, Expo) are used; review
-              their privacy policies for details.
+              Third-party APIs such as Google Maps, Aladhan, and Expo are used.
+              Review their privacy policies for details.
             </p>
           </div>
 

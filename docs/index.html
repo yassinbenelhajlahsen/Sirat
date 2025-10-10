@@ -2,28 +2,95 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Edge-to-edge on iOS -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <!-- Match the browser UI color on mobile -->
+    <meta
+      name="theme-color"
+      content="#08260b"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#08260b"
+      media="(prefers-color-scheme: light)"
+    />
+
+    <!-- Optional PWA status bar style if you add to Home Screen on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+
     <title>Sirat – Your Daily Companion</title>
     <link rel="icon" href="assets/Sirat-Icon.png" />
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
+      :root {
+        --bg-top: #08260b;
+        --bg-mid: #0c3605;
+        --bg-bottom: #06280a;
+      }
+
       html,
       body {
         height: 100%;
         margin: 0;
-        background: linear-gradient(
-          180deg,
-          #08260b 0%,
-          #0c3605 50%,
-          #06280a 100%
-        );
       }
 
+      /* Primary gradient on the root so it fills the full page and scrolls correctly on desktop */
+      html {
+        background-color: var(--bg-top); /* fast paint fallback */
+        background: linear-gradient(
+          180deg,
+          var(--bg-top) 0%,
+          var(--bg-mid) 50%,
+          var(--bg-bottom) 100%
+        );
+        background-attachment: fixed;
+        background-size: cover;
+        height: 100%;
+      }
+
+      /* Body uses safe-area padding and relies on html's background */
       body {
-        /* allow content to avoid the notch and home indicator */
+        color: #fff;
+
+        /* Safe-area padding for notch/home indicator */
         padding-top: env(safe-area-inset-top);
+        padding-top: constant(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
+        padding-bottom: constant(safe-area-inset-bottom);
+
+        min-height: 100svh;
+        min-height: 100dvh;
+        min-height: 100vh;
         box-sizing: border-box;
+        overflow-x: hidden;
+
+        background: transparent; /* don't override html gradient */
+      }
+
+      /* Small fixed fallback layer for mobile browsers (covers notch areas); harmless on desktop */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(
+          180deg,
+          var(--bg-top) 0%,
+          var(--bg-mid) 50%,
+          var(--bg-bottom) 100%
+        );
+        background-size: cover;
       }
 
       /* subtle glass card */
@@ -38,9 +105,7 @@
     </style>
   </head>
 
-  <body
-    class="bg-gradient-to-b from-[#08260b] via-[#0c3605] to-[#06280a] text-white font-sans flex flex-col min-h-screen"
-  >
+  <body class="text-white font-sans flex flex-col">
     <div class="max-w-5xl mx-auto w-full px-6">
       <!-- Top navigation -->
       <nav class="flex items-center justify-between py-6">
@@ -108,11 +173,11 @@
           <h1
             class="text-4xl sm:text-5xl font-extrabold text-[#f5d36e] leading-tight"
           >
-            Stay connected with prayer times, Qibla, and mosques — beautifully.
+            Stay connected with prayer times, Qibla, and mosques.
           </h1>
           <p class="mt-4 text-gray-200 max-w-lg">
             Sirat provides precise prayer times, a smooth Qibla compass, and
-            nearby mosque discovery — all optimized for privacy and on-device
+            nearby mosque discovery, all optimized for privacy and on-device
             processing.
           </p>
 
@@ -148,8 +213,8 @@
             Accurate Prayer Times
           </h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Automatic location-based calculations with configurable calculation
-            methods and offsets.
+            Automatic location-based calculations with configurable methods and
+            offsets.
           </p>
         </div>
 
@@ -201,8 +266,7 @@
         >
           <h3 class="text-lg font-semibold text-[#f5d36e]">Privacy-first</h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Most processing is local — no personal data stored on remote
-            servers.
+            Most processing is local. No personal data stored on remote servers.
           </p>
         </div>
       </section>
