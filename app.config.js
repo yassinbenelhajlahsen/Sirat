@@ -1,4 +1,3 @@
-// app.config.js
 import "dotenv/config";
 
 export default {
@@ -20,10 +19,11 @@ export default {
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
       buildNumber: "1.0.0",
+      teamId: "5AN795CL7Z",
       infoPlist: {
         CFBundleDisplayName: "Sirat",
+        ITSAppUsesNonExemptEncryption: false,
       },
-      teamId: "5AN795CL7Z",
     },
     plugins: ["expo-router", "expo-font"],
     experiments: {

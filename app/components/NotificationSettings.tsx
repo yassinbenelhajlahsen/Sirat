@@ -1,3 +1,4 @@
+// app/components/NotificationSettings.tsx
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -27,7 +28,12 @@ const STORAGE_ENABLED = "notif_enabled_v1";
 const STORAGE_MAP = "notif_map_v1";
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
-export default function NotificationSettings() {
+type Props = {
+  // From Settings.tsx: notifStatus = "granted" | "denied"
+  notifStatus?: string | null;
+};
+
+export default function NotificationSettings({ notifStatus }: Props) {
   const colors = useMemo(
     () => ({
       bg: "#134b0a",
@@ -45,14 +51,16 @@ export default function NotificationSettings() {
   const [loaded, setLoaded] = useState(false);
   const [prefs, setPrefs] = useState<Record<PrayerKey, boolean>>({
     Fajr: true,
-    Sunrise: false,
+    Sunrise: true,
     Dhuhr: true,
     Asr: true,
     Maghrib: true,
     Isha: true,
   });
 
-  // tiny pulse for bell press feedback
+  // Track whether the user has an explicit stored preference
+  const hasStoredEnabledKey = useRef<boolean>(false);
+
   const bellAnimRef = useRef<Record<PrayerKey, Animated.Value>>({
     Fajr: new Animated.Value(1),
     Sunrise: new Animated.Value(1),
@@ -62,7 +70,7 @@ export default function NotificationSettings() {
     Isha: new Animated.Value(1),
   });
 
-  // load prefs
+  // Load prefs
   useEffect(() => {
     (async () => {
       try {
@@ -70,17 +78,28 @@ export default function NotificationSettings() {
           AsyncStorage.getItem(STORAGE_ENABLED),
           AsyncStorage.getItem(STORAGE_MAP),
         ]);
+        hasStoredEnabledKey.current = rawEnabled !== null;
+
         if (rawEnabled !== null) setEnabled(rawEnabled === "1");
         if (rawMap) setPrefs((p) => ({ ...p, ...JSON.parse(rawMap) }));
-      } catch (e) {
-        // ignore load errors but ensure UI unblocks
+      } catch {
+        // ignore load errors
       } finally {
         setLoaded(true);
       }
     })();
   }, []);
 
-  // persist master toggle
+  // Auto-enable once if OS permission is granted and user never chose
+  useEffect(() => {
+    if (!loaded) return;
+    if (notifStatus === "granted" && !hasStoredEnabledKey.current && !enabled) {
+      // First time permission granted and no explicit app toggle set — turn it on
+      persistEnabled(true);
+      hasStoredEnabledKey.current = true;
+    }
+  }, [notifStatus, loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const persistEnabled = useCallback(
     async (val: boolean) => {
       setEnabled(val);
@@ -93,7 +112,6 @@ export default function NotificationSettings() {
     [prefs]
   );
 
-  // persist per-prayer toggle
   const setPrayer = useCallback(
     async (k: PrayerKey, val: boolean) => {
       const next = { ...prefs, [k]: val };
@@ -136,7 +154,6 @@ export default function NotificationSettings() {
 
   return (
     <View>
-      {/* Header row */}
       <View style={styles.sectionHeader}>
         <View style={{ flexShrink: 1, paddingRight: 12 }}>
           <Text
@@ -161,13 +178,15 @@ export default function NotificationSettings() {
           </Text>
         </View>
 
-        {/* Master switch (native iOS-style) */}
         {!loaded ? (
           <ActivityIndicator size="small" color={colors.accent} />
         ) : (
           <Switch
             value={enabled}
-            onValueChange={(val) => persistEnabled(val)}
+            onValueChange={(val) => {
+              hasStoredEnabledKey.current = true;
+              persistEnabled(val);
+            }}
             trackColor={{
               false: "rgba(255,255,255,0.08)",
               true: colors.accent,
@@ -181,7 +200,6 @@ export default function NotificationSettings() {
         )}
       </View>
 
-      {/* Always-open list when enabled */}
       {loaded && enabled ? (
         <View
           style={[
@@ -206,14 +224,12 @@ export default function NotificationSettings() {
                 ]}
               >
                 <View style={styles.itemRow}>
-                  {/* Title + subtitle */}
                   <View style={styles.meta}>
                     <Text style={[styles.title, { color: colors.text }]}>
                       {p}
                     </Text>
                   </View>
 
-                  {/* Right: rounded toggle pill */}
                   <Animated.View>
                     <Pressable
                       onPress={() => togglePrayer(p)}
@@ -277,23 +293,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    borderWidth: 1,
-  },
-  meta: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 15,
-    fontFamily: "SFProDisplay-Semibold",
-  },
+  meta: { flex: 1, justifyContent: "center" },
+  title: { fontSize: 15, fontFamily: "SFProDisplay-Semibold" },
   subtitle: {
     fontSize: 12,
     marginTop: 3,
@@ -309,20 +310,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: 12,
     minWidth: 44,
-  },
-  noteWrap: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  masterToggle: {
-    padding: 4,
-  },
-  masterPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
   },
 });

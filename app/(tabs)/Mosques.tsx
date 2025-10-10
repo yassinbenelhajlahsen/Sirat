@@ -187,7 +187,7 @@ export default function MosqueScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <Text style={styles.title}>Mosques</Text>
-         <View style={{ flex: 1, marginTop: 20}}>
+          <View style={{ flex: 1, marginTop: 20 }}>
             {servicesOff ? (
               <InfoBanner
                 icon="location"
@@ -293,13 +293,12 @@ export default function MosqueScreen() {
         <Text style={styles.header}>Nearby</Text>
         {emptyNearby ? (
           <View style={styles.emptyCard}>
-            <Ionicons name="search" size={18} color="#DABA69" />
-            <Text style={styles.emptyText}>
-              No mosques found near your current location.
-            </Text>
-            <Text style={styles.emptySub}>
-              Try opening the map and “Search this area”.
-            </Text>
+            <View style={styles.emptyRow}>
+              <Ionicons name="search" size={18} color="#DABA69" />
+              <Text style={[styles.emptyText, { marginLeft: 10, flex: 1 }]}>
+                No mosques found near your current location.
+              </Text>
+            </View>
           </View>
         ) : (
           <FlatList
@@ -553,6 +552,11 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 6,
     marginBottom: 24,
+  },
+  emptyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
   },
   emptyText: { color: "white", fontSize: 15 },
   emptySub: { color: "#DABA69", fontSize: 13 },

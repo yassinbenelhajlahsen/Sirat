@@ -1,4 +1,4 @@
-// app/(tabs)/Home.tsx
+// app/(tabs)/index.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  AppState,
   DeviceEventEmitter,
   RefreshControl,
   ScrollView,
@@ -61,7 +62,6 @@ export default function Home() {
       ? JSON.parse(stored)
       : { useLocation: true, method: DEFAULT_METHOD, city: DEFAULT_CITY };
 
-    // Ensure we always have a city when useLocation is false
     if (!base.useLocation) {
       if (base.city && typeof base.city.lat === "number") return base;
       const savedKey = (base as any).cityKey as string | undefined;
@@ -72,7 +72,6 @@ export default function Home() {
       return { ...base, city: DEFAULT_CITY };
     }
 
-    // If useLocation true, city is optional
     return {
       useLocation: true,
       method: base.method ?? DEFAULT_METHOD,
@@ -91,69 +90,51 @@ export default function Home() {
     if (!payload.useLocation && payload.city) {
       await AsyncStorage.setItem("selectedCity", cityKey(payload.city));
     }
-    // Keep the rest of the app in sync
     DeviceEventEmitter.emit("settingsChanged", save);
   }
 
-  // If iOS Location Services are off or permission is not granted,
-  // flip to manual city and show a banner.
-  async function syncUseLocationWithOSIfNeeded(
-    settings: PrayerSettings
+  // Non-destructive OS reconciliation.
+  // If OS blocks location, we *temporarily* fall back to manual without persisting useLocation=false.
+  async function reconcileWithOS(
+    settings: PrayerSettings,
+    forceUseLocation: boolean | null
   ): Promise<PrayerSettings> {
-    if (!settings.useLocation) return settings;
-
-    try {
-      const servicesEnabled = await Location.hasServicesEnabledAsync();
-      const perm = await Location.getForegroundPermissionsAsync();
-
-      const permitted = servicesEnabled && perm.status === "granted";
-      if (!permitted) {
-        const manualCity = settings.city ?? DEFAULT_CITY;
-        const updated: PrayerSettings = {
-          useLocation: false,
-          method: settings.method ?? DEFAULT_METHOD,
-          city: manualCity,
-        };
-        await persistSettings(updated);
-        setBanner(
-          `Location is off, so we are using your manual city: ${manualCity.name}. You can turn Location back on in iOS Settings or in Sirat Settings.`
-        );
-        return updated;
-      }
-    } catch (e) {
-      // If anything goes wrong, be safe and fall back to manual city
+    if (forceUseLocation === true) {
+      setBanner("");
+      return { ...settings, useLocation: true };
+    }
+    if (forceUseLocation === false) {
       const manualCity = settings.city ?? DEFAULT_CITY;
-      const updated: PrayerSettings = {
+      setBanner(
+        `Location is unavailable, using your manual city: ${manualCity.name}.`
+      );
+      return {
         useLocation: false,
         method: settings.method ?? DEFAULT_METHOD,
         city: manualCity,
       };
-      await persistSettings(updated);
-      setBanner(
-        `We could not read your location. Using manual city: ${manualCity.name}.`
-      );
-      return updated;
     }
-
-    // All good, keep using location
-    setBanner("");
+    // No force — keep current settings as is
     return settings;
   }
 
-  const loadData = async () => {
+  const loadData = async (opts?: { forceUseLocation?: boolean }) => {
     try {
       setLoading(true);
 
-      // Reset transient UI state
       setPrayerTimes([]);
       setNextPrayer(null);
       setNextDayFajr(null);
       setTimeLeft("");
       fadeAnim.setValue(0);
 
-      // Read settings and reconcile with OS
       let settings = await getSettings();
-      settings = await syncUseLocationWithOSIfNeeded(settings);
+      settings = await reconcileWithOS(
+        settings,
+        typeof opts?.forceUseLocation === "boolean"
+          ? opts.forceUseLocation
+          : null
+      );
 
       const times = await getPrayerTimesToday(settings);
       setPrayerTimes(times);
@@ -170,7 +151,7 @@ export default function Home() {
       }
 
       if (!foundNext) {
-        // End of day peek
+        // Peek tomorrow with the same effective settings
         const tomorrowTimes = await getPrayerTimesToday(settings);
         const fajr = tomorrowTimes.find((p) => p.label === "Fajr");
         if (fajr) setNextDayFajr(fajr.time);
@@ -185,38 +166,68 @@ export default function Home() {
     }
   };
 
+  const bootstrapAndLoad = async () => {
+    try {
+      // Notifications can be requested in parallel; do not block UI on it.
+      try {
+        await Notifications.requestPermissionsAsync();
+      } catch {}
+
+      // Location: wait for a final status to avoid persisting a false manual fallback.
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      let perm = await Location.getForegroundPermissionsAsync();
+      if (perm.status === "undetermined") {
+        perm = await Location.requestForegroundPermissionsAsync();
+      }
+      const canUseLocation = servicesEnabled && perm.status === "granted";
+
+      await loadData({ forceUseLocation: canUseLocation });
+    } catch (e) {
+      console.warn("bootstrap failed:", e);
+      await loadData({ forceUseLocation: false });
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    // On pull-to-refresh, re-check OS quickly
+    const servicesEnabled = await Location.hasServicesEnabledAsync();
+    const perm = await Location.getForegroundPermissionsAsync();
+    await loadData({
+      forceUseLocation: servicesEnabled && perm.status === "granted",
+    });
     setRefreshing(false);
   };
 
+  // Foreground re-sync in case user toggled OS settings outside the app
   useEffect(() => {
-    (async () => {
-      try {
-        // Ask for notifications
-        await Notifications.requestPermissionsAsync();
-
-        // Ask for location permissions next
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          console.warn("Location permission not granted.");
-        }
-      } catch (e) {
-        console.error("Permission request failed:", e);
+    const sub = AppState.addEventListener("change", async (s) => {
+      if (s === "active") {
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        const perm = await Location.getForegroundPermissionsAsync();
+        await loadData({
+          forceUseLocation: servicesEnabled && perm.status === "granted",
+        });
       }
-    })();
-  }, []);
-
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
-      await loadData();
     });
     return () => sub.remove();
   }, []);
 
+  // Listen for in-app Settings changes
   useEffect(() => {
-    loadData();
+    const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      const perm = await Location.getForegroundPermissionsAsync();
+      await loadData({
+        forceUseLocation: servicesEnabled && perm.status === "granted",
+      });
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Initial launch
+  useEffect(() => {
+    bootstrapAndLoad();
   }, []);
 
   useEffect(() => {
@@ -271,7 +282,6 @@ export default function Home() {
           />
         }
       >
-        {/* Banner when falling back to manual city or on errors */}
         {!!banner && (
           <View
             style={{
