@@ -10,11 +10,13 @@ import {
   DeviceEventEmitter,
   Easing,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   Switch,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import {
@@ -26,13 +28,15 @@ import CALCULATION_METHODS from "../../util/calculationMethods";
 import CITIES, { City, cityKey } from "../../util/cities";
 import CitySearchModal from "../components/CitySearchModal";
 import NotificationSettings from "../components/NotificationSettings";
-import SupportFooter from "../components/SupportFooter";
 
 export default function Settings() {
   const TAB_BAR_HEIGHT = 0;
-  const FOOTER_GAP = 0;
   const insets = useSafeAreaInsets();
-  const footerPadding = insets.bottom + 140 + FOOTER_GAP + TAB_BAR_HEIGHT;
+  const { width } = useWindowDimensions();
+  const isSmall = width < 360;
+
+  // Extra bottom padding so the final button has breathing room above any tab bar or home indicator
+  const footerPadding = insets.bottom + 24;
 
   const colors = {
     bg: "#134b0a",
@@ -44,8 +48,9 @@ export default function Settings() {
   };
 
   const [useLocation, setUseLocation] = useState(true);
-  const [permissionStatus, setPermissionStatus] = useState<string | null>(null); // "granted" | "denied" | "undetermined" | null
-  const [notifStatus, setNotifStatus] = useState<string | null>(null); // notification permission sync
+  const [permissionStatus, setPermissionStatus] = useState<string | null>(null); // granted | denied | undetermined | null
+  const [notifStatus, setNotifStatus] = useState<string | null>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const [methodOpen, setMethodOpen] = useState(false);
   const [method, setMethod] = useState(-1);
@@ -63,7 +68,6 @@ export default function Settings() {
     }).start();
   }, [methodOpen, methodAnim]);
 
-  // initialize to 0 when useLocation is true (hidden), 1 when false (visible)
   const locationAnim = useRef(new Animated.Value(useLocation ? 0 : 1)).current;
   const toggleScale = useRef(new Animated.Value(1)).current;
 
@@ -96,7 +100,7 @@ export default function Settings() {
         if (!servicesEnabled) {
           Alert.alert(
             "Location is off",
-            "Please enable Location Services on your device (Settings → Privacy & Security → Location Services), then try again.",
+            "Please enable Location Services on your device, then try again.",
             [
               { text: "Open Settings", onPress: () => Linking.openSettings() },
               { text: "Cancel", style: "cancel" },
@@ -105,11 +109,9 @@ export default function Settings() {
           setUseLocation(false);
           return;
         }
-
         let perm = await Location.getForegroundPermissionsAsync();
         if (perm.status !== "granted") {
-          const requested = await Location.requestForegroundPermissionsAsync();
-          perm = requested;
+          perm = await Location.requestForegroundPermissionsAsync();
         }
         setPermissionStatus(perm.status);
         if (perm.status === "granted") {
@@ -117,10 +119,9 @@ export default function Settings() {
         } else {
           Alert.alert(
             "Permission needed",
-            "Sirat needs Location permission to use automatic prayer times and nearby mosque features. Grant permission in Settings or try again.",
+            "Sirat needs Location permission for automatic prayer times.",
             [
               { text: "Open Settings", onPress: () => Linking.openSettings() },
-              { text: "Try again", onPress: () => handleToggle(true) },
               { text: "Cancel", style: "cancel" },
             ]
           );
@@ -131,33 +132,7 @@ export default function Settings() {
         setUseLocation(false);
       }
     } else {
-      Alert.alert(
-        "Disable location",
-        "Do you want to stop using Location in the app only, or open device Settings to revoke permission?",
-        [
-          {
-            text: "Disable in app",
-            onPress: () => setUseLocation(false),
-            style: "default",
-          },
-          {
-            text: "Open Settings",
-            onPress: async () => {
-              try {
-                await Linking.openSettings();
-              } catch {
-                Alert.alert(
-                  "Open Settings",
-                  "Unable to open device Settings. Please revoke permission manually."
-                );
-              }
-              setUseLocation(false);
-            },
-            style: "destructive",
-          },
-          { text: "Cancel", style: "cancel" },
-        ]
-      );
+      setUseLocation(false);
     }
   };
 
@@ -173,12 +148,12 @@ export default function Settings() {
     []
   );
 
-  // Load saved settings
+  // Initial load
   useEffect(() => {
     (async () => {
-      const storedSettings = await AsyncStorage.getItem("prayerSettings");
-      if (storedSettings) {
-        const parsed = JSON.parse(storedSettings);
+      const raw = await AsyncStorage.getItem("prayerSettings");
+      if (raw) {
+        const parsed = JSON.parse(raw);
         setUseLocation(parsed.useLocation ?? true);
         setMethod(parsed.method ?? -1);
         if (parsed.cityKey) {
@@ -187,67 +162,42 @@ export default function Settings() {
         } else if (parsed.city) {
           setCity(parsed.city);
         }
-      }
-
-      const legacy = await AsyncStorage.getItem("selectedCity");
-      if (legacy) {
-        const byKey = CITIES.find((c) => cityKey(c) === legacy);
-        if (byKey) setCity(byKey);
-        else {
-          const byName = CITIES.find((c) => c.name === legacy);
-          if (byName) setCity(byName);
+      } else {
+        const legacy = await AsyncStorage.getItem("selectedCity");
+        if (legacy) {
+          const found = CITIES.find((c) => cityKey(c) === legacy);
+          if (found) setCity(found);
         }
       }
+      setSettingsLoaded(true);
     })();
   }, []);
 
-  // Initial permission checks
+  // Re-sync with OS permissions when returning to foreground
   useEffect(() => {
-    (async () => {
-      try {
-        const servicesEnabled = await Location.hasServicesEnabledAsync();
-        const perm = await Location.getForegroundPermissionsAsync();
-        const notifPerm = await Notifications.getPermissionsAsync();
-
-        setPermissionStatus(perm.status);
-        setNotifStatus(notifPerm.granted ? "granted" : "denied");
-
-        if (!servicesEnabled || perm.status !== "granted") {
-          setUseLocation(false);
-        } else {
-          setUseLocation(true);
-        }
-      } catch {
-        setPermissionStatus("denied");
-        setUseLocation(false);
-      }
-    })();
-  }, []);
-
-  // Recheck both permissions when app returns from background
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", async (state) => {
+    const sub = AppState.addEventListener("change", async (state) => {
       if (state === "active") {
         try {
+          const servicesEnabled = await Location.hasServicesEnabledAsync();
           const perm = await Location.getForegroundPermissionsAsync();
           const notifPerm = await Notifications.getPermissionsAsync();
 
           setPermissionStatus(perm.status);
           setNotifStatus(notifPerm.granted ? "granted" : "denied");
 
-          const servicesEnabled = await Location.hasServicesEnabledAsync();
-          if (!servicesEnabled || perm.status !== "granted") {
+          if (useLocation && (!servicesEnabled || perm.status !== "granted")) {
             setUseLocation(false);
           }
         } catch (e) {
           console.warn("Recheck permissions failed:", e);
+          if (useLocation) setUseLocation(false);
         }
       }
     });
-    return () => subscription.remove();
-  }, []);
+    return () => sub.remove();
+  }, [useLocation]);
 
-  // Persist + notify
+  // Persist + notify on changes
   useEffect(() => {
     const save = async () => {
       const payload = {
@@ -261,10 +211,13 @@ export default function Settings() {
         await AsyncStorage.setItem("selectedCity", cityKey(city));
       }
       clearPrayerCache();
-      DeviceEventEmitter.emit("settingsChanged", payload);
+      try {
+        // @ts-ignore for web
+        DeviceEventEmitter?.emit?.("settingsChanged", payload);
+      } catch {}
     };
-    save();
-  }, [useLocation, method, city]);
+    if (settingsLoaded) void save();
+  }, [useLocation, method, city, settingsLoaded]);
 
   const selectCityByKey = (value: string) => {
     const selected = CITIES.find((c) => cityKey(c) === value) || CITIES[0];
@@ -272,11 +225,82 @@ export default function Settings() {
     setCityModalVisible(false);
   };
 
+  const VisitSiteButton = () => (
+    <Pressable
+      accessibilityRole="link"
+      accessible
+      accessibilityLabel="Open Sirat website"
+      accessibilityHint="Opens the Sirat website in your browser"
+      onPress={() => Linking.openURL("https://sirat.dev").catch(() => {})}
+      android_ripple={{ color: "rgba(255,255,255,0.06)", borderless: false }}
+      style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: pressed
+          ? "rgba(255,255,255,0.04)"
+          : "rgba(255,255,255,0.03)",
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.06)",
+        shadowColor: "#000",
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 6,
+        width: "100%",
+        maxWidth: 520,
+        transform: [{ scale: pressed ? 0.985 : 1 }],
+      })}
+    >
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            color: colors.text,
+            fontSize: 14,
+            lineHeight: 20,
+            fontFamily:
+              Platform.OS === "ios" ? "SFProDisplay-Semibold" : undefined,
+            letterSpacing: 0.2,
+            marginRight: 8,
+          }}
+        >
+          Visit our site
+        </Text>
+        <Text
+          style={{
+            color: colors.accent,
+            fontSize: 14,
+            lineHeight: 20,
+            fontFamily:
+              Platform.OS === "ios" ? "SFProDisplay-Semibold" : undefined,
+            opacity: 0.95,
+          }}
+        >
+          ↗
+        </Text>
+      </View>
+    </Pressable>
+  );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: footerPadding }}
+        contentContainerStyle={{
+          paddingBottom: footerPadding,
+        }}
         showsVerticalScrollIndicator={false}
+        // Higher zIndex so dropdowns can overlay correctly on small screens without clipping
+        style={{ zIndex: 0 }}
       >
         {/* Title */}
         <View style={{ paddingTop: 10, paddingHorizontal: 20 }}>
@@ -285,7 +309,7 @@ export default function Settings() {
             style={{
               color: colors.text,
               fontFamily: "SFProDisplay-Bold",
-              fontSize: 40,
+              fontSize: isSmall ? 34 : 40,
             }}
           >
             Settings
@@ -293,7 +317,13 @@ export default function Settings() {
         </View>
 
         {/* Calculation Method */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 14, zIndex: 2000 }}>
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            zIndex: 2000, // ensure the dropdown is above anything below on small screens
+          }}
+        >
           <Text
             style={{
               color: colors.text,
@@ -334,6 +364,7 @@ export default function Settings() {
                 backgroundColor: colors.cardAlt,
                 borderColor: colors.accent,
                 borderRadius: 12,
+                zIndex: 3000,
               }}
               textStyle={{
                 color: colors.text,
@@ -368,47 +399,51 @@ export default function Settings() {
           style={{
             paddingHorizontal: 20,
             marginTop: 18,
-            flexDirection: "row",
-            alignItems: "center",
             transform: [{ scale: toggleScale }],
           }}
         >
-          <View style={{ flex: 1, marginRight: 12 }}>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                flexShrink: 1,
-              }}
-              numberOfLines={1}
-            >
-              Use My Location
-            </Text>
-            <Text
-              style={{
-                color: colors.text,
-                opacity: 0.8,
-                fontSize: 13,
-                marginTop: 2,
-                flexShrink: 1,
-              }}
-              numberOfLines={2}
-            >
-              {permissionStatus === "granted"
-                ? "Location permission granted. Turn off to select a city manually."
-                : "Tap to enable Location (app will request permission). Turn off to select a city manually."}
-            </Text>
-          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: isSmall ? 15 : 16,
+                  fontFamily: "SFProDisplay-Semibold",
+                }}
+                numberOfLines={1}
+              >
+                Use My Location
+              </Text>
+              <Text
+                style={{
+                  color: colors.text,
+                  opacity: 0.8,
+                  fontSize: isSmall ? 12 : 13,
+                  marginTop: 2,
+                }}
+                numberOfLines={2}
+              >
+                {permissionStatus === "granted"
+                  ? "Location permission granted. Turn off to select a city manually."
+                  : "Tap to enable Location. Turn off to select a city manually."}
+              </Text>
+            </View>
 
-          <View style={{ width: 64, alignItems: "flex-end" }}>
-            <Switch
-              accessibilityLabel="Use my location"
-              value={useLocation}
-              onValueChange={handleToggle}
-              trackColor={{ false: "#555", true: colors.accent }}
-              thumbColor={useLocation ? "#fff" : "#888"}
-            />
+            <View style={{ marginLeft: 8 }}>
+              <Switch
+                accessibilityLabel="Use my location"
+                value={useLocation}
+                onValueChange={handleToggle}
+                trackColor={{ false: "#555", true: colors.accent }}
+                thumbColor={useLocation ? "#fff" : "#888"}
+              />
+            </View>
           </View>
         </Animated.View>
 
@@ -476,16 +511,18 @@ export default function Settings() {
 
         {/* Notifications section */}
         <NotificationSettings notifStatus={notifStatus} />
-      </ScrollView>
 
-      {/* Footer */}
-      <SupportFooter
-        email="yassinbenelhajlahsen@gmail.com"
-        textColor={colors.text}
-        accentColor={colors.accent}
-        tabBarHeight={TAB_BAR_HEIGHT}
-        gapAboveTab={FOOTER_GAP}
-      />
+        {/* Visit site button at the very bottom of the page, never overlapping */}
+        <View
+          style={{
+            paddingHorizontal: 16,
+            marginTop: 24,
+            alignItems: "center",
+          }}
+        >
+          <VisitSiteButton />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

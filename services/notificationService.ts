@@ -20,7 +20,10 @@ const STORAGE_MAP = "notif_map_v1";
 const STORAGE_SCHEDULE_IDS = "notif_schedule_ids_v1";
 const STORAGE_DAYKEY = "notif_daykey_v1";
 const STORAGE_SEEN_KEYS = "notif_seen_keys_v1"; // set of "Label_YYYY-MM-DDTHH:MM"
-const STORAGE_CITY_DISPLAY = "notif_last_city_v1"; // Display label cache for titles when using location
+
+// Split caches so manual vs location labels never bleed into each other
+const STORAGE_CITY_DISPLAY_LOC = "notif_city_display_loc_v1";
+const STORAGE_CITY_DISPLAY_MAN = "notif_city_display_man_v1";
 const STORAGE_LAST_MANUAL_CITY = "notif_last_manual_city_v1"; // Full manual city cache
 
 // -----------------------------
@@ -53,7 +56,13 @@ const PRAYER_EMOJI: Record<PrayerKey, string> = {
   Isha: "🌙",
 };
 
-type CityLike = { name: string; lat: number; lng: number; country?: string; id?: string };
+type CityLike = {
+  name: string;
+  lat: number;
+  lng: number;
+  country?: string;
+  id?: string;
+};
 
 function isCityLike(x: any): x is CityLike {
   return (
@@ -72,8 +81,18 @@ function normalizeCity(raw: any): CityLike | null {
   const candidate = Array.isArray(raw) ? raw[0] : raw;
   const lat = Number(candidate?.lat);
   const lng = Number(candidate?.lng);
-  if (typeof candidate?.name === "string" && !Number.isNaN(lat) && !Number.isNaN(lng)) {
-    return { name: candidate.name.trim(), lat, lng, country: candidate.country, id: candidate.id };
+  if (
+    typeof candidate?.name === "string" &&
+    !Number.isNaN(lat) &&
+    !Number.isNaN(lng)
+  ) {
+    return {
+      name: candidate.name.trim(),
+      lat,
+      lng,
+      country: candidate.country,
+      id: candidate.id,
+    };
   }
   return null;
 }
@@ -184,46 +203,104 @@ async function readPrayerSettings(): Promise<{
 }
 
 // -----------------------------
+// Effective settings (match Home)
+// -----------------------------
+async function canUseOSLocation(): Promise<boolean> {
+  const servicesEnabled = await Location.hasServicesEnabledAsync();
+  const perm = await Location.getForegroundPermissionsAsync();
+  return servicesEnabled && perm.status === "granted";
+}
+
+/**
+ * Derive effective settings for this run:
+ * - If user toggled location OFF: always use manual city.
+ * - If user toggled ON but OS blocks: temporary fallback to manual city.
+ * - Pass manual city through even when using location, so dailyPrayerTimes can gracefully fallback.
+ */
+function deriveEffectiveSettings(
+  s: { useLocation: boolean; method: number; city?: CityLike | null },
+  canUse: boolean
+): { useLocation: boolean; method: number; city?: CityLike | null } {
+  const manualCity = s.city ?? null;
+  if (!s.useLocation) {
+    return { useLocation: false, method: s.method, city: manualCity };
+  }
+  if (s.useLocation && !canUse) {
+    return { useLocation: false, method: s.method, city: manualCity };
+  }
+  // Location allowed. Provide city as fallback to avoid hard errors if read fails mid-run.
+  return { useLocation: true, method: s.method, city: manualCity ?? undefined };
+}
+
+// -----------------------------
 // City label resolver (manual vs location)
 // -----------------------------
 /**
  * Resolve a short city-only label for notification titles.
- * Manual mode: use saved manual city or last known manual city.
- * Location mode: use reverse geocode or cached display.
+ * - Manual mode: use manual city name; cache under MAN key.
+ * - Location mode: try current position quickly; fall back to lastKnown; cache under LOC key.
  */
-async function resolveCityDisplay(): Promise<string> {
-  const s = await readPrayerSettings();
-
-  // Manual mode: only use manual city
-  if (!s.useLocation) {
-    if (s.city && s.city.name) {
-      const label = s.city.name;
-      await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, label);
-      await AsyncStorage.setItem(STORAGE_LAST_MANUAL_CITY, JSON.stringify(s.city));
-      return label;
+async function resolveCityDisplay(effective: {
+  useLocation: boolean;
+  city?: CityLike | null;
+}): Promise<string> {
+  if (!effective.useLocation) {
+    const city = effective.city;
+    if (city?.name) {
+      await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_MAN, city.name);
+      await AsyncStorage.setItem(
+        STORAGE_LAST_MANUAL_CITY,
+        JSON.stringify(city)
+      );
+      return city.name;
     }
+    // fallback to last saved manual display
+    const man = await AsyncStorage.getItem(STORAGE_CITY_DISPLAY_MAN);
+    if (man) return man;
+    // as a last resort, try the legacy manual city object
     const lastManualRaw = await AsyncStorage.getItem(STORAGE_LAST_MANUAL_CITY);
     if (lastManualRaw) {
       try {
-        const lastManual = JSON.parse(lastManualRaw);
-        const c = normalizeCity(lastManual);
-        if (c?.name) {
-          await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, c.name);
-          return c.name;
+        const lastManual = normalizeCity(JSON.parse(lastManualRaw));
+        if (lastManual?.name) {
+          await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_MAN, lastManual.name);
+          return lastManual.name;
         }
       } catch {}
     }
     return "your area";
   }
 
-  // Location mode: prefer cached
-  const cached = await AsyncStorage.getItem(STORAGE_CITY_DISPLAY);
-  if (cached) {
-    const cityOnly = cached.split(",")[0].trim();
-    if (cityOnly) return cityOnly;
+  // Location mode — try to refresh from current position quickly
+  try {
+    // a gentle attempt; if it throws/timeout, we fall back to last known and cache
+    const loc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+      maximumAge: 15_000,
+      timeout: 2_500,
+    } as any);
+    if (loc) {
+      const [place] = await Location.reverseGeocodeAsync({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+      if (place) {
+        const locality =
+          place.city ||
+          (place as any).subregion ||
+          (place as any).district ||
+          (place as any).name ||
+          "";
+        const label = String(locality).trim() || "your area";
+        await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_LOC, label);
+        return label;
+      }
+    }
+  } catch {
+    // ignore and fall back
   }
 
-  // Reverse geocode and cache
+  // Fallback to last known
   try {
     const last = await Location.getLastKnownPositionAsync({});
     if (last) {
@@ -239,11 +316,17 @@ async function resolveCityDisplay(): Promise<string> {
           (place as any).name ||
           "";
         const label = String(locality).trim() || "your area";
-        await AsyncStorage.setItem(STORAGE_CITY_DISPLAY, label);
+        await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_LOC, label);
         return label;
       }
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
+
+  // Use cached location label if we have it
+  const cachedLoc = await AsyncStorage.getItem(STORAGE_CITY_DISPLAY_LOC);
+  if (cachedLoc) return cachedLoc;
 
   return "your area";
 }
@@ -305,10 +388,10 @@ async function scheduleForToday(
     if (seen.has(sk)) continue;
 
     const emoji = PRAYER_EMOJI[label] || "🕌";
-    const titleParts = [emoji, label, p.time, cityDisplay]
+    const title = [emoji, label, p.time, cityDisplay]
       .map((x) => String(x || "").trim())
-      .filter(Boolean);
-    const title = titleParts.join(" • ");
+      .filter(Boolean)
+      .join(" • ");
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
@@ -337,62 +420,53 @@ async function scheduleForToday(
 
   if (ids.length) {
     await AsyncStorage.setItem(STORAGE_SCHEDULE_IDS, JSON.stringify(ids));
+    await AsyncStorage.setItem(
+      STORAGE_SEEN_KEYS,
+      JSON.stringify(Array.from(seen))
+    );
   }
-  // NOTE: Do NOT write STORAGE_DAYKEY here; rescheduleAll() is the single source of truth.
 }
 
 // -----------------------------
 // Fetch today's times with strict manual-vs-location handling
 // -----------------------------
-async function fetchTodayTimes(): Promise<PrayerTime[]> {
+async function fetchTodayTimesWithEffective(): Promise<{
+  times: PrayerTime[];
+  effective: { useLocation: boolean; method: number; city?: CityLike | null };
+}> {
   const s = await readPrayerSettings();
+  const canUse = await canUseOSLocation();
+  const effective = deriveEffectiveSettings(s, canUse);
 
-  // Manual mode: guarantee a city object, do not silently substitute
-  if (!s.useLocation) {
-    let city = s.city;
-    if (!city) {
-      const lastManualRaw = await AsyncStorage.getItem(STORAGE_LAST_MANUAL_CITY);
-      if (lastManualRaw) {
-        try {
-          city = normalizeCity(JSON.parse(lastManualRaw));
-        } catch {}
-      }
-    }
-    if (!city) {
-      throw new Error("Manual city is not set. Please choose a city in Settings.");
-    }
-    return getPrayerTimesToday({
-      useLocation: false,
-      method: s.method,
-      city,
-    });
-  }
-
-  // Location mode
-  return getPrayerTimesToday({
-    useLocation: true,
-    method: s.method,
-    city: undefined,
+  // Always pass the fallback city through; dailyPrayerTimes handles the rest.
+  const times = await getPrayerTimesToday({
+    useLocation: effective.useLocation,
+    method: effective.method,
+    city: effective.city || undefined,
   });
+
+  return { times, effective };
 }
 
 // -----------------------------
 // Midnight rescheduler & listeners
 // -----------------------------
-let midnightTimer: number | null = null;
+let midnightTimer: any = null;
 let rescheduleInProgress = false;
 let initDone = false; // prevents double init and duplicate listeners
 
 function startMidnightRescheduler() {
-  if (midnightTimer) clearTimeout(midnightTimer as any);
+  if (midnightTimer) clearTimeout(midnightTimer);
   midnightTimer = setTimeout(async () => {
     await NotificationService.rescheduleAll("midnight");
     startMidnightRescheduler();
-  }, msUntilNextLocalMidnightPlus(MIDNIGHT_REFRESH_MINUTES)) as unknown as number;
+  }, msUntilNextLocalMidnightPlus(MIDNIGHT_REFRESH_MINUTES));
 }
 
 function attachEventListeners() {
-  // These listeners cause reschedules. Guarded by initDone so we attach once.
+  if ((attachEventListeners as any)._attached) return;
+  (attachEventListeners as any)._attached = true;
+
   DeviceEventEmitter.addListener(NOTIF_PREFS_UPDATED_EVENT, () => {
     NotificationService.rescheduleAll("notif-prefs-changed").catch(() => {});
   });
@@ -465,19 +539,30 @@ export const NotificationService = {
       }
 
       const prefs = await readPrefs();
-      const times = await fetchTodayTimes();
-      const cityDisplay = await resolveCityDisplay();
+      const { times, effective } = await fetchTodayTimesWithEffective();
+      const cityDisplay = await resolveCityDisplay(effective);
 
       const today = yyyymmdd();
-      const timesFingerprint = JSON.stringify(times.map((t) => [t.label, t.time]));
-      const nextDayKey = `day_${today}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}`;
+      const timesFingerprint = JSON.stringify(
+        times.map((t) => [t.label, t.time])
+      );
+      const effFingerprint = JSON.stringify({
+        useLocation: effective.useLocation,
+        city: effective.city
+          ? {
+              n: effective.city.name,
+              lat: effective.city.lat,
+              lng: effective.city.lng,
+            }
+          : null,
+      });
+      const nextDayKey = `day_${today}_${JSON.stringify(
+        prefs
+      )}_${cityDisplay}_${timesFingerprint}_${effFingerprint}`;
       const lastDayKey = (await AsyncStorage.getItem(STORAGE_DAYKEY)) || "";
 
-      // Only skip on light triggers to avoid missing changes
-      const canSkip =
-        reason === "app-foreground" ||
-        reason === "init" ||
-        reason === "settings-changed";
+      // Only skip on truly "light" triggers
+      const canSkip = reason === "app-foreground" || reason === "init";
 
       if (canSkip && lastDayKey === nextDayKey) {
         // Nothing changed for today, leave existing schedules intact
@@ -486,6 +571,12 @@ export const NotificationService = {
 
       await scheduleForToday(times, prefs, true, cityDisplay);
       await AsyncStorage.setItem(STORAGE_DAYKEY, nextDayKey);
+    } catch (e) {
+      // On hard failures, clear to avoid stale schedules
+      console.warn("rescheduleAll failed:", e);
+      try {
+        await cancelPreviouslyScheduled();
+      } catch {}
     } finally {
       rescheduleInProgress = false;
     }
