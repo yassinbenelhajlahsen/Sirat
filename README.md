@@ -1,46 +1,76 @@
 # Sirat 📿
 
-**Sirat** is a mobile-first Islamic utility app built with React Native and Expo. It helps users practice their faith with tools like prayer time reminders, Qibla direction, nearby mosque discovery, and more.
+**Sirat** is a modern, mobile-first Islamic companion app built with **React Native** and **Expo**.  
+It helps users stay connected to their faith with accurate prayer times, Qibla direction, mosque discovery, and daily reminders — all in a clean, minimalist interface.
 
 ---
 
 ## ✨ Features
 
-- 🕌 Accurate prayer times using Aladhan API
-- 🧭 Qibla direction compass using device sensors
-- 📍 Mosque locator via Google Maps API and geolocation
-- 🔔 Local Adhan notifications (planned)
-- 📖 Daily Ayah and Hadith feed (planned)
-- 🌙 Offline-friendly UI with theme support (planned)
+- 🕌 **Accurate Prayer Times** – powered by the Aladhan API, adjusted to the user’s precise location  
+- 🧭 **Qibla Direction** – live compass using device orientation sensors  
+- 📍 **Nearby Mosques** – integrates Google Maps and Places API for mosque discovery  
+- 🔔 **Prayer Notifications** – customizable alerts with prayer names and times  
+- 🌗 **Dynamic Themes** – smooth dark and light mode support  
+- 💾 **Offline Support** – locally cached preferences and last known prayer data  
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **React Native** + **Expo**
-- **Tailwind CSS** (via NativeWind)
-- **Axios** – API calls
-- **expo-location** – get user location
-- **expo-sensors** – for compass heading
-- **expo-notifications** – for scheduled prayer alerts
-- **AsyncStorage** – for saving preferences
+- **Framework:** React Native + Expo Router  
+- **Styling:** Tailwind CSS (via NativeWind)  
+- **APIs:** Aladhan API, Google Maps / Places API  
+- **Storage:** AsyncStorage for local persistence  
+- **Core Libraries:**  
+  - `expo-location` – user geolocation  
+  - `expo-sensors` – compass heading  
+  - `expo-notifications` – scheduled reminders  
+  - `axios` – API data fetching  
+  - `expo-updates` – over-the-air updates via EAS
+
+---
+
+## 🧭 Architecture
+
+- **Frontend:** Modular React Native components for screens, utilities, and services  
+- **Logic Layer:** Hooks-based services for location, notifications, and API integration  
+- **UI Design:** Built for mobile-first responsiveness using TailwindCSS + Safe Area context  
+- **OTA Updates:** Instant over-the-air JS updates via Expo EAS Updates
 
 ---
 
 ## 📚 APIs Used
 
-Aladhan API – prayer times & calender
-
-Google Maps / Places API – mosque locator
+| API | Purpose |
+|-----|----------|
+| [Aladhan API](https://aladhan.com/prayer-times-api) | Prayer times, calendar, and date conversion |
+| [Google Maps / Places API](https://developers.google.com/maps/documentation/places/web-service/overview) | Mosque locations |
 
 ---
 
-## 🚧 Planned Features
+## 🚧 Roadmap
 
-Push notifications with custom Adhan audio
+- 📢 Push notifications with Adhan audio  
+- 📖 Quran & Hadith browser with bookmarking and progress saving  
+- 🌍 Multilingual support (English, Arabic, French, more)  
+- ☁️ Backend integration for user profiles and sync  
+- 📆 Widget & Apple Watch support  
+- 🎨 Advanced theme customization and user-selected color palettes
 
-Bookmarking Ayahs and Hadiths and saving progress, adding a backend
+---
 
-Full Quran/Hadith browser with search
+## 🌐 Learn More
 
-Multilingual support (EN, AR, FR, etc.)
+Visit the official landing page for more info and download links:  
+👉 [**sirat.dev**](https://sirat.dev)
+
+---
+
+
+## 🧑‍💻 Author
+
+**Yassin Benelhajlahsen**  
+Built with 💚 and a goal to make daily faith practice easier through thoughtful technology.
+
+---
