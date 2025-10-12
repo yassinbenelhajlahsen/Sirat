@@ -7,6 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
+    <meta name="theme-color" content="#08260b" />
 
     <!-- Match the browser UI color on mobile -->
     <meta
@@ -73,10 +74,13 @@
         min-height: 100vh;
         box-sizing: border-box;
         overflow-x: hidden;
-
-        background: transparent; /* don't override html gradient */
+        background-color: var(--bg-top);
       }
-
+      @media (hover: none) and (pointer: coarse) {
+        html {
+          background-attachment: initial;
+        }
+      }
       /* Small fixed fallback layer for mobile browsers (covers notch areas); harmless on desktop */
       body::before {
         content: "";
