@@ -1,4 +1,3 @@
-// app/(tabs)/Settings.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
@@ -35,7 +34,6 @@ export default function Settings() {
   const { width } = useWindowDimensions();
   const isSmall = width < 360;
 
-  // Extra bottom padding so the final button has breathing room above any tab bar or home indicator
   const footerPadding = insets.bottom + 24;
 
   const colors = {
@@ -49,7 +47,7 @@ export default function Settings() {
 
   const [useLocation, setUseLocation] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null); // granted | denied | undetermined | null
-  const [notifStatus, setNotifStatus] = useState<string | null>(null);
+  const [notifStatus, setNotifStatus] = useState<string | null>(null); // granted | denied | null
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const [methodOpen, setMethodOpen] = useState(false);
@@ -148,7 +146,7 @@ export default function Settings() {
     []
   );
 
-  // Initial load
+  // Initial load: read prayer settings and read current notification permission once
   useEffect(() => {
     (async () => {
       const raw = await AsyncStorage.getItem("prayerSettings");
@@ -169,6 +167,15 @@ export default function Settings() {
           if (found) setCity(found);
         }
       }
+
+      // Prime notifStatus to drive NotificationSettings master toggle
+      try {
+        const notifPerm = await Notifications.getPermissionsAsync();
+        setNotifStatus(notifPerm.granted ? "granted" : "denied");
+      } catch {
+        setNotifStatus("denied");
+      }
+
       setSettingsLoaded(true);
     })();
   }, []);
@@ -299,7 +306,6 @@ export default function Settings() {
           paddingBottom: footerPadding,
         }}
         showsVerticalScrollIndicator={false}
-        // Higher zIndex so dropdowns can overlay correctly on small screens without clipping
         style={{ zIndex: 0 }}
       >
         {/* Title */}
@@ -321,7 +327,7 @@ export default function Settings() {
           style={{
             paddingHorizontal: 20,
             paddingTop: 14,
-            zIndex: 2000, // ensure the dropdown is above anything below on small screens
+            zIndex: 2000,
           }}
         >
           <Text
@@ -509,10 +515,10 @@ export default function Settings() {
           items={cityItems}
         />
 
-        {/* Notifications section */}
+        {/* Notifications section: the master toggle mirrors OS and opens Settings on press */}
         <NotificationSettings notifStatus={notifStatus} />
 
-        {/* Visit site button at the very bottom of the page, never overlapping */}
+        {/* Visit site button */}
         <View
           style={{
             paddingHorizontal: 16,

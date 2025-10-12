@@ -1,4 +1,3 @@
-// app/components/NotificationSettings.tsx
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,6 +6,7 @@ import {
   Animated,
   DeviceEventEmitter,
   Easing,
+  Linking,
   Pressable,
   StyleSheet,
   Switch,
@@ -24,12 +24,15 @@ const PRAYERS: PrayerKey[] = [
   "Isha",
 ];
 
-const STORAGE_ENABLED = "notif_enabled_v1";
+// Storage keys
+const STORAGE_ENABLED = "notif_enabled_v1"; // "1" for on, "0" for off
 const STORAGE_MAP = "notif_map_v1";
+
+// Broadcast event used elsewhere in the app
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
 type Props = {
-  // From Settings.tsx: notifStatus = "granted" | "denied"
+  // From Settings.tsx: "granted" | "denied" | null
   notifStatus?: string | null;
 };
 
@@ -47,7 +50,9 @@ export default function NotificationSettings({ notifStatus }: Props) {
     []
   );
 
+  // Master toggle mirrors OS permission
   const [enabled, setEnabled] = useState<boolean>(false);
+
   const [loaded, setLoaded] = useState(false);
   const [prefs, setPrefs] = useState<Record<PrayerKey, boolean>>({
     Fajr: true,
@@ -58,13 +63,8 @@ export default function NotificationSettings({ notifStatus }: Props) {
     Isha: true,
   });
 
-  // Track whether the user has an explicit stored preference
-  const hasStoredEnabledKey = useRef<boolean>(false);
-
-  // Animation: header pulse (matches location toggle scale)
+  // Animations
   const headerScale = useRef(new Animated.Value(1)).current;
-
-  // Animation: content open/close (fade, slide, expand)
   const contentAnim = useRef(new Animated.Value(0)).current;
 
   const bellAnimRef = useRef<Record<PrayerKey, Animated.Value>>({
@@ -76,17 +76,11 @@ export default function NotificationSettings({ notifStatus }: Props) {
     Isha: new Animated.Value(1),
   });
 
-  // Load prefs
+  // Load per-prayer map on mount. We do not trust STORAGE_ENABLED anymore for the master switch.
   useEffect(() => {
     (async () => {
       try {
-        const [rawEnabled, rawMap] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_ENABLED),
-          AsyncStorage.getItem(STORAGE_MAP),
-        ]);
-        hasStoredEnabledKey.current = rawEnabled !== null;
-
-        if (rawEnabled !== null) setEnabled(rawEnabled === "1");
+        const rawMap = await AsyncStorage.getItem(STORAGE_MAP);
         if (rawMap) setPrefs((p) => ({ ...p, ...JSON.parse(rawMap) }));
       } catch {
         // ignore load errors
@@ -96,14 +90,23 @@ export default function NotificationSettings({ notifStatus }: Props) {
     })();
   }, []);
 
-  // Auto-enable once if OS permission is granted and user never chose
+  // Mirror OS -> master toggle and persist that mirror into STORAGE_ENABLED
   useEffect(() => {
-    if (!loaded) return;
-    if (notifStatus === "granted" && !hasStoredEnabledKey.current && !enabled) {
-      persistEnabled(true);
-      hasStoredEnabledKey.current = true;
-    }
-  }, [notifStatus, loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+    const osGranted = notifStatus === "granted";
+    setEnabled(osGranted);
+    (async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_ENABLED, osGranted ? "1" : "0");
+        DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, {
+          enabled: osGranted,
+          prefs,
+        });
+      } catch {
+        // ignore
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifStatus]);
 
   // Drive open/close animation when enabled changes
   useEffect(() => {
@@ -112,7 +115,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
       toValue: enabled ? 1 : 0,
       duration: 280,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: false, // using maxHeight so must be false
+      useNativeDriver: false, // maxHeight animation
     }).start();
   }, [enabled, loaded, contentAnim]);
 
@@ -131,27 +134,19 @@ export default function NotificationSettings({ notifStatus }: Props) {
     ]).start();
   };
 
-  const persistEnabled = useCallback(
-    async (val: boolean) => {
-      setEnabled(val);
-      await AsyncStorage.setItem(STORAGE_ENABLED, val ? "1" : "0");
-      DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, {
-        enabled: val,
-        prefs,
-      });
-    },
-    [prefs]
-  );
-
   const setPrayer = useCallback(
     async (k: PrayerKey, val: boolean) => {
       const next = { ...prefs, [k]: val };
       setPrefs(next);
-      await AsyncStorage.setItem(STORAGE_MAP, JSON.stringify(next));
-      DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, {
-        enabled,
-        prefs: next,
-      });
+      try {
+        await AsyncStorage.setItem(STORAGE_MAP, JSON.stringify(next));
+        DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, {
+          enabled,
+          prefs: next,
+        });
+      } catch {
+        // ignore
+      }
     },
     [prefs, enabled]
   );
@@ -184,12 +179,11 @@ export default function NotificationSettings({ notifStatus }: Props) {
   );
 
   // Interpolations for content reveal
-  const contentOpacity = contentAnim; // 0 -> 1
+  const contentOpacity = contentAnim;
   const contentTranslateY = contentAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [6, 0],
   });
-  // Big enough max height to cover the list; keeps it smooth without measuring
   const contentMaxHeight = contentAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 600],
@@ -235,10 +229,14 @@ export default function NotificationSettings({ notifStatus }: Props) {
         ) : (
           <Switch
             value={enabled}
-            onValueChange={(val) => {
-              hasStoredEnabledKey.current = true;
+            onValueChange={async () => {
+              // Do not flip locally. Always guide user to system settings.
               pulseHeader();
-              persistEnabled(val);
+              try {
+                await Linking.openSettings();
+              } catch {
+                // ignore
+              }
             }}
             trackColor={{
               false: "rgba(255,255,255,0.08)",
@@ -246,9 +244,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
             }}
             thumbColor={enabled ? "#ffffff" : "#f4f3f4"}
             ios_backgroundColor="rgba(255,255,255,0.08)"
-            accessibilityLabel={
-              enabled ? "Disable notifications" : "Enable notifications"
-            }
+            accessibilityLabel="Open system settings to change notifications"
           />
         )}
       </Animated.View>
@@ -281,6 +277,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   backgroundColor: idx % 2 === 0 ? colors.cardAlt : colors.card,
                   borderColor: colors.divider,
                   transform: [{ scale: anim }],
+                  opacity: enabled ? 1 : 0.55,
                 },
               ]}
             >
@@ -291,24 +288,25 @@ export default function NotificationSettings({ notifStatus }: Props) {
 
                 <Animated.View>
                   <Pressable
-                    onPress={() => togglePrayer(p)}
+                    onPress={() => enabled && togglePrayer(p)}
+                    disabled={!enabled}
                     hitSlop={10}
                     accessibilityRole="button"
                     accessibilityLabel={`${p} alert ${isOn ? "on" : "off"}. Toggle`}
                     style={[
                       styles.togglePill,
                       {
-                        backgroundColor: isOn
+                        backgroundColor: isOn && enabled
                           ? colors.accent
                           : "rgba(255,255,255,0.04)",
-                        borderColor: isOn ? "transparent" : colors.divider,
+                        borderColor: isOn && enabled ? "transparent" : colors.divider,
                       },
                     ]}
                   >
                     <Ionicons
-                      name={isOn ? "notifications" : "notifications-off-outline"}
+                      name={isOn && enabled ? "notifications" : "notifications-off-outline"}
                       size={16}
-                      color={isOn ? "#0c3605" : colors.subtext}
+                      color={isOn && enabled ? "#0c3605" : colors.subtext}
                     />
                   </Pressable>
                 </Animated.View>
