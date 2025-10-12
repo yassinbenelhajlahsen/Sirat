@@ -61,6 +61,12 @@ export default function NotificationSettings({ notifStatus }: Props) {
   // Track whether the user has an explicit stored preference
   const hasStoredEnabledKey = useRef<boolean>(false);
 
+  // Animation: header pulse (matches location toggle scale)
+  const headerScale = useRef(new Animated.Value(1)).current;
+
+  // Animation: content open/close (fade, slide, expand)
+  const contentAnim = useRef(new Animated.Value(0)).current;
+
   const bellAnimRef = useRef<Record<PrayerKey, Animated.Value>>({
     Fajr: new Animated.Value(1),
     Sunrise: new Animated.Value(1),
@@ -94,11 +100,36 @@ export default function NotificationSettings({ notifStatus }: Props) {
   useEffect(() => {
     if (!loaded) return;
     if (notifStatus === "granted" && !hasStoredEnabledKey.current && !enabled) {
-      // First time permission granted and no explicit app toggle set — turn it on
       persistEnabled(true);
       hasStoredEnabledKey.current = true;
     }
   }, [notifStatus, loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Drive open/close animation when enabled changes
+  useEffect(() => {
+    if (!loaded) return;
+    Animated.timing(contentAnim, {
+      toValue: enabled ? 1 : 0,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false, // using maxHeight so must be false
+    }).start();
+  }, [enabled, loaded, contentAnim]);
+
+  const pulseHeader = () => {
+    Animated.sequence([
+      Animated.timing(headerScale, {
+        toValue: 0.96,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(headerScale, {
+        toValue: 1,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const persistEnabled = useCallback(
     async (val: boolean) => {
@@ -152,9 +183,30 @@ export default function NotificationSettings({ notifStatus }: Props) {
     [prefs, setPrayer]
   );
 
+  // Interpolations for content reveal
+  const contentOpacity = contentAnim; // 0 -> 1
+  const contentTranslateY = contentAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [6, 0],
+  });
+  // Big enough max height to cover the list; keeps it smooth without measuring
+  const contentMaxHeight = contentAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 600],
+  });
+  const contentScale = contentAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.985, 1],
+  });
+
   return (
     <View>
-      <View style={styles.sectionHeader}>
+      <Animated.View
+        style={[
+          styles.sectionHeader,
+          { transform: [{ scale: headerScale }] },
+        ]}
+      >
         <View style={{ flexShrink: 1, paddingRight: 12 }}>
           <Text
             style={{
@@ -185,6 +237,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
             value={enabled}
             onValueChange={(val) => {
               hasStoredEnabledKey.current = true;
+              pulseHeader();
               persistEnabled(val);
             }}
             trackColor={{
@@ -198,71 +251,72 @@ export default function NotificationSettings({ notifStatus }: Props) {
             }
           />
         )}
-      </View>
+      </Animated.View>
 
-      {loaded && enabled ? (
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.card, borderColor: colors.divider },
-          ]}
-        >
-          {PRAYERS.map((p, idx) => {
-            const isOn = prefs[p];
-            const anim = bellAnimRef.current[p];
-            return (
-              <Animated.View
-                key={p}
-                style={[
-                  styles.itemCard,
-                  {
-                    backgroundColor:
-                      idx % 2 === 0 ? colors.cardAlt : colors.card,
-                    borderColor: colors.divider,
-                    transform: [{ scale: anim }],
-                  },
-                ]}
-              >
-                <View style={styles.itemRow}>
-                  <View style={styles.meta}>
-                    <Text style={[styles.title, { color: colors.text }]}>
-                      {p}
-                    </Text>
-                  </View>
-
-                  <Animated.View>
-                    <Pressable
-                      onPress={() => togglePrayer(p)}
-                      hitSlop={10}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${p} alert ${
-                        isOn ? "on" : "off"
-                      }. Toggle`}
-                      style={[
-                        styles.togglePill,
-                        {
-                          backgroundColor: isOn
-                            ? colors.accent
-                            : "rgba(255,255,255,0.04)",
-                          borderColor: isOn ? "transparent" : colors.divider,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        name={
-                          isOn ? "notifications" : "notifications-off-outline"
-                        }
-                        size={16}
-                        color={isOn ? "#0c3605" : colors.subtext}
-                      />
-                    </Pressable>
-                  </Animated.View>
+      {/* Keep mounted so close animates out smoothly */}
+      <Animated.View
+        pointerEvents={enabled ? "auto" : "none"}
+        accessibilityElementsHidden={!enabled}
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.divider,
+            opacity: contentOpacity,
+            transform: [{ translateY: contentTranslateY }, { scale: contentScale }],
+            maxHeight: contentMaxHeight,
+            overflow: "hidden",
+          },
+        ]}
+      >
+        {PRAYERS.map((p, idx) => {
+          const isOn = prefs[p];
+          const anim = bellAnimRef.current[p];
+          return (
+            <Animated.View
+              key={p}
+              style={[
+                styles.itemCard,
+                {
+                  backgroundColor: idx % 2 === 0 ? colors.cardAlt : colors.card,
+                  borderColor: colors.divider,
+                  transform: [{ scale: anim }],
+                },
+              ]}
+            >
+              <View style={styles.itemRow}>
+                <View style={styles.meta}>
+                  <Text style={[styles.title, { color: colors.text }]}>{p}</Text>
                 </View>
-              </Animated.View>
-            );
-          })}
-        </View>
-      ) : null}
+
+                <Animated.View>
+                  <Pressable
+                    onPress={() => togglePrayer(p)}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${p} alert ${isOn ? "on" : "off"}. Toggle`}
+                    style={[
+                      styles.togglePill,
+                      {
+                        backgroundColor: isOn
+                          ? colors.accent
+                          : "rgba(255,255,255,0.04)",
+                        borderColor: isOn ? "transparent" : colors.divider,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={isOn ? "notifications" : "notifications-off-outline"}
+                      size={16}
+                      color={isOn ? "#0c3605" : colors.subtext}
+                    />
+                  </Pressable>
+                </Animated.View>
+              </View>
+            </Animated.View>
+          );
+        })}
+      </Animated.View>
     </View>
   );
 }

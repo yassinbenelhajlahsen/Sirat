@@ -1,11 +1,24 @@
-// Qibla requires location + compass. Show a clear gate if location is off.
+// app/(tabs)/qibla.tsx
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
-import { useEffect, useRef, useState } from "react";
-import { ImageSourcePropType, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  ImageSourcePropType,
+  Linking,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import useQibla from "../../util/useQibla";
 
 type Perm = "undetermined" | "denied" | "granted";
@@ -15,12 +28,14 @@ function minimalTarget(from: number, to: number) {
   return from + delta;
 }
 
-const arrowImg = require("../../assets/images/qibla-compass-svgrepo-com.png") as ImageSourcePropType;
+const arrowImg =
+  require("../../assets/images/qibla-compass-svgrepo-com.png") as ImageSourcePropType;
 
 export default function Qibla() {
   const { rotation, error, accuracy, isAligned } = useQibla();
 
-  const [permissionStatus, setPermissionStatus] = useState<Perm>("undetermined");
+  const [permissionStatus, setPermissionStatus] =
+    useState<Perm>("undetermined");
   const [servicesOn, setServicesOn] = useState<boolean | null>(null);
 
   // Reanimated shared value for unbounded rotation (no snapping)
@@ -28,17 +43,41 @@ export default function Qibla() {
   const lastHapticAt = useRef(0);
   const prevAligned = useRef(false);
 
-  useEffect(() => {
-    (async () => {
+  // ----- Copied Mosques-style status checks -----
+  const checkStatus = async () => {
+    const sOn = await Location.hasServicesEnabledAsync();
+    setServicesOn(sOn);
+    const perm = await Location.getForegroundPermissionsAsync();
+    setPermissionStatus(perm.status as Perm);
+  };
+
+  const requestPermissionAndLoad = async () => {
+    try {
       const sOn = await Location.hasServicesEnabledAsync();
       setServicesOn(sOn);
-      const perm = await Location.getForegroundPermissionsAsync();
-      setPermissionStatus(perm.status as Perm);
-      if (perm.status !== "granted" && sOn) {
-        const req = await Location.requestForegroundPermissionsAsync();
-        setPermissionStatus(req.status as Perm);
+
+      // If services are off, stop here and show CTA
+      if (!sOn) return;
+
+      let perm = await Location.getForegroundPermissionsAsync();
+      if (perm.status !== "granted") {
+        perm = await Location.requestForegroundPermissionsAsync();
       }
-    })();
+      setPermissionStatus(perm.status as Perm);
+
+      // If still not granted, stop
+      if (perm.status !== "granted") return;
+
+      // At this point, the hook can access location. Nothing else needed here.
+    } catch (e) {
+      // Noop, UI gate will handle
+    }
+  };
+
+  useEffect(() => {
+    checkStatus()
+      .then(requestPermissionAndLoad)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -50,7 +89,7 @@ export default function Qibla() {
   useEffect(() => {
     const now = Date.now();
     if (isAligned && !prevAligned.current && now - lastHapticAt.current > 900) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       lastHapticAt.current = now;
     }
     prevAligned.current = isAligned;
@@ -61,77 +100,174 @@ export default function Qibla() {
     return { transform: [{ rotate: `${deg}deg` }] };
   });
 
-  const needGate =
+  const needLocationGate =
     servicesOn === false || permissionStatus !== "granted";
 
   const openDeviceSettings = async () => {
     try {
-      // Expo recommends Linking.openSettings
-      // @ts-ignore
-      await import("react-native").then(({ Linking }) => Linking.openSettings());
+      await Linking.openSettings();
     } catch {
-      // noop
+      Alert.alert(
+        "Open Settings",
+        "Unable to open settings. Please open device settings and grant Location permission."
+      );
     }
   };
 
   const openLocationServicesHelp = () => {
-    alert(
+    Alert.alert(
+      "Turn On Location Services",
       Platform.select({
-        ios: "Qibla needs Location. Turn on: Settings → Privacy & Security → Location Services, then allow Sirat.",
-        android: "Qibla needs Location. Enable Location in Quick Settings or Settings → Location, then allow Sirat.",
+        ios: "Go to Settings → Privacy & Security → Location Services and turn it on, then open Sirat and grant access.",
+        android:
+          "Turn on Location in Quick Settings or Settings → Location, then open Sirat and grant access.",
         default: "Please enable Location Services on your device.",
       }) as string
     );
   };
 
+  // ----- Same InfoBanner component used in Mosques -----
+  const InfoBanner = ({
+    icon,
+    title,
+    message,
+    actions,
+    iconColor = "#134b0a",
+  }: {
+    icon: keyof typeof Ionicons.glyphMap;
+    title: string;
+    message: string;
+    actions?: React.ReactNode;
+    iconColor?: string;
+  }) => (
+    <View style={styles.banner}>
+      <Ionicons name={icon} size={20} color={iconColor} />
+      <View style={{ flex: 1, marginLeft: 10 }}>
+        <Text style={styles.bannerTitle}>{title}</Text>
+        <Text style={styles.bannerText}>{message}</Text>
+        {actions}
+      </View>
+    </View>
+  );
+
+  // ----- Top-of-screen gate like Mosques -----
+  if (needLocationGate) {
+    const servicesOff = servicesOn === false;
+    const denied = permissionStatus === "denied";
+    const undetermined = permissionStatus === "undetermined";
+
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Qibla</Text>
+          <View style={{ flex: 1, marginTop: 20 }}>
+            {servicesOff ? (
+              <InfoBanner
+                icon="location"
+                title="Location Services Off"
+                message="Location is required to calculate the Qibla direction."
+                actions={
+                  <View style={styles.row}>
+                    <TouchableOpacity
+                      style={styles.ctaPrimary}
+                      onPress={openLocationServicesHelp}
+                    >
+                      <Text style={styles.ctaPrimaryText}>How to turn on</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.ctaSecondary}
+                      onPress={checkStatus}
+                    >
+                      <Text style={styles.ctaSecondaryText}>
+                        I turned it on
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                }
+              />
+            ) : denied ? (
+              <InfoBanner
+                icon="location-outline"
+                iconColor="#DABA69"
+                title="Allow Location Access"
+                message="Grant Sirat access to your location to calculate the Qibla direction."
+                actions={
+                  <View style={styles.row}>
+                    <TouchableOpacity
+                      style={styles.ctaPrimary}
+                      onPress={openDeviceSettings}
+                    >
+                      <Text style={styles.ctaPrimaryText}>Open Settings</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.ctaSecondary}
+                      onPress={requestPermissionAndLoad}
+                    >
+                      <Text style={styles.ctaSecondaryText}>Try again</Text>
+                    </TouchableOpacity>
+                  </View>
+                }
+              />
+            ) : undetermined ? (
+              <InfoBanner
+                icon="navigate-outline"
+                title="We need your location"
+                message="Tap enable to calculate the direction to the Kaaba. You can disable anytime in Settings."
+                actions={
+                  <TouchableOpacity
+                    style={[styles.ctaPrimary, { alignSelf: "flex-start" }]}
+                    onPress={requestPermissionAndLoad}
+                  >
+                    <Text style={styles.ctaPrimaryText}>Enable Location</Text>
+                  </TouchableOpacity>
+                }
+              />
+            ) : null}
+
+            <Text style={styles.helper}>
+              Prayer Times still work without location. Pick a city in{" "}
+              <Text style={styles.link}>Settings</Text>.
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ----- Normal Qibla UI -----
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Qibla</Text>
-        {!needGate && accuracy != null && accuracy >= 0 ? (
+        {!needLocationGate && accuracy != null && accuracy >= 0 ? (
           <Text style={styles.subtle}>Accuracy ±{Math.round(accuracy)}°</Text>
         ) : null}
       </View>
 
       <View style={styles.center}>
-        {needGate ? (
-          <View style={styles.banner}>
-            <Ionicons name="location-outline" size={20} color="#134b0a" />
-            <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={styles.bannerTitle}>Location required</Text>
-              <Text style={styles.bannerText}>
-                Turn on Location Services and allow access to calculate the direction to the Kaaba.
-              </Text>
-              <View style={styles.row}>
-                <TouchableOpacity style={styles.ctaPrimary} onPress={openLocationServicesHelp}>
-                  <Text style={styles.ctaPrimaryText}>How to turn on</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.ctaSecondary} onPress={openDeviceSettings}>
-                  <Text style={styles.ctaSecondaryText}>Open Settings</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.helper}>
-                Prayer Times still work without location. Pick a city in{" "}
-                <Text style={styles.link}>Settings</Text>.
-              </Text>
-            </View>
-          </View>
-        ) : error ? (
+        {error ? (
           <>
             <Text style={styles.errorText}>{error}</Text>
-            <Text style={styles.helper}>Move your phone in a figure-eight to improve compass accuracy.</Text>
+            <Text style={styles.helper}>
+              Move your phone in a figure eight to improve compass accuracy.
+            </Text>
           </>
         ) : rotation == null ? (
           <Text style={styles.loadingText}>Finding direction…</Text>
         ) : (
           <>
             {accuracy != null && accuracy > 20 ? (
-              <Text style={styles.noteText}>Move phone in a figure eight to improve accuracy.</Text>
+              <Text style={styles.noteText}>
+                Move phone in a figure eight to improve accuracy.
+              </Text>
             ) : null}
 
             <View style={[styles.ring, isAligned && styles.ringAligned]}>
-              <Animated.Image source={arrowImg} style={[styles.arrow, animatedStyle]} resizeMode="contain" />
+              <Animated.Image
+                source={arrowImg}
+                style={[styles.arrow, animatedStyle]}
+                resizeMode="contain"
+              />
             </View>
           </>
         )}
@@ -142,11 +278,27 @@ export default function Qibla() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#134b0a" },
-  titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
-  title: { color: "white", fontFamily: "SFProDisplay-Bold", fontSize: 44, letterSpacing: 0.2 },
-  subtle: { marginTop: 2, color: "#d4e7d2", fontSize: 13 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
 
+  // Matches the Mosques layout so the banner sits at the top under the title
+  container: { flex: 1, padding: 20 },
+
+  titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
+  title: {
+    color: "white",
+    fontFamily: "SFProDisplay-Bold",
+    fontSize: 44,
+    letterSpacing: 0.2,
+  },
+  subtle: { marginTop: 2, color: "#d4e7d2", fontSize: 13 },
+
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+
+  // Banner visuals kept identical to Mosques
   banner: {
     backgroundColor: "rgba(218,186,105,0.18)",
     borderWidth: 1,
@@ -156,8 +308,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
   },
-  bannerTitle: { color: "#DABA69", fontSize: 16, fontFamily: "SFProDisplay-Semibold" },
+  bannerTitle: {
+    color: "#DABA69",
+    fontSize: 16,
+    fontFamily: "SFProDisplay-Semibold",
+  },
   bannerText: { color: "white", opacity: 0.95, fontSize: 14, marginTop: 4 },
+
   row: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
   ctaPrimary: {
     backgroundColor: "#DABA69",
@@ -194,7 +351,12 @@ const styles = StyleSheet.create({
 
   loadingText: { color: "white", fontSize: 18, textAlign: "center" },
   errorText: { color: "#ff7070", fontSize: 16, textAlign: "center" },
-  noteText: { color: "#DABA69", fontSize: 14, marginBottom: 10, textAlign: "center" },
+  noteText: {
+    color: "#DABA69",
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: "center",
+  },
   helper: { color: "#dfeee0", fontSize: 14, marginTop: 12 },
   link: { color: "#DABA69", textDecorationLine: "underline" },
 });
