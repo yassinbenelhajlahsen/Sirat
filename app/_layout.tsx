@@ -1,10 +1,10 @@
-// app/_layout.tsx
+import { Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
+import * as Updates from "expo-updates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { useFonts } from "expo-font";
-import { Ionicons } from "@expo/vector-icons";
 
 import { NotificationService } from "../services/notificationService";
 import SplashScreen from "./components/SplashScreen";
@@ -20,18 +20,32 @@ export default function RootLayout() {
     ...Ionicons.font,
   });
 
-  // Render the dynamic splash until the app is ready
   const [showSplash, setShowSplash] = useState(true);
 
-  // If you add more boot tasks, flip this when they are done
-  const appReady = fontsLoaded;
-
-  // Optional non-blocking init that should not delay first paint
+  // Initialize notification logic (non-blocking)
   useEffect(() => {
     NotificationService.init();
   }, []);
 
-  // Hide native splash only after our React splash has mounted
+  // ✅ Check for OTA updates once on app start
+  useEffect(() => {
+    async function checkForOTAUpdate() {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          console.log("New OTA update found. Fetching...");
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync(); // Reload to apply new JS bundle immediately
+        } else {
+          console.log("App is up to date.");
+        }
+      } catch (e) {
+        console.log("Failed to check for OTA update:", e);
+      }
+    }
+    checkForOTAUpdate();
+  }, []);
+
   const hasHiddenNative = useRef(false);
   const hideNativeSplash = useCallback(async () => {
     if (hasHiddenNative.current) return;
@@ -40,6 +54,8 @@ export default function RootLayout() {
       await ExpoSplash.hideAsync();
     } catch {}
   }, []);
+
+  const appReady = fontsLoaded;
 
   return (
     <SafeAreaProvider>

@@ -14,6 +14,7 @@ export default {
     userInterfaceStyle: "automatic",
     backgroundColor: "#0c3605",
     newArchEnabled: true,
+    platforms: ["ios", "android"],
     ios: {
       userInterfaceStyle: "dark",
       supportsTablet: true,
@@ -33,6 +34,14 @@ export default {
     experiments: {
       typedRoutes: true,
     },
+
+    updates: {
+      url: "https://u.expo.dev/cf8d4247-0a70-4fe4-bd59-43ea9efac019",
+    },
+    runtimeVersion: {
+      policy: "appVersion",
+    },
+
     extra: {
       fullName: "Sirat - The Path to Your Deen",
       GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
