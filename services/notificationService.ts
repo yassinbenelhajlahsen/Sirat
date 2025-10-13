@@ -40,7 +40,7 @@ type PrefMap = Record<PrayerKey, boolean>;
 
 const DEFAULT_PREFS: PrefMap = {
   Fajr: true,
-  Sunrise: false,
+  Sunrise: true,
   Dhuhr: true,
   Asr: true,
   Maghrib: true,
@@ -387,16 +387,12 @@ async function scheduleForToday(
     const sk = makeSeenKey(label, fireDate);
     if (seen.has(sk)) continue;
 
-    const emoji = PRAYER_EMOJI[label] || "🕌";
-    const title = [emoji, label, p.time, cityDisplay]
-      .map((x) => String(x || "").trim())
-      .filter(Boolean)
-      .join(" • ");
-
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title,
-        body: `It is time for ${label}.`,
+        title: `${PRAYER_EMOJI[label] || "🕌"} ${label} • ${
+          p.time
+        } • ${cityDisplay}`,
+        body: "",
         sound: Platform.select({ ios: "default", android: "default" }),
         priority: Notifications.AndroidNotificationPriority.HIGH,
         data: {
@@ -406,7 +402,6 @@ async function scheduleForToday(
           city: cityDisplay,
           dayKey,
         },
-        subtitle: Platform.OS === "ios" ? "Prayer reminder" : undefined,
       },
       trigger: {
         type: "date",
