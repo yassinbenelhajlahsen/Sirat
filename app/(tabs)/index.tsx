@@ -50,7 +50,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [banner, setBanner] = useState<string>("");
 
-  // New state to show whether we're using device location or a manual city
+  // Single source of truth label for where times came from
   const [locationLabel, setLocationLabel] = useState<string>("");
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -87,9 +87,8 @@ export default function Home() {
     if (!s.useLocation && s.city) {
       await AsyncStorage.setItem("selectedCity", cityKey(s.city));
     }
-    // Notify anyone interested, like the notification service
     try {
-      // @ts-ignore optional chaining for web safety
+      // @ts-ignore web safety
       DeviceEventEmitter?.emit?.("settingsChanged", save);
     } catch {}
   }
@@ -99,46 +98,10 @@ export default function Home() {
     const perm = await Location.getForegroundPermissionsAsync();
     return servicesEnabled && perm.status === "granted";
   }
-  // Add this helper near your other helpers
-async function updateLocationLabel(effective: PrayerSettings) {
-  try {
-    if (effective.useLocation) {
-      // Try last known first to avoid a slow prompt
-      let pos = await Location.getLastKnownPositionAsync();
-      if (!pos) {
-        pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Lowest,
-          mayShowUserSettingsDialog: false,
-        });
-      }
-      const { latitude, longitude } = pos.coords;
-      const places = await Location.reverseGeocodeAsync({ latitude, longitude });
-      const p = places?.[0];
-      const city =
-        p?.city || p?.district || p?.subregion || p?.region || "your area";
-      const cc = p?.isoCountryCode || p?.country || "";
-      setLocationLabel(
-        `${city}${cc ? ", " + cc : ""}`
-      );
-    } else {
-      setLocationLabel(
-        `${effective.city?.name ?? "Unknown"}`
-      );
-    }
-  } catch {
-    // Fallback if anything fails
-    setLocationLabel(
-      effective.useLocation ? "Using device location" :
-      `${effective.city?.name ?? "Unknown"}`
-    );
-  }
-}
 
   /**
    * Read settings, enforce sync with the OS, persist if adjusted, and return effective settings.
-   * Rule:
-   * - If useLocation is true but OS blocks, flip to false and persist.
-   * - Otherwise leave as is.
+   * If useLocation is true but OS blocks, flip to false and persist.
    */
   async function readSyncedSettings(): Promise<PrayerSettings> {
     let s = await readSettings();
@@ -152,6 +115,75 @@ async function updateLocationLabel(effective: PrayerSettings) {
     return s;
   }
 
+  /**
+   * Resolve a fresh coordinate and a human label once, then reuse both.
+   * Never uses getLastKnownPositionAsync to avoid stale locations.
+   */
+  async function resolveCoordsAndLabel(
+    effective: PrayerSettings
+  ): Promise<{
+    coords?: { latitude: number; longitude: number };
+    country?: string;
+    label: string;
+  }> {
+    if (!effective.useLocation) {
+      return {
+        coords: undefined,
+        label: effective.city?.name ?? "Unknown",
+      };
+    }
+
+    // Permission check and prompt if needed
+    let perm = await Location.getForegroundPermissionsAsync();
+    if (perm.status !== "granted") {
+      const req = await Location.requestForegroundPermissionsAsync();
+      perm = req;
+    }
+    const services = await Location.hasServicesEnabledAsync();
+    if (!services || perm.status !== "granted") {
+      // Fall back to manual city label if present
+      return {
+        coords: undefined,
+        label: effective.city?.name ?? "Location off",
+      };
+    }
+
+    // Fresh reading only
+    const pos = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+      mayShowUserSettingsDialog: false,
+    });
+
+    let country: string | undefined;
+    let label = "";
+    try {
+      const places = await Location.reverseGeocodeAsync({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      });
+      const p = places?.[0];
+      const city =
+        p?.city || p?.district || p?.subregion || p?.region || "Your area";
+      const cc = p?.isoCountryCode || p?.country || "";
+      label = `${city}${cc ? ", " + cc : ""}`;
+      country = p?.country || p?.isoCountryCode || undefined;
+    } catch {
+      // If reverse geocode fails, still show a useful label
+      const lat = pos.coords.latitude.toFixed(3);
+      const lon = pos.coords.longitude.toFixed(3);
+      label = `Lat ${lat}, Lon ${lon}`;
+    }
+
+    return {
+      coords: {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      },
+      country,
+      label,
+    };
+  }
+
   // ---- Data load ----
   const loadData = async () => {
     try {
@@ -161,12 +193,23 @@ async function updateLocationLabel(effective: PrayerSettings) {
       setNextDayFajr(null);
       setTimeLeft("");
       fadeAnim.setValue(0);
+      setBanner("");
 
+      // 1) Read effective settings
       const effective = await readSyncedSettings();
-      await updateLocationLabel(effective);
-      const times = await getPrayerTimesToday(effective);
+
+      // 2) Resolve coordinates and label once
+      const { coords, country, label } = await resolveCoordsAndLabel(effective);
+      setLocationLabel(label);
+
+      // 3) Fetch times using the exact same coords
+      const times = await getPrayerTimesToday(effective, {
+        coords,
+        country,
+      });
       setPrayerTimes(times);
 
+      // 4) Compute next prayer
       const now = new Date();
       let foundNext = false;
       for (const pt of times) {
@@ -178,9 +221,12 @@ async function updateLocationLabel(effective: PrayerSettings) {
         }
       }
 
+      // 5) If day finished, show tomorrow's Fajr using same coords
       if (!foundNext) {
-        // As a simple placeholder, show next-day Fajr label from the same function
-        const tomorrowTimes = await getPrayerTimesToday(effective);
+        const tomorrowTimes = await getPrayerTimesToday(effective, {
+          coords,
+          country,
+        });
         const fajr = tomorrowTimes.find((p) => p.label === "Fajr");
         if (fajr) setNextDayFajr(fajr.time);
       }
@@ -320,7 +366,6 @@ async function updateLocationLabel(effective: PrayerSettings) {
             Today's Prayer Times
           </Text>
 
-          {/* Location display (manual or using device) */}
           {locationLabel ? (
             <Text
               style={{
