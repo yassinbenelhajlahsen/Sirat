@@ -7,9 +7,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, DeviceEventEmitter } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { NotificationService } from "../services/notificationService";
 import SplashScreen from "./components/SplashScreen";
@@ -35,7 +35,8 @@ function parseJSON<T>(raw: string | null, fallback: T): T {
 
 async function syncLocationPermissionToSettings() {
   // 1) Read current OS permission without prompting
-  const { status: currentStatus } = await Location.getForegroundPermissionsAsync();
+  const { status: currentStatus } =
+    await Location.getForegroundPermissionsAsync();
   let status = currentStatus;
 
   // 2) If undecided, request now (first launch behavior)
@@ -122,14 +123,10 @@ export default function RootLayout() {
       try {
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
-          console.log("New OTA update found. Fetching...");
           await Updates.fetchUpdateAsync();
           await Updates.reloadAsync();
-        } else {
-          console.log("App is up to date.");
-        }
+        } 
       } catch (e) {
-        console.log("Failed to check for OTA update:", e);
       }
     }
     checkForOTAUpdate();
@@ -185,6 +182,7 @@ export default function RootLayout() {
       {showSplash ? (
         <SplashScreen
           ready={appReady}
+          fontsReady={fontsLoaded}
           onReadyToHideNative={hideNativeSplash}
           onFinished={() => setShowSplash(false)}
         />

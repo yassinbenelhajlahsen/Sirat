@@ -5,6 +5,7 @@ import {
   Easing,
   I18nManager,
   LayoutChangeEvent,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -18,16 +19,20 @@ type Props = {
   onReadyToHideNative?: () => void;
   // Called after fade out completes so parent can render the app
   onFinished?: () => void;
+  // New: only render text after fonts are loaded to avoid wrong measurements
+  fontsReady?: boolean;
 };
 
 export default function SplashScreen({
   ready,
   onReadyToHideNative,
   onFinished,
+  fontsReady = true,
 }: Props) {
   const [hadith, setHadith] = useState<{
     arabic: string;
     english: string;
+    source: string;
   } | null>(null);
 
   // Opaque at start so nothing beneath is visible
@@ -38,7 +43,7 @@ export default function SplashScreen({
   useEffect(() => {
     I18nManager.allowRTL(true);
     const day = new Date().getDate();
-    const today = hadiths.find((h: any) => h.day === day) || null;
+    const today = (hadiths as any[]).find((h) => h.day === day) || null;
     setHadith(today);
   }, []);
 
@@ -63,8 +68,6 @@ export default function SplashScreen({
   // When parent marks ready, fade out and notify completion
   useEffect(() => {
     if (!ready) return;
-
-    // wait extra time before fade starts (e.g., 1500 ms)
     const timeout = setTimeout(() => {
       Animated.timing(opacity, {
         toValue: 0,
@@ -74,19 +77,17 @@ export default function SplashScreen({
       }).start(({ finished }) => {
         if (finished && onFinished) onFinished();
       });
-    }, 2000); // <-- extend splash visibility here
-
+    }, 2000);
     return () => clearTimeout(timeout);
   }, [ready]);
 
   // Hide native splash once this component has a frame on screen
-  const handleLayout = (e: LayoutChangeEvent) => {
+  const handleLayout = (_e: LayoutChangeEvent) => {
     onReadyToHideNative?.();
   };
 
   const englishQuoted = useMemo(() => {
     if (!hadith?.english) return "";
-    // Ensure consistent quotes
     return `“${hadith.english}”`;
   }, [hadith]);
 
@@ -101,20 +102,52 @@ export default function SplashScreen({
           },
         ]}
       >
-        <Text style={styles.appName}>Sirat</Text>
-        <Text style={styles.tagline}>The Path to Your Deen</Text>
-        {hadith ? (
-          <>
-            <Text style={styles.arabic} numberOfLines={3} adjustsFontSizeToFit allowFontScaling={false}>
-              {hadith.arabic}
-            </Text>
-            <View style={styles.divider} />
-            <Text style={styles.english} numberOfLines={3} adjustsFontSizeToFit>
-              {englishQuoted}
-            </Text>
-          </>
+        {/* Title */}
+        <Text style={styles.appName} allowFontScaling={false}>
+          {/* trailing space avoids right-edge clip on some iOS builds */}
+          Sirat{" "}
+        </Text>
+
+        {/* Subtitle */}
+        <Text style={styles.tagline} allowFontScaling={false}>
+          The Path to Your Deen
+        </Text>
+
+        {/* Only render variable-length text when fonts are ready */}
+        {fontsReady ? (
+          hadith ? (
+            <>
+              {/* Arabic */}
+              <Text
+                style={styles.arabic}
+                allowFontScaling={false}
+              >
+                {hadith.arabic}
+              </Text>
+
+              <View style={styles.divider} />
+
+              {/* English */}
+              <Text
+                style={styles.english}
+                numberOfLines={3}
+                adjustsFontSizeToFit
+                minimumFontScale={0.9}
+              >
+                {englishQuoted}
+              </Text>
+              {hadith?.source ? (
+                <Text style={styles.source} allowFontScaling={false}>
+                  {hadith.source}
+                </Text>
+              ) : null}
+            </>
+          ) : (
+            <Text style={styles.loadingText}>Loading hadith...</Text>
+          )
         ) : (
-          <Text style={styles.loadingText}>Loading hadith...</Text>
+          // keep layout stable but invisible while fonts load
+          <View style={{ height: 140 }} />
         )}
       </Animated.View>
     </View>
@@ -131,8 +164,10 @@ const styles = StyleSheet.create({
   content: {
     alignItems: "center",
     justifyContent: "center",
+    // Give Text a stable measuring box across devices
+    width: "90%",
+    maxWidth: 700,
     paddingHorizontal: 28,
-    transform: [{ translateY: -40 }],
   },
   appName: {
     color: "#DABA69",
@@ -140,22 +175,28 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Bold",
     marginBottom: 6,
     letterSpacing: 0.6,
+    // prevent right-edge clipping and add vertical room
+    paddingHorizontal: 6,
+    lineHeight: 68,
+    ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
   },
   tagline: {
     color: "#ffffff",
     opacity: 0.85,
     fontSize: 30,
     fontFamily: "SFProDisplay-Regular",
-    marginBottom: 85,
+    marginBottom: 72,
+    ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
   },
   arabic: {
     color: "#ffffff",
     fontSize: 36,
     textAlign: "center",
-    fontFamily: "Amiri-Regular",
     lineHeight: 54,
     marginTop: 8,
     marginBottom: 18,
+    writingDirection: "rtl",
+    ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
   },
   divider: {
     width: 60,
@@ -170,6 +211,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "SFProDisplay-Semibold",
     lineHeight: 26,
+  },
+  source: {
+    marginTop: 8,
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Semiboldr",
   },
   loadingText: {
     color: "#DABA69",

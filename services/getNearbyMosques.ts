@@ -73,8 +73,6 @@ export async function getCachedMosques(
         return data;
       }
     }
-
-    console.log("Fetching fresh mosque data");
     const freshData = await getNearbyMosques(latitude, longitude);
     await AsyncStorage.setItem(
       cacheKey,
