@@ -105,7 +105,7 @@ export default function SplashScreen({
         <Text style={styles.tagline}>The Path to Your Deen</Text>
         {hadith ? (
           <>
-            <Text style={styles.arabic} numberOfLines={3} adjustsFontSizeToFit>
+            <Text style={styles.arabic} numberOfLines={3} adjustsFontSizeToFit allowFontScaling={false}>
               {hadith.arabic}
             </Text>
             <View style={styles.divider} />
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 36,
     textAlign: "center",
-    fontFamily: "GeezaPro",
+    fontFamily: "Amiri-Regular",
     lineHeight: 54,
     marginTop: 8,
     marginBottom: 18,
