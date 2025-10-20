@@ -19,7 +19,7 @@ import {
   getPrayerTimesForDate,
   PrayerSettings,
   PrayerTime,
-} from "../../services/yearlyPrayerTimes";
+} from "../../services/prayerTimes";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
 

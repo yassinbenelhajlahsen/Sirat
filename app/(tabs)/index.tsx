@@ -18,7 +18,7 @@ import {
   getPrayerTimesToday,
   PrayerSettings,
   PrayerTime,
-} from "../../services/dailyPrayerTimes";
+} from "../../services/prayerTimes";
 import CITIES, { City, cityKey } from "../../util/cities";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
@@ -119,9 +119,7 @@ export default function Home() {
    * Resolve a fresh coordinate and a human label once, then reuse both.
    * Never uses getLastKnownPositionAsync to avoid stale locations.
    */
-  async function resolveCoordsAndLabel(
-    effective: PrayerSettings
-  ): Promise<{
+  async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
     coords?: { latitude: number; longitude: number };
     country?: string;
     label: string;

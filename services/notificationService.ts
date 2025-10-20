@@ -4,17 +4,22 @@ import * as Device from "expo-device";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import { AppState, DeviceEventEmitter, Platform } from "react-native";
-import { getPrayerTimesToday, PrayerTime } from "./dailyPrayerTimes";
+import {
+  getPrayerTimesForDate,
+  getPrayerTimesToday,
+  PrayerSettings,
+  PrayerTime,
+} from "./prayerTimes";
 
-// -----------------------------
-// Events your app already emits
-// -----------------------------
+/** -----------------------------
+ * Events your app already emits
+ * -----------------------------*/
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED"; // from NotificationSettings.tsx
 const SETTINGS_CHANGED_EVENT = "settingsChanged"; // from Settings screen
 
-// -----------------------------
-// Storage keys
-// -----------------------------
+/** -----------------------------
+ * Storage keys
+ * -----------------------------*/
 const STORAGE_ENABLED = "notif_enabled_v1";
 const STORAGE_MAP = "notif_map_v1";
 const STORAGE_SCHEDULE_IDS = "notif_schedule_ids_v1";
@@ -26,15 +31,21 @@ const STORAGE_CITY_DISPLAY_LOC = "notif_city_display_loc_v1";
 const STORAGE_CITY_DISPLAY_MAN = "notif_city_display_man_v1";
 const STORAGE_LAST_MANUAL_CITY = "notif_last_manual_city_v1"; // Full manual city cache
 
-// -----------------------------
-// Scheduling constants
-// -----------------------------
-const MIDNIGHT_REFRESH_MINUTES = 5; // Fire at 12:05 AM local to refresh next day
+/** -----------------------------
+ * Scheduling constants
+ * -----------------------------*/
+const MIDNIGHT_REFRESH_MINUTES = 5; // 12:05 AM local
 const ANDROID_CHANNEL_ID = "prayer-reminders";
 
-// -----------------------------
-// Types & defaults
-// -----------------------------
+// Rolling horizon (Plan A)
+const HORIZON_DAYS_IOS = 10; // 6 prayers/day * 10 = 60 <= iOS 64 cap
+const HORIZON_DAYS_ANDROID = 14;
+const HORIZON_DAYS =
+  Platform.OS === "ios" ? HORIZON_DAYS_IOS : HORIZON_DAYS_ANDROID;
+
+/** -----------------------------
+ * Types & defaults
+ * -----------------------------*/
 type PrayerKey = "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 type PrefMap = Record<PrayerKey, boolean>;
 
@@ -64,18 +75,6 @@ type CityLike = {
   id?: string;
 };
 
-function isCityLike(x: any): x is CityLike {
-  return (
-    !!x &&
-    typeof x === "object" &&
-    typeof x.name === "string" &&
-    typeof x.lat !== "undefined" &&
-    typeof x.lng !== "undefined" &&
-    !Number.isNaN(Number(x.lat)) &&
-    !Number.isNaN(Number(x.lng))
-  );
-}
-
 function normalizeCity(raw: any): CityLike | null {
   if (!raw) return null;
   const candidate = Array.isArray(raw) ? raw[0] : raw;
@@ -97,21 +96,26 @@ function normalizeCity(raw: any): CityLike | null {
   return null;
 }
 
-// -----------------------------
-// Utils
-// -----------------------------
-function parse12hToTodayDate(timeStr: string): Date {
-  // input like "5:23 AM"
+/** -----------------------------
+ * Utils
+ * -----------------------------*/
+function parse12hToDate(base: Date, timeStr: string): Date {
+  // timeStr like "5:23 AM"
   const [hm, ampm] = timeStr.split(" ");
   const [hStr, mStr] = hm.split(":");
   let h = parseInt(hStr, 10);
   const m = parseInt(mStr, 10);
-
   if (ampm === "PM" && h !== 12) h += 12;
   if (ampm === "AM" && h === 12) h = 0;
-
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+  return new Date(
+    base.getFullYear(),
+    base.getMonth(),
+    base.getDate(),
+    h,
+    m,
+    0,
+    0
+  );
 }
 
 function yyyymmdd(d = new Date()): string {
@@ -136,14 +140,14 @@ function msUntilNextLocalMidnightPlus(minutes: number): number {
 }
 
 function makeSeenKey(label: PrayerKey, fireDate: Date): string {
-  // Use minute precision to avoid trivial clock drift
+  // minute precision
   const k = fireDate.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
   return `${label}_${k}`;
 }
 
-// -----------------------------
-// Permissions & channels
-// -----------------------------
+/** -----------------------------
+ * Permissions & channels
+ * -----------------------------*/
 async function ensurePermissions(): Promise<boolean> {
   if (!Device.isDevice) return true; // allow on simulators
   const settings = await Notifications.getPermissionsAsync();
@@ -174,9 +178,9 @@ async function configureAndroidChannel() {
   });
 }
 
-// -----------------------------
-// Settings & prefs reads
-// -----------------------------
+/** -----------------------------
+ * Settings & prefs reads
+ * -----------------------------*/
 async function readMasterEnabled(): Promise<boolean> {
   const raw = await AsyncStorage.getItem(STORAGE_ENABLED);
   return raw === "1";
@@ -187,11 +191,9 @@ async function readPrefs(): Promise<PrefMap> {
   return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
 }
 
-async function readPrayerSettings(): Promise<{
-  useLocation: boolean;
-  method: number;
-  city?: CityLike | null;
-}> {
+async function readPrayerSettings(): Promise<
+  PrayerSettings & { city?: CityLike | null }
+> {
   const raw = await AsyncStorage.getItem("prayerSettings");
   if (!raw) return { useLocation: true, method: -1, city: null };
   const parsed = JSON.parse(raw);
@@ -202,44 +204,33 @@ async function readPrayerSettings(): Promise<{
   };
 }
 
-// -----------------------------
-// Effective settings (match Home)
-// -----------------------------
+/** -----------------------------
+ * Effective settings (match Home)
+ * -----------------------------*/
 async function canUseOSLocation(): Promise<boolean> {
   const servicesEnabled = await Location.hasServicesEnabledAsync();
   const perm = await Location.getForegroundPermissionsAsync();
   return servicesEnabled && perm.status === "granted";
 }
 
-/**
- * Derive effective settings for this run:
- * - If user toggled location OFF: always use manual city.
- * - If user toggled ON but OS blocks: temporary fallback to manual city.
- * - Pass manual city through even when using location, so dailyPrayerTimes can gracefully fallback.
- */
 function deriveEffectiveSettings(
   s: { useLocation: boolean; method: number; city?: CityLike | null },
   canUse: boolean
-): { useLocation: boolean; method: number; city?: CityLike | null } {
+): PrayerSettings {
   const manualCity = s.city ?? null;
   if (!s.useLocation) {
-    return { useLocation: false, method: s.method, city: manualCity };
+    return { useLocation: false, method: s.method, city: manualCity as any };
   }
   if (s.useLocation && !canUse) {
-    return { useLocation: false, method: s.method, city: manualCity };
+    return { useLocation: false, method: s.method, city: manualCity as any };
   }
-  // Location allowed. Provide city as fallback to avoid hard errors if read fails mid-run.
-  return { useLocation: true, method: s.method, city: manualCity ?? undefined };
+  // Location allowed. Provide city as fallback for other screens if needed.
+  return { useLocation: true, method: s.method, city: manualCity as any };
 }
 
-// -----------------------------
-// City label resolver (manual vs location)
-// -----------------------------
-/**
- * Resolve a short city-only label for notification titles.
- * - Manual mode: use manual city name; cache under MAN key.
- * - Location mode: try current position quickly; fall back to lastKnown; cache under LOC key.
- */
+/** -----------------------------
+ * City label resolver (manual vs location)
+ * -----------------------------*/
 async function resolveCityDisplay(effective: {
   useLocation: boolean;
   city?: CityLike | null;
@@ -254,10 +245,8 @@ async function resolveCityDisplay(effective: {
       );
       return city.name;
     }
-    // fallback to last saved manual display
     const man = await AsyncStorage.getItem(STORAGE_CITY_DISPLAY_MAN);
     if (man) return man;
-    // as a last resort, try the legacy manual city object
     const lastManualRaw = await AsyncStorage.getItem(STORAGE_LAST_MANUAL_CITY);
     if (lastManualRaw) {
       try {
@@ -271,9 +260,7 @@ async function resolveCityDisplay(effective: {
     return "your area";
   }
 
-  // Location mode — try to refresh from current position quickly
   try {
-    // a gentle attempt; if it throws/timeout, we fall back to last known and cache
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
       maximumAge: 15_000,
@@ -296,11 +283,8 @@ async function resolveCityDisplay(effective: {
         return label;
       }
     }
-  } catch {
-    // ignore and fall back
-  }
+  } catch {}
 
-  // Fallback to last known
   try {
     const last = await Location.getLastKnownPositionAsync({});
     if (last) {
@@ -320,27 +304,22 @@ async function resolveCityDisplay(effective: {
         return label;
       }
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
 
-  // Use cached location label if we have it
   const cachedLoc = await AsyncStorage.getItem(STORAGE_CITY_DISPLAY_LOC);
   if (cachedLoc) return cachedLoc;
 
   return "your area";
 }
 
-// -----------------------------
-// Scheduling helpers
-// -----------------------------
+/** -----------------------------
+ * Scheduling helpers
+ * -----------------------------*/
 async function cancelPreviouslyScheduled() {
-  // Clear OS scheduled notifications
+  // Clear OS schedules
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-  } catch {
-    // best effort
-  }
+  } catch {}
 
   // Clear any IDs we tracked
   const raw = await AsyncStorage.getItem(STORAGE_SCHEDULE_IDS);
@@ -356,99 +335,107 @@ async function cancelPreviouslyScheduled() {
   await AsyncStorage.multiRemove([STORAGE_SCHEDULE_IDS, STORAGE_SEEN_KEYS]);
 }
 
-async function scheduleForToday(
-  prayers: PrayerTime[],
+function addDays(d: Date, offset: number) {
+  return new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate() + offset,
+    0,
+    0,
+    0,
+    0
+  );
+}
+
+/**
+ * Schedule a rolling horizon starting today for N days.
+ * Does not wipe existing future schedules; relies on STORAGE_SEEN_KEYS to avoid duplicates.
+ */
+async function scheduleForHorizon(
+  days: number,
   prefs: PrefMap,
-  enabled: boolean,
-  cityDisplay: string
+  cityDisplay: string,
+  effective: PrayerSettings
 ) {
-  await cancelPreviouslyScheduled();
-  if (!enabled) return;
+  const now = Date.now();
 
-  const ids: string[] = [];
-  const today = yyyymmdd();
-  const dayKey = `day_${today}`;
-
-  // Keep a set of scheduled keys to prevent duplicates even if this runs twice
   const seenRaw = await AsyncStorage.getItem(STORAGE_SEEN_KEYS);
   const seen = new Set<string>(seenRaw ? JSON.parse(seenRaw) : []);
 
-  for (const p of prayers) {
-    const label = p.label as PrayerKey;
-    if (!prefs[label]) continue;
+  const scheduledIdsRaw = await AsyncStorage.getItem(STORAGE_SCHEDULE_IDS);
+  const scheduledIds = new Set<string>(
+    scheduledIdsRaw ? JSON.parse(scheduledIdsRaw) : []
+  );
+  const idsToPersist: string[] = Array.from(scheduledIds);
 
-    const fireDate = parse12hToTodayDate(p.time);
-    const now = new Date();
+  for (let d = 0; d < days; d++) {
+    const day = addDays(new Date(), d);
+    const times: PrayerTime[] = await getPrayerTimesForDate(effective, day);
 
-    // Skip past times for today
-    if (fireDate.getTime() <= now.getTime()) continue;
+    for (const p of times) {
+      const label = p.label as PrayerKey;
+      if (!prefs[label]) continue;
 
-    // Duplicate guard
-    const sk = makeSeenKey(label, fireDate);
-    if (seen.has(sk)) continue;
+      const fireDate = parse12hToDate(day, p.time);
+      if (fireDate.getTime() <= now) continue;
 
-    const id = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: `${PRAYER_EMOJI[label] || "🕌"} ${label} • ${
-          p.time
-        } • ${cityDisplay}`,
-        body: "",
-        sound: Platform.select({ ios: "default", android: "default" }),
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-        data: {
-          type: "prayer",
-          label,
-          timeLocal: p.time,
-          city: cityDisplay,
-          dayKey,
+      const sk = makeSeenKey(label, fireDate);
+      if (seen.has(sk)) continue;
+
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `${PRAYER_EMOJI[label] || "🕌"} ${label} • ${
+            p.time
+          } • ${cityDisplay}`,
+          body: "",
+          sound: Platform.select({ ios: "default", android: "default" }),
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          data: {
+            type: "prayer",
+            label,
+            timeLocal: p.time,
+            city: cityDisplay,
+            dayKey: yyyymmdd(day),
+          },
         },
-      },
-      trigger: {
-        type: "date",
-        date: fireDate,
-      } as unknown as Notifications.NotificationTriggerInput,
-    });
+        trigger: { type: "date", date: fireDate } as any,
+      });
 
-    ids.push(id);
-    seen.add(sk);
+      seen.add(sk);
+      idsToPersist.push(id);
+    }
   }
 
-  if (ids.length) {
-    await AsyncStorage.setItem(STORAGE_SCHEDULE_IDS, JSON.stringify(ids));
-    await AsyncStorage.setItem(
-      STORAGE_SEEN_KEYS,
-      JSON.stringify(Array.from(seen))
-    );
-  }
+  await AsyncStorage.setItem(
+    STORAGE_SCHEDULE_IDS,
+    JSON.stringify(idsToPersist)
+  );
+  await AsyncStorage.setItem(
+    STORAGE_SEEN_KEYS,
+    JSON.stringify(Array.from(seen))
+  );
 }
 
-// -----------------------------
-// Fetch today's times with strict manual-vs-location handling
-// -----------------------------
+/** -----------------------------
+ * Fetch today's times with strict manual-vs-location handling
+ * -----------------------------*/
 async function fetchTodayTimesWithEffective(): Promise<{
   times: PrayerTime[];
-  effective: { useLocation: boolean; method: number; city?: CityLike | null };
+  effective: PrayerSettings;
 }> {
   const s = await readPrayerSettings();
   const canUse = await canUseOSLocation();
   const effective = deriveEffectiveSettings(s, canUse);
-
-  // Always pass the fallback city through; dailyPrayerTimes handles the rest.
-  const times = await getPrayerTimesToday({
-    useLocation: effective.useLocation,
-    method: effective.method,
-    city: effective.city || undefined,
-  });
-
+  const times = await getPrayerTimesToday(effective);
   return { times, effective };
 }
 
-// -----------------------------
-// Midnight rescheduler & listeners
-// -----------------------------
+/** -----------------------------
+ * Midnight rescheduler & listeners
+ * -----------------------------*/
 let midnightTimer: any = null;
 let rescheduleInProgress = false;
-let initDone = false; // prevents double init and duplicate listeners
+let initDone = false;
 
 function startMidnightRescheduler() {
   if (midnightTimer) clearTimeout(midnightTimer);
@@ -477,42 +464,36 @@ function attachEventListeners() {
   });
 }
 
-// -----------------------------
-// Public service
-// -----------------------------
+/** -----------------------------
+ * Public service
+ * -----------------------------*/
 export const NotificationService = {
-  /**
-   * Call once on app startup, for example in your root layout.
-   */
+  /** Call once on app startup, for example in your root layout. */
   async init() {
-    if (initDone) return; // prevent duplicate listeners and timers
+    if (initDone) return;
     initDone = true;
 
     await configureAndroidChannel();
 
-    // Foreground behavior
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
-        // Below two are iOS-specific; Expo ignores when not applicable
-        shouldShowBanner: true as any,
-        shouldShowList: true as any,
+        shouldShowBanner: true as any, // iOS only; safe no-op elsewhere
+        shouldShowList: true as any, // iOS only; safe no-op elsewhere
       }),
     });
 
     attachEventListeners();
     startMidnightRescheduler();
 
-    // First schedule on boot
     await this.rescheduleAll("init");
   },
 
   /**
-   * Reschedules all notifications for today based on current settings and prefs.
-   * Safe to call often. Cancels old schedules and creates fresh ones.
-   * Includes duplicate protection and a day-key shortcut to avoid redundant work.
+   * Reschedules notifications using a rolling horizon.
+   * Heavy triggers wipe and rebuild. Light triggers top up.
    */
   async rescheduleAll(
     reason:
@@ -534,12 +515,14 @@ export const NotificationService = {
       }
 
       const prefs = await readPrefs();
-      const { times, effective } = await fetchTodayTimesWithEffective();
+      const { times: todayTimes, effective } =
+        await fetchTodayTimesWithEffective();
       const cityDisplay = await resolveCityDisplay(effective);
 
+      // Fingerprint: when this changes, do heavy rebuild
       const today = yyyymmdd();
       const timesFingerprint = JSON.stringify(
-        times.map((t) => [t.label, t.time])
+        todayTimes.map((t) => [t.label, t.time])
       );
       const effFingerprint = JSON.stringify({
         useLocation: effective.useLocation,
@@ -551,23 +534,27 @@ export const NotificationService = {
             }
           : null,
       });
-      const nextDayKey = `day_${today}_${JSON.stringify(
+      const nextKey = `day_${today}_${JSON.stringify(
         prefs
       )}_${cityDisplay}_${timesFingerprint}_${effFingerprint}`;
-      const lastDayKey = (await AsyncStorage.getItem(STORAGE_DAYKEY)) || "";
+      const lastKey = (await AsyncStorage.getItem(STORAGE_DAYKEY)) || "";
 
-      // Only skip on truly "light" triggers
-      const canSkip = reason === "app-foreground" || reason === "init";
+      const heavy =
+        reason === "notif-prefs-changed" || reason === "settings-changed";
 
-      if (canSkip && lastDayKey === nextDayKey) {
-        // Nothing changed for today, leave existing schedules intact
+      if (heavy || lastKey !== nextKey) {
+        // Full rebuild: clear and seed horizon
+        await cancelPreviouslyScheduled();
+        await scheduleForHorizon(HORIZON_DAYS, prefs, cityDisplay, effective);
+        await AsyncStorage.setItem(STORAGE_DAYKEY, nextKey);
         return;
       }
 
-      await scheduleForToday(times, prefs, true, cityDisplay);
-      await AsyncStorage.setItem(STORAGE_DAYKEY, nextDayKey);
+      // Light path: keep existing future notifications; add any missing ones
+      await scheduleForHorizon(HORIZON_DAYS, prefs, cityDisplay, effective);
+
+      // Optional: pruning of past-due entries could be added here if desired.
     } catch (e) {
-      // On hard failures, clear to avoid stale schedules
       console.warn("rescheduleAll failed:", e);
       try {
         await cancelPreviouslyScheduled();
@@ -577,9 +564,7 @@ export const NotificationService = {
     }
   },
 
-  /**
-   * Manually disable and clear all scheduled notifications.
-   */
+  /** Manually disable and clear all scheduled notifications. */
   async cancelAll() {
     await cancelPreviouslyScheduled();
   },

@@ -22,7 +22,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { clearPrayerCache } from "../../services/yearlyPrayerTimes";
+import { clearPrayerCache } from "../../services/prayerTimes";
 import CALCULATION_METHODS from "../../util/calculationMethods";
 import CITIES, { City, cityKey } from "../../util/cities";
 import CitySearchModal from "../components/CitySearchModal";
