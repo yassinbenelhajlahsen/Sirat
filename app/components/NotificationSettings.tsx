@@ -78,20 +78,41 @@ export default function NotificationSettings({ notifStatus }: Props) {
 
   // Load per-prayer map on mount. We do not trust STORAGE_ENABLED anymore for the master switch.
   useEffect(() => {
+    let active = true;
     (async () => {
       try {
-        const rawMap = await AsyncStorage.getItem(STORAGE_MAP);
-        if (rawMap) setPrefs((p) => ({ ...p, ...JSON.parse(rawMap) }));
+        const entries = await AsyncStorage.multiGet([
+          STORAGE_MAP,
+          STORAGE_ENABLED,
+        ]);
+        if (!active) return;
+
+        const rawMap = entries.find(([key]) => key === STORAGE_MAP)?.[1];
+        if (rawMap) {
+          setPrefs((p) => ({ ...p, ...JSON.parse(rawMap) }));
+        }
+
+        const rawEnabled = entries.find(
+          ([key]) => key === STORAGE_ENABLED
+        )?.[1];
+        const initialEnabled = rawEnabled === "1";
+        setEnabled(initialEnabled);
+        contentAnim.setValue(initialEnabled ? 1 : 0);
       } catch {
         // ignore load errors
       } finally {
-        setLoaded(true);
+        if (active) setLoaded(true);
       }
     })();
-  }, []);
+
+    return () => {
+      active = false;
+    };
+  }, [contentAnim]);
 
   // Mirror OS -> master toggle and persist that mirror into STORAGE_ENABLED
   useEffect(() => {
+    if (notifStatus == null) return;
     const osGranted = notifStatus === "granted";
     setEnabled(osGranted);
     (async () => {
@@ -196,10 +217,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
   return (
     <View>
       <Animated.View
-        style={[
-          styles.sectionHeader,
-          { transform: [{ scale: headerScale }] },
-        ]}
+        style={[styles.sectionHeader, { transform: [{ scale: headerScale }] }]}
       >
         <View style={{ flexShrink: 1, paddingRight: 12 }}>
           <Text
@@ -259,7 +277,10 @@ export default function NotificationSettings({ notifStatus }: Props) {
             backgroundColor: colors.card,
             borderColor: colors.divider,
             opacity: contentOpacity,
-            transform: [{ translateY: contentTranslateY }, { scale: contentScale }],
+            transform: [
+              { translateY: contentTranslateY },
+              { scale: contentScale },
+            ],
             maxHeight: contentMaxHeight,
             overflow: "hidden",
           },
@@ -283,7 +304,9 @@ export default function NotificationSettings({ notifStatus }: Props) {
             >
               <View style={styles.itemRow}>
                 <View style={styles.meta}>
-                  <Text style={[styles.title, { color: colors.text }]}>{p}</Text>
+                  <Text style={[styles.title, { color: colors.text }]}>
+                    {p}
+                  </Text>
                 </View>
 
                 <Animated.View>
@@ -292,19 +315,27 @@ export default function NotificationSettings({ notifStatus }: Props) {
                     disabled={!enabled}
                     hitSlop={10}
                     accessibilityRole="button"
-                    accessibilityLabel={`${p} alert ${isOn ? "on" : "off"}. Toggle`}
+                    accessibilityLabel={`${p} alert ${
+                      isOn ? "on" : "off"
+                    }. Toggle`}
                     style={[
                       styles.togglePill,
                       {
-                        backgroundColor: isOn && enabled
-                          ? colors.accent
-                          : "rgba(255,255,255,0.04)",
-                        borderColor: isOn && enabled ? "transparent" : colors.divider,
+                        backgroundColor:
+                          isOn && enabled
+                            ? colors.accent
+                            : "rgba(255,255,255,0.04)",
+                        borderColor:
+                          isOn && enabled ? "transparent" : colors.divider,
                       },
                     ]}
                   >
                     <Ionicons
-                      name={isOn && enabled ? "notifications" : "notifications-off-outline"}
+                      name={
+                        isOn && enabled
+                          ? "notifications"
+                          : "notifications-off-outline"
+                      }
                       size={16}
                       color={isOn && enabled ? "#0c3605" : colors.subtext}
                     />
