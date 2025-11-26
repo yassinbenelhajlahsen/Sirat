@@ -37,27 +37,21 @@
         --bg-bottom: #06280a;
       }
 
+      /* Keep a simple fallback on html; the fixed gradient lives on body::before so safe-area and mobile browsers render correctly immediately */
       html,
       body {
         height: 100%;
         margin: 0;
-        background-color: var(--bg-top);
       }
+
       @media (hover: none) and (pointer: coarse) {
         html {
           background-attachment: initial;
         }
       }
+
       html {
-        background-color: var(--bg-top);
-        background: linear-gradient(
-          180deg,
-          var(--bg-top) 0%,
-          var(--bg-mid) 50%,
-          var(--bg-bottom) 100%
-        );
-        background-attachment: fixed;
-        background-size: cover;
+        background-color: var(--bg-top); /* fast paint fallback */
         height: 100%;
       }
 
@@ -75,6 +69,7 @@
         min-height: 100vh;
         box-sizing: border-box;
         overflow-x: hidden;
+        background-color: transparent; /* allow the fixed gradient layer to show immediately */
       }
 
       body::before {
@@ -83,13 +78,17 @@
         inset: 0;
         z-index: -1;
         pointer-events: none;
+        /* The real fixed gradient layer */
         background: linear-gradient(
           180deg,
           var(--bg-top) 0%,
           var(--bg-mid) 50%,
           var(--bg-bottom) 100%
         );
+        background-repeat: no-repeat;
         background-size: cover;
+        background-attachment: fixed;
+        -webkit-transform: translateZ(0);
       }
 
       .glass {

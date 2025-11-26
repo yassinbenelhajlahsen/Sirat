@@ -21,7 +21,6 @@
       media="(prefers-color-scheme: light)"
     />
 
-    <!-- Optional PWA status bar style if you add to Home Screen on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
@@ -48,14 +47,6 @@
       /* Primary gradient on the root so it fills the full page and scrolls correctly on desktop */
       html {
         background-color: var(--bg-top); /* fast paint fallback */
-        background: linear-gradient(
-          180deg,
-          var(--bg-top) 0%,
-          var(--bg-mid) 50%,
-          var(--bg-bottom) 100%
-        );
-        background-attachment: fixed;
-        background-size: cover;
         height: 100%;
       }
 
@@ -74,7 +65,7 @@
         min-height: 100vh;
         box-sizing: border-box;
         overflow-x: hidden;
-        background-color: var(--bg-top);
+        background-color: transparent; /* allow the fixed gradient layer to show immediately */
       }
       @media (hover: none) and (pointer: coarse) {
         html {
@@ -88,13 +79,17 @@
         inset: 0;
         z-index: -1;
         pointer-events: none;
+        /* The real fixed gradient layer */
         background: linear-gradient(
           180deg,
           var(--bg-top) 0%,
           var(--bg-mid) 50%,
           var(--bg-bottom) 100%
         );
+        background-repeat: no-repeat;
         background-size: cover;
+        background-attachment: fixed;
+        -webkit-transform: translateZ(0);
       }
 
       /* subtle glass card */
