@@ -1,7 +1,8 @@
 import { memo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import PressableScale from "./PressableScale";
 
 type QuranCompletionCardProps = {
   onBackToTop: () => void;
@@ -14,13 +15,13 @@ function QuranCompletionCard({ onBackToTop }: QuranCompletionCardProps) {
       <Text style={styles.subtitle}>
         May this journey of recitation bring you continued blessings.
       </Text>
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         style={styles.backToTopButton}
         onPress={onBackToTop}
       >
         <Text style={styles.backToTopText}>Back to Top</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

@@ -1,9 +1,13 @@
-import { FlashList, ListRenderItemInfo } from "@shopify/flash-list";
+import {
+  FlashList,
+  FlashListRef,
+  ListRenderItem,
+  ListRenderItemInfo,
+} from "@shopify/flash-list";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   InteractionManager,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -24,6 +28,7 @@ import {
   saveLastReadAyahIndex,
   saveLastReadSurahAndAyah,
 } from "@/services/quranProgress";
+import PressableScale from "../components/PressableScale";
 import QuranAyahCard from "../components/QuranAyahCard";
 import QuranCompletionCard from "../components/QuranCompletionCard";
 import QuranNavigatorModal from "../components/QuranNavigatorModal";
@@ -136,7 +141,7 @@ export default function QuranScreen() {
       };
     }, [ayat, surahs]);
 
-  const flashListRef = useRef<FlashList<QuranListItem>>(null);
+  const flashListRef = useRef<FlashListRef<QuranListItem>>(null);
   const isProgrammaticScrollRef = useRef(false);
   const hasAppliedInitialScrollRef = useRef(false);
   const animatedScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -255,6 +260,37 @@ export default function QuranScreen() {
     [ayahToItemIndex, scrollToItemIndex]
   );
 
+  const scrollToTopAnimated = useCallback(() => {
+    const list = flashListRef.current;
+    if (!list) {
+      return;
+    }
+
+    if (animatedScrollTimeoutRef.current) {
+      clearTimeout(animatedScrollTimeoutRef.current);
+      animatedScrollTimeoutRef.current = null;
+    }
+
+    isProgrammaticScrollRef.current = true;
+
+    try {
+      list.scrollToOffset({ offset: 0, animated: true });
+    } catch (error) {
+      console.warn("Animated scrollToOffset to top failed", error);
+      try {
+        list.scrollToIndex({ index: 0, animated: true, viewPosition: 0 });
+      } catch (fallbackError) {
+        console.warn("Fallback scrollToIndex to top failed", fallbackError);
+        isProgrammaticScrollRef.current = false;
+        return;
+      }
+    }
+
+    InteractionManager.runAfterInteractions(() => {
+      isProgrammaticScrollRef.current = false;
+    });
+  }, []);
+
   const handleScrollToIndexFailed = useCallback(
     (info: { index: number; averageItemLength: number }) => {
       const { index, averageItemLength } = info;
@@ -370,7 +406,7 @@ export default function QuranScreen() {
     }
   }, [navigatorOpen, surahSearchQuery]);
 
-  const renderItem = useCallback(
+  const renderItem = useCallback<ListRenderItem<QuranListItem>>(
     ({ item }: ListRenderItemInfo<QuranListItem>) => {
       if (item.type === "ayah") {
         const surahMetaForAyah = surahMap.get(item.ayah.surahNumber);
@@ -386,9 +422,9 @@ export default function QuranScreen() {
         );
       }
 
-      return <QuranCompletionCard onBackToTop={() => scrollToAyahIndex(0)} />;
+      return <QuranCompletionCard onBackToTop={scrollToTopAnimated} />;
     },
-    [scrollToAyahIndex, surahMap]
+    [scrollToTopAnimated, surahMap]
   );
 
   const getItemType = useCallback((item: QuranListItem) => {
@@ -425,13 +461,13 @@ export default function QuranScreen() {
               Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
             </Text>
           </View>
-          <Pressable
+          <PressableScale
             style={styles.jumpButton}
             onPress={() => setNavigatorOpen(true)}
             accessibilityRole="button"
           >
             <Text style={styles.jumpButtonText}>Navigate</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
 

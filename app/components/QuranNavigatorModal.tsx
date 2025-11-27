@@ -1,8 +1,9 @@
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   InteractionManager,
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +13,7 @@ import {
 
 import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import { NormalizedSurahMeta } from "@/services/quranData";
+import PressableScale from "./PressableScale";
 
 type QuranNavigatorModalProps = {
   visible: boolean;
@@ -40,6 +42,67 @@ function QuranNavigatorModal({
     [filteredSurahs, surahs, trimmedQuery]
   );
 
+  const [shouldRender, setShouldRender] = useState(visible);
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const cardTranslateY = useRef(new Animated.Value(28)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+
+  // Fade the backdrop and slide the card whenever the modal toggles.
+  useEffect(() => {
+    overlayOpacity.stopAnimation();
+    cardTranslateY.stopAnimation();
+    cardOpacity.stopAnimation();
+
+    if (visible) {
+      setShouldRender(true);
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 180,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardTranslateY, {
+          toValue: 0,
+          duration: 260,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardOpacity, {
+          toValue: 1,
+          duration: 200,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: 160,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardTranslateY, {
+          toValue: 28,
+          duration: 220,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardOpacity, {
+          toValue: 0,
+          duration: 160,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) {
+          setShouldRender(false);
+        }
+      });
+    }
+  }, [cardOpacity, cardTranslateY, overlayOpacity, visible]);
+
   const juzRows = useMemo(() => {
     const rows: number[][] = [];
     const JUZ_PER_ROW = 3;
@@ -60,15 +123,27 @@ function QuranNavigatorModal({
     return rows;
   }, []);
 
+  if (!shouldRender) {
+    return null;
+  }
+
   return (
     <Modal
-      animationType="slide"
+      animationType="none"
       transparent
-      visible={visible}
+      visible={shouldRender}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+      <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
+        <Animated.View
+          style={[
+            styles.modalCard,
+            {
+              opacity: cardOpacity,
+              transform: [{ translateY: cardTranslateY }],
+            },
+          ]}
+        >
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Jump To</Text>
           </View>
@@ -87,7 +162,7 @@ function QuranNavigatorModal({
               />
               <View style={styles.surahResultsList}>
                 {visibleSurahs.map((surah) => (
-                  <Pressable
+                  <PressableScale
                     key={surah.surahNumber}
                     style={styles.sectionButton}
                     onPress={() => {
@@ -108,7 +183,7 @@ function QuranNavigatorModal({
                     <Text style={styles.sectionButtonMeta}>
                       Surah {surah.surahNumber} • {surah.ayahCount} ayat
                     </Text>
-                  </Pressable>
+                  </PressableScale>
                 ))}
                 {trimmedQuery && visibleSurahs.length === 0 ? (
                   <Text style={styles.surahResultsEmpty}>No surah found.</Text>
@@ -122,7 +197,7 @@ function QuranNavigatorModal({
                 {juzRows.map((row, rowIndex) => (
                   <View key={`juz-row-${rowIndex}`} style={styles.juzRow}>
                     {row.map((juz) => (
-                      <Pressable
+                      <PressableScale
                         key={juz}
                         style={styles.juzButton}
                         onPress={() => {
@@ -133,7 +208,7 @@ function QuranNavigatorModal({
                         }}
                       >
                         <Text style={styles.juzButtonText}>Juz {juz}</Text>
-                      </Pressable>
+                      </PressableScale>
                     ))}
                   </View>
                 ))}
@@ -141,11 +216,15 @@ function QuranNavigatorModal({
             </View>
           </ScrollView>
 
-          <Pressable style={styles.modalClose} onPress={onClose}>
+          <PressableScale
+            style={styles.modalClose}
+            onPress={onClose}
+            scaleTo={0.9}
+          >
             <Text style={styles.modalCloseText}>Close</Text>
-          </Pressable>
-        </View>
-      </View>
+          </PressableScale>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }

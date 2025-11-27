@@ -23,6 +23,7 @@ import {
 import CITIES, { City, cityKey } from "../../util/cities";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
+import PressableScale from "../components/PressableScale";
 
 function parseTimeToDate(timeStr: string): Date {
   const now = new Date();
@@ -426,8 +427,7 @@ export default function Home() {
 
         {!nextPrayer && nextDayFajr && (
           <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
-            <TouchableOpacity
-              activeOpacity={0.9}
+            <PressableScale
               onPress={() =>
                 router.push({
                   pathname: "/components/[date]",
@@ -473,7 +473,7 @@ export default function Home() {
               >
                 Tap to see tomorrow’s prayer times
               </Text>
-            </TouchableOpacity>
+            </PressableScale>
           </Animated.View>
         )}
       </ScrollView>

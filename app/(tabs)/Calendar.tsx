@@ -17,6 +17,7 @@ import {
   dateKeyFromDate,
   getHolidayMapForYear,
 } from "../../services/holidayService";
+import PressableScale from "../components/PressableScale";
 
 const getMonthMatrix = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1).getDay();
@@ -291,7 +292,7 @@ export default function CalendarScreen() {
             marginBottom: 16,
           }}
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={goToPreviousMonth}
             disabled={new Date(viewYear, viewMonth - 1) < minDate}
           >
@@ -304,7 +305,7 @@ export default function CalendarScreen() {
                   : colors.accent
               }
             />
-          </TouchableOpacity>
+          </PressableScale>
 
           <Text
             style={{
@@ -316,7 +317,7 @@ export default function CalendarScreen() {
             {monthName} {viewYear}
           </Text>
 
-          <TouchableOpacity
+          <PressableScale
             onPress={goToNextMonth}
             disabled={new Date(viewYear, viewMonth + 1) > maxDate}
           >
@@ -329,7 +330,7 @@ export default function CalendarScreen() {
                   : colors.accent
               }
             />
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </View>
 
@@ -412,7 +413,7 @@ export default function CalendarScreen() {
                     const isHoliday = !!holidayName;
 
                     return (
-                      <TouchableOpacity
+                      <PressableScale
                         key={j}
                         onPress={() => {
                           if (day > 0) {
@@ -455,7 +456,7 @@ export default function CalendarScreen() {
                         >
                           {day > 0 ? day : ""}
                         </Text>
-                      </TouchableOpacity>
+                      </PressableScale>
                     );
                   })}
                 </View>
@@ -466,7 +467,7 @@ export default function CalendarScreen() {
 
         {/* Back to Today */}
         {!isViewingToday && (
-          <TouchableOpacity
+          <PressableScale
             onPress={() => {
               const targetYear = today.getFullYear();
               const targetMonth = today.getMonth();
@@ -494,7 +495,7 @@ export default function CalendarScreen() {
             >
               Back to Today
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         )}
       </Animated.View>
     </SafeAreaView>

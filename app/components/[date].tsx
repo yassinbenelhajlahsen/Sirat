@@ -23,7 +23,7 @@ import {
 } from "../../services/prayerTimes";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
-
+import PressableScale from "../components/PressableScale"
 const screenWidth = Dimensions.get("window").width;
 
 type UIError =
@@ -446,7 +446,7 @@ export default function CalendarDetail() {
           paddingBottom: 0,
         }}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={animateBackToCalendar}
           style={{
             flexDirection: "row",
@@ -468,7 +468,7 @@ export default function CalendarDetail() {
           >
             Calendar
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
 
       {/* Animated Date Content */}
@@ -498,7 +498,7 @@ export default function CalendarDetail() {
           }}
         >
           {/* Prev */}
-          <TouchableOpacity
+          <PressableScale
             onPress={() => !isPrevDisabled && animateDateChange("prev", -1)}
             disabled={isPrevDisabled}
             style={{
@@ -522,7 +522,7 @@ export default function CalendarDetail() {
                 {formatShort(prevDate)}
               </Text>
             )}
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Date Info */}
           <View style={{ flex: 1, alignItems: "center" }}>

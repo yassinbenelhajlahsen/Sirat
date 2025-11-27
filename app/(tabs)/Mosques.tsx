@@ -23,6 +23,7 @@ import {
   getNearbyMosques,
   Mosque,
 } from "../../services/getNearbyMosques";
+import PressableScale from "../components/PressableScale";
 
 type Perm = "undetermined" | "denied" | "granted";
 
@@ -266,8 +267,7 @@ export default function MosqueScreen() {
 
     return (
       <Animated.View style={{ transform: [{ scale }] }}>
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <PressableScale
           onPress={() => openDirections(item.lat, item.lng)}
           onPressIn={onPressIn}
           onPressOut={onPressOut}
@@ -278,7 +278,7 @@ export default function MosqueScreen() {
             <Text style={styles.name}>{item.name}</Text>
           </View>
           <Text style={styles.address}>{item.address}</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </Animated.View>
     );
   };
@@ -312,7 +312,7 @@ export default function MosqueScreen() {
         )}
 
         <Text style={styles.header}>Map</Text>
-        <TouchableOpacity
+        <PressableScale
           style={styles.mapContainer}
           onPress={() => router.push("/components/map")}
           activeOpacity={0.9}
@@ -367,7 +367,7 @@ export default function MosqueScreen() {
               <ActivityIndicator size="small" color={colors.accent} />
             </View>
           )}
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
