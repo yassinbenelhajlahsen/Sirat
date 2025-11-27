@@ -1,4 +1,5 @@
 // app/components/SplashScreen.tsx
+import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -63,6 +64,7 @@ export default function SplashScreen({
         useNativeDriver: true,
       }),
     ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When parent marks ready, fade out and notify completion
@@ -79,6 +81,7 @@ export default function SplashScreen({
       });
     }, 2000);
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
   // Hide native splash once this component has a frame on screen
@@ -118,10 +121,7 @@ export default function SplashScreen({
           hadith ? (
             <>
               {/* Arabic */}
-              <Text
-                style={styles.arabic}
-                allowFontScaling={false}
-              >
+              <Text style={styles.arabic} allowFontScaling={false}>
                 {hadith.arabic}
               </Text>
 
@@ -157,7 +157,7 @@ export default function SplashScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#134b0a",
+    backgroundColor: themeColors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
   },
   appName: {
-    color: "#DABA69",
+    color: themeColors.accent,
     fontSize: 60,
     fontFamily: "SFProDisplay-Bold",
     marginBottom: 6,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
   },
   tagline: {
-    color: "#ffffff",
+    color: themeColors.white,
     opacity: 0.85,
     fontSize: 30,
     fontFamily: "SFProDisplay-Regular",
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
   },
   arabic: {
-    color: "#ffffff",
+    color: themeColors.white,
     fontSize: 36,
     textAlign: "center",
     lineHeight: 54,
@@ -201,12 +201,12 @@ const styles = StyleSheet.create({
   divider: {
     width: 60,
     height: 2,
-    backgroundColor: "#DABA69",
+    backgroundColor: themeColors.accent,
     marginVertical: 20,
     borderRadius: 2,
   },
   english: {
-    color: "#DABA69",
+    color: themeColors.accent,
     fontSize: 18,
     textAlign: "center",
     fontFamily: "SFProDisplay-Semibold",
@@ -214,13 +214,13 @@ const styles = StyleSheet.create({
   },
   source: {
     marginTop: 8,
-    color: "rgba(255,255,255,0.8)",
+    color: withOpacity(themeColors.white, 0.8),
     fontSize: 12,
     textAlign: "center",
     fontFamily: "SFProDisplay-Semiboldr",
   },
   loadingText: {
-    color: "#DABA69",
+    color: themeColors.accent,
     fontSize: 16,
     fontFamily: "SFProDisplay-Regular",
   },

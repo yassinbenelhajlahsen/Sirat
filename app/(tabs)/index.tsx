@@ -1,4 +1,5 @@
 // app/(tabs)/index.tsx
+import { colors } from "@/app/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
@@ -252,6 +253,7 @@ export default function Home() {
       }
     });
     return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // React to in-app settings changes
@@ -260,11 +262,13 @@ export default function Home() {
       await loadData();
     });
     return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Initial launch
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -284,14 +288,7 @@ export default function Home() {
         useNativeDriver: true,
       }).start();
     }
-  }, [nextDayFajr, nextPrayer]);
-
-  const colors = {
-    bg: "#134b0a",
-    card: "#1a5f0e",
-    text: "#ffffff",
-    accent: "#DABA69",
-  };
+  }, [fadeAnim, nextDayFajr, nextPrayer]);
 
   const today = new Date();
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
@@ -305,7 +302,7 @@ export default function Home() {
   const tomorrowParam = encodeURIComponent(tomorrow.toISOString());
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
@@ -322,7 +319,7 @@ export default function Home() {
         {!!banner && (
           <View
             style={{
-              backgroundColor: "#2a7520",
+              backgroundColor: colors.primaryLift,
               borderColor: colors.accent,
               borderWidth: 1,
               borderRadius: 12,
@@ -345,7 +342,7 @@ export default function Home() {
 
         <Text
           style={{
-            color: "white",
+            color: colors.white,
             fontSize: 42,
             fontFamily: "SFProDisplay-Bold",
           }}
@@ -356,12 +353,12 @@ export default function Home() {
         <View style={{ marginTop: 30, alignItems: "center" }}>
           <Text
             style={{
-              color: "white",
+              color: colors.white,
               fontSize: 28,
               fontFamily: "SFProDisplay-Semibold",
             }}
           >
-            Today's Prayer Times
+            Today&apos;s Prayer Times
           </Text>
 
           {locationLabel ? (
@@ -381,7 +378,7 @@ export default function Home() {
           <View style={{ marginTop: 30, alignItems: "center" }}>
             <Text
               style={{
-                color: "white",
+                color: colors.white,
                 fontSize: 22,
                 fontFamily: "SFProDisplay-Bold",
                 textAlign: "center",
@@ -407,7 +404,7 @@ export default function Home() {
         <View
           style={{
             marginTop: 20,
-            backgroundColor: colors.card,
+            backgroundColor: colors.primarySurface,
             borderRadius: 16,
             padding: 20,
           }}
@@ -442,7 +439,7 @@ export default function Home() {
                 })
               }
               style={{
-                backgroundColor: colors.card,
+                backgroundColor: colors.primarySurface,
                 borderRadius: 12,
                 paddingVertical: 18,
                 paddingHorizontal: 24,
@@ -468,7 +465,7 @@ export default function Home() {
               </Text>
               <Text
                 style={{
-                  color: "white",
+                  color: colors.white,
                   fontSize: 16,
                   fontFamily: "SFProDisplay-Semibold",
                   textAlign: "center",

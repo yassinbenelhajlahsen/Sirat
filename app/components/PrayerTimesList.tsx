@@ -1,12 +1,13 @@
+import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  LayoutChangeEvent,
+  StyleProp,
   Text,
   View,
-  StyleProp,
   ViewStyle,
-  LayoutChangeEvent,
 } from "react-native";
 import { PrayerTime } from "../../services/prayerTimes";
 
@@ -23,8 +24,8 @@ const ROW_STYLES = {
     // Keep borderWidth constant so nothing jumps when data renders
     borderWidth: 2,
   },
-  labelText: { color: "white", fontSize: 20 },
-  timeText: { color: "white", fontSize: 20 },
+  labelText: { color: themeColors.white, fontSize: 20 },
+  timeText: { color: themeColors.white, fontSize: 20 },
 };
 
 /* ---------- Pure JS shimmer bar (no gradient libs) ---------- */
@@ -76,7 +77,7 @@ function SkeletonBar({
       style={[
         {
           height,
-          backgroundColor: "#184d1a", // base bar color
+          backgroundColor: themeColors.primaryMuted, // base bar color
           borderRadius: 6,
           overflow: "hidden",
         },
@@ -104,7 +105,7 @@ function SkeletonBar({
             top: 0,
             bottom: 0,
             width: "100%",
-            backgroundColor: "rgba(255,255,255,0.10)",
+            backgroundColor: withOpacity(themeColors.white, 0.1),
             borderRadius: 6,
           }}
         />
@@ -116,7 +117,7 @@ function SkeletonBar({
             top: 0,
             bottom: 0,
             width: "60%",
-            backgroundColor: "rgba(255,255,255,0.25)",
+            backgroundColor: withOpacity(themeColors.white, 0.25),
             borderRadius: 6,
           }}
         />
@@ -128,7 +129,7 @@ function SkeletonBar({
             top: 0,
             bottom: 0,
             width: "35%",
-            backgroundColor: "rgba(255,255,255,0.12)",
+            backgroundColor: withOpacity(themeColors.white, 0.12),
             borderRadius: 6,
           }}
         />
@@ -207,8 +208,10 @@ export default function PrayerTimesList({
             style={[
               ROW_STYLES.containerBase,
               {
-                backgroundColor: isNext ? "#1b5e11" : "transparent",
-                borderColor: isNext ? "#DABA69" : "transparent", // width stays 2
+                backgroundColor: isNext
+                  ? themeColors.primaryHighlight
+                  : "transparent",
+                borderColor: isNext ? themeColors.accent : "transparent", // width stays 2
               },
             ]}
           >

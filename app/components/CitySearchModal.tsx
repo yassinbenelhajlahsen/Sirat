@@ -1,5 +1,6 @@
 // components/CitySearchModal.tsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -18,8 +19,10 @@ function useKeyboardInset() {
   const [bottomInset, setBottomInset] = useState(0);
 
   useEffect(() => {
-    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const onShow = (e: KeyboardEvent) => {
       const h = e.endCoordinates?.height ?? 0;
@@ -78,13 +81,13 @@ export default function CitySearchModal({
   items,
   initialQuery = "",
   colors = {
-    bg: "rgba(0,0,0,0.65)",
-    card: "#134b0a",
-    cardAlt: "#1e5c1a",
-    text: "#ffffff",
-    accent: "#DABA69",
-    divider: "#235e1d",
-    placeholder: "#cfcfcf",
+    bg: withOpacity(themeColors.black, 0.65),
+    card: themeColors.primary,
+    cardAlt: themeColors.primarySurfaceAlt,
+    text: themeColors.white,
+    accent: themeColors.accent,
+    divider: themeColors.primaryOutline,
+    placeholder: themeColors.grayLight,
   },
 }: CitySearchModalProps) {
   const bottomInset = useKeyboardInset();
@@ -174,7 +177,9 @@ export default function CitySearchModal({
             />
             {query.length > 0 && (
               <TouchableOpacity onPress={() => setQuery("")}>
-                <Text style={{ color: colors.accent, fontSize: 14 }}>Clear</Text>
+                <Text style={{ color: colors.accent, fontSize: 14 }}>
+                  Clear
+                </Text>
               </TouchableOpacity>
             )}
           </View>

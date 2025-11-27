@@ -1,4 +1,5 @@
 // app/(tabs)/qibla.tsx
+import { colors, withOpacity } from "@/app/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
@@ -69,7 +70,7 @@ export default function Qibla() {
       if (perm.status !== "granted") return;
 
       // At this point, the hook can access location. Nothing else needed here.
-    } catch (e) {
+    } catch {
       // Noop, UI gate will handle
     }
   };
@@ -84,7 +85,7 @@ export default function Qibla() {
     if (rotation == null) return;
     const target = minimalTarget(rot.get(), rotation);
     rot.value = withSpring(target, { stiffness: 180, damping: 20, mass: 0.9 });
-  }, [rotation]);
+  }, [rotation, rot]);
 
   useEffect(() => {
     const now = Date.now();
@@ -132,7 +133,7 @@ export default function Qibla() {
     title,
     message,
     actions,
-    iconColor = "#134b0a",
+    iconColor = colors.primary,
   }: {
     icon: keyof typeof Ionicons.glyphMap;
     title: string;
@@ -188,7 +189,7 @@ export default function Qibla() {
             ) : denied ? (
               <InfoBanner
                 icon="location-outline"
-                iconColor="#DABA69"
+                iconColor={colors.accent}
                 title="Allow Location Access"
                 message="Grant Sirat access to your location to calculate the Qibla direction."
                 actions={
@@ -277,19 +278,19 @@ export default function Qibla() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#134b0a" },
+  safeArea: { flex: 1, backgroundColor: colors.primary },
 
   // Matches the Mosques layout so the banner sits at the top under the title
   container: { flex: 1, padding: 20 },
 
   titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
   title: {
-    color: "white",
+    color: colors.white,
     fontFamily: "SFProDisplay-Bold",
     fontSize: 44,
     letterSpacing: 0.2,
   },
-  subtle: { marginTop: 2, color: "#d4e7d2", fontSize: 13 },
+  subtle: { marginTop: 2, color: colors.accentSoft, fontSize: 13 },
 
   center: {
     flex: 1,
@@ -300,39 +301,44 @@ const styles = StyleSheet.create({
 
   // Banner visuals kept identical to Mosques
   banner: {
-    backgroundColor: "rgba(218,186,105,0.18)",
+    backgroundColor: withOpacity(colors.accent, 0.18),
     borderWidth: 1,
-    borderColor: "rgba(218,186,105,0.35)",
+    borderColor: withOpacity(colors.accent, 0.35),
     borderRadius: 14,
     padding: 12,
     flexDirection: "row",
     alignItems: "flex-start",
   },
   bannerTitle: {
-    color: "#DABA69",
+    color: colors.accent,
     fontSize: 16,
     fontFamily: "SFProDisplay-Semibold",
   },
-  bannerText: { color: "white", opacity: 0.95, fontSize: 14, marginTop: 4 },
+  bannerText: {
+    color: colors.white,
+    opacity: 0.95,
+    fontSize: 14,
+    marginTop: 4,
+  },
 
   row: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
   ctaPrimary: {
-    backgroundColor: "#DABA69",
+    backgroundColor: colors.accent,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
     alignSelf: "flex-start",
   },
-  ctaPrimaryText: { color: "#134b0a", fontWeight: "700" },
+  ctaPrimaryText: { color: colors.primary, fontWeight: "700" },
   ctaSecondary: {
-    borderColor: "#DABA69",
+    borderColor: colors.accent,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
     alignSelf: "flex-start",
   },
-  ctaSecondaryText: { color: "#DABA69", fontWeight: "600" },
+  ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
 
   ring: {
     width: 320,
@@ -340,8 +346,8 @@ const styles = StyleSheet.create({
     borderRadius: 160,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.04)",
-    shadowColor: "#00ffcc",
+    backgroundColor: withOpacity(colors.white, 0.04),
+    shadowColor: colors.accentGlow,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
     shadowRadius: 14,
@@ -349,14 +355,14 @@ const styles = StyleSheet.create({
   ringAligned: { shadowOpacity: 0.8, shadowRadius: 20 },
   arrow: { width: 280, height: 280 },
 
-  loadingText: { color: "white", fontSize: 18, textAlign: "center" },
-  errorText: { color: "#ff7070", fontSize: 16, textAlign: "center" },
+  loadingText: { color: colors.white, fontSize: 18, textAlign: "center" },
+  errorText: { color: colors.danger, fontSize: 16, textAlign: "center" },
   noteText: {
-    color: "#DABA69",
+    color: colors.accent,
     fontSize: 14,
     marginBottom: 10,
     textAlign: "center",
   },
-  helper: { color: "#dfeee0", fontSize: 14, marginTop: 12 },
-  link: { color: "#DABA69", textDecorationLine: "underline" },
+  helper: { color: colors.accentMuted, fontSize: 14, marginTop: 12 },
+  link: { color: colors.accent, textDecorationLine: "underline" },
 });

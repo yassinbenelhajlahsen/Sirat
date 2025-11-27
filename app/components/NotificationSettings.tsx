@@ -1,6 +1,7 @@
+import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -37,18 +38,16 @@ type Props = {
 };
 
 export default function NotificationSettings({ notifStatus }: Props) {
-  const colors = useMemo(
-    () => ({
-      bg: "#134b0a",
-      card: "#134b0a",
-      cardAlt: "#1e5c1a",
-      text: "#ffffff",
-      subtext: "#C8E6C9",
-      accent: "#DABA69",
-      divider: "rgba(255,255,255,0.08)",
-    }),
-    []
-  );
+  const colors = {
+    bg: themeColors.primary,
+    card: themeColors.primary,
+    cardAlt: themeColors.primarySurfaceAlt,
+    text: themeColors.white,
+    subtext: themeColors.successSoft,
+    accent: themeColors.accent,
+    divider: withOpacity(themeColors.white, 0.08),
+    pillOffBg: withOpacity(themeColors.white, 0.04),
+  } as const;
 
   // Master toggle mirrors OS permission
   const [enabled, setEnabled] = useState<boolean>(false);
@@ -257,11 +256,11 @@ export default function NotificationSettings({ notifStatus }: Props) {
               }
             }}
             trackColor={{
-              false: "rgba(255,255,255,0.08)",
+              false: colors.divider,
               true: colors.accent,
             }}
-            thumbColor={enabled ? "#ffffff" : "#f4f3f4"}
-            ios_backgroundColor="rgba(255,255,255,0.08)"
+            thumbColor={enabled ? colors.text : themeColors.offWhite}
+            ios_backgroundColor={colors.divider}
             accessibilityLabel="Open system settings to change notifications"
           />
         )}
@@ -322,9 +321,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                       styles.togglePill,
                       {
                         backgroundColor:
-                          isOn && enabled
-                            ? colors.accent
-                            : "rgba(255,255,255,0.04)",
+                          isOn && enabled ? colors.accent : colors.pillOffBg,
                         borderColor:
                           isOn && enabled ? "transparent" : colors.divider,
                       },
@@ -337,7 +334,11 @@ export default function NotificationSettings({ notifStatus }: Props) {
                           : "notifications-off-outline"
                       }
                       size={16}
-                      color={isOn && enabled ? "#0c3605" : colors.subtext}
+                      color={
+                        isOn && enabled
+                          ? themeColors.primaryDark
+                          : colors.subtext
+                      }
                     />
                   </Pressable>
                 </Animated.View>

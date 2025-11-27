@@ -1,3 +1,4 @@
+import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
@@ -163,7 +164,7 @@ export default function MapScreen() {
   if (loading && !location) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#DABA69" />
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
@@ -173,7 +174,7 @@ export default function MapScreen() {
       <View
         style={{
           flex: 1,
-          backgroundColor: "#134b0a",
+          backgroundColor: themeColors.primary,
           paddingTop: 50,
           paddingHorizontal: 20,
         }}
@@ -182,11 +183,15 @@ export default function MapScreen() {
           onPress={() => router.push("/(tabs)/Mosques")}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={22} color="#DABA69" />
+          <Ionicons name="arrow-back" size={22} color={themeColors.accent} />
         </TouchableOpacity>
 
         <View style={[styles.banner, { marginTop: 20 }]}>
-          <Ionicons name="location-outline" size={20} color="#134b0a" />
+          <Ionicons
+            name="location-outline"
+            size={20}
+            color={themeColors.primary}
+          />
           <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={styles.bannerTitle}>Location required</Text>
             <Text style={styles.bannerText}>
@@ -220,7 +225,7 @@ export default function MapScreen() {
         onPress={() => router.push("/(tabs)/Mosques")}
         style={styles.backButton}
       >
-        <Ionicons name="arrow-back" size={22} color="#DABA69" />
+        <Ionicons name="arrow-back" size={22} color={themeColors.accent} />
       </TouchableOpacity>
 
       <MapView
@@ -238,7 +243,11 @@ export default function MapScreen() {
             tracksViewChanges={false}
           >
             <View style={styles.pinContainer}>
-              <FontAwesome5 name="mosque" size={20} color="#134b0a" />
+              <FontAwesome5
+                name="mosque"
+                size={20}
+                color={themeColors.primary}
+              />
             </View>
 
             <Callout tooltip>
@@ -247,7 +256,11 @@ export default function MapScreen() {
                 <Text style={styles.calloutAddress}>{m.address}</Text>
                 <CalloutSubview onPress={() => openDirections(m.lat, m.lng)}>
                   <View style={styles.directionButton}>
-                    <Ionicons name="navigate" size={14} color="#134b0a" />
+                    <Ionicons
+                      name="navigate"
+                      size={14}
+                      color={themeColors.primary}
+                    />
                     <Text style={styles.directionText}>Directions</Text>
                   </View>
                 </CalloutSubview>
@@ -262,7 +275,7 @@ export default function MapScreen() {
           <Ionicons
             name="information-circle-outline"
             size={20}
-            color="#DABA69"
+            color={themeColors.accent}
           />
           <Text style={styles.emptyText}>No mosques in this view.</Text>
           <Text style={styles.emptySub}>Move the map and search again.</Text>
@@ -274,14 +287,14 @@ export default function MapScreen() {
           style={styles.searchButton}
           onPress={handleSearchThisArea}
         >
-          <Ionicons name="search" size={18} color="#134b0a" />
+          <Ionicons name="search" size={18} color={themeColors.primary} />
           <Text style={styles.searchButtonText}>Search this area</Text>
         </TouchableOpacity>
       )}
 
       {fetching && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#DABA69" />
+          <ActivityIndicator size="large" color={themeColors.accent} />
         </View>
       )}
     </View>
@@ -289,9 +302,15 @@ export default function MapScreen() {
 }
 
 const customMapStyle = [
-  { elementType: "geometry", stylers: [{ color: "#0c3605" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#DABA69" }] },
-  { featureType: "poi.place_of_worship", stylers: [{ color: "#134b0a" }] },
+  { elementType: "geometry", stylers: [{ color: themeColors.primaryDark }] },
+  {
+    elementType: "labels.text.fill",
+    stylers: [{ color: themeColors.accent }],
+  },
+  {
+    featureType: "poi.place_of_worship",
+    stylers: [{ color: themeColors.primary }],
+  },
 ];
 
 const styles = StyleSheet.create({
@@ -299,86 +318,91 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#134b0a",
+    backgroundColor: themeColors.primary,
   },
   backButton: {
     position: "absolute",
     top: 50,
     left: 20,
     zIndex: 10,
-    backgroundColor: "rgba(19,75,10,0.85)",
+    backgroundColor: withOpacity(themeColors.primary, 0.85),
     borderRadius: 30,
     padding: 10,
-    shadowColor: "#000",
+    shadowColor: themeColors.black,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
     elevation: 5,
   },
   banner: {
-    backgroundColor: "rgba(218,186,105,0.18)",
+    backgroundColor: withOpacity(themeColors.accent, 0.18),
     borderWidth: 1,
-    borderColor: "rgba(218,186,105,0.35)",
+    borderColor: withOpacity(themeColors.accent, 0.35),
     borderRadius: 14,
     padding: 12,
     flexDirection: "row",
     alignItems: "flex-start",
   },
   bannerTitle: {
-    color: "#DABA69",
+    color: themeColors.accent,
     fontSize: 16,
     fontFamily: "SFProDisplay-Semibold",
   },
-  bannerText: { color: "white", opacity: 0.95, fontSize: 14, marginTop: 4 },
+  bannerText: {
+    color: themeColors.white,
+    opacity: 0.95,
+    fontSize: 14,
+    marginTop: 4,
+  },
   row: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
   ctaPrimary: {
-    backgroundColor: "#DABA69",
+    backgroundColor: themeColors.accent,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  ctaPrimaryText: { color: "#134b0a", fontWeight: "700" },
+  ctaPrimaryText: { color: themeColors.primary, fontWeight: "700" },
   ctaSecondary: {
-    borderColor: "#DABA69",
+    borderColor: themeColors.accent,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  ctaSecondaryText: { color: "#DABA69", fontWeight: "600" },
+  ctaSecondaryText: { color: themeColors.accent, fontWeight: "600" },
   pinContainer: {
-    backgroundColor: "#DABA69",
+    backgroundColor: themeColors.accent,
     borderRadius: 30,
     padding: 6,
     borderWidth: 2,
-    borderColor: "#134b0a",
-    shadowColor: "#000",
+    borderColor: themeColors.primary,
+    shadowColor: themeColors.black,
     shadowOpacity: 0.25,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   callout: {
-    backgroundColor: "#134b0a",
+    backgroundColor: themeColors.primary,
     borderRadius: 12,
     padding: 12,
     width: 210,
-    borderColor: "#DABA69",
+    borderColor: themeColors.accent,
     borderWidth: 1,
-    shadowColor: "#000",
+    shadowColor: themeColors.black,
     shadowOpacity: 0.4,
     shadowRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   calloutTitle: {
-    color: "#DABA69",
+    color: themeColors.accent,
     fontFamily: "SFProDisplay-Bold",
     fontSize: 16,
     marginBottom: 4,
     textAlign: "center",
   },
   calloutAddress: {
-    color: "white",
+    color: themeColors.white,
     fontFamily: "SFProDisplay-Regular",
     fontSize: 13,
     opacity: 0.9,
@@ -388,14 +412,14 @@ const styles = StyleSheet.create({
   directionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#DABA69",
+    backgroundColor: themeColors.accent,
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 10,
     justifyContent: "center",
   },
   directionText: {
-    color: "#134b0a",
+    color: themeColors.primary,
     fontWeight: "600",
     marginLeft: 5,
     fontSize: 13,
@@ -406,12 +430,12 @@ const styles = StyleSheet.create({
     bottom: 40,
     alignSelf: "center",
     flexDirection: "row",
-    backgroundColor: "rgba(218,186,105,0.95)",
+    backgroundColor: withOpacity(themeColors.accent, 0.95),
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 25,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: themeColors.black,
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
@@ -420,12 +444,12 @@ const styles = StyleSheet.create({
   searchButtonText: {
     marginLeft: 6,
     fontWeight: "600",
-    color: "#134b0a",
+    color: themeColors.primary,
     fontSize: 15,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.25)",
+    backgroundColor: withOpacity(themeColors.black, 0.25),
     justifyContent: "center",
     alignItems: "center",
   },
@@ -433,15 +457,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 90,
     alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: withOpacity(themeColors.black, 0.35),
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     alignItems: "center",
     gap: 4,
   },
-  emptyText: { color: "white", fontSize: 14 },
-  emptySub: { color: "#DABA69", fontSize: 12 },
-  helper: { color: "#dfeee0", fontSize: 14, marginTop: 14 },
-  link: { color: "#DABA69", textDecorationLine: "underline" },
+  emptyText: { color: themeColors.white, fontSize: 14 },
+  emptySub: { color: themeColors.accent, fontSize: 12 },
+  helper: { color: themeColors.accentMuted, fontSize: 14, marginTop: 14 },
+  link: { color: themeColors.accent, textDecorationLine: "underline" },
 });
