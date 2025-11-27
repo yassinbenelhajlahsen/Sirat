@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
@@ -120,16 +121,22 @@ export default function RootLayout() {
 
   // OTA update check
   useEffect(() => {
+    if (Constants.appOwnership === "expo") {
+      return;
+    }
+
     async function checkForOTAUpdate() {
       try {
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
           await Updates.fetchUpdateAsync();
           await Updates.reloadAsync();
-        } 
-      } catch (e) {
+        }
+      } catch (error) {
+        console.error("OTA update check failed", error);
       }
     }
+
     checkForOTAUpdate();
   }, []);
 
