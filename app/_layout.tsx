@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
+import { preloadQuranData } from "@/services/quranData";
 import { NotificationService } from "../services/notificationService";
 import SplashScreen from "./components/SplashScreen";
 
@@ -141,7 +142,10 @@ export default function RootLayout() {
         await Promise.all([
           syncLocationPermissionToSettings(),
           syncNotificationPermissionToToggle(),
+          preloadQuranData(),
         ]);
+      } catch (error) {
+        console.error("Failed to complete initial app sync", error);
       } finally {
         if (mounted) setInitialSynced(true);
       }
