@@ -14,7 +14,9 @@ import {
   ViewToken,
   useWindowDimensions,
 } from "react-native";
-
+import {
+  SafeAreaView,
+} from "react-native-safe-area-context";
 import { colors as themeColors } from "@/app/constants/theme";
 import {
   NormalizedAyah,
@@ -439,6 +441,7 @@ export default function QuranScreen() {
     : undefined;
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.primary }}>
     <View style={styles.container}>
       <View style={styles.header}>
         <Text
@@ -505,6 +508,7 @@ export default function QuranScreen() {
         onClose={() => setNavigatorOpen(false)}
       />
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -512,7 +516,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: themeColors.primary,
-    paddingTop: Platform.select({ ios: 56, android: 48, default: 40 }),
   },
   header: {
     paddingHorizontal: 20,

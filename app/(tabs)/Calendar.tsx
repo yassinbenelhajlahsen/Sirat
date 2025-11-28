@@ -8,7 +8,6 @@ import {
   Easing,
   PanResponder,
   Text,
-  TouchableOpacity,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -36,11 +35,13 @@ const getMonthMatrix = (year: number, month: number) => {
   return weeks;
 };
 
+
 export default function CalendarScreen() {
   const router = useRouter();
   const today = new Date();
   const { month, year } = useLocalSearchParams();
-
+  const { width } = useWindowDimensions();
+  const isSmall = width < 360;
   const initialMonth =
     typeof month === "string" ? parseInt(month, 10) : today.getMonth();
   const initialYear =
@@ -277,7 +278,7 @@ export default function CalendarScreen() {
           style={{
             color: colors.white,
             fontFamily: "SFProDisplay-Bold",
-            fontSize: 45,
+            fontSize: isSmall ? 34 : 40,
             marginBottom: 20,
           }}
         >

@@ -17,6 +17,7 @@ export default function TabLayout() {
             backgroundColor: colors.primary,
             borderTopWidth: 0,
             elevation: 0,
+            height: 70,
             shadowOpacity: 0,
           },
 
