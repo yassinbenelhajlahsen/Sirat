@@ -1,3 +1,4 @@
+import { colors, withOpacity } from "@/app/constants/theme";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
@@ -22,6 +23,7 @@ import {
   getNearbyMosques,
   Mosque,
 } from "../../services/getNearbyMosques";
+import PressableScale from "../components/PressableScale";
 
 type Perm = "undetermined" | "denied" | "granted";
 
@@ -152,7 +154,7 @@ export default function MosqueScreen() {
     title,
     message,
     actions,
-    iconColor = "#134b0a",
+    iconColor = colors.primary,
   }: {
     icon: keyof typeof Ionicons.glyphMap;
     title: string;
@@ -173,7 +175,7 @@ export default function MosqueScreen() {
   if (loading && !location) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#DABA69" />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -215,7 +217,7 @@ export default function MosqueScreen() {
             ) : denied ? (
               <InfoBanner
                 icon="location-outline"
-                iconColor="#DABA69"
+                iconColor={colors.accent}
                 title="Allow Location Access"
                 message="Grant Sirat access to your location for accurate nearby mosque results."
                 actions={
@@ -265,19 +267,18 @@ export default function MosqueScreen() {
 
     return (
       <Animated.View style={{ transform: [{ scale }] }}>
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <PressableScale
           onPress={() => openDirections(item.lat, item.lng)}
           onPressIn={onPressIn}
           onPressOut={onPressOut}
           style={styles.card}
         >
           <View style={styles.cardHeader}>
-            <FontAwesome5 name="mosque" size={22} color="#DABA69" solid />
+            <FontAwesome5 name="mosque" size={22} color={colors.accent} solid />
             <Text style={styles.name}>{item.name}</Text>
           </View>
           <Text style={styles.address}>{item.address}</Text>
-        </TouchableOpacity>
+        </PressableScale>
       </Animated.View>
     );
   };
@@ -294,7 +295,7 @@ export default function MosqueScreen() {
         {emptyNearby ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyRow}>
-              <Ionicons name="search" size={18} color="#DABA69" />
+              <Ionicons name="search" size={18} color={colors.accent} />
               <Text style={[styles.emptyText, { marginLeft: 10, flex: 1 }]}>
                 No mosques found near your current location.
               </Text>
@@ -311,7 +312,7 @@ export default function MosqueScreen() {
         )}
 
         <Text style={styles.header}>Map</Text>
-        <TouchableOpacity
+        <PressableScale
           style={styles.mapContainer}
           onPress={() => router.push("/components/map")}
           activeOpacity={0.9}
@@ -334,7 +335,11 @@ export default function MosqueScreen() {
                 tracksViewChanges={false}
               >
                 <View style={styles.pinContainer}>
-                  <FontAwesome5 name="mosque" size={18} color="#134b0a" />
+                  <FontAwesome5
+                    name="mosque"
+                    size={18}
+                    color={colors.primary}
+                  />
                 </View>
 
                 <Callout tooltip>
@@ -345,7 +350,11 @@ export default function MosqueScreen() {
                       style={styles.directionButton}
                       onPress={() => openDirections(m.lat, m.lng)}
                     >
-                      <Ionicons name="navigate" size={14} color="#134b0a" />
+                      <Ionicons
+                        name="navigate"
+                        size={14}
+                        color={colors.primary}
+                      />
                       <Text style={styles.directionText}>Directions</Text>
                     </TouchableOpacity>
                   </View>
@@ -355,89 +364,89 @@ export default function MosqueScreen() {
           </MapView>
           {fetchingFresh && (
             <View style={styles.mapSpinner}>
-              <ActivityIndicator size="small" color="#DABA69" />
+              <ActivityIndicator size="small" color={colors.accent} />
             </View>
           )}
-        </TouchableOpacity>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
 }
 
 const customMapStyle = [
-  { elementType: "geometry", stylers: [{ color: "#0c3605" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#DABA69" }] },
-  { featureType: "poi.place_of_worship", stylers: [{ color: "#134b0a" }] },
+  { elementType: "geometry", stylers: [{ color: colors.primaryDark }] },
+  { elementType: "labels.text.fill", stylers: [{ color: colors.accent }] },
+  { featureType: "poi.place_of_worship", stylers: [{ color: colors.primary }] },
 ];
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#134b0a" },
+  safeArea: { flex: 1, backgroundColor: colors.primary },
   container: { flex: 1, padding: 20 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: {
-    color: "white",
+    color: colors.white,
     fontFamily: "SFProDisplay-Bold",
     fontSize: 36,
     marginBottom: 8,
-    textShadowColor: "rgba(0,0,0,0.4)",
+    textShadowColor: withOpacity(colors.black, 0.4),
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 3,
   },
   header: {
-    color: "#DABA69",
+    color: colors.accent,
     fontSize: 22,
     fontFamily: "SFProDisplay-Bold",
     marginBottom: 16,
     marginTop: 4,
-    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowColor: withOpacity(colors.black, 0.3),
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   banner: {
-    backgroundColor: "rgba(218,186,105,0.18)",
+    backgroundColor: withOpacity(colors.accent, 0.18),
     borderWidth: 1,
-    borderColor: "rgba(218,186,105,0.35)",
+    borderColor: withOpacity(colors.accent, 0.35),
     borderRadius: 14,
     padding: 12,
     flexDirection: "row",
     alignItems: "flex-start",
   },
   bannerTitle: {
-    color: "#DABA69",
+    color: colors.accent,
     fontSize: 16,
     fontFamily: "SFProDisplay-Semibold",
   },
   bannerText: {
-    color: "white",
+    color: colors.white,
     opacity: 0.95,
     fontSize: 14,
     marginTop: 4,
   },
   row: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
   ctaPrimary: {
-    backgroundColor: "#DABA69",
+    backgroundColor: colors.accent,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  ctaPrimaryText: { color: "#134b0a", fontWeight: "700" },
+  ctaPrimaryText: { color: colors.primary, fontWeight: "700" },
   ctaSecondary: {
-    borderColor: "#DABA69",
+    borderColor: colors.accent,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
   },
-  ctaSecondaryText: { color: "#DABA69", fontWeight: "600" },
+  ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
   card: {
-    backgroundColor: "#1a5f0e",
+    backgroundColor: colors.primarySurface,
     borderRadius: 18,
     paddingVertical: 16,
     paddingHorizontal: 20,
     marginBottom: 18,
     borderWidth: 1,
-    borderColor: "rgba(218,186,105,0.25)",
-    shadowColor: "#000",
+    borderColor: withOpacity(colors.accent, 0.25),
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -450,16 +459,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   name: {
-    color: "white",
+    color: colors.white,
     fontFamily: "SFProDisplay-Semibold",
     fontSize: 19,
     flexShrink: 1,
-    textShadowColor: "rgba(0,0,0,0.25)",
+    textShadowColor: withOpacity(colors.black, 0.25),
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   address: {
-    color: "white",
+    color: colors.white,
     fontFamily: "SFProDisplay-Regular",
     fontSize: 15,
     opacity: 0.85,
@@ -472,8 +481,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginTop: 6,
     borderWidth: 1,
-    borderColor: "rgba(218,186,105,0.25)",
-    shadowColor: "#000",
+    borderColor: withOpacity(colors.accent, 0.25),
+    shadowColor: colors.black,
     shadowOpacity: 0.35,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 5 },
@@ -484,44 +493,44 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
     top: 10,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: withOpacity(colors.black, 0.35),
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   pinContainer: {
-    backgroundColor: "#DABA69",
+    backgroundColor: colors.accent,
     borderRadius: 30,
     padding: 5,
     borderWidth: 2,
-    borderColor: "#134b0a",
-    shadowColor: "#000",
+    borderColor: colors.primary,
+    shadowColor: colors.black,
     shadowOpacity: 0.25,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   callout: {
-    backgroundColor: "#134b0a",
+    backgroundColor: colors.primary,
     borderRadius: 12,
     padding: 10,
     width: 200,
-    borderColor: "#DABA69",
+    borderColor: colors.accent,
     borderWidth: 1,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOpacity: 0.4,
     shadowRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   calloutTitle: {
-    color: "#DABA69",
+    color: colors.accent,
     fontFamily: "SFProDisplay-Bold",
     fontSize: 16,
     marginBottom: 4,
     textAlign: "center",
   },
   calloutAddress: {
-    color: "white",
+    color: colors.white,
     fontFamily: "SFProDisplay-Regular",
     fontSize: 13,
     opacity: 0.9,
@@ -531,24 +540,24 @@ const styles = StyleSheet.create({
   directionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#DABA69",
+    backgroundColor: colors.accent,
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 10,
     justifyContent: "center",
   },
   directionText: {
-    color: "#134b0a",
+    color: colors.primary,
     fontWeight: "600",
     marginLeft: 5,
     fontSize: 13,
     textAlign: "center",
   },
   emptyCard: {
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: withOpacity(colors.white, 0.05),
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(218,186,105,0.25)",
+    borderColor: withOpacity(colors.accent, 0.25),
     padding: 14,
     gap: 6,
     marginBottom: 24,
@@ -558,7 +567,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 6,
   },
-  emptyText: { color: "white", fontSize: 15 },
-  emptySub: { color: "#DABA69", fontSize: 13 },
-  link: { color: "#DABA69", textDecorationLine: "underline" },
+  emptyText: { color: colors.white, fontSize: 15 },
+  emptySub: { color: colors.accent, fontSize: 13 },
+  link: { color: colors.accent, textDecorationLine: "underline" },
 });

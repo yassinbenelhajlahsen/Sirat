@@ -1,3 +1,4 @@
+import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
@@ -8,6 +9,7 @@ import {
   AppState,
   DeviceEventEmitter,
   Easing,
+  ImageStyle,
   Linking,
   Platform,
   Pressable,
@@ -29,21 +31,11 @@ import CitySearchModal from "../components/CitySearchModal";
 import NotificationSettings from "../components/NotificationSettings";
 
 export default function Settings() {
-  const TAB_BAR_HEIGHT = 0;
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isSmall = width < 360;
 
   const footerPadding = insets.bottom + 24;
-
-  const colors = {
-    bg: "#134b0a",
-    card: "#134b0a",
-    cardAlt: "#1e5c1a",
-    text: "#ffffff",
-    accent: "#DABA69",
-    border: "#ffffff",
-  };
 
   const [useLocation, setUseLocation] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null); // granted | denied | undetermined | null
@@ -239,20 +231,23 @@ export default function Settings() {
       accessibilityLabel="Open Sirat website"
       accessibilityHint="Opens the Sirat website in your browser"
       onPress={() => Linking.openURL("https://sirat.dev").catch(() => {})}
-      android_ripple={{ color: "rgba(255,255,255,0.06)", borderless: false }}
+      android_ripple={{
+        color: withOpacity(themeColors.white, 0.06),
+        borderless: false,
+      }}
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: pressed
-          ? "rgba(255,255,255,0.04)"
-          : "rgba(255,255,255,0.03)",
+          ? withOpacity(themeColors.white, 0.04)
+          : withOpacity(themeColors.white, 0.03),
         borderRadius: 14,
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.06)",
-        shadowColor: "#000",
+        borderColor: withOpacity(themeColors.white, 0.06),
+        shadowColor: themeColors.black,
         shadowOpacity: 0.12,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
@@ -272,7 +267,7 @@ export default function Settings() {
       >
         <Text
           style={{
-            color: colors.text,
+            color: themeColors.white,
             fontSize: 14,
             lineHeight: 20,
             fontFamily:
@@ -285,7 +280,7 @@ export default function Settings() {
         </Text>
         <Text
           style={{
-            color: colors.accent,
+            color: themeColors.accent,
             fontSize: 14,
             lineHeight: 20,
             fontFamily:
@@ -300,7 +295,7 @@ export default function Settings() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.primary }}>
       <ScrollView
         contentContainerStyle={{
           paddingBottom: footerPadding,
@@ -313,7 +308,7 @@ export default function Settings() {
           <Text
             accessibilityRole="header"
             style={{
-              color: colors.text,
+              color: themeColors.white,
               fontFamily: "SFProDisplay-Bold",
               fontSize: isSmall ? 34 : 40,
             }}
@@ -332,7 +327,7 @@ export default function Settings() {
         >
           <Text
             style={{
-              color: colors.text,
+              color: themeColors.white,
               fontSize: 16,
               marginBottom: 8,
               fontFamily: "SFProDisplay-Semibold",
@@ -360,42 +355,44 @@ export default function Settings() {
               setValue={setMethod}
               setItems={setMethodItems}
               style={{
-                backgroundColor: colors.cardAlt,
-                borderColor: colors.accent,
+                backgroundColor: themeColors.primarySurfaceAlt,
+                borderColor: themeColors.accent,
                 minHeight: 50,
                 borderRadius: 12,
                 marginBottom: methodOpen ? 12 : 0,
               }}
               dropDownContainerStyle={{
-                backgroundColor: colors.cardAlt,
-                borderColor: colors.accent,
+                backgroundColor: themeColors.primarySurfaceAlt,
+                borderColor: themeColors.accent,
                 borderRadius: 12,
                 zIndex: 3000,
               }}
               textStyle={{
-                color: colors.text,
+                color: themeColors.white,
                 fontSize: 16,
                 fontFamily: "SFProDisplay-Semibold",
               }}
-              arrowIconStyle={{ tintColor: colors.accent }}
+              arrowIconStyle={{ tintColor: themeColors.accent } as ImageStyle}
               selectedItemLabelStyle={{
-                color: colors.accent,
+                color: themeColors.accent,
                 fontFamily: "SFProDisplay-Bold",
               }}
               listItemLabelStyle={{
-                color: colors.text,
+                color: themeColors.white,
                 fontFamily: "SFProDisplay-Regular",
               }}
               listMode="SCROLLVIEW"
-              animationDuration={320}
-              animationType="slide"
               placeholder="Select calculation method"
               placeholderStyle={{
-                color: "#aaa",
+                color: themeColors.grayMedium,
                 fontFamily: "SFProDisplay-Regular",
               }}
               showTickIcon
-              tickIconStyle={{ tintColor: colors.accent }}
+              tickIconStyle={
+                {
+                  tintColor: themeColors.accent,
+                } as ImageStyle
+              }
             />
           </Animated.View>
         </View>
@@ -418,7 +415,7 @@ export default function Settings() {
             <View style={{ flex: 1, paddingRight: 12 }}>
               <Text
                 style={{
-                  color: colors.text,
+                  color: themeColors.white,
                   fontSize: isSmall ? 15 : 16,
                   fontFamily: "SFProDisplay-Semibold",
                 }}
@@ -428,7 +425,7 @@ export default function Settings() {
               </Text>
               <Text
                 style={{
-                  color: colors.text,
+                  color: themeColors.white,
                   opacity: 0.8,
                   fontSize: isSmall ? 12 : 13,
                   marginTop: 2,
@@ -446,8 +443,13 @@ export default function Settings() {
                 accessibilityLabel="Use my location"
                 value={useLocation}
                 onValueChange={handleToggle}
-                trackColor={{ false: "#555", true: colors.accent }}
-                thumbColor={useLocation ? "#fff" : "#888"}
+                trackColor={{
+                  false: themeColors.grayDark,
+                  true: themeColors.accent,
+                }}
+                thumbColor={
+                  useLocation ? themeColors.white : themeColors.grayMuted
+                }
               />
             </View>
           </View>
@@ -478,7 +480,7 @@ export default function Settings() {
         >
           <Text
             style={{
-              color: colors.text,
+              color: themeColors.white,
               fontSize: 16,
               marginBottom: 8,
               fontFamily: "SFProDisplay-Semibold",
@@ -491,15 +493,15 @@ export default function Settings() {
             onPress={() => setCityModalVisible(true)}
             accessibilityRole="button"
             style={{
-              backgroundColor: colors.cardAlt,
-              borderColor: colors.accent,
+              backgroundColor: themeColors.primarySurfaceAlt,
+              borderColor: themeColors.accent,
               borderWidth: 1,
               borderRadius: 12,
               paddingVertical: 14,
               paddingHorizontal: 14,
             }}
           >
-            <Text style={{ color: colors.text, fontSize: 15 }}>
+            <Text style={{ color: themeColors.white, fontSize: 15 }}>
               {city
                 ? `${city.name}${city.country ? ", " + city.country : ""}`
                 : "Select City"}

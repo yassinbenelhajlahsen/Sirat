@@ -1,3 +1,4 @@
+import { colors } from "@/app/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -7,7 +8,6 @@ import {
   Easing,
   PanResponder,
   Text,
-  TouchableOpacity,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -16,6 +16,7 @@ import {
   dateKeyFromDate,
   getHolidayMapForYear,
 } from "../../services/holidayService";
+import PressableScale from "../components/PressableScale";
 
 const getMonthMatrix = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1).getDay();
@@ -34,11 +35,13 @@ const getMonthMatrix = (year: number, month: number) => {
   return weeks;
 };
 
+
 export default function CalendarScreen() {
   const router = useRouter();
   const today = new Date();
   const { month, year } = useLocalSearchParams();
-
+  const { width } = useWindowDimensions();
+  const isSmall = width < 360;
   const initialMonth =
     typeof month === "string" ? parseInt(month, 10) : today.getMonth();
   const initialYear =
@@ -268,14 +271,14 @@ export default function CalendarScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
       {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
       <View style={{ padding: 16 }}>
         <Text
           style={{
-            color: "white",
+            color: colors.white,
             fontFamily: "SFProDisplay-Bold",
-            fontSize: 45,
+            fontSize: isSmall ? 34 : 40,
             marginBottom: 20,
           }}
         >
@@ -290,7 +293,7 @@ export default function CalendarScreen() {
             marginBottom: 16,
           }}
         >
-          <TouchableOpacity
+          <PressableScale
             onPress={goToPreviousMonth}
             disabled={new Date(viewYear, viewMonth - 1) < minDate}
           >
@@ -298,14 +301,16 @@ export default function CalendarScreen() {
               name="chevron-back"
               size={28}
               color={
-                new Date(viewYear, viewMonth - 1) < minDate ? "#555" : "#DABA69"
+                new Date(viewYear, viewMonth - 1) < minDate
+                  ? colors.grayDark
+                  : colors.accent
               }
             />
-          </TouchableOpacity>
+          </PressableScale>
 
           <Text
             style={{
-              color: "white",
+              color: colors.white,
               fontSize: 22,
               fontFamily: "SFProDisplay-Semibold",
             }}
@@ -313,7 +318,7 @@ export default function CalendarScreen() {
             {monthName} {viewYear}
           </Text>
 
-          <TouchableOpacity
+          <PressableScale
             onPress={goToNextMonth}
             disabled={new Date(viewYear, viewMonth + 1) > maxDate}
           >
@@ -321,10 +326,12 @@ export default function CalendarScreen() {
               name="chevron-forward"
               size={28}
               color={
-                new Date(viewYear, viewMonth + 1) > maxDate ? "#555" : "#DABA69"
+                new Date(viewYear, viewMonth + 1) > maxDate
+                  ? colors.grayDark
+                  : colors.accent
               }
             />
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </View>
 
@@ -358,7 +365,7 @@ export default function CalendarScreen() {
               <Text
                 key={`${d}-${i}`}
                 style={{
-                  color: "#DABA69",
+                  color: colors.accent,
                   fontSize: 16,
                   fontFamily: "SFProDisplay-Regular",
                   width: 32,
@@ -372,7 +379,7 @@ export default function CalendarScreen() {
 
           {loadingHolidays ? (
             <View style={{ marginTop: 30, alignItems: "center" }}>
-              <ActivityIndicator size="small" color="#DABA69" />
+              <ActivityIndicator size="small" color={colors.accent} />
             </View>
           ) : (
             <View
@@ -407,7 +414,7 @@ export default function CalendarScreen() {
                     const isHoliday = !!holidayName;
 
                     return (
-                      <TouchableOpacity
+                      <PressableScale
                         key={j}
                         onPress={() => {
                           if (day > 0) {
@@ -425,11 +432,13 @@ export default function CalendarScreen() {
                           height: 32,
                           borderRadius: 16,
                           backgroundColor: isToday
-                            ? "#DABA69"
+                            ? colors.accent
                             : isHoliday
-                            ? "#1b4e10"
+                            ? colors.primaryBorder
                             : "transparent",
-                          borderColor: isHoliday ? "#DABA69" : "transparent",
+                          borderColor: isHoliday
+                            ? colors.accent
+                            : "transparent",
                           borderWidth: isHoliday ? 2 : 0,
                           justifyContent: "center",
                           alignItems: "center",
@@ -438,17 +447,17 @@ export default function CalendarScreen() {
                         <Text
                           style={{
                             color: isToday
-                              ? "#0c3605"
+                              ? colors.primaryDark
                               : isHoliday
-                              ? "#DABA69"
-                              : "white",
+                              ? colors.accent
+                              : colors.white,
                             fontFamily: "SFProDisplay-Regular",
                             fontSize: 16,
                           }}
                         >
                           {day > 0 ? day : ""}
                         </Text>
-                      </TouchableOpacity>
+                      </PressableScale>
                     );
                   })}
                 </View>
@@ -459,7 +468,7 @@ export default function CalendarScreen() {
 
         {/* Back to Today */}
         {!isViewingToday && (
-          <TouchableOpacity
+          <PressableScale
             onPress={() => {
               const targetYear = today.getFullYear();
               const targetMonth = today.getMonth();
@@ -472,7 +481,7 @@ export default function CalendarScreen() {
             style={{
               marginTop: 24,
               alignSelf: "center",
-              backgroundColor: "#DABA69",
+              backgroundColor: colors.accent,
               paddingHorizontal: 20,
               paddingVertical: 10,
               borderRadius: 20,
@@ -480,14 +489,14 @@ export default function CalendarScreen() {
           >
             <Text
               style={{
-                color: "#0c3605",
+                color: colors.primaryDark,
                 fontSize: 16,
                 fontFamily: "SFProDisplay-Semibold",
               }}
             >
               Back to Today
             </Text>
-          </TouchableOpacity>
+          </PressableScale>
         )}
       </Animated.View>
     </SafeAreaView>

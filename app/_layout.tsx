@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
@@ -11,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
+import { preloadQuranData } from "@/services/quranData";
 import { NotificationService } from "../services/notificationService";
 import SplashScreen from "./components/SplashScreen";
 
@@ -119,16 +121,22 @@ export default function RootLayout() {
 
   // OTA update check
   useEffect(() => {
+    if (Constants.appOwnership === "expo") {
+      return;
+    }
+
     async function checkForOTAUpdate() {
       try {
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
           await Updates.fetchUpdateAsync();
           await Updates.reloadAsync();
-        } 
-      } catch (e) {
+        }
+      } catch (error) {
+        console.error("OTA update check failed", error);
       }
     }
+
     checkForOTAUpdate();
   }, []);
 
@@ -141,7 +149,10 @@ export default function RootLayout() {
         await Promise.all([
           syncLocationPermissionToSettings(),
           syncNotificationPermissionToToggle(),
+          preloadQuranData(),
         ]);
+      } catch (error) {
+        console.error("Failed to complete initial app sync", error);
       } finally {
         if (mounted) setInitialSynced(true);
       }

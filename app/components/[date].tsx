@@ -1,3 +1,4 @@
+import { colors as themeColors } from "@/app/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -22,7 +23,7 @@ import {
 } from "../../services/prayerTimes";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
-
+import PressableScale from "../components/PressableScale";
 const screenWidth = Dimensions.get("window").width;
 
 type UIError =
@@ -46,6 +47,10 @@ export default function CalendarDetail() {
   const [error, setError] = useState<UIError | null>(null);
   const [fetchNonce, setFetchNonce] = useState(0);
 
+  const holidayValue = typeof holidayParam === "string" ? holidayParam : null;
+  const hasHolidayParam =
+    holidayValue != null && holidayValue.trim().length > 0;
+
   // retry control for silent spinner mode
   const retryRef = useRef<{
     attempt: number;
@@ -63,15 +68,15 @@ export default function CalendarDetail() {
     if (typeof date === "string") {
       setSelectedDate(new Date(decodeURIComponent(date)));
     }
-    if (typeof holidayParam === "string" && holidayParam.trim() !== "") {
-      setHoliday(holidayParam);
+    if (hasHolidayParam && holidayValue) {
+      setHoliday(holidayValue);
     }
-  }, [date, holidayParam]);
+  }, [date, holidayValue, hasHolidayParam]);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      if (!selectedDate || (holidayParam && holidayParam.trim() !== "")) return;
+      if (!selectedDate || hasHolidayParam) return;
       try {
         const map = await getHolidayMapForYear(selectedDate.getFullYear());
         const key = dateKeyFromDate(selectedDate);
@@ -84,7 +89,7 @@ export default function CalendarDetail() {
     return () => {
       mounted = false;
     };
-  }, [selectedDate, holidayParam]);
+  }, [selectedDate, hasHolidayParam]);
 
   const today = new Date();
   const isToday = selectedDate?.toDateString() === today.toDateString();
@@ -188,6 +193,7 @@ export default function CalendarDetail() {
       clearRetry();
     };
     // include nonce so manual retrys happen
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, fetchNonce]);
 
   useEffect(() => {
@@ -210,6 +216,7 @@ export default function CalendarDetail() {
         break;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isToday, prayerTimes]);
 
   useEffect(() => {
@@ -316,20 +323,20 @@ export default function CalendarDetail() {
     !error ? null : (
       <View
         style={{
-          backgroundColor: "#1a5f0e",
+          backgroundColor: themeColors.primarySurface,
           borderRadius: 12,
           padding: 14,
           marginTop: 8,
           marginBottom: 14,
           borderWidth: 2,
-          borderColor: "#DABA69",
+          borderColor: themeColors.accent,
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Ionicons name="alert-circle" size={20} color="#DABA69" />
+          <Ionicons name="alert-circle" size={20} color={themeColors.accent} />
           <Text
             style={{
-              color: "#DABA69",
+              color: themeColors.accent,
               fontSize: 16,
               marginLeft: 8,
               fontFamily: "SFProDisplay-Semibold",
@@ -338,7 +345,9 @@ export default function CalendarDetail() {
             Problem loading prayer times
           </Text>
         </View>
-        <Text style={{ color: "white", marginTop: 8, lineHeight: 20 }}>
+        <Text
+          style={{ color: themeColors.white, marginTop: 8, lineHeight: 20 }}
+        >
           {error.message}
         </Text>
 
@@ -348,7 +357,7 @@ export default function CalendarDetail() {
           <TouchableOpacity
             onPress={handleRetry}
             style={{
-              backgroundColor: "#DABA69",
+              backgroundColor: themeColors.accent,
               paddingVertical: 8,
               paddingHorizontal: 14,
               borderRadius: 8,
@@ -357,7 +366,7 @@ export default function CalendarDetail() {
           >
             <Text
               style={{
-                color: "#1a5f0e",
+                color: themeColors.primary,
                 fontSize: 14,
                 fontFamily: "SFProDisplay-Semibold",
               }}
@@ -374,12 +383,12 @@ export default function CalendarDetail() {
                 paddingHorizontal: 14,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: "#DABA69",
+                borderColor: themeColors.accent,
               }}
             >
               <Text
                 style={{
-                  color: "#DABA69",
+                  color: themeColors.accent,
                   fontSize: 14,
                   fontFamily: "SFProDisplay-Semibold",
                 }}
@@ -395,16 +404,16 @@ export default function CalendarDetail() {
   const EmptyBox = () => (
     <View
       style={{
-        backgroundColor: "#1a5f0e",
+        backgroundColor: themeColors.primarySurface,
         borderRadius: 12,
         padding: 16,
         marginTop: 8,
         marginBottom: 14,
         borderWidth: 2,
-        borderColor: "#1a5f0e",
+        borderColor: themeColors.primarySurface,
       }}
     >
-      <Text style={{ color: "white", textAlign: "center" }}>
+      <Text style={{ color: themeColors.white, textAlign: "center" }}>
         No prayer times available for this date.
       </Text>
       <TouchableOpacity
@@ -412,19 +421,21 @@ export default function CalendarDetail() {
         style={{
           alignSelf: "center",
           marginTop: 10,
-          backgroundColor: "#DABA69",
+          backgroundColor: themeColors.accent,
           paddingVertical: 6,
           paddingHorizontal: 12,
           borderRadius: 8,
         }}
       >
-        <Text style={{ color: "#1a5f0e", fontWeight: "600" }}>Try again</Text>
+        <Text style={{ color: themeColors.primary, fontWeight: "600" }}>
+          Try again
+        </Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#134b0a" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.primary }}>
       {/* Top Navigation Bar - stays fixed */}
       <View
         style={{
@@ -435,21 +446,21 @@ export default function CalendarDetail() {
           paddingBottom: 0,
         }}
       >
-        <TouchableOpacity
+        <PressableScale
           onPress={animateBackToCalendar}
           style={{
             flexDirection: "row",
             alignItems: "center",
             paddingVertical: 6,
             paddingHorizontal: 10,
-            backgroundColor: "#1a5f0e",
+            backgroundColor: themeColors.primarySurface,
             borderRadius: 8,
           }}
         >
-          <Ionicons name="chevron-back" size={20} color="#DABA69" />
+          <Ionicons name="chevron-back" size={20} color={themeColors.accent} />
           <Text
             style={{
-              color: "#DABA69",
+              color: themeColors.accent,
               fontSize: 16,
               fontFamily: "SFProDisplay-Semibold",
               marginLeft: 4,
@@ -457,7 +468,7 @@ export default function CalendarDetail() {
           >
             Calendar
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
 
       {/* Animated Date Content */}
@@ -487,7 +498,7 @@ export default function CalendarDetail() {
           }}
         >
           {/* Prev */}
-          <TouchableOpacity
+          <PressableScale
             onPress={() => !isPrevDisabled && animateDateChange("prev", -1)}
             disabled={isPrevDisabled}
             style={{
@@ -496,23 +507,37 @@ export default function CalendarDetail() {
               opacity: isPrevDisabled ? 0.4 : 1,
             }}
           >
-            <Ionicons name="chevron-back" size={20} color="#DABA69" />
-            <Text style={{ color: "#DABA69", fontSize: 14 }}>Previous</Text>
+            <Ionicons
+              name="chevron-back"
+              size={20}
+              color={themeColors.accent}
+            />
+            <Text style={{ color: themeColors.accent, fontSize: 14 }}>
+              Previous
+            </Text>
             {!isPrevDisabled && (
-              <Text style={{ color: "white", fontSize: 12, marginTop: 2 }}>
+              <Text
+                style={{ color: themeColors.white, fontSize: 12, marginTop: 2 }}
+              >
                 {formatShort(prevDate)}
               </Text>
             )}
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Date Info */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={{ color: "white", fontSize: 22, textAlign: "center" }}>
+            <Text
+              style={{
+                color: themeColors.white,
+                fontSize: 22,
+                textAlign: "center",
+              }}
+            >
               {selectedDate.toDateString()}
             </Text>
             <Text
               style={{
-                color: "#DABA69",
+                color: themeColors.accent,
                 fontSize: 15,
                 marginTop: 4,
                 textAlign: "center",
@@ -532,10 +557,18 @@ export default function CalendarDetail() {
               opacity: isNextDisabled ? 0.4 : 1,
             }}
           >
-            <Ionicons name="chevron-forward" size={20} color="#DABA69" />
-            <Text style={{ color: "#DABA69", fontSize: 14 }}>Next</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={themeColors.accent}
+            />
+            <Text style={{ color: themeColors.accent, fontSize: 14 }}>
+              Next
+            </Text>
             {!isNextDisabled && (
-              <Text style={{ color: "white", fontSize: 12, marginTop: 2 }}>
+              <Text
+                style={{ color: themeColors.white, fontSize: 12, marginTop: 2 }}
+              >
                 {formatShort(nextDate)}
               </Text>
             )}
@@ -546,13 +579,13 @@ export default function CalendarDetail() {
         {holiday && (
           <View
             style={{
-              backgroundColor: "#1a5f0e",
+              backgroundColor: themeColors.primarySurface,
               borderRadius: 12,
               padding: 16,
               marginBottom: 20,
               borderWidth: 2,
-              borderColor: "#DABA69",
-              shadowColor: "#DABA69",
+              borderColor: themeColors.accent,
+              shadowColor: themeColors.accent,
               shadowOpacity: 0.6,
               shadowRadius: 8,
               elevation: 4,
@@ -560,7 +593,7 @@ export default function CalendarDetail() {
           >
             <Text
               style={{
-                color: "#DABA69",
+                color: themeColors.accent,
                 fontSize: 18,
                 textAlign: "center",
               }}
@@ -573,7 +606,7 @@ export default function CalendarDetail() {
         {/* Section title */}
         <Text
           style={{
-            color: "white",
+            color: themeColors.white,
             fontSize: 20,
             marginBottom: 10,
             textAlign: "center",
@@ -588,7 +621,7 @@ export default function CalendarDetail() {
         <View
           style={{
             marginTop: 10,
-            backgroundColor: "#1a5f0e",
+            backgroundColor: themeColors.primarySurface,
             borderRadius: 16,
             padding: 20,
             marginBottom: 10,
@@ -607,7 +640,7 @@ export default function CalendarDetail() {
 
         {isToday && nextPrayer && !error && (
           <View style={{ marginTop: 10, alignItems: "center" }}>
-            <Text style={{ color: "#DABA69", fontSize: 16 }}>
+            <Text style={{ color: themeColors.accent, fontSize: 16 }}>
               Next: {nextPrayer.label} in {timeLeft}
             </Text>
           </View>
