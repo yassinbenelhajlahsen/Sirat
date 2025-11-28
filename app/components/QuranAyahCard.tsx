@@ -33,7 +33,7 @@ function QuranAyahCard({ ayah, isSurahStart, surahMeta }: QuranAyahCardProps) {
         <Text style={styles.surahTag}>
           {ayah.surahNumber}:{ayah.ayahNumber}
         </Text>
-        <Text style={styles.arabic} allowFontScaling={false}>
+        <Text style={styles.arabic}>
           {ayah.arabicText}
         </Text>
         <Text style={styles.translation}>{ayah.englishText}</Text>

@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     color: withOpacity(themeColors.white, 0.8),
     fontSize: 12,
     textAlign: "center",
-    fontFamily: "SFProDisplay-Semiboldr",
+    fontFamily: "SFProDisplay-Semibold",
   },
   loadingText: {
     color: themeColors.accent,

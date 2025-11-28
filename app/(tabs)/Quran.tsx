@@ -7,7 +7,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   InteractionManager,
-  Platform,
   StyleSheet,
   Text,
   View,
@@ -484,7 +483,6 @@ export default function QuranScreen() {
           getItemType={getItemType}
           style={styles.list}
           disableAutoLayout={true}
-          overrideItemLayout={(layout, item) => layout}
           contentContainerStyle={styles.listContent}
           initialScrollIndex={initialScrollIndexValue}
           onViewableItemsChanged={handleViewableItemsChanged}

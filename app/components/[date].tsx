@@ -23,7 +23,7 @@ import {
 } from "../../services/prayerTimes";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
-import PressableScale from "../components/PressableScale"
+import PressableScale from "../components/PressableScale";
 const screenWidth = Dimensions.get("window").width;
 
 type UIError =
