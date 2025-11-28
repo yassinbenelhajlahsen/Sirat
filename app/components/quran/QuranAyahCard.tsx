@@ -1,5 +1,6 @@
-import { memo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { memo, useCallback, useRef } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import { NormalizedAyah, NormalizedSurahMeta } from "@/services/quranData";
@@ -8,11 +9,35 @@ type QuranAyahCardProps = {
   ayah: NormalizedAyah;
   isSurahStart: boolean;
   surahMeta?: NormalizedSurahMeta;
+  isBookmarked?: boolean;
+  onDoubleTap?: () => void;
 };
 
-function QuranAyahCard({ ayah, isSurahStart, surahMeta }: QuranAyahCardProps) {
+const DOUBLE_TAP_INTERVAL_MS = 280;
+
+function QuranAyahCard({
+  ayah,
+  isSurahStart,
+  surahMeta,
+  isBookmarked = false,
+  onDoubleTap,
+}: QuranAyahCardProps) {
   const arabicName = surahMeta?.arabicName ?? ayah.surahNameAr;
   const englishName = surahMeta?.englishName ?? ayah.surahNameEn;
+  const lastTapRef = useRef(0);
+
+  const handlePress = useCallback(() => {
+    if (!onDoubleTap) {
+      return;
+    }
+    const now = Date.now();
+    if (now - lastTapRef.current <= DOUBLE_TAP_INTERVAL_MS) {
+      lastTapRef.current = 0;
+      onDoubleTap();
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [onDoubleTap]);
 
   return (
     <View style={styles.container}>
@@ -29,15 +54,26 @@ function QuranAyahCard({ ayah, isSurahStart, surahMeta }: QuranAyahCardProps) {
         </View>
       ) : null}
 
-      <View style={styles.ayahCard}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.ayahCard,
+          pressed && onDoubleTap ? styles.ayahCardPressed : null,
+        ]}
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={`Ayah ${ayah.ayahNumber} from Surah ${ayah.surahNumber}`}
+      >
+        {isBookmarked ? (
+          <View style={styles.bookmarkBadge}>
+            <Ionicons name="bookmark" size={18} color={themeColors.danger} />
+          </View>
+        ) : null}
         <Text style={styles.surahTag}>
           {ayah.surahNumber}:{ayah.ayahNumber}
         </Text>
-        <Text style={styles.arabic}>
-          {ayah.arabicText}
-        </Text>
+        <Text style={styles.arabic}>{ayah.arabicText}</Text>
         <Text style={styles.translation}>{ayah.englishText}</Text>
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -95,6 +131,18 @@ const styles = StyleSheet.create({
     opacity: 0.75,
     fontSize: 12,
     marginBottom: 6,
+  },
+  bookmarkBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    backgroundColor: withOpacity(themeColors.black, 0.25),
+    borderRadius: 12,
+    padding: 4,
+  },
+  ayahCardPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.95,
   },
   arabic: {
     fontSize: 28,

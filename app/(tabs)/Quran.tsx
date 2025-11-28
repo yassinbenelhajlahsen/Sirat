@@ -1,22 +1,11 @@
+import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import {
-  FlashList,
-  FlashListRef,
-  ListRenderItem,
-  ListRenderItemInfo,
-} from "@shopify/flash-list";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  InteractionManager,
-  StyleSheet,
-  Text,
-  View,
-  ViewToken,
-  useWindowDimensions,
-} from "react-native";
-import {
-  SafeAreaView,
-} from "react-native-safe-area-context";
-import { colors as themeColors } from "@/app/constants/theme";
+  QuranBookmark,
+  deleteBookmark,
+  getBookmarkKey,
+  getBookmarks,
+  upsertBookmark,
+} from "@/services/quranBookmarks";
 import {
   NormalizedAyah,
   NormalizedSurahMeta,
@@ -29,10 +18,30 @@ import {
   saveLastReadAyahIndex,
   saveLastReadSurahAndAyah,
 } from "@/services/quranProgress";
+import {
+  FlashList,
+  FlashListRef,
+  ListRenderItem,
+  ListRenderItemInfo,
+} from "@shopify/flash-list";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  InteractionManager,
+  StyleSheet,
+  Text,
+  View,
+  ViewToken,
+  useWindowDimensions,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import PressableScale from "../components/PressableScale";
-import QuranAyahCard from "../components/QuranAyahCard";
-import QuranCompletionCard from "../components/QuranCompletionCard";
-import QuranNavigatorModal from "../components/QuranNavigatorModal";
+import NavigatorModal from "../components/quran/navigator/NavigatorModal";
+import QuranAyahCard from "../components/quran/QuranAyahCard";
+import QuranBookmarkModal, {
+  QuranBookmarkModalPayload,
+} from "../components/quran/QuranBookmarkModal";
+import QuranCompletionCard from "../components/quran/QuranCompletionCard";
 
 type AyahItem = {
   type: "ayah";
@@ -100,6 +109,37 @@ function computeSurahMatchScore(value: string, query: string): number {
   return Math.max(score, 1);
 }
 
+type BookmarkListItem = {
+  bookmark: QuranBookmark;
+  title: string;
+  note: string;
+  surahEnglish: string;
+  surahArabic: string;
+};
+
+function computeBookmarkMatchScore(
+  item: BookmarkListItem,
+  query: string
+): number {
+  const fields = [
+    item.title,
+    item.note,
+    item.surahEnglish,
+    item.surahArabic,
+    String(item.bookmark.surahNumber),
+    `${item.bookmark.surahNumber}:${item.bookmark.ayahNumber}`,
+  ].filter(Boolean) as string[];
+
+  let score = 0;
+  for (const field of fields) {
+    score = Math.max(score, computeSurahMatchScore(field, query));
+    if (score >= 1000) {
+      break;
+    }
+  }
+  return score;
+}
+
 export default function QuranScreen() {
   const ayat = useMemo(() => Array.from(getAllAyat()), []);
   const surahs = useMemo(() => Array.from(getSurahMeta()), []);
@@ -151,6 +191,7 @@ export default function QuranScreen() {
 
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   const [surahSearchQuery, setSurahSearchQuery] = useState("");
+  const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
 
   const [initialAyahIndex, setInitialAyahIndex] = useState(0);
   const [listReady, setListReady] = useState(false);
@@ -166,6 +207,27 @@ export default function QuranScreen() {
       englishText: "",
     }
   );
+
+  const [bookmarks, setBookmarks] = useState<QuranBookmark[]>([]);
+  const [bookmarkModalContext, setBookmarkModalContext] = useState<{
+    ayah: NormalizedAyah;
+    ayahGlobalIndex: number;
+    bookmark?: QuranBookmark;
+  } | null>(null);
+  const [bookmarkSaving, setBookmarkSaving] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const stored = await getBookmarks();
+      if (mounted) {
+        setBookmarks(stored);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -374,6 +436,37 @@ export default function QuranScreen() {
     []
   );
 
+  const bookmarkMap = useMemo(() => {
+    const map = new Map<string, QuranBookmark>();
+    bookmarks.forEach((bookmark) => {
+      map.set(
+        getBookmarkKey(bookmark.surahNumber, bookmark.ayahNumber),
+        bookmark
+      );
+    });
+    return map;
+  }, [bookmarks]);
+
+  const bookmarkedAyahKeys = useMemo(() => {
+    return new Set(
+      bookmarks.map((bookmark) =>
+        getBookmarkKey(bookmark.surahNumber, bookmark.ayahNumber)
+      )
+    );
+  }, [bookmarks]);
+
+  const bookmarkItems = useMemo<BookmarkListItem[]>(() => {
+    return bookmarks.map((bookmark) => {
+      const surahMeta = surahMap.get(bookmark.surahNumber);
+      return {
+        bookmark,
+        title: bookmark.title,
+        note: bookmark.note ?? "",
+        surahEnglish: surahMeta?.englishName ?? bookmark.title,
+        surahArabic: surahMeta?.arabicName ?? "",
+      };
+    });
+  }, [bookmarks, surahMap]);
   const currentSurahMeta = surahMap.get(currentAyah.surahNumber);
 
   const filteredSurahs = useMemo<NormalizedSurahMeta[]>(() => {
@@ -401,11 +494,48 @@ export default function QuranScreen() {
       .map((entry) => entry.surah);
   }, [surahSearchQuery, surahs]);
 
-  useEffect(() => {
-    if (!navigatorOpen && surahSearchQuery) {
-      setSurahSearchQuery("");
+  const filteredBookmarkItems = useMemo<BookmarkListItem[]>(() => {
+    const query = bookmarkSearchQuery.trim();
+    if (!query) {
+      return bookmarkItems;
     }
-  }, [navigatorOpen, surahSearchQuery]);
+    return bookmarkItems
+      .map((item) => ({
+        item,
+        score: computeBookmarkMatchScore(item, query),
+      }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        return b.item.bookmark.updatedAt - a.item.bookmark.updatedAt;
+      })
+      .map((entry) => entry.item);
+  }, [bookmarkItems, bookmarkSearchQuery]);
+
+  useEffect(() => {
+    if (!navigatorOpen) {
+      if (surahSearchQuery) {
+        setSurahSearchQuery("");
+      }
+      if (bookmarkSearchQuery) {
+        setBookmarkSearchQuery("");
+      }
+    }
+  }, [bookmarkSearchQuery, navigatorOpen, surahSearchQuery]);
+
+  const handleAyahDoubleTap = useCallback(
+    (ayah: NormalizedAyah, ayahGlobalIndex: number, ayahKey: string) => {
+      const existing = bookmarkMap.get(ayahKey);
+      setBookmarkModalContext({
+        ayah,
+        ayahGlobalIndex,
+        bookmark: existing,
+      });
+    },
+    [bookmarkMap]
+  );
 
   const renderItem = useCallback<ListRenderItem<QuranListItem>>(
     ({ item }: ListRenderItemInfo<QuranListItem>) => {
@@ -413,19 +543,24 @@ export default function QuranScreen() {
         const surahMetaForAyah = surahMap.get(item.ayah.surahNumber);
         const isSurahStart =
           item.ayah.ayahNumber === 1 && item.ayahGlobalIndex !== 0;
+        const ayahKey = item.key;
 
         return (
           <QuranAyahCard
             ayah={item.ayah}
             isSurahStart={isSurahStart}
             surahMeta={surahMetaForAyah}
+            isBookmarked={bookmarkedAyahKeys.has(ayahKey)}
+            onDoubleTap={() =>
+              handleAyahDoubleTap(item.ayah, item.ayahGlobalIndex, ayahKey)
+            }
           />
         );
       }
 
       return <QuranCompletionCard onBackToTop={scrollToTopAnimated} />;
     },
-    [scrollToTopAnimated, surahMap]
+    [bookmarkedAyahKeys, handleAyahDoubleTap, scrollToTopAnimated, surahMap]
   );
 
   const getItemType = useCallback((item: QuranListItem) => {
@@ -439,73 +574,164 @@ export default function QuranScreen() {
     ? initialItemIndex
     : undefined;
 
+  const handleBookmarkSubmit = useCallback(
+    async ({ title, note }: QuranBookmarkModalPayload) => {
+      if (!bookmarkModalContext) {
+        return;
+      }
+      setBookmarkSaving(true);
+      try {
+        const updated = await upsertBookmark({
+          id: bookmarkModalContext.bookmark?.id,
+          surahNumber: bookmarkModalContext.ayah.surahNumber,
+          ayahNumber: bookmarkModalContext.ayah.ayahNumber,
+          ayahGlobalIndex: bookmarkModalContext.ayahGlobalIndex,
+          title,
+          note,
+        });
+        setBookmarks(updated);
+        setBookmarkModalContext(null);
+      } catch (error) {
+        console.warn("Failed to save bookmark", error);
+        Alert.alert(
+          "Bookmark",
+          "Unable to save bookmark right now. Please try again."
+        );
+      } finally {
+        setBookmarkSaving(false);
+      }
+    },
+    [bookmarkModalContext]
+  );
+
+  const handleBookmarkModalClose = useCallback(() => {
+    if (bookmarkSaving) {
+      return;
+    }
+    setBookmarkModalContext(null);
+  }, [bookmarkSaving]);
+
+  const handleSelectBookmark = useCallback(
+    (bookmark: QuranBookmark) => {
+      scrollToAyahIndex(bookmark.ayahGlobalIndex);
+      setNavigatorOpen(false);
+    },
+    [scrollToAyahIndex]
+  );
+
+  const handleDeleteBookmark = useCallback(async (bookmark: QuranBookmark) => {
+    try {
+      const updated = await deleteBookmark(bookmark.id);
+      setBookmarks(updated);
+      setBookmarkModalContext((context) => {
+        if (context?.bookmark && context.bookmark.id === bookmark.id) {
+          return null;
+        }
+        return context;
+      });
+    } catch (error) {
+      console.warn("Failed to delete bookmark", error);
+      Alert.alert(
+        "Bookmark",
+        "Unable to delete bookmark right now. Please try again."
+      );
+    }
+  }, []);
+
+  const isBookmarkModalVisible = Boolean(bookmarkModalContext);
+  const bookmarkModalAyah = bookmarkModalContext?.ayah ?? null;
+  const bookmarkModalInitialTitle = bookmarkModalContext?.bookmark?.title;
+  const bookmarkModalInitialNote = bookmarkModalContext?.bookmark?.note ?? "";
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.primary }}>
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text
-          style={[
-            styles.headerTitle,
-            { fontSize: isSmall ? 34 : 40, fontFamily: "SFProDisplay-Bold" },
-          ]}
-        >
-          Quran
-        </Text>
-        <View style={styles.headerSubsection}>
-          <View style={styles.headerDetails}>
-            <Text style={styles.headerSurahEnglish}>
-              {currentSurahMeta?.englishName ?? ""}
-            </Text>
-            <Text style={styles.headerSurahArabic}>
-              {currentSurahMeta?.arabicName ?? ""}
-            </Text>
-            <Text style={styles.headerMeta}>
-              Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
-            </Text>
-          </View>
-          <PressableScale
-            style={styles.jumpButton}
-            onPress={() => setNavigatorOpen(true)}
-            accessibilityRole="button"
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text
+            style={[
+              styles.headerTitle,
+              { fontSize: isSmall ? 34 : 40, fontFamily: "SFProDisplay-Bold" },
+            ]}
           >
-            <Text style={styles.jumpButtonText}>Navigate</Text>
-          </PressableScale>
+            Quran
+          </Text>
+          <View style={styles.headerSubsection}>
+            <View style={styles.headerDetails}>
+              <Text style={styles.headerSurahEnglish}>
+                {currentSurahMeta?.englishName ?? ""}
+              </Text>
+              <Text style={styles.headerSurahArabic}>
+                {currentSurahMeta?.arabicName ?? ""}
+              </Text>
+              <Text style={styles.headerMeta}>
+                Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
+              </Text>
+            </View>
+            <PressableScale
+              style={styles.jumpButton}
+              onPress={() => setNavigatorOpen(true)}
+              accessibilityRole="button"
+            >
+              <Text style={styles.jumpButtonText}>Navigate</Text>
+            </PressableScale>
+          </View>
         </View>
-      </View>
 
-      {listReady ? (
-        <FlashList
-          ref={flashListRef}
-          data={listData}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          estimatedItemSize={ESTIMATED_ITEM_SIZE}
-          getItemType={getItemType}
-          style={styles.list}
-          disableAutoLayout={true}
-          contentContainerStyle={styles.listContent}
-          initialScrollIndex={initialScrollIndexValue}
-          onViewableItemsChanged={handleViewableItemsChanged}
-          viewabilityConfig={viewabilityConfigRef.current}
-          onScrollToIndexFailed={handleScrollToIndexFailed}
+        {listReady ? (
+          <FlashList
+            ref={flashListRef}
+            data={listData}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            estimatedItemSize={ESTIMATED_ITEM_SIZE}
+            getItemType={getItemType}
+            style={styles.list}
+            disableAutoLayout={true}
+            contentContainerStyle={styles.listContent}
+            initialScrollIndex={initialScrollIndexValue}
+            onViewableItemsChanged={handleViewableItemsChanged}
+            viewabilityConfig={viewabilityConfigRef.current}
+            onScrollToIndexFailed={handleScrollToIndexFailed}
+          />
+        ) : (
+          <View style={styles.listPlaceholder} />
+        )}
+
+        <View style={styles.footerNoteContainer}>
+          <Text style={styles.footerNote}>
+            Double tap an Ayah to make a bookmark.
+          </Text>
+        </View>
+
+        <NavigatorModal
+          visible={navigatorOpen}
+          surahs={surahs}
+          filteredSurahs={filteredSurahs}
+          surahSearchQuery={surahSearchQuery}
+          bookmarks={bookmarkItems}
+          filteredBookmarks={filteredBookmarkItems}
+          bookmarkSearchQuery={bookmarkSearchQuery}
+          onSurahSearchQueryChange={setSurahSearchQuery}
+          onBookmarkSearchQueryChange={setBookmarkSearchQuery}
+          onSelectSurah={(surahNumber) =>
+            handleJump({ kind: "surah", surahNumber })
+          }
+          onSelectJuz={(juzNumber) => handleJump({ kind: "juz", juzNumber })}
+          onSelectBookmark={handleSelectBookmark}
+          onDeleteBookmark={handleDeleteBookmark}
+          onClose={() => setNavigatorOpen(false)}
         />
-      ) : (
-        <View style={styles.listPlaceholder} />
-      )}
 
-      <QuranNavigatorModal
-        visible={navigatorOpen}
-        surahs={surahs}
-        filteredSurahs={filteredSurahs}
-        surahSearchQuery={surahSearchQuery}
-        onSurahSearchQueryChange={setSurahSearchQuery}
-        onSelectSurah={(surahNumber) =>
-          handleJump({ kind: "surah", surahNumber })
-        }
-        onSelectJuz={(juzNumber) => handleJump({ kind: "juz", juzNumber })}
-        onClose={() => setNavigatorOpen(false)}
-      />
-    </View>
+        <QuranBookmarkModal
+          visible={isBookmarkModalVisible}
+          ayah={bookmarkModalAyah}
+          initialTitle={bookmarkModalInitialTitle}
+          initialNote={bookmarkModalInitialNote}
+          onSubmit={handleBookmarkSubmit}
+          onClose={handleBookmarkModalClose}
+          isSubmitting={bookmarkSaving}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -566,9 +792,19 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingBottom: 56,
   },
   listPlaceholder: {
     flex: 1,
+  },
+  footerNoteContainer: {
+    paddingTop: 6,
+    paddingBottom: 12,
+    alignItems: "center",
+  },
+  footerNote: {
+    color: withOpacity(themeColors.white, 0.65),
+    fontSize: 11,
+    textAlign: "center",
   },
 });

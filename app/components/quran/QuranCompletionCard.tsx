@@ -2,7 +2,7 @@ import { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { colors as themeColors, withOpacity } from "@/app/constants/theme";
-import PressableScale from "./PressableScale";
+import PressableScale from "../PressableScale";
 
 type QuranCompletionCardProps = {
   onBackToTop: () => void;
