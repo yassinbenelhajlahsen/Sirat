@@ -2,6 +2,7 @@
 import { colors, withOpacity } from "@/app/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -158,127 +159,143 @@ export default function Qibla() {
     const undetermined = permissionStatus === "undetermined";
 
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Qibla</Text>
-          <View style={{ flex: 1, marginTop: 20 }}>
-            {servicesOff ? (
-              <InfoBanner
-                icon="location"
-                title="Location Services Off"
-                message="Location is required to calculate the Qibla direction."
-                actions={
-                  <View style={styles.row}>
+      <LinearGradient
+        colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Qibla</Text>
+            <View style={{ flex: 1, marginTop: 20 }}>
+              {servicesOff ? (
+                <InfoBanner
+                  icon="location"
+                  title="Location Services Off"
+                  message="Location is required to calculate the Qibla direction."
+                  actions={
+                    <View style={styles.row}>
+                      <TouchableOpacity
+                        style={styles.ctaPrimary}
+                        onPress={openLocationServicesHelp}
+                      >
+                        <Text style={styles.ctaPrimaryText}>
+                          How to turn on
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.ctaSecondary}
+                        onPress={checkStatus}
+                      >
+                        <Text style={styles.ctaSecondaryText}>
+                          I turned it on
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  }
+                />
+              ) : denied ? (
+                <InfoBanner
+                  icon="location-outline"
+                  iconColor={colors.accent}
+                  title="Allow Location Access"
+                  message="Grant Sirat access to your location to calculate the Qibla direction."
+                  actions={
+                    <View style={styles.row}>
+                      <TouchableOpacity
+                        style={styles.ctaPrimary}
+                        onPress={openDeviceSettings}
+                      >
+                        <Text style={styles.ctaPrimaryText}>Open Settings</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.ctaSecondary}
+                        onPress={requestPermissionAndLoad}
+                      >
+                        <Text style={styles.ctaSecondaryText}>Try again</Text>
+                      </TouchableOpacity>
+                    </View>
+                  }
+                />
+              ) : undetermined ? (
+                <InfoBanner
+                  icon="navigate-outline"
+                  title="We need your location"
+                  message="Tap enable to calculate the direction to the Kaaba. You can disable anytime in Settings."
+                  actions={
                     <TouchableOpacity
-                      style={styles.ctaPrimary}
-                      onPress={openLocationServicesHelp}
-                    >
-                      <Text style={styles.ctaPrimaryText}>How to turn on</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.ctaSecondary}
-                      onPress={checkStatus}
-                    >
-                      <Text style={styles.ctaSecondaryText}>
-                        I turned it on
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                }
-              />
-            ) : denied ? (
-              <InfoBanner
-                icon="location-outline"
-                iconColor={colors.accent}
-                title="Allow Location Access"
-                message="Grant Sirat access to your location to calculate the Qibla direction."
-                actions={
-                  <View style={styles.row}>
-                    <TouchableOpacity
-                      style={styles.ctaPrimary}
-                      onPress={openDeviceSettings}
-                    >
-                      <Text style={styles.ctaPrimaryText}>Open Settings</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.ctaSecondary}
+                      style={[styles.ctaPrimary, { alignSelf: "flex-start" }]}
                       onPress={requestPermissionAndLoad}
                     >
-                      <Text style={styles.ctaSecondaryText}>Try again</Text>
+                      <Text style={styles.ctaPrimaryText}>Enable Location</Text>
                     </TouchableOpacity>
-                  </View>
-                }
-              />
-            ) : undetermined ? (
-              <InfoBanner
-                icon="navigate-outline"
-                title="We need your location"
-                message="Tap enable to calculate the direction to the Kaaba. You can disable anytime in Settings."
-                actions={
-                  <TouchableOpacity
-                    style={[styles.ctaPrimary, { alignSelf: "flex-start" }]}
-                    onPress={requestPermissionAndLoad}
-                  >
-                    <Text style={styles.ctaPrimaryText}>Enable Location</Text>
-                  </TouchableOpacity>
-                }
-              />
-            ) : null}
+                  }
+                />
+              ) : null}
 
-            <Text style={styles.helper}>
-              Prayer Times still work without location. Pick a city in{" "}
-              <Text style={styles.link}>Settings</Text>.
-            </Text>
+              <Text style={styles.helper}>
+                Prayer Times still work without location. Pick a city in{" "}
+                <Text style={styles.link}>Settings</Text>.
+              </Text>
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   // ----- Normal Qibla UI -----
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.titleContainer}>
-        <Text style={styles.title}>Qibla</Text>
-        {!needLocationGate && accuracy != null && accuracy >= 0 ? (
-          <Text style={styles.subtle}>Accuracy ±{Math.round(accuracy)}°</Text>
-        ) : null}
-      </View>
+    <LinearGradient
+      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Qibla</Text>
+          {!needLocationGate && accuracy != null && accuracy >= 0 ? (
+            <Text style={styles.subtle}>Accuracy ±{Math.round(accuracy)}°</Text>
+          ) : null}
+        </View>
 
-      <View style={styles.center}>
-        {error ? (
-          <>
-            <Text style={styles.errorText}>{error}</Text>
-            <Text style={styles.helper}>
-              Move your phone in a figure eight to improve compass accuracy.
-            </Text>
-          </>
-        ) : rotation == null ? (
-          <Text style={styles.loadingText}>Finding direction…</Text>
-        ) : (
-          <>
-            {accuracy != null && accuracy > 20 ? (
-              <Text style={styles.noteText}>
-                Move phone in a figure eight to improve accuracy.
+        <View style={styles.center}>
+          {error ? (
+            <>
+              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.helper}>
+                Move your phone in a figure eight to improve compass accuracy.
               </Text>
-            ) : null}
+            </>
+          ) : rotation == null ? (
+            <Text style={styles.loadingText}>Finding direction…</Text>
+          ) : (
+            <>
+              {accuracy != null && accuracy > 20 ? (
+                <Text style={styles.noteText}>
+                  Move phone in a figure eight to improve accuracy.
+                </Text>
+              ) : null}
 
-            <View style={[styles.ring, isAligned && styles.ringAligned]}>
-              <Animated.Image
-                source={arrowImg}
-                style={[styles.arrow, animatedStyle]}
-                resizeMode="contain"
-              />
-            </View>
-          </>
-        )}
-      </View>
-    </SafeAreaView>
+              <View style={[styles.ring, isAligned && styles.ringAligned]}>
+                <Animated.Image
+                  source={arrowImg}
+                  style={[styles.arrow, animatedStyle]}
+                  resizeMode="contain"
+                />
+              </View>
+            </>
+          )}
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.primary },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
 
   // Matches the Mosques layout so the banner sits at the top under the title
   container: { flex: 1, padding: 20 },

@@ -1,5 +1,6 @@
 import { colors as themeColors, withOpacity } from "@/app/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,7 +12,6 @@ import {
   Easing,
   ImageStyle,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   Switch,
@@ -241,7 +241,7 @@ export default function Settings() {
         justifyContent: "center",
         backgroundColor: pressed
           ? withOpacity(themeColors.white, 0.04)
-          : withOpacity(themeColors.white, 0.03),
+          : withOpacity(themeColors.primaryDark, 0.3),
         borderRadius: 14,
         paddingHorizontal: 16,
         paddingVertical: 12,
@@ -270,8 +270,7 @@ export default function Settings() {
             color: themeColors.white,
             fontSize: 14,
             lineHeight: 20,
-            fontFamily:
-              Platform.OS === "ios" ? "SFProDisplay-Semibold" : undefined,
+            fontFamily: "SFProDisplay-Semibold",
             letterSpacing: 0.2,
             marginRight: 8,
           }}
@@ -283,8 +282,7 @@ export default function Settings() {
             color: themeColors.accent,
             fontSize: 14,
             lineHeight: 20,
-            fontFamily:
-              Platform.OS === "ios" ? "SFProDisplay-Semibold" : undefined,
+            fontFamily: "SFProDisplay-Semibold",
             opacity: 0.95,
           }}
         >
@@ -295,242 +293,253 @@ export default function Settings() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.primary }}>
-      <ScrollView
-        contentContainerStyle={{
-          paddingBottom: footerPadding,
-        }}
-        showsVerticalScrollIndicator={false}
-        style={{ zIndex: 0 }}
-      >
-        {/* Title */}
-        <View style={{ paddingTop: 10, paddingHorizontal: 20 }}>
-          <Text
-            accessibilityRole="header"
-            style={{
-              color: themeColors.white,
-              fontFamily: "SFProDisplay-Bold",
-              fontSize: isSmall ? 34 : 40,
-            }}
-          >
-            Settings
-          </Text>
-        </View>
-
-        {/* Calculation Method */}
-        <View
-          style={{
-            paddingHorizontal: 20,
-            paddingTop: 14,
-            zIndex: 2000,
+    <LinearGradient
+      colors={[
+        themeColors.primaryDeep,
+        themeColors.primary,
+        themeColors.primaryLift,
+      ]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{
+            paddingBottom: footerPadding,
           }}
+          showsVerticalScrollIndicator={false}
+          style={{ zIndex: 0 }}
         >
-          <Text
+          {/* Title */}
+          <View style={{ paddingTop: 10, paddingHorizontal: 20 }}>
+            <Text
+              accessibilityRole="header"
+              style={{
+                color: themeColors.white,
+                fontFamily: "SFProDisplay-Bold",
+                fontSize: isSmall ? 34 : 40,
+              }}
+            >
+              Settings
+            </Text>
+          </View>
+
+          {/* Calculation Method */}
+          <View
             style={{
-              color: themeColors.white,
-              fontSize: 16,
-              marginBottom: 8,
-              fontFamily: "SFProDisplay-Semibold",
+              paddingHorizontal: 20,
+              paddingTop: 14,
+              zIndex: 2000,
             }}
           >
-            Calculation Method
-          </Text>
+            <Text
+              style={{
+                color: themeColors.white,
+                fontSize: 16,
+                marginBottom: 8,
+                fontFamily: "SFProDisplay-Semibold",
+              }}
+            >
+              Calculation Method
+            </Text>
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    scale: methodAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.03],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <DropDownPicker
+                open={methodOpen}
+                value={method}
+                items={methodItems}
+                setOpen={setMethodOpen}
+                setValue={setMethod}
+                setItems={setMethodItems}
+                style={{
+                  backgroundColor: themeColors.primarySurfaceAlt,
+                  borderColor: themeColors.accent,
+                  minHeight: 50,
+                  borderRadius: 12,
+                  marginBottom: methodOpen ? 12 : 0,
+                }}
+                dropDownContainerStyle={{
+                  backgroundColor: themeColors.primarySurfaceAlt,
+                  borderColor: themeColors.accent,
+                  borderRadius: 12,
+                  zIndex: 3000,
+                }}
+                textStyle={{
+                  color: themeColors.white,
+                  fontSize: 16,
+                  fontFamily: "SFProDisplay-Semibold",
+                }}
+                arrowIconStyle={{ tintColor: themeColors.accent } as ImageStyle}
+                selectedItemLabelStyle={{
+                  color: themeColors.accent,
+                  fontFamily: "SFProDisplay-Bold",
+                }}
+                listItemLabelStyle={{
+                  color: themeColors.white,
+                  fontFamily: "SFProDisplay-Regular",
+                }}
+                listMode="SCROLLVIEW"
+                placeholder="Select calculation method"
+                placeholderStyle={{
+                  color: themeColors.grayMedium,
+                  fontFamily: "SFProDisplay-Regular",
+                }}
+                showTickIcon
+                tickIconStyle={
+                  {
+                    tintColor: themeColors.accent,
+                  } as ImageStyle
+                }
+              />
+            </Animated.View>
+          </View>
+
+          {/* Location toggle */}
           <Animated.View
             style={{
+              paddingHorizontal: 20,
+              marginTop: 18,
+              transform: [{ scale: toggleScale }],
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: 12 }}>
+                <Text
+                  style={{
+                    color: themeColors.white,
+                    fontSize: isSmall ? 15 : 16,
+                    fontFamily: "SFProDisplay-Semibold",
+                  }}
+                  numberOfLines={1}
+                >
+                  Use My Location
+                </Text>
+                <Text
+                  style={{
+                    color: themeColors.white,
+                    opacity: 0.8,
+                    fontSize: isSmall ? 12 : 13,
+                    marginTop: 2,
+                  }}
+                  numberOfLines={2}
+                >
+                  {permissionStatus === "granted"
+                    ? "Location permission granted. Turn off to select a city manually."
+                    : "Tap to enable Location. Turn off to select a city manually."}
+                </Text>
+              </View>
+
+              <View style={{ marginLeft: 8 }}>
+                <Switch
+                  accessibilityLabel="Use my location"
+                  value={useLocation}
+                  onValueChange={handleToggle}
+                  trackColor={{
+                    false: themeColors.grayDark,
+                    true: themeColors.accent,
+                  }}
+                  thumbColor={
+                    useLocation ? themeColors.white : themeColors.grayMuted
+                  }
+                />
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Manual city selector */}
+          <Animated.View
+            pointerEvents={useLocation ? "none" : "auto"}
+            accessibilityElementsHidden={useLocation}
+            style={{
+              paddingHorizontal: 20,
+              marginTop: 18,
+              opacity: locationAnim,
               transform: [
                 {
-                  scale: methodAnim.interpolate({
+                  translateY: locationAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [1, 1.03],
+                    outputRange: [6, 0],
                   }),
                 },
               ],
+              maxHeight: locationAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 120],
+              }),
+              overflow: "hidden",
             }}
           >
-            <DropDownPicker
-              open={methodOpen}
-              value={method}
-              items={methodItems}
-              setOpen={setMethodOpen}
-              setValue={setMethod}
-              setItems={setMethodItems}
+            <Text
+              style={{
+                color: themeColors.white,
+                fontSize: 16,
+                marginBottom: 8,
+                fontFamily: "SFProDisplay-Semibold",
+              }}
+            >
+              Manual City
+            </Text>
+
+            <Pressable
+              onPress={() => setCityModalVisible(true)}
+              accessibilityRole="button"
               style={{
                 backgroundColor: themeColors.primarySurfaceAlt,
                 borderColor: themeColors.accent,
-                minHeight: 50,
+                borderWidth: 1,
                 borderRadius: 12,
-                marginBottom: methodOpen ? 12 : 0,
+                paddingVertical: 14,
+                paddingHorizontal: 14,
               }}
-              dropDownContainerStyle={{
-                backgroundColor: themeColors.primarySurfaceAlt,
-                borderColor: themeColors.accent,
-                borderRadius: 12,
-                zIndex: 3000,
-              }}
-              textStyle={{
-                color: themeColors.white,
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-              }}
-              arrowIconStyle={{ tintColor: themeColors.accent } as ImageStyle}
-              selectedItemLabelStyle={{
-                color: themeColors.accent,
-                fontFamily: "SFProDisplay-Bold",
-              }}
-              listItemLabelStyle={{
-                color: themeColors.white,
-                fontFamily: "SFProDisplay-Regular",
-              }}
-              listMode="SCROLLVIEW"
-              placeholder="Select calculation method"
-              placeholderStyle={{
-                color: themeColors.grayMedium,
-                fontFamily: "SFProDisplay-Regular",
-              }}
-              showTickIcon
-              tickIconStyle={
-                {
-                  tintColor: themeColors.accent,
-                } as ImageStyle
-              }
-            />
+            >
+              <Text style={{ color: themeColors.white, fontSize: 15 }}>
+                {city
+                  ? `${city.name}${city.country ? ", " + city.country : ""}`
+                  : "Select City"}
+              </Text>
+            </Pressable>
           </Animated.View>
-        </View>
 
-        {/* Location toggle */}
-        <Animated.View
-          style={{
-            paddingHorizontal: 20,
-            marginTop: 18,
-            transform: [{ scale: toggleScale }],
-          }}
-        >
+          {/* City search modal */}
+          <CitySearchModal
+            visible={cityModalVisible}
+            onClose={() => setCityModalVisible(false)}
+            onSelectKey={selectCityByKey}
+            items={cityItems}
+          />
+
+          {/* Notifications section: the master toggle mirrors OS and opens Settings on press */}
+          <NotificationSettings notifStatus={notifStatus} />
+
+          {/* Visit site button */}
           <View
             style={{
-              flexDirection: "row",
+              paddingHorizontal: 16,
+              marginTop: 24,
               alignItems: "center",
-              justifyContent: "space-between",
             }}
           >
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text
-                style={{
-                  color: themeColors.white,
-                  fontSize: isSmall ? 15 : 16,
-                  fontFamily: "SFProDisplay-Semibold",
-                }}
-                numberOfLines={1}
-              >
-                Use My Location
-              </Text>
-              <Text
-                style={{
-                  color: themeColors.white,
-                  opacity: 0.8,
-                  fontSize: isSmall ? 12 : 13,
-                  marginTop: 2,
-                }}
-                numberOfLines={2}
-              >
-                {permissionStatus === "granted"
-                  ? "Location permission granted. Turn off to select a city manually."
-                  : "Tap to enable Location. Turn off to select a city manually."}
-              </Text>
-            </View>
-
-            <View style={{ marginLeft: 8 }}>
-              <Switch
-                accessibilityLabel="Use my location"
-                value={useLocation}
-                onValueChange={handleToggle}
-                trackColor={{
-                  false: themeColors.grayDark,
-                  true: themeColors.accent,
-                }}
-                thumbColor={
-                  useLocation ? themeColors.white : themeColors.grayMuted
-                }
-              />
-            </View>
+            <VisitSiteButton />
           </View>
-        </Animated.View>
-
-        {/* Manual city selector */}
-        <Animated.View
-          pointerEvents={useLocation ? "none" : "auto"}
-          accessibilityElementsHidden={useLocation}
-          style={{
-            paddingHorizontal: 20,
-            marginTop: 18,
-            opacity: locationAnim,
-            transform: [
-              {
-                translateY: locationAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [6, 0],
-                }),
-              },
-            ],
-            maxHeight: locationAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 120],
-            }),
-            overflow: "hidden",
-          }}
-        >
-          <Text
-            style={{
-              color: themeColors.white,
-              fontSize: 16,
-              marginBottom: 8,
-              fontFamily: "SFProDisplay-Semibold",
-            }}
-          >
-            Manual City
-          </Text>
-
-          <Pressable
-            onPress={() => setCityModalVisible(true)}
-            accessibilityRole="button"
-            style={{
-              backgroundColor: themeColors.primarySurfaceAlt,
-              borderColor: themeColors.accent,
-              borderWidth: 1,
-              borderRadius: 12,
-              paddingVertical: 14,
-              paddingHorizontal: 14,
-            }}
-          >
-            <Text style={{ color: themeColors.white, fontSize: 15 }}>
-              {city
-                ? `${city.name}${city.country ? ", " + city.country : ""}`
-                : "Select City"}
-            </Text>
-          </Pressable>
-        </Animated.View>
-
-        {/* City search modal */}
-        <CitySearchModal
-          visible={cityModalVisible}
-          onClose={() => setCityModalVisible(false)}
-          onSelectKey={selectCityByKey}
-          items={cityItems}
-        />
-
-        {/* Notifications section: the master toggle mirrors OS and opens Settings on press */}
-        <NotificationSettings notifStatus={notifStatus} />
-
-        {/* Visit site button */}
-        <View
-          style={{
-            paddingHorizontal: 16,
-            marginTop: 24,
-            alignItems: "center",
-          }}
-        >
-          <VisitSiteButton />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

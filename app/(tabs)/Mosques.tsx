@@ -1,6 +1,7 @@
 import { colors, withOpacity } from "@/app/constants/theme";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -186,75 +187,84 @@ export default function MosqueScreen() {
     const undetermined = permissionStatus === "undetermined";
 
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Mosques</Text>
-          <View style={{ flex: 1, marginTop: 20 }}>
-            {servicesOff ? (
-              <InfoBanner
-                icon="location"
-                title="Location Services Off"
-                message="Location is required to show nearby mosques and center the map."
-                actions={
-                  <View style={styles.row}>
+      <LinearGradient
+        colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Mosques</Text>
+            <View style={{ flex: 1, marginTop: 20 }}>
+              {servicesOff ? (
+                <InfoBanner
+                  icon="location"
+                  title="Location Services Off"
+                  message="Location is required to show nearby mosques and center the map."
+                  actions={
+                    <View style={styles.row}>
+                      <TouchableOpacity
+                        style={styles.ctaPrimary}
+                        onPress={openLocationServicesHelp}
+                      >
+                        <Text style={styles.ctaPrimaryText}>
+                          How to turn on
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.ctaSecondary}
+                        onPress={checkStatus}
+                      >
+                        <Text style={styles.ctaSecondaryText}>
+                          I turned it on
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  }
+                />
+              ) : denied ? (
+                <InfoBanner
+                  icon="location-outline"
+                  iconColor={colors.accent}
+                  title="Allow Location Access"
+                  message="Grant Sirat access to your location for accurate nearby mosque results."
+                  actions={
+                    <View style={styles.row}>
+                      <TouchableOpacity
+                        style={styles.ctaPrimary}
+                        onPress={openDeviceSettings}
+                      >
+                        <Text style={styles.ctaPrimaryText}>Open Settings</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.ctaSecondary}
+                        onPress={requestPermissionAndLoad}
+                      >
+                        <Text style={styles.ctaSecondaryText}>Try again</Text>
+                      </TouchableOpacity>
+                    </View>
+                  }
+                />
+              ) : undetermined ? (
+                <InfoBanner
+                  icon="navigate-outline"
+                  title="We need your location"
+                  message="Tap enable to find mosques near you. You can disable anytime in Settings."
+                  actions={
                     <TouchableOpacity
-                      style={styles.ctaPrimary}
-                      onPress={openLocationServicesHelp}
-                    >
-                      <Text style={styles.ctaPrimaryText}>How to turn on</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.ctaSecondary}
-                      onPress={checkStatus}
-                    >
-                      <Text style={styles.ctaSecondaryText}>
-                        I turned it on
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                }
-              />
-            ) : denied ? (
-              <InfoBanner
-                icon="location-outline"
-                iconColor={colors.accent}
-                title="Allow Location Access"
-                message="Grant Sirat access to your location for accurate nearby mosque results."
-                actions={
-                  <View style={styles.row}>
-                    <TouchableOpacity
-                      style={styles.ctaPrimary}
-                      onPress={openDeviceSettings}
-                    >
-                      <Text style={styles.ctaPrimaryText}>Open Settings</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.ctaSecondary}
+                      style={[styles.ctaPrimary, { alignSelf: "flex-start" }]}
                       onPress={requestPermissionAndLoad}
                     >
-                      <Text style={styles.ctaSecondaryText}>Try again</Text>
+                      <Text style={styles.ctaPrimaryText}>Enable Location</Text>
                     </TouchableOpacity>
-                  </View>
-                }
-              />
-            ) : undetermined ? (
-              <InfoBanner
-                icon="navigate-outline"
-                title="We need your location"
-                message="Tap enable to find mosques near you. You can disable anytime in Settings."
-                actions={
-                  <TouchableOpacity
-                    style={[styles.ctaPrimary, { alignSelf: "flex-start" }]}
-                    onPress={requestPermissionAndLoad}
-                  >
-                    <Text style={styles.ctaPrimaryText}>Enable Location</Text>
-                  </TouchableOpacity>
-                }
-              />
-            ) : null}
+                  }
+                />
+              ) : null}
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
@@ -287,89 +297,98 @@ export default function MosqueScreen() {
     !fetchingFresh && (mosques == null || mosques.length === 0);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Mosques</Text>
+    <LinearGradient
+      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Mosques</Text>
 
-        <Text style={styles.header}>Nearby</Text>
-        {emptyNearby ? (
-          <View style={styles.emptyCard}>
-            <View style={styles.emptyRow}>
-              <Ionicons name="search" size={18} color={colors.accent} />
-              <Text style={[styles.emptyText, { marginLeft: 10, flex: 1 }]}>
-                No mosques found near your current location.
-              </Text>
+          <Text style={styles.header}>Nearby</Text>
+          {emptyNearby ? (
+            <View style={styles.emptyCard}>
+              <View style={styles.emptyRow}>
+                <Ionicons name="search" size={18} color={colors.accent} />
+                <Text style={[styles.emptyText, { marginLeft: 10, flex: 1 }]}>
+                  No mosques found near your current location.
+                </Text>
+              </View>
             </View>
-          </View>
-        ) : (
-          <FlatList
-            data={mosques.slice(0, 3)}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            showsVerticalScrollIndicator={false}
-            style={{ marginBottom: 24 }}
-          />
-        )}
-
-        <Text style={styles.header}>Map</Text>
-        <PressableScale
-          style={styles.mapContainer}
-          onPress={() => router.push("/components/map")}
-          activeOpacity={0.9}
-        >
-          <MapView
-            style={StyleSheet.absoluteFillObject}
-            initialRegion={{
-              latitude: location!.latitude,
-              longitude: location!.longitude,
-              latitudeDelta: 0.02,
-              longitudeDelta: 0.02,
-            }}
-            showsUserLocation
-            customMapStyle={customMapStyle}
-          >
-            {mosques.map((m) => (
-              <Marker
-                key={m.id}
-                coordinate={{ latitude: m.lat, longitude: m.lng }}
-                tracksViewChanges={false}
-              >
-                <View style={styles.pinContainer}>
-                  <FontAwesome5
-                    name="mosque"
-                    size={18}
-                    color={colors.primary}
-                  />
-                </View>
-
-                <Callout tooltip>
-                  <View style={styles.callout}>
-                    <Text style={styles.calloutTitle}>{m.name}</Text>
-                    <Text style={styles.calloutAddress}>{m.address}</Text>
-                    <TouchableOpacity
-                      style={styles.directionButton}
-                      onPress={() => openDirections(m.lat, m.lng)}
-                    >
-                      <Ionicons
-                        name="navigate"
-                        size={14}
-                        color={colors.primary}
-                      />
-                      <Text style={styles.directionText}>Directions</Text>
-                    </TouchableOpacity>
-                  </View>
-                </Callout>
-              </Marker>
-            ))}
-          </MapView>
-          {fetchingFresh && (
-            <View style={styles.mapSpinner}>
-              <ActivityIndicator size="small" color={colors.accent} />
-            </View>
+          ) : (
+            <FlatList
+              data={mosques.slice(0, 3)}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              showsVerticalScrollIndicator={false}
+              scrollEnabled={false}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+            />
           )}
-        </PressableScale>
-      </View>
-    </SafeAreaView>
+
+          <Text style={styles.header}>Map</Text>
+          <PressableScale
+            style={styles.mapContainer}
+            onPress={() => router.push("/components/map")}
+            activeOpacity={0.9}
+          >
+            <MapView
+              style={StyleSheet.absoluteFillObject}
+              initialRegion={{
+                latitude: location!.latitude,
+                longitude: location!.longitude,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
+              }}
+              showsUserLocation
+              customMapStyle={customMapStyle}
+            >
+              {mosques.map((m) => (
+                <Marker
+                  key={m.id}
+                  coordinate={{ latitude: m.lat, longitude: m.lng }}
+                  tracksViewChanges={false}
+                >
+                  <View style={styles.pinContainer}>
+                    <FontAwesome5
+                      name="mosque"
+                      size={18}
+                      color={colors.primary}
+                    />
+                  </View>
+
+                  <Callout tooltip>
+                    <View style={styles.callout}>
+                      <Text style={styles.calloutTitle}>{m.name}</Text>
+                      <Text style={styles.calloutAddress}>{m.address}</Text>
+                      <TouchableOpacity
+                        style={styles.directionButton}
+                        onPress={() => openDirections(m.lat, m.lng)}
+                      >
+                        <Ionicons
+                          name="navigate"
+                          size={14}
+                          color={colors.primary}
+                        />
+                        <Text style={styles.directionText}>Directions</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </Callout>
+                </Marker>
+              ))}
+            </MapView>
+            {fetchingFresh && (
+              <View style={styles.mapSpinner}>
+                <ActivityIndicator size="small" color={colors.accent} />
+              </View>
+            )}
+          </PressableScale>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
@@ -380,7 +399,8 @@ const customMapStyle = [
 ];
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.primary },
+  gradient: { flex: 1 },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   container: { flex: 1, padding: 20 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: {
@@ -439,7 +459,7 @@ const styles = StyleSheet.create({
   },
   ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
   card: {
-    backgroundColor: colors.primarySurface,
+    backgroundColor: colors.primarySurfaceAlt,
     borderRadius: 18,
     paddingVertical: 16,
     paddingHorizontal: 20,
@@ -570,4 +590,10 @@ const styles = StyleSheet.create({
   emptyText: { color: colors.white, fontSize: 15 },
   emptySub: { color: colors.accent, fontSize: 13 },
   link: { color: colors.accent, textDecorationLine: "underline" },
+  list: {
+    flexGrow: 0,
+  },
+  listContent: {
+    paddingBottom: 8,
+  },
 });

@@ -1,10 +1,12 @@
 import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
   LayoutChangeEvent,
   StyleProp,
+  StyleSheet,
   Text,
   View,
   ViewStyle,
@@ -21,11 +23,20 @@ const ROW_STYLES = {
     paddingVertical: 12,
     paddingHorizontal: 12,
     marginBottom: 12,
-    // Keep borderWidth constant so nothing jumps when data renders
     borderWidth: 2,
   },
-  labelText: { color: themeColors.white, fontSize: 20 },
-  timeText: { color: themeColors.white, fontSize: 20 },
+  labelText: {
+    color: withOpacity(themeColors.white, 0.9),
+    fontSize: 20,
+    fontFamily: "SFProDisplay-Semibold",
+    letterSpacing: 0.2,
+  },
+  timeText: {
+    color: themeColors.accent,
+    fontSize: 20,
+    fontFamily: "SFProDisplay-Bold",
+    letterSpacing: 0.2,
+  },
 };
 
 /* ---------- Pure JS shimmer bar (no gradient libs) ---------- */
@@ -74,15 +85,7 @@ function SkeletonBar({
   return (
     <View
       onLayout={onLayout}
-      style={[
-        {
-          height,
-          backgroundColor: themeColors.primaryMuted, // base bar color
-          borderRadius: 6,
-          overflow: "hidden",
-        },
-        style,
-      ]}
+      style={[styles.skeletonBarBase, { height }, style]}
       accessibilityRole="progressbar"
       accessibilityState={{ busy: true }}
     >
@@ -105,7 +108,7 @@ function SkeletonBar({
             top: 0,
             bottom: 0,
             width: "100%",
-            backgroundColor: withOpacity(themeColors.white, 0.1),
+            backgroundColor: withOpacity(themeColors.accent, 0.12),
             borderRadius: 6,
           }}
         />
@@ -129,7 +132,7 @@ function SkeletonBar({
             top: 0,
             bottom: 0,
             width: "35%",
-            backgroundColor: withOpacity(themeColors.white, 0.12),
+            backgroundColor: withOpacity(themeColors.accent, 0.18),
             borderRadius: 6,
           }}
         />
@@ -202,18 +205,32 @@ export default function PrayerTimesList({
     <View>
       {prayerTimes.map(({ label, time }) => {
         const isNext = nextPrayerLabel === label;
+        if (isNext) {
+          return (
+            <LinearGradient
+              key={label}
+              colors={[
+                withOpacity(themeColors.accent, 0.9),
+                themeColors.primaryHighlight,
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[ROW_STYLES.containerBase, styles.nextRowCard]}
+            >
+              <Text style={[ROW_STYLES.labelText, styles.nextRowLabel]}>
+                {label}
+              </Text>
+              <Text style={[ROW_STYLES.timeText, styles.nextRowTime]}>
+                {time}
+              </Text>
+            </LinearGradient>
+          );
+        }
+
         return (
           <View
             key={label}
-            style={[
-              ROW_STYLES.containerBase,
-              {
-                backgroundColor: isNext
-                  ? themeColors.primaryHighlight
-                  : "transparent",
-                borderColor: isNext ? themeColors.accent : "transparent", // width stays 2
-              },
-            ]}
+            style={[ROW_STYLES.containerBase, styles.rowSurface]}
           >
             <Text style={ROW_STYLES.labelText}>{label}</Text>
             <Text style={ROW_STYLES.timeText}>{time}</Text>
@@ -223,3 +240,41 @@ export default function PrayerTimesList({
     </View>
   );
 }
+const styles = StyleSheet.create({
+  rowSurface: {
+    backgroundColor: withOpacity(themeColors.white, 0.05),
+    borderColor: withOpacity(themeColors.white, 0.05),
+    shadowColor: withOpacity(themeColors.black, 0.05),
+    shadowOpacity: 0.25,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 6,
+    overflow: "hidden",
+  },
+  nextRowCard: {
+    borderColor: withOpacity(themeColors.accent, 0.8),
+    shadowColor: withOpacity(themeColors.accent, 0.8),
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 14 },
+    elevation: 7,
+    overflow: "hidden",
+  },
+  nextRowLabel: {
+    color: themeColors.white,
+    textShadowColor: withOpacity(themeColors.primaryDeep, 0.35),
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  nextRowTime: {
+    color: themeColors.white,
+    textShadowColor: withOpacity(themeColors.primaryDeep, 0.35),
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  skeletonBarBase: {
+    backgroundColor: withOpacity(themeColors.white, 0.08),
+    borderRadius: 6,
+    overflow: "hidden",
+  },
+});

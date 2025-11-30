@@ -1,6 +1,7 @@
 // app/(tabs)/index.tsx
-import { colors } from "@/app/constants/theme";
+import { colors, withOpacity } from "@/app/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +12,6 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -303,180 +303,194 @@ export default function Home() {
   const tomorrowParam = encodeURIComponent(tomorrow.toISOString());
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
-      <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.accent}
-            title="Refreshing…"
-            titleColor={colors.accent}
-          />
-        }
-      >
-        {!!banner && (
-          <View
-            style={{
-              backgroundColor: colors.primaryLift,
-              borderColor: colors.accent,
-              borderWidth: 1,
-              borderRadius: 12,
-              paddingVertical: 10,
-              paddingHorizontal: 14,
-              marginBottom: 16,
-            }}
-          >
-            <Text
-              style={{
-                color: colors.accent,
-                fontFamily: "SFProDisplay-Semibold",
-                fontSize: 14,
-              }}
-            >
-              {banner}
-            </Text>
-          </View>
-        )}
-
-        <Text
-          style={{
-            color: colors.white,
-            fontSize: 42,
-            fontFamily: "SFProDisplay-Bold",
-          }}
+    <LinearGradient
+      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.accent}
+              title="Refreshing…"
+              titleColor={colors.accent}
+            />
+          }
         >
-          Home
-        </Text>
-
-        <View style={{ marginTop: 30, alignItems: "center" }}>
-          <Text
-            style={{
-              color: colors.white,
-              fontSize: 28,
-              fontFamily: "SFProDisplay-Semibold",
-            }}
-          >
-            Today&apos;s Prayer Times
-          </Text>
-
-          {locationLabel ? (
-            <Text
+          {!!banner && (
+            <View
               style={{
-                color: colors.accent,
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                marginTop: 8,
-                textAlign: "center",
-              }}
-            >
-              {locationLabel}
-            </Text>
-          ) : null}
-
-          <View style={{ marginTop: 30, alignItems: "center" }}>
-            <Text
-              style={{
-                color: colors.white,
-                fontSize: 22,
-                fontFamily: "SFProDisplay-Bold",
-                textAlign: "center",
-              }}
-            >
-              {today.toDateString()}
-            </Text>
-            <Text
-              style={{
-                color: colors.accent,
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                marginTop: 4,
-                marginBottom: 20,
-                textAlign: "center",
-              }}
-            >
-              {islamicDate}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={{
-            marginTop: 20,
-            backgroundColor: colors.primarySurface,
-            borderRadius: 16,
-            padding: 20,
-          }}
-        >
-          <PrayerTimesList
-            loading={loading}
-            prayerTimes={prayerTimes}
-            nextPrayerLabel={nextPrayer?.label ?? null}
-          />
-        </View>
-
-        {nextPrayer && (
-          <View style={{ marginTop: 10, alignItems: "center" }}>
-            <Text style={{ color: colors.accent, fontSize: 16 }}>
-              Next: {nextPrayer.label} in {timeLeft}
-            </Text>
-          </View>
-        )}
-
-        {!nextPrayer && nextDayFajr && (
-          <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
-            <PressableScale
-              onPress={() =>
-                router.push({
-                  pathname: "/components/[date]",
-                  params: {
-                    date: tomorrowParam,
-                    month: tomorrow.getMonth().toString(),
-                    year: tomorrow.getFullYear().toString(),
-                  },
-                })
-              }
-              style={{
-                backgroundColor: colors.primarySurface,
-                borderRadius: 12,
-                paddingVertical: 18,
-                paddingHorizontal: 24,
-                borderWidth: 2,
+                backgroundColor: colors.primaryLift,
                 borderColor: colors.accent,
-                shadowColor: colors.accent,
-                shadowOpacity: 0.6,
-                shadowRadius: 8,
-                elevation: 5,
-                alignItems: "center",
+                borderWidth: 1,
+                borderRadius: 12,
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                marginBottom: 16,
               }}
             >
               <Text
                 style={{
                   color: colors.accent,
-                  fontSize: 18,
-                  fontFamily: "SFProDisplay-Bold",
-                  textAlign: "center",
-                  marginBottom: 4,
+                  fontFamily: "SFProDisplay-Semibold",
+                  fontSize: 14,
                 }}
               >
-                Finished all prayers!
+                {banner}
               </Text>
+            </View>
+          )}
+
+          <Text
+            style={{
+              color: colors.white,
+              fontSize: 42,
+              fontFamily: "SFProDisplay-Bold",
+            }}
+          >
+            Home
+          </Text>
+
+          <View style={{ marginTop: 30, alignItems: "center" }}>
+            <Text
+              style={{
+                color: colors.white,
+                fontSize: 28,
+                fontFamily: "SFProDisplay-Semibold",
+              }}
+            >
+              Today&apos;s Prayer Times
+            </Text>
+
+            {locationLabel ? (
+              <Text
+                style={{
+                  color: colors.accent,
+                  fontSize: 16,
+                  fontFamily: "SFProDisplay-Semibold",
+                  marginTop: 8,
+                  textAlign: "center",
+                }}
+              >
+                {locationLabel}
+              </Text>
+            ) : null}
+
+            <View style={{ marginTop: 30, alignItems: "center" }}>
               <Text
                 style={{
                   color: colors.white,
-                  fontSize: 16,
-                  fontFamily: "SFProDisplay-Semibold",
+                  fontSize: 22,
+                  fontFamily: "SFProDisplay-Bold",
                   textAlign: "center",
                 }}
               >
-                Tap to see tomorrow’s prayer times
+                {today.toDateString()}
               </Text>
-            </PressableScale>
-          </Animated.View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+              <Text
+                style={{
+                  color: colors.accent,
+                  fontSize: 16,
+                  fontFamily: "SFProDisplay-Semibold",
+                  marginTop: 4,
+                  marginBottom: 20,
+                  textAlign: "center",
+                }}
+              >
+                {islamicDate}
+              </Text>
+            </View>
+          </View>
+
+          <View
+            style={{
+              marginTop: 20,
+              backgroundColor: withOpacity(colors.black, 0.2),
+              borderRadius: 18,
+              padding: 20,
+              borderWidth: 1,
+              borderColor: withOpacity(colors.white, 0.08),
+              shadowColor: colors.primaryDark,
+              shadowOpacity: 0.25,
+              shadowRadius: 24,
+              shadowOffset: { width: 0, height: 16 },
+              elevation: 6,
+            }}
+          >
+            <PrayerTimesList
+              loading={loading}
+              prayerTimes={prayerTimes}
+              nextPrayerLabel={nextPrayer?.label ?? null}
+            />
+          </View>
+
+          {nextPrayer && (
+            <View style={{ marginTop: 10, alignItems: "center" }}>
+              <Text style={{ color: colors.accent, fontSize: 16 }}>
+                Next: {nextPrayer.label} in {timeLeft}
+              </Text>
+            </View>
+          )}
+
+          {!nextPrayer && nextDayFajr && (
+            <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
+              <PressableScale
+                onPress={() =>
+                  router.push({
+                    pathname: "/components/[date]",
+                    params: {
+                      date: tomorrowParam,
+                      month: tomorrow.getMonth().toString(),
+                      year: tomorrow.getFullYear().toString(),
+                    },
+                  })
+                }
+                style={{
+                  backgroundColor: colors.primarySurface,
+                  borderRadius: 12,
+                  paddingVertical: 18,
+                  paddingHorizontal: 24,
+                  borderWidth: 2,
+                  borderColor: colors.accent,
+                  shadowColor: colors.accent,
+                  shadowOpacity: 0.6,
+                  shadowRadius: 8,
+                  elevation: 5,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.accent,
+                    fontSize: 18,
+                    fontFamily: "SFProDisplay-Bold",
+                    textAlign: "center",
+                    marginBottom: 4,
+                  }}
+                >
+                  Finished all prayers!
+                </Text>
+                <Text
+                  style={{
+                    color: colors.white,
+                    fontSize: 16,
+                    fontFamily: "SFProDisplay-Semibold",
+                    textAlign: "center",
+                  }}
+                >
+                  Tap to see tomorrow’s prayer times
+                </Text>
+              </PressableScale>
+            </Animated.View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

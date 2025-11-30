@@ -1,5 +1,6 @@
-import { colors as themeColors } from "@/app/constants/theme";
+import { colors, withOpacity } from "@/app/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -323,20 +324,20 @@ export default function CalendarDetail() {
     !error ? null : (
       <View
         style={{
-          backgroundColor: themeColors.primarySurface,
+          backgroundColor: colors.primarySurface,
           borderRadius: 12,
           padding: 14,
           marginTop: 8,
           marginBottom: 14,
           borderWidth: 2,
-          borderColor: themeColors.accent,
+          borderColor: colors.accent,
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Ionicons name="alert-circle" size={20} color={themeColors.accent} />
+          <Ionicons name="alert-circle" size={20} color={colors.accent} />
           <Text
             style={{
-              color: themeColors.accent,
+              color: colors.accent,
               fontSize: 16,
               marginLeft: 8,
               fontFamily: "SFProDisplay-Semibold",
@@ -345,9 +346,7 @@ export default function CalendarDetail() {
             Problem loading prayer times
           </Text>
         </View>
-        <Text
-          style={{ color: themeColors.white, marginTop: 8, lineHeight: 20 }}
-        >
+        <Text style={{ color: colors.white, marginTop: 8, lineHeight: 20 }}>
           {error.message}
         </Text>
 
@@ -357,7 +356,7 @@ export default function CalendarDetail() {
           <TouchableOpacity
             onPress={handleRetry}
             style={{
-              backgroundColor: themeColors.accent,
+              backgroundColor: colors.accent,
               paddingVertical: 8,
               paddingHorizontal: 14,
               borderRadius: 8,
@@ -366,7 +365,7 @@ export default function CalendarDetail() {
           >
             <Text
               style={{
-                color: themeColors.primary,
+                color: colors.primary,
                 fontSize: 14,
                 fontFamily: "SFProDisplay-Semibold",
               }}
@@ -383,12 +382,12 @@ export default function CalendarDetail() {
                 paddingHorizontal: 14,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: themeColors.accent,
+                borderColor: colors.accent,
               }}
             >
               <Text
                 style={{
-                  color: themeColors.accent,
+                  color: colors.accent,
                   fontSize: 14,
                   fontFamily: "SFProDisplay-Semibold",
                 }}
@@ -404,16 +403,16 @@ export default function CalendarDetail() {
   const EmptyBox = () => (
     <View
       style={{
-        backgroundColor: themeColors.primarySurface,
+        backgroundColor: colors.primarySurface,
         borderRadius: 12,
         padding: 16,
         marginTop: 8,
         marginBottom: 14,
         borderWidth: 2,
-        borderColor: themeColors.primarySurface,
+        borderColor: colors.primarySurface,
       }}
     >
-      <Text style={{ color: themeColors.white, textAlign: "center" }}>
+      <Text style={{ color: colors.white, textAlign: "center" }}>
         No prayer times available for this date.
       </Text>
       <TouchableOpacity
@@ -421,13 +420,13 @@ export default function CalendarDetail() {
         style={{
           alignSelf: "center",
           marginTop: 10,
-          backgroundColor: themeColors.accent,
+          backgroundColor: colors.accent,
           paddingVertical: 6,
           paddingHorizontal: 12,
           borderRadius: 8,
         }}
       >
-        <Text style={{ color: themeColors.primary, fontWeight: "600" }}>
+        <Text style={{ color: colors.primary, fontWeight: "600" }}>
           Try again
         </Text>
       </TouchableOpacity>
@@ -435,217 +434,235 @@ export default function CalendarDetail() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.primary }}>
-      {/* Top Navigation Bar - stays fixed */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 20,
-          padding: 20,
-          paddingBottom: 0,
-        }}
-      >
-        <PressableScale
-          onPress={animateBackToCalendar}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 6,
-            paddingHorizontal: 10,
-            backgroundColor: themeColors.primarySurface,
-            borderRadius: 8,
-          }}
-        >
-          <Ionicons name="chevron-back" size={20} color={themeColors.accent} />
-          <Text
-            style={{
-              color: themeColors.accent,
-              fontSize: 16,
-              fontFamily: "SFProDisplay-Semibold",
-              marginLeft: 4,
-            }}
-          >
-            Calendar
-          </Text>
-        </PressableScale>
-      </View>
-
-      {/* Animated Date Content */}
-      <Animated.View
-        style={{
-          flex: 1,
-          padding: 20,
-          opacity: fadeAnim,
-          transform: [
-            {
-              scale: fadeAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.98, 1],
-              }),
-            },
-            { translateX: slideAnim },
-          ],
-        }}
-      >
-        {/* Prev / Next Row */}
+    <LinearGradient
+      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Top Navigation Bar - stays fixed */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
             marginBottom: 20,
+            padding: 20,
+            paddingBottom: 0,
           }}
         >
-          {/* Prev */}
           <PressableScale
-            onPress={() => !isPrevDisabled && animateDateChange("prev", -1)}
-            disabled={isPrevDisabled}
+            onPress={animateBackToCalendar}
             style={{
-              width: 90,
+              flexDirection: "row",
               alignItems: "center",
-              opacity: isPrevDisabled ? 0.4 : 1,
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              backgroundColor: colors.primaryDark,
+              borderRadius: 8,
             }}
           >
-            <Ionicons
-              name="chevron-back"
-              size={20}
-              color={themeColors.accent}
-            />
-            <Text style={{ color: themeColors.accent, fontSize: 14 }}>
-              Previous
+            <Ionicons name="chevron-back" size={20} color={colors.accent} />
+            <Text
+              style={{
+                color: colors.accent,
+                fontSize: 16,
+                fontFamily: "SFProDisplay-Semibold",
+                marginLeft: 4,
+              }}
+            >
+              Calendar
             </Text>
-            {!isPrevDisabled && (
-              <Text
-                style={{ color: themeColors.white, fontSize: 12, marginTop: 2 }}
-              >
-                {formatShort(prevDate)}
-              </Text>
-            )}
           </PressableScale>
-
-          {/* Date Info */}
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Text
-              style={{
-                color: themeColors.white,
-                fontSize: 22,
-                textAlign: "center",
-              }}
-            >
-              {selectedDate.toDateString()}
-            </Text>
-            <Text
-              style={{
-                color: themeColors.accent,
-                fontSize: 15,
-                marginTop: 4,
-                textAlign: "center",
-              }}
-            >
-              {islamicDate}
-            </Text>
-          </View>
-
-          {/* Next */}
-          <TouchableOpacity
-            onPress={() => !isNextDisabled && animateDateChange("next", 1)}
-            disabled={isNextDisabled}
-            style={{
-              width: 90,
-              alignItems: "center",
-              opacity: isNextDisabled ? 0.4 : 1,
-            }}
-          >
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={themeColors.accent}
-            />
-            <Text style={{ color: themeColors.accent, fontSize: 14 }}>
-              Next
-            </Text>
-            {!isNextDisabled && (
-              <Text
-                style={{ color: themeColors.white, fontSize: 12, marginTop: 2 }}
-              >
-                {formatShort(nextDate)}
-              </Text>
-            )}
-          </TouchableOpacity>
         </View>
 
-        {/* Holiday Box */}
-        {holiday && (
+        {/* Animated Date Content */}
+        <Animated.View
+          style={{
+            flex: 1,
+            padding: 20,
+            opacity: fadeAnim,
+            transform: [
+              {
+                scale: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.98, 1],
+                }),
+              },
+              { translateX: slideAnim },
+            ],
+          }}
+        >
+          {/* Prev / Next Row */}
           <View
             style={{
-              backgroundColor: themeColors.primarySurface,
-              borderRadius: 12,
-              padding: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
               marginBottom: 20,
-              borderWidth: 2,
-              borderColor: themeColors.accent,
-              shadowColor: themeColors.accent,
-              shadowOpacity: 0.6,
-              shadowRadius: 8,
-              elevation: 4,
             }}
           >
-            <Text
+            {/* Prev */}
+            <PressableScale
+              onPress={() => !isPrevDisabled && animateDateChange("prev", -1)}
+              disabled={isPrevDisabled}
               style={{
-                color: themeColors.accent,
-                fontSize: 18,
-                textAlign: "center",
+                width: 90,
+                alignItems: "center",
+                opacity: isPrevDisabled ? 0.4 : 1,
               }}
             >
-              {holiday}
-            </Text>
+              <Ionicons name="chevron-back" size={20} color={colors.accent} />
+              <Text style={{ color: colors.accent, fontSize: 14 }}>
+                Previous
+              </Text>
+              {!isPrevDisabled && (
+                <Text
+                  style={{
+                    color: colors.white,
+                    fontSize: 12,
+                    marginTop: 2,
+                  }}
+                >
+                  {formatShort(prevDate)}
+                </Text>
+              )}
+            </PressableScale>
+
+            {/* Date Info */}
+            <View style={{ flex: 1, alignItems: "center" }}>
+              <Text
+                style={{
+                  color: colors.white,
+                  fontSize: 22,
+                  textAlign: "center",
+                }}
+              >
+                {selectedDate.toDateString()}
+              </Text>
+              <Text
+                style={{
+                  color: colors.accent,
+                  fontSize: 15,
+                  marginTop: 4,
+                  textAlign: "center",
+                }}
+              >
+                {islamicDate}
+              </Text>
+            </View>
+
+            {/* Next */}
+            <TouchableOpacity
+              onPress={() => !isNextDisabled && animateDateChange("next", 1)}
+              disabled={isNextDisabled}
+              style={{
+                width: 90,
+                alignItems: "center",
+                opacity: isNextDisabled ? 0.4 : 1,
+              }}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.accent}
+              />
+              <Text style={{ color: colors.accent, fontSize: 14 }}>Next</Text>
+              {!isNextDisabled && (
+                <Text
+                  style={{
+                    color: colors.white,
+                    fontSize: 12,
+                    marginTop: 2,
+                  }}
+                >
+                  {formatShort(nextDate)}
+                </Text>
+              )}
+            </TouchableOpacity>
           </View>
-        )}
 
-        {/* Section title */}
-        <Text
-          style={{
-            color: themeColors.white,
-            fontSize: 20,
-            marginBottom: 10,
-            textAlign: "center",
-          }}
-        >
-          Prayer Times
-        </Text>
-
-        {/* Error or Empty states */}
-        {error && <ErrorBox />}
-
-        <View
-          style={{
-            marginTop: 10,
-            backgroundColor: themeColors.primarySurface,
-            borderRadius: 16,
-            padding: 20,
-            marginBottom: 10,
-          }}
-        >
-          {!loading && !error && prayerTimes.length === 0 ? (
-            <EmptyBox />
-          ) : (
-            <PrayerTimesList
-              loading={loading}
-              prayerTimes={prayerTimes}
-              nextPrayerLabel={isToday ? nextPrayer?.label ?? null : null}
-            />
+          {/* Holiday Box */}
+          {holiday && (
+            <View
+              style={{
+                backgroundColor: colors.primarySurface,
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 20,
+                borderWidth: 2,
+                borderColor: colors.accent,
+                shadowColor: colors.accent,
+                shadowOpacity: 0.6,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.accent,
+                  fontSize: 18,
+                  textAlign: "center",
+                }}
+              >
+                {holiday}
+              </Text>
+            </View>
           )}
-        </View>
 
-        {isToday && nextPrayer && !error && (
-          <View style={{ marginTop: 10, alignItems: "center" }}>
-            <Text style={{ color: themeColors.accent, fontSize: 16 }}>
-              Next: {nextPrayer.label} in {timeLeft}
-            </Text>
+          {/* Section title */}
+          <Text
+            style={{
+              color: colors.white,
+              fontSize: 20,
+              marginBottom: 10,
+              textAlign: "center",
+            }}
+          >
+            Prayer Times
+          </Text>
+
+          {/* Error or Empty states */}
+          {error && <ErrorBox />}
+
+          <View
+          >
+            {!loading && !error && prayerTimes.length === 0 ? (
+              <EmptyBox />
+            ) : (
+              <View
+                style={{
+                  marginTop: 20,
+                  backgroundColor: withOpacity(colors.black, 0.2),
+                  borderRadius: 18,
+                  padding: 20,
+                  borderWidth: 1,
+                  borderColor: withOpacity(colors.white, 0.08),
+                  shadowColor: colors.primaryDark,
+                  shadowOpacity: 0.25,
+                  shadowRadius: 24,
+                  shadowOffset: { width: 0, height: 16 },
+                  elevation: 6,
+                }}
+              >
+                <PrayerTimesList
+                  loading={loading}
+                  prayerTimes={prayerTimes}
+                  nextPrayerLabel={nextPrayer?.label ?? null}
+                />
+              </View>
+            )}
           </View>
-        )}
-      </Animated.View>
-    </SafeAreaView>
+
+          {isToday && nextPrayer && !error && (
+            <View style={{ marginTop: 10, alignItems: "center" }}>
+              <Text style={{ color: colors.accent, fontSize: 16 }}>
+                Next: {nextPrayer.label} in {timeLeft}
+              </Text>
+            </View>
+          )}
+        </Animated.View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

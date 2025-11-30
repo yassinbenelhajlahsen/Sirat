@@ -24,6 +24,7 @@ import {
   ListRenderItem,
   ListRenderItemInfo,
 } from "@shopify/flash-list";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -644,102 +645,116 @@ export default function QuranScreen() {
   const bookmarkModalInitialNote = bookmarkModalContext?.bookmark?.note ?? "";
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.primary }}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text
-            style={[
-              styles.headerTitle,
-              { fontSize: isSmall ? 34 : 40, fontFamily: "SFProDisplay-Bold" },
-            ]}
-          >
-            Quran
-          </Text>
-          <View style={styles.headerSubsection}>
-            <View style={styles.headerDetails}>
-              <Text style={styles.headerSurahEnglish}>
-                {currentSurahMeta?.englishName ?? ""}
-              </Text>
-              <Text style={styles.headerSurahArabic}>
-                {currentSurahMeta?.arabicName ?? ""}
-              </Text>
-              <Text style={styles.headerMeta}>
-                Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
-              </Text>
-            </View>
-            <PressableScale
-              style={styles.jumpButton}
-              onPress={() => setNavigatorOpen(true)}
-              accessibilityRole="button"
+    <LinearGradient
+      colors={[
+        themeColors.primaryDeep,
+        themeColors.primary,
+        themeColors.primaryLift,
+      ]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Text
+              style={[
+                styles.headerTitle,
+                {
+                  fontSize: isSmall ? 34 : 40,
+                  fontFamily: "SFProDisplay-Bold",
+                },
+              ]}
             >
-              <Text style={styles.jumpButtonText}>Navigate</Text>
-            </PressableScale>
+              Quran
+            </Text>
+            <View style={styles.headerSubsection}>
+              <View style={styles.headerDetails}>
+                <Text style={styles.headerSurahEnglish}>
+                  {currentSurahMeta?.englishName ?? ""}
+                </Text>
+                <Text style={styles.headerSurahArabic}>
+                  {currentSurahMeta?.arabicName ?? ""}
+                </Text>
+                <Text style={styles.headerMeta}>
+                  Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
+                </Text>
+              </View>
+              <PressableScale
+                style={styles.jumpButton}
+                onPress={() => setNavigatorOpen(true)}
+                accessibilityRole="button"
+              >
+                <Text style={styles.jumpButtonText}>Navigate</Text>
+              </PressableScale>
+            </View>
           </View>
-        </View>
 
-        {listReady ? (
-          <FlashList
-            ref={flashListRef}
-            data={listData}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            estimatedItemSize={ESTIMATED_ITEM_SIZE}
-            getItemType={getItemType}
-            style={styles.list}
-            disableAutoLayout={true}
-            contentContainerStyle={styles.listContent}
-            initialScrollIndex={initialScrollIndexValue}
-            onViewableItemsChanged={handleViewableItemsChanged}
-            viewabilityConfig={viewabilityConfigRef.current}
-            onScrollToIndexFailed={handleScrollToIndexFailed}
+          {listReady ? (
+            <FlashList
+              ref={flashListRef}
+              data={listData}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              estimatedItemSize={ESTIMATED_ITEM_SIZE}
+              getItemType={getItemType}
+              style={styles.list}
+              disableAutoLayout={true}
+              contentContainerStyle={styles.listContent}
+              initialScrollIndex={initialScrollIndexValue}
+              onViewableItemsChanged={handleViewableItemsChanged}
+              viewabilityConfig={viewabilityConfigRef.current}
+              onScrollToIndexFailed={handleScrollToIndexFailed}
+            />
+          ) : (
+            <View style={styles.listPlaceholder} />
+          )}
+
+          <View style={styles.footerNoteContainer}>
+            <Text style={styles.footerNote}>
+              Double tap an Ayah to make a bookmark.
+            </Text>
+          </View>
+
+          <NavigatorModal
+            visible={navigatorOpen}
+            surahs={surahs}
+            filteredSurahs={filteredSurahs}
+            surahSearchQuery={surahSearchQuery}
+            bookmarks={bookmarkItems}
+            filteredBookmarks={filteredBookmarkItems}
+            bookmarkSearchQuery={bookmarkSearchQuery}
+            onSurahSearchQueryChange={setSurahSearchQuery}
+            onBookmarkSearchQueryChange={setBookmarkSearchQuery}
+            onSelectSurah={(surahNumber) =>
+              handleJump({ kind: "surah", surahNumber })
+            }
+            onSelectJuz={(juzNumber) => handleJump({ kind: "juz", juzNumber })}
+            onSelectBookmark={handleSelectBookmark}
+            onDeleteBookmark={handleDeleteBookmark}
+            onClose={() => setNavigatorOpen(false)}
           />
-        ) : (
-          <View style={styles.listPlaceholder} />
-        )}
 
-        <View style={styles.footerNoteContainer}>
-          <Text style={styles.footerNote}>
-            Double tap an Ayah to make a bookmark.
-          </Text>
+          <QuranBookmarkModal
+            visible={isBookmarkModalVisible}
+            ayah={bookmarkModalAyah}
+            initialTitle={bookmarkModalInitialTitle}
+            initialNote={bookmarkModalInitialNote}
+            onSubmit={handleBookmarkSubmit}
+            onClose={handleBookmarkModalClose}
+            isSubmitting={bookmarkSaving}
+          />
         </View>
-
-        <NavigatorModal
-          visible={navigatorOpen}
-          surahs={surahs}
-          filteredSurahs={filteredSurahs}
-          surahSearchQuery={surahSearchQuery}
-          bookmarks={bookmarkItems}
-          filteredBookmarks={filteredBookmarkItems}
-          bookmarkSearchQuery={bookmarkSearchQuery}
-          onSurahSearchQueryChange={setSurahSearchQuery}
-          onBookmarkSearchQueryChange={setBookmarkSearchQuery}
-          onSelectSurah={(surahNumber) =>
-            handleJump({ kind: "surah", surahNumber })
-          }
-          onSelectJuz={(juzNumber) => handleJump({ kind: "juz", juzNumber })}
-          onSelectBookmark={handleSelectBookmark}
-          onDeleteBookmark={handleDeleteBookmark}
-          onClose={() => setNavigatorOpen(false)}
-        />
-
-        <QuranBookmarkModal
-          visible={isBookmarkModalVisible}
-          ayah={bookmarkModalAyah}
-          initialTitle={bookmarkModalInitialTitle}
-          initialNote={bookmarkModalInitialNote}
-          onSubmit={handleBookmarkSubmit}
-          onClose={handleBookmarkModalClose}
-          isSubmitting={bookmarkSaving}
-        />
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: themeColors.primary,
+    backgroundColor: "transparent",
   },
   header: {
     paddingHorizontal: 20,

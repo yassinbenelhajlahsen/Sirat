@@ -1,5 +1,6 @@
 import { colors } from "@/app/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -17,6 +18,7 @@ import {
   getHolidayMapForYear,
 } from "../../services/holidayService";
 import PressableScale from "../components/PressableScale";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 const getMonthMatrix = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1).getDay();
@@ -34,7 +36,6 @@ const getMonthMatrix = (year: number, month: number) => {
   }
   return weeks;
 };
-
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function CalendarScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const { width: screenWidth } = useWindowDimensions();
+  const tabBarHeight = useBottomTabBarHeight();
 
   // keep refs for current viewMonth/viewYear so PanResponder callbacks read fresh values
   const viewMonthRef = useRef(viewMonth);
@@ -271,234 +273,243 @@ export default function CalendarScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
-      {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
-      <View style={{ padding: 16 }}>
-        <Text
-          style={{
-            color: colors.white,
-            fontFamily: "SFProDisplay-Bold",
-            fontSize: isSmall ? 34 : 40,
-            marginBottom: 20,
-          }}
-        >
-          Calendar
-        </Text>
-
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <PressableScale
-            onPress={goToPreviousMonth}
-            disabled={new Date(viewYear, viewMonth - 1) < minDate}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={28}
-              color={
-                new Date(viewYear, viewMonth - 1) < minDate
-                  ? colors.grayDark
-                  : colors.accent
-              }
-            />
-          </PressableScale>
-
+    <LinearGradient
+      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
+        <View style={{ padding: 16 }}>
           <Text
             style={{
               color: colors.white,
-              fontSize: 22,
-              fontFamily: "SFProDisplay-Semibold",
+              fontFamily: "SFProDisplay-Bold",
+              fontSize: isSmall ? 34 : 40,
+              marginBottom: 20,
             }}
           >
-            {monthName} {viewYear}
+            Calendar
           </Text>
 
-          <PressableScale
-            onPress={goToNextMonth}
-            disabled={new Date(viewYear, viewMonth + 1) > maxDate}
-          >
-            <Ionicons
-              name="chevron-forward"
-              size={28}
-              color={
-                new Date(viewYear, viewMonth + 1) > maxDate
-                  ? colors.grayDark
-                  : colors.accent
-              }
-            />
-          </PressableScale>
-        </View>
-      </View>
-
-      {/* Animated calendar area (swipe + slide animations applied here only) */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={{
-          flex: 1,
-          padding: 16,
-          opacity: fadeAnim,
-          transform: [
-            {
-              translateX: translateX,
-            },
-            {
-              scale: fadeAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.98, 1],
-              }),
-            },
-          ],
-        }}
-      >
-        {/* Calendar Grid */}
-        <View style={{ flex: 1, justifyContent: "flex-start" }}>
-          {/* Day of week */}
           <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-              <Text
-                key={`${d}-${i}`}
-                style={{
-                  color: colors.accent,
-                  fontSize: 16,
-                  fontFamily: "SFProDisplay-Regular",
-                  width: 32,
-                  textAlign: "center",
-                }}
-              >
-                {d}
-              </Text>
-            ))}
-          </View>
-
-          {loadingHolidays ? (
-            <View style={{ marginTop: 30, alignItems: "center" }}>
-              <ActivityIndicator size="small" color={colors.accent} />
-            </View>
-          ) : (
-            <View
-              style={{
-                flexGrow: 1,
-                justifyContent: "space-evenly",
-                marginTop: 8,
-              }}
-            >
-              {matrix.map((week, i) => (
-                <View
-                  key={i}
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginVertical: 4,
-                  }}
-                >
-                  {week.map((day, j) => {
-                    const isToday =
-                      day === today.getDate() &&
-                      viewMonth === today.getMonth() &&
-                      viewYear === today.getFullYear();
-
-                    let holidayName: string | null = null;
-                    if (day > 0) {
-                      const dateObj = new Date(viewYear, viewMonth, day);
-                      const key = dateKeyFromDate(dateObj);
-                      holidayName = holidayMap[key] ?? null;
-                    }
-
-                    const isHoliday = !!holidayName;
-
-                    return (
-                      <PressableScale
-                        key={j}
-                        onPress={() => {
-                          if (day > 0) {
-                            const selectedDate = new Date(
-                              viewYear,
-                              viewMonth,
-                              day
-                            );
-                            handleDatePress(selectedDate, holidayName || "");
-                          }
-                        }}
-                        disabled={navigating}
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 16,
-                          backgroundColor: isToday
-                            ? colors.accent
-                            : isHoliday
-                            ? colors.primaryBorder
-                            : "transparent",
-                          borderColor: isHoliday
-                            ? colors.accent
-                            : "transparent",
-                          borderWidth: isHoliday ? 2 : 0,
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: isToday
-                              ? colors.primaryDark
-                              : isHoliday
-                              ? colors.accent
-                              : colors.white,
-                            fontFamily: "SFProDisplay-Regular",
-                            fontSize: 16,
-                          }}
-                        >
-                          {day > 0 ? day : ""}
-                        </Text>
-                      </PressableScale>
-                    );
-                  })}
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Back to Today */}
-        {!isViewingToday && (
-          <PressableScale
-            onPress={() => {
-              const targetYear = today.getFullYear();
-              const targetMonth = today.getMonth();
-              if (targetYear === viewYear && targetMonth === viewMonth) return;
-              const targetDate = new Date(targetYear, targetMonth);
-              const currentDate = new Date(viewYear, viewMonth);
-              const dir = targetDate > currentDate ? 1 : -1;
-              animateSlideChange(dir, targetYear, targetMonth);
-            }}
             style={{
-              marginTop: 24,
-              alignSelf: "center",
-              backgroundColor: colors.accent,
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 20,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
             }}
           >
+            <PressableScale
+              onPress={goToPreviousMonth}
+              disabled={new Date(viewYear, viewMonth - 1) < minDate}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={28}
+                color={
+                  new Date(viewYear, viewMonth - 1) < minDate
+                    ? colors.grayDark
+                    : colors.accent
+                }
+              />
+            </PressableScale>
+
             <Text
               style={{
-                color: colors.primaryDark,
-                fontSize: 16,
+                color: colors.white,
+                fontSize: 22,
                 fontFamily: "SFProDisplay-Semibold",
               }}
             >
-              Back to Today
+              {monthName} {viewYear}
             </Text>
-          </PressableScale>
-        )}
-      </Animated.View>
-    </SafeAreaView>
+
+            <PressableScale
+              onPress={goToNextMonth}
+              disabled={new Date(viewYear, viewMonth + 1) > maxDate}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={28}
+                color={
+                  new Date(viewYear, viewMonth + 1) > maxDate
+                    ? colors.grayDark
+                    : colors.accent
+                }
+              />
+            </PressableScale>
+          </View>
+        </View>
+
+        {/* Animated calendar area (swipe + slide animations applied here only) */}
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={{
+            flex: 1,
+            padding: 16,
+            paddingBottom: tabBarHeight + 24,
+            opacity: fadeAnim,
+            transform: [
+              {
+                translateX: translateX,
+              },
+              {
+                scale: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.98, 1],
+                }),
+              },
+            ],
+          }}
+        >
+          {/* Calendar Grid */}
+          <View style={{ flex: 1, justifyContent: "flex-start" }}>
+            {/* Day of week */}
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                <Text
+                  key={`${d}-${i}`}
+                  style={{
+                    color: colors.accent,
+                    fontSize: 16,
+                    fontFamily: "SFProDisplay-Regular",
+                    width: 32,
+                    textAlign: "center",
+                  }}
+                >
+                  {d}
+                </Text>
+              ))}
+            </View>
+
+            {loadingHolidays ? (
+              <View style={{ marginTop: 30, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={colors.accent} />
+              </View>
+            ) : (
+              <View
+                style={{
+                  flexGrow: 1,
+                  justifyContent: "space-evenly",
+                  marginTop: 8,
+                }}
+              >
+                {matrix.map((week, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginVertical: 4,
+                    }}
+                  >
+                    {week.map((day, j) => {
+                      const isToday =
+                        day === today.getDate() &&
+                        viewMonth === today.getMonth() &&
+                        viewYear === today.getFullYear();
+
+                      let holidayName: string | null = null;
+                      if (day > 0) {
+                        const dateObj = new Date(viewYear, viewMonth, day);
+                        const key = dateKeyFromDate(dateObj);
+                        holidayName = holidayMap[key] ?? null;
+                      }
+
+                      const isHoliday = !!holidayName;
+
+                      return (
+                        <PressableScale
+                          key={j}
+                          onPress={() => {
+                            if (day > 0) {
+                              const selectedDate = new Date(
+                                viewYear,
+                                viewMonth,
+                                day
+                              );
+                              handleDatePress(selectedDate, holidayName || "");
+                            }
+                          }}
+                          disabled={navigating}
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: isToday
+                              ? colors.accent
+                              : isHoliday
+                              ? colors.primaryBorder
+                              : "transparent",
+                            borderColor: isHoliday
+                              ? colors.accent
+                              : "transparent",
+                            borderWidth: isHoliday ? 2 : 0,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: isToday
+                                ? colors.primaryDark
+                                : isHoliday
+                                ? colors.accent
+                                : colors.white,
+                              fontFamily: "SFProDisplay-Regular",
+                              fontSize: 16,
+                            }}
+                          >
+                            {day > 0 ? day : ""}
+                          </Text>
+                        </PressableScale>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Back to Today */}
+          {!isViewingToday && (
+            <PressableScale
+              onPress={() => {
+                const targetYear = today.getFullYear();
+                const targetMonth = today.getMonth();
+                if (targetYear === viewYear && targetMonth === viewMonth)
+                  return;
+                const targetDate = new Date(targetYear, targetMonth);
+                const currentDate = new Date(viewYear, viewMonth);
+                const dir = targetDate > currentDate ? 1 : -1;
+                animateSlideChange(dir, targetYear, targetMonth);
+              }}
+              style={{
+                marginTop: 24,
+                alignSelf: "center",
+                backgroundColor: colors.accent,
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 20,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.primaryDark,
+                  fontSize: 16,
+                  fontFamily: "SFProDisplay-Semibold",
+                }}
+              >
+                Back to Today
+              </Text>
+            </PressableScale>
+          )}
+        </Animated.View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

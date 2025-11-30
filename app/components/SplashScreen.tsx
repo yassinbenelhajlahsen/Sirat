@@ -1,5 +1,6 @@
 // app/components/SplashScreen.tsx
 import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -95,7 +96,17 @@ export default function SplashScreen({
   }, [hadith]);
 
   return (
-    <View style={styles.container} onLayout={handleLayout}>
+    <LinearGradient
+      colors={[
+        themeColors.primaryDeep,
+        themeColors.primary,
+        themeColors.primaryLift,
+      ]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.gradient}
+      onLayout={handleLayout}
+    >
       <Animated.View
         style={[
           styles.content,
@@ -150,14 +161,13 @@ export default function SplashScreen({
           <View style={{ height: 140 }} />
         )}
       </Animated.View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  gradient: {
     flex: 1,
-    backgroundColor: themeColors.primary,
     alignItems: "center",
     justifyContent: "center",
   },

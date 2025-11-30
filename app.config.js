@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.0.6",
+    version: "1.0.7",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
@@ -19,7 +19,7 @@ export default {
       userInterfaceStyle: "dark",
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
-      buildNumber: "1.0.1",
+      buildNumber: "1.0.2",
       teamId: "5AN795CL7Z",
       infoPlist: {
         CFBundleDisplayName: "Sirat",
