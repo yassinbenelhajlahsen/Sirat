@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { QuranBookmark } from "@/services/quranBookmarks";
 
 import PressableScale from "../../PressableScale";

@@ -3,7 +3,7 @@ import { Tabs } from "expo-router";
 import { Image } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { colors, withOpacity } from "../constants/theme";
+import { colors, withOpacity } from "../../constants/theme";
 
 export default function TabLayout() {
   return (

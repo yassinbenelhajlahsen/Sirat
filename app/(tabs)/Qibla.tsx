@@ -1,5 +1,5 @@
 // app/(tabs)/qibla.tsx
-import { colors, withOpacity } from "@/app/constants/theme";
+import { colors, withOpacity } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";

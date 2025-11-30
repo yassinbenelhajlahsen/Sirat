@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 
 import PressableScale from "../../PressableScale";
 

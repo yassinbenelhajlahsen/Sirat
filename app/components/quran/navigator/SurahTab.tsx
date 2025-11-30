@@ -10,7 +10,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { NormalizedSurahMeta } from "@/services/quranData";
 
 import PressableScale from "../../PressableScale";

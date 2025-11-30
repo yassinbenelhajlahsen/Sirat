@@ -1,4 +1,4 @@
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";

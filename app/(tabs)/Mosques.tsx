@@ -1,4 +1,4 @@
-import { colors, withOpacity } from "@/app/constants/theme";
+import { colors, withOpacity } from "@/constants/theme";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";

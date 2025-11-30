@@ -1,4 +1,4 @@
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
@@ -241,7 +241,7 @@ export default function Settings() {
         justifyContent: "center",
         backgroundColor: pressed
           ? withOpacity(themeColors.white, 0.04)
-          : withOpacity(themeColors.primaryDark, 0.3),
+          : withOpacity(themeColors.primaryDeep, 0.4),
         borderRadius: 14,
         paddingHorizontal: 16,
         paddingVertical: 12,

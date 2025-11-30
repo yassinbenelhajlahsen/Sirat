@@ -1,5 +1,6 @@
-import { colors } from "@/app/constants/theme";
+import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +19,6 @@ import {
   getHolidayMapForYear,
 } from "../../services/holidayService";
 import PressableScale from "../components/PressableScale";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 const getMonthMatrix = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1).getDay();

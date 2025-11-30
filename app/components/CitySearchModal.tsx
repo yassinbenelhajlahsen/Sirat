@@ -1,5 +1,5 @@
 // components/CitySearchModal.tsx
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dimensions,

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { memo, useCallback, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { NormalizedAyah, NormalizedSurahMeta } from "@/services/quranData";
 
 type QuranAyahCardProps = {

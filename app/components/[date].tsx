@@ -1,4 +1,4 @@
-import { colors, withOpacity } from "@/app/constants/theme";
+import { colors, withOpacity } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -625,8 +625,7 @@ export default function CalendarDetail() {
           {/* Error or Empty states */}
           {error && <ErrorBox />}
 
-          <View
-          >
+          <View>
             {!loading && !error && prayerTimes.length === 0 ? (
               <EmptyBox />
             ) : (

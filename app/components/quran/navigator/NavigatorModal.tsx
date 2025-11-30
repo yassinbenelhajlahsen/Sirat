@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { colors as themeColors, withOpacity } from "@/app/constants/theme";
+import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { QuranBookmark } from "@/services/quranBookmarks";
 import { NormalizedSurahMeta } from "@/services/quranData";
 
@@ -123,7 +123,6 @@ function NavigatorModal({
     setSelectedTab(tab);
   }, []);
 
-
   if (!shouldRender) {
     return null;
   }
@@ -240,12 +239,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalCard: {
-  backgroundColor: themeColors.primary,
-  borderRadius: 20,
-  paddingBottom: 12,
-  minHeight: 700,  
-  maxHeight: "70%",      
-},
+    backgroundColor: themeColors.primary,
+    borderRadius: 20,
+    paddingBottom: 12,
+    minHeight: 700,
+    maxHeight: "70%",
+  },
   modalHeader: {
     paddingHorizontal: 20,
     paddingTop: 20,
