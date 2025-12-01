@@ -10,6 +10,7 @@ import {
   Alert,
   Animated,
   FlatList,
+  Image,
   Linking,
   Platform,
   StyleSheet,
@@ -193,6 +194,21 @@ export default function MosqueScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
+        <Image
+          source={require("../../assets/patterns/islamic-gold.png")}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: 0.05,
+            resizeMode: "repeat",
+            width: "100%",
+            height: "100%",
+          }}
+        />
+
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
             <Text style={styles.title}>Mosques</Text>
@@ -303,6 +319,20 @@ export default function MosqueScreen() {
       end={{ x: 1, y: 1 }}
       style={styles.gradient}
     >
+      <Image
+        source={require("../../assets/patterns/islamic-gold.png")}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.05,
+          resizeMode: "repeat",
+          width: "100%",
+          height: "100%",
+        }}
+      />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <Text style={styles.title}>Mosques</Text>

@@ -14,6 +14,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -253,6 +254,20 @@ export default function Qibla() {
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
+            <Image
+        source={require("@/assets/patterns/islamic-gold.png")}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.05, 
+          resizeMode: "repeat",
+          width: "100%",
+          height: "100%",
+        }}
+      />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Qibla</Text>
