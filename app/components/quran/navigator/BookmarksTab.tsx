@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 36,
     borderRadius: 14,
-    backgroundColor: themeColors.primarySurface,
+    backgroundColor: themeColors.primaryDark,
     borderWidth: 1,
     borderColor: withOpacity(themeColors.accent, 0.35),
   },

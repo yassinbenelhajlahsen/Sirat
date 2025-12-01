@@ -9,6 +9,7 @@ import {
   Animated,
   AppState,
   DeviceEventEmitter,
+  Image,
   RefreshControl,
   ScrollView,
   Text,
@@ -309,6 +310,21 @@ export default function Home() {
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
+      <Image
+        source={require("@/assets/patterns/islamic-gold.png")}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.05, 
+          resizeMode: "repeat",
+          width: "100%",
+          height: "100%",
+        }}
+      />
+
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
@@ -421,6 +437,8 @@ export default function Home() {
               shadowRadius: 24,
               shadowOffset: { width: 0, height: 16 },
               elevation: 6,
+              position: "relative",
+              zIndex: 1,
             }}
           >
             <PrayerTimesList
@@ -452,12 +470,12 @@ export default function Home() {
                   })
                 }
                 style={{
-                  backgroundColor: colors.primarySurface,
+                  backgroundColor: withOpacity(colors.primarySurfaceAlt, .25),
                   borderRadius: 12,
                   paddingVertical: 18,
                   paddingHorizontal: 24,
                   borderWidth: 2,
-                  borderColor: colors.accent,
+                  borderColor: withOpacity(colors.accent, .75),
                   shadowColor: colors.accent,
                   shadowOpacity: 0.6,
                   shadowRadius: 8,

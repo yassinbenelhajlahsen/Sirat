@@ -25,6 +25,7 @@ const STORAGE_MAP = "notif_map_v1";
 const STORAGE_SCHEDULE_IDS = "notif_schedule_ids_v1";
 const STORAGE_DAYKEY = "notif_daykey_v1";
 const STORAGE_SEEN_KEYS = "notif_seen_keys_v1"; // set of "Label_YYYY-MM-DDTHH:MM"
+const STORAGE_SOUND_MODE = "notif_sound_mode_v1";
 
 // Split caches so manual vs location labels never bleed into each other
 const STORAGE_CITY_DISPLAY_LOC = "notif_city_display_loc_v1";
@@ -73,6 +74,13 @@ type CityLike = {
   lng: number;
   country?: string;
   id?: string;
+};
+
+type SoundMode = "default" | "adhan";
+
+const IOS_SOUND_MAP: Record<SoundMode, string> = {
+  default: "default",
+  adhan: "adhan.wav",
 };
 
 function normalizeCity(raw: any): CityLike | null {
@@ -145,6 +153,16 @@ function makeSeenKey(label: PrayerKey, fireDate: Date): string {
   return `${label}_${k}`;
 }
 
+async function readSoundMode(): Promise<SoundMode> {
+  const raw = await AsyncStorage.getItem(STORAGE_SOUND_MODE);
+  if (
+    raw === "adhan"
+  ) {
+    return raw;
+  }
+  return "default";
+}
+
 /** -----------------------------
  * Permissions & channels
  * -----------------------------*/
@@ -192,16 +210,20 @@ async function readPrefs(): Promise<PrefMap> {
 }
 
 async function readPrayerSettings(): Promise<
-  PrayerSettings & { city?: CityLike | null }
+  Omit<PrayerSettings, "city"> & { city?: CityLike | null }
 > {
   const raw = await AsyncStorage.getItem("prayerSettings");
-  if (!raw) return { useLocation: true, method: -1, city: null };
+  if (!raw)
+    return { useLocation: true, method: -1, city: null } as Omit<
+      PrayerSettings,
+      "city"
+    > & { city?: CityLike | null };
   const parsed = JSON.parse(raw);
   return {
     useLocation: Boolean(parsed.useLocation ?? true),
     method: parsed.method ?? -1,
     city: normalizeCity(parsed.city),
-  };
+  } as Omit<PrayerSettings, "city"> & { city?: CityLike | null };
 }
 
 /** -----------------------------
@@ -355,7 +377,8 @@ async function scheduleForHorizon(
   days: number,
   prefs: PrefMap,
   cityDisplay: string,
-  effective: PrayerSettings
+  effective: PrayerSettings,
+  soundMode: SoundMode
 ) {
   const now = Date.now();
 
@@ -382,13 +405,16 @@ async function scheduleForHorizon(
       const sk = makeSeenKey(label, fireDate);
       if (seen.has(sk)) continue;
 
+      const iosSound = IOS_SOUND_MAP[soundMode] ?? "default";
+      const triggerSound = Platform.OS === "ios" ? iosSound : "default";
+
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: `${PRAYER_EMOJI[label] || "🕌"} ${label} • ${
             p.time
           } • ${cityDisplay}`,
           body: "",
-          sound: Platform.select({ ios: "default", android: "default" }),
+          sound: triggerSound,
           priority: Notifications.AndroidNotificationPriority.HIGH,
           data: {
             type: "prayer",
@@ -518,6 +544,7 @@ export const NotificationService = {
       const { times: todayTimes, effective } =
         await fetchTodayTimesWithEffective();
       const cityDisplay = await resolveCityDisplay(effective);
+      const soundMode = await readSoundMode();
 
       // Fingerprint: when this changes, do heavy rebuild
       const today = yyyymmdd();
@@ -536,7 +563,7 @@ export const NotificationService = {
       });
       const nextKey = `day_${today}_${JSON.stringify(
         prefs
-      )}_${cityDisplay}_${timesFingerprint}_${effFingerprint}`;
+      )}_${cityDisplay}_${timesFingerprint}_${effFingerprint}_${soundMode}`;
       const lastKey = (await AsyncStorage.getItem(STORAGE_DAYKEY)) || "";
 
       const heavy =
@@ -545,13 +572,25 @@ export const NotificationService = {
       if (heavy || lastKey !== nextKey) {
         // Full rebuild: clear and seed horizon
         await cancelPreviouslyScheduled();
-        await scheduleForHorizon(HORIZON_DAYS, prefs, cityDisplay, effective);
+        await scheduleForHorizon(
+          HORIZON_DAYS,
+          prefs,
+          cityDisplay,
+          effective,
+          soundMode
+        );
         await AsyncStorage.setItem(STORAGE_DAYKEY, nextKey);
         return;
       }
 
       // Light path: keep existing future notifications; add any missing ones
-      await scheduleForHorizon(HORIZON_DAYS, prefs, cityDisplay, effective);
+      await scheduleForHorizon(
+        HORIZON_DAYS,
+        prefs,
+        cityDisplay,
+        effective,
+        soundMode
+      );
 
       // Optional: pruning of past-due entries could be added here if desired.
     } catch (e) {

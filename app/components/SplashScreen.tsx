@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image
 } from "react-native";
 import hadiths from "../../assets/data/hadiths.json";
 
@@ -107,6 +108,21 @@ export default function SplashScreen({
       style={styles.gradient}
       onLayout={handleLayout}
     >
+
+      <Image
+        source={require("@/assets/patterns/islamic-gold.png")}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.05, 
+          resizeMode: "repeat",
+          width: "100%",
+          height: "100%",
+        }}
+      />
       <Animated.View
         style={[
           styles.content,

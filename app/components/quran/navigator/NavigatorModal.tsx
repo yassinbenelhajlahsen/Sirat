@@ -239,11 +239,13 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalCard: {
-    backgroundColor: themeColors.primary,
+    backgroundColor: withOpacity(themeColors.primaryDeep, .95),
     borderRadius: 20,
     paddingBottom: 12,
     minHeight: 700,
     maxHeight: "70%",
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.accent, 0.5),
   },
   modalHeader: {
     paddingHorizontal: 20,

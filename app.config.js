@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.0.7",
+    version: "1.0.8",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
@@ -19,7 +19,7 @@ export default {
       userInterfaceStyle: "dark",
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
-      buildNumber: "1.0.2",
+      buildNumber: "1.0.3",
       teamId: "5AN795CL7Z",
       infoPlist: {
         CFBundleDisplayName: "Sirat",
@@ -30,7 +30,19 @@ export default {
           "Sirat sends prayer time reminders and notifications you enable in the app settings.",
       },
     },
-    plugins: ["expo-router", "expo-font"],
+    plugins: [
+      "expo-router",
+      "expo-font",
+      "expo-audio",
+      [
+        "expo-notifications",
+        {
+          sounds: [
+            "./assets/sounds/adhan.wav",
+          ],
+        },
+      ],
+    ],
     experiments: {
       typedRoutes: true,
     },

@@ -1,36 +1,29 @@
 import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  DeviceEventEmitter,
   Easing,
   Linking,
   Pressable,
-  StyleSheet,
   Switch,
   Text,
   View,
 } from "react-native";
 
-type PrayerKey = "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
-const PRAYERS: PrayerKey[] = [
-  "Fajr",
-  "Sunrise",
-  "Dhuhr",
-  "Asr",
-  "Maghrib",
-  "Isha",
-];
+import {
+  PRAYERS,
+  SOUND_OPTIONS,
+  SOUND_SEGMENT_GAP,
+  type PrayerKey,
+  type SoundMode,
+} from "./notification/constants";
+import { notificationStyles as styles } from "./notification/styles";
+import { useAdhanPreview } from "./notification/useAdhanPreview";
+import { useNotificationPreferences } from "./notification/useNotificationPreferences";
 
-// Storage keys
-const STORAGE_ENABLED = "notif_enabled_v1"; // "1" for on, "0" for off
-const STORAGE_MAP = "notif_map_v1";
-
-// Broadcast event used elsewhere in the app
-export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
+export { NOTIF_PREFS_UPDATED_EVENT } from "./notification/constants";
 
 type Props = {
   // From Settings.tsx: "granted" | "denied" | null
@@ -39,32 +32,32 @@ type Props = {
 
 export default function NotificationSettings({ notifStatus }: Props) {
   const colors = {
-    bg: themeColors.primary,
-    card: themeColors.primary,
-    cardAlt: themeColors.primarySurfaceAlt,
     text: themeColors.white,
-    subtext: themeColors.successSoft,
     accent: themeColors.accent,
     divider: withOpacity(themeColors.white, 0.08),
     pillOffBg: withOpacity(themeColors.white, 0.04),
   } as const;
 
-  // Master toggle mirrors OS permission
-  const [enabled, setEnabled] = useState<boolean>(false);
+  const {
+    loaded,
+    enabled,
+    prefs,
+    soundMode,
+    setPrayerPreference,
+    updateSoundMode,
+  } = useNotificationPreferences({ notifStatus });
 
-  const [loaded, setLoaded] = useState(false);
-  const [prefs, setPrefs] = useState<Record<PrayerKey, boolean>>({
-    Fajr: true,
-    Sunrise: true,
-    Dhuhr: true,
-    Asr: true,
-    Maghrib: true,
-    Isha: true,
-  });
+  const { previewing, handlePreviewPress, stopPreview } =
+    useAdhanPreview(enabled);
+
+  const [segmentWidth, setSegmentWidth] = useState<number | null>(null);
 
   // Animations
   const headerScale = useRef(new Animated.Value(1)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
+  const soundIndicator = useRef(
+    new Animated.Value(soundMode === "adhan" ? 1 : 0)
+  ).current;
 
   const bellAnimRef = useRef<Record<PrayerKey, Animated.Value>>({
     Fajr: new Animated.Value(1),
@@ -75,62 +68,16 @@ export default function NotificationSettings({ notifStatus }: Props) {
     Isha: new Animated.Value(1),
   });
 
-  // Load per-prayer map on mount. We do not trust STORAGE_ENABLED anymore for the master switch.
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const entries = await AsyncStorage.multiGet([
-          STORAGE_MAP,
-          STORAGE_ENABLED,
-        ]);
-        if (!active) return;
-
-        const rawMap = entries.find(([key]) => key === STORAGE_MAP)?.[1];
-        if (rawMap) {
-          setPrefs((p) => ({ ...p, ...JSON.parse(rawMap) }));
-        }
-
-        const rawEnabled = entries.find(
-          ([key]) => key === STORAGE_ENABLED
-        )?.[1];
-        const initialEnabled = rawEnabled === "1";
-        setEnabled(initialEnabled);
-        contentAnim.setValue(initialEnabled ? 1 : 0);
-      } catch {
-        // ignore load errors
-      } finally {
-        if (active) setLoaded(true);
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [contentAnim]);
-
-  // Mirror OS -> master toggle and persist that mirror into STORAGE_ENABLED
-  useEffect(() => {
-    if (notifStatus == null) return;
-    const osGranted = notifStatus === "granted";
-    setEnabled(osGranted);
-    (async () => {
-      try {
-        await AsyncStorage.setItem(STORAGE_ENABLED, osGranted ? "1" : "0");
-        DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, {
-          enabled: osGranted,
-          prefs,
-        });
-      } catch {
-        // ignore
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notifStatus]);
+  const initialAnimSet = useRef(false);
 
   // Drive open/close animation when enabled changes
   useEffect(() => {
     if (!loaded) return;
+    if (!initialAnimSet.current) {
+      contentAnim.setValue(enabled ? 1 : 0);
+      initialAnimSet.current = true;
+      return;
+    }
     Animated.timing(contentAnim, {
       toValue: enabled ? 1 : 0,
       duration: 280,
@@ -154,23 +101,6 @@ export default function NotificationSettings({ notifStatus }: Props) {
     ]).start();
   };
 
-  const setPrayer = useCallback(
-    async (k: PrayerKey, val: boolean) => {
-      const next = { ...prefs, [k]: val };
-      setPrefs(next);
-      try {
-        await AsyncStorage.setItem(STORAGE_MAP, JSON.stringify(next));
-        DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, {
-          enabled,
-          prefs: next,
-        });
-      } catch {
-        // ignore
-      }
-    },
-    [prefs, enabled]
-  );
-
   const pulse = (k: PrayerKey) => {
     const a = bellAnimRef.current[k];
     a.setValue(1);
@@ -193,10 +123,28 @@ export default function NotificationSettings({ notifStatus }: Props) {
   const togglePrayer = useCallback(
     (k: PrayerKey) => {
       pulse(k);
-      setPrayer(k, !prefs[k]);
+      void setPrayerPreference(k, !prefs[k]);
     },
-    [prefs, setPrayer]
+    [prefs, setPrayerPreference]
   );
+
+  const handleSoundModeChange = useCallback(
+    async (nextMode: SoundMode) => {
+      if (nextMode === soundMode) return;
+      await stopPreview();
+      await updateSoundMode(nextMode);
+    },
+    [soundMode, stopPreview, updateSoundMode]
+  );
+
+  useEffect(() => {
+    Animated.timing(soundIndicator, {
+      toValue: soundMode === "adhan" ? 1 : 0,
+      duration: 200,
+      easing: Easing.out(Easing.poly(4)),
+      useNativeDriver: true,
+    }).start();
+  }, [soundIndicator, soundMode]);
 
   // Interpolations for content reveal
   const contentOpacity = contentAnim;
@@ -206,12 +154,15 @@ export default function NotificationSettings({ notifStatus }: Props) {
   });
   const contentMaxHeight = contentAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 600],
+    outputRange: [0, 820],
   });
   const contentScale = contentAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.985, 1],
   });
+
+  const selectedSoundOption =
+    SOUND_OPTIONS.find((option) => option.id === soundMode) ?? SOUND_OPTIONS[0];
 
   return (
     <View>
@@ -271,128 +222,229 @@ export default function NotificationSettings({ notifStatus }: Props) {
         pointerEvents={enabled ? "auto" : "none"}
         accessibilityElementsHidden={!enabled}
         style={[
-          styles.card,
+          styles.cardContainer,
           {
-            backgroundColor: colors.card,
-            borderColor: colors.divider,
             opacity: contentOpacity,
             transform: [
               { translateY: contentTranslateY },
               { scale: contentScale },
             ],
             maxHeight: contentMaxHeight,
-            overflow: "hidden",
           },
         ]}
       >
-        {PRAYERS.map((p, idx) => {
+        {PRAYERS.map((p) => {
           const isOn = prefs[p];
           const anim = bellAnimRef.current[p];
+          const iconColor = enabled
+            ? isOn
+              ? colors.accent
+              : withOpacity(colors.text, 0.55)
+            : withOpacity(colors.text, 0.35);
+
           return (
             <Animated.View
               key={p}
               style={[
-                styles.itemCard,
+                styles.rowWrapper,
                 {
-                  backgroundColor: idx % 2 === 0 ? colors.cardAlt : colors.card,
-                  borderColor: colors.divider,
                   transform: [{ scale: anim }],
                   opacity: enabled ? 1 : 0.55,
                 },
               ]}
             >
-              <View style={styles.itemRow}>
-                <View style={styles.meta}>
-                  <Text style={[styles.title, { color: colors.text }]}>
-                    {p}
+              <Pressable
+                onPress={() => {
+                  if (!enabled) return;
+                  togglePrayer(p);
+                }}
+                disabled={!enabled}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: isOn, disabled: !enabled }}
+                accessibilityLabel={`${p} alert`}
+                style={({ pressed }) => [
+                  styles.rowBase,
+                  styles.rowSurface,
+                  isOn && enabled ? styles.rowActive : undefined,
+                  pressed && enabled ? styles.rowPressed : undefined,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.rowLabel,
+                    !enabled ? styles.rowLabelDisabled : undefined,
+                  ]}
+                >
+                  {p}
+                </Text>
+                <View style={styles.rowIndicator}>
+                  <Ionicons
+                    name={isOn ? "notifications" : "notifications-off-outline"}
+                    size={18}
+                    color={iconColor}
+                  />
+                  <Text style={[styles.rowIndicatorText, { color: iconColor }]}>
+                    {isOn ? "On" : "Off"}
                   </Text>
                 </View>
-
-                <Animated.View>
-                  <Pressable
-                    onPress={() => enabled && togglePrayer(p)}
-                    disabled={!enabled}
-                    hitSlop={10}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${p} alert ${
-                      isOn ? "on" : "off"
-                    }. Toggle`}
-                    style={[
-                      styles.togglePill,
-                      {
-                        backgroundColor:
-                          isOn && enabled ? colors.accent : colors.pillOffBg,
-                        borderColor:
-                          isOn && enabled ? "transparent" : colors.divider,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={
-                        isOn && enabled
-                          ? "notifications"
-                          : "notifications-off-outline"
-                      }
-                      size={16}
-                      color={
-                        isOn && enabled
-                          ? themeColors.primaryDark
-                          : colors.subtext
-                      }
-                    />
-                  </Pressable>
-                </Animated.View>
-              </View>
+              </Pressable>
             </Animated.View>
           );
         })}
+        <View
+          style={[
+            styles.soundCard,
+            {
+              opacity: enabled ? 1 : 0.55,
+            },
+          ]}
+        >
+          <Text
+            style={[styles.soundSectionTitle, { color: colors.text }]}
+            accessibilityRole="header"
+          >
+            Adhan sound
+          </Text>
+          <Text
+            style={[
+              styles.soundSectionSubtitle,
+              { color: withOpacity(colors.text, 0.75) },
+            ]}
+          >
+            Choose the alert sound for prayer reminders.
+          </Text>
+
+          <View
+            style={styles.soundSegmentRow}
+            onLayout={(event) => {
+              const width = event.nativeEvent.layout.width;
+              if (!width) return;
+              const calculated =
+                (width - SOUND_SEGMENT_GAP * (SOUND_OPTIONS.length - 1)) /
+                SOUND_OPTIONS.length;
+              if (!Number.isFinite(calculated) || calculated <= 0) return;
+              if (
+                segmentWidth != null &&
+                Math.abs(segmentWidth - calculated) < 0.5
+              ) {
+                return;
+              }
+              setSegmentWidth(calculated);
+            }}
+          >
+            {segmentWidth != null && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.soundSegmentHighlight,
+                  {
+                    width: segmentWidth,
+                    transform: [
+                      {
+                        translateX: soundIndicator.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, segmentWidth + SOUND_SEGMENT_GAP],
+                        }),
+                      },
+                    ],
+                    backgroundColor: colors.accent,
+                    borderColor: colors.accent,
+                  },
+                ]}
+              />
+            )}
+            {SOUND_OPTIONS.map((option, idx) => {
+              const selected = soundMode === option.id;
+              return (
+                <Pressable
+                  key={option.id}
+                  disabled={!enabled}
+                  onPress={() => handleSoundModeChange(option.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={`${option.label} sound option`}
+                  style={({ pressed }) => [
+                    styles.soundSegment,
+                    {
+                      marginRight:
+                        idx === SOUND_OPTIONS.length - 1
+                          ? 0
+                          : SOUND_SEGMENT_GAP,
+                      backgroundColor: selected
+                        ? "transparent"
+                        : colors.pillOffBg,
+                      borderColor: selected ? "transparent" : colors.divider,
+                      opacity: pressed ? 0.9 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.soundSegmentLabel,
+                      {
+                        color: selected ? themeColors.primaryDark : colors.text,
+                      },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          {selectedSoundOption.description && (
+            <View
+              style={[
+                styles.soundDescriptionBox,
+                {
+                  borderColor: colors.divider,
+                  backgroundColor: withOpacity(colors.text, 0.05),
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.soundDescriptionText,
+                  { color: withOpacity(colors.text, 0.85) },
+                ]}
+              >
+                {selectedSoundOption.description}
+              </Text>
+              {selectedSoundOption.id === "adhan" && (
+                <Pressable
+                  disabled={!enabled}
+                  onPress={() =>
+                    enabled && handlePreviewPress(selectedSoundOption.id)
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel={`Preview ${selectedSoundOption.label}`}
+                  style={({ pressed }) => [
+                    styles.soundPreviewButton,
+                    {
+                      backgroundColor: pressed
+                        ? withOpacity(colors.accent, 0.2)
+                        : withOpacity(colors.accent, 0.12),
+                      borderColor: colors.accent,
+                      opacity: pressed ? 0.95 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={previewing === "adhan" ? "pause" : "play"}
+                    size={16}
+                    color={colors.accent}
+                  />
+                  <Text
+                    style={[styles.soundPreviewText, { color: colors.accent }]}
+                  >
+                    {previewing === "adhan" ? "Stop preview" : "Play preview"}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+        </View>
       </Animated.View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionHeader: {
-    paddingHorizontal: 20,
-    marginTop: 22,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 48,
-  },
-  card: {
-    marginTop: 10,
-    marginHorizontal: 20,
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  itemCard: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  meta: { flex: 1, justifyContent: "center" },
-  title: { fontSize: 15, fontFamily: "SFProDisplay-Semibold" },
-  subtitle: {
-    fontSize: 12,
-    marginTop: 3,
-    fontFamily: "SFProDisplay-Regular",
-    opacity: 0.9,
-  },
-  togglePill: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 12,
-    minWidth: 44,
-  },
-});

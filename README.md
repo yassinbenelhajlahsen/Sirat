@@ -12,7 +12,6 @@ It helps users stay connected to their faith with accurate prayer times, Qibla d
 - 📖 **Quran Reader** – full text with translation, fuzzy surah/juz search, juz jumping, and auto-resume
 - 📍 **Nearby Mosques** – integrates Google Maps and Places API for mosque discovery
 - 🔔 **Prayer Notifications** – customizable alerts with prayer names and times
-- 🌗 **Dynamic Themes** – smooth dark and light mode support
 - 💾 **Offline Support** – locally cached preferences and last known prayer data
 
 ---
@@ -51,8 +50,6 @@ It helps users stay connected to their faith with accurate prayer times, Qibla d
 ---
 
 ## 🚧 Roadmap
-
-- 📢 Push notifications with Adhan audio
 - 🌍 Multilingual support (English, Arabic, French, more)
 - ☁️ Backend integration for user profiles and sync
 - 📆 Widget & Apple Watch support
