@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 12,
-    backgroundColor: withOpacity(themeColors.accent, 0.08),
+    backgroundColor:themeColors.primaryDark,
     borderWidth: 1,
     borderColor: withOpacity(themeColors.accent, 0.25),
     alignItems: "center",

@@ -180,12 +180,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   card: {
-    backgroundColor: themeColors.primarySurface,
+    backgroundColor: withOpacity(themeColors.primaryDeep, .95),
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 24,
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.2),
+    borderColor: withOpacity(themeColors.accent, 0.5),
   },
   headerRow: {
     flexDirection: "row",
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   input: {
-    backgroundColor: withOpacity(themeColors.primary, 0.5),
+    backgroundColor: themeColors.primaryDark,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,

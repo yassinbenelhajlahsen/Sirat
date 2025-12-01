@@ -18,6 +18,7 @@ import {
   Text,
   View,
   useWindowDimensions,
+  Image
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import {
@@ -303,6 +304,20 @@ export default function Settings() {
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
+            <Image
+              source={require("@/assets/patterns/islamic-gold.png")}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                opacity: 0.05, 
+                resizeMode: "repeat",
+                width: "100%",
+                height: "100%",
+              }}
+            />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{
@@ -363,15 +378,15 @@ export default function Settings() {
                 setValue={setMethod}
                 setItems={setMethodItems}
                 style={{
-                  backgroundColor: themeColors.primarySurfaceAlt,
-                  borderColor: themeColors.accent,
+                  backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
+                  borderColor: withOpacity(themeColors.accent, 0.4),
                   minHeight: 50,
                   borderRadius: 12,
                   marginBottom: methodOpen ? 12 : 0,
                 }}
                 dropDownContainerStyle={{
-                  backgroundColor: themeColors.primarySurfaceAlt,
-                  borderColor: themeColors.accent,
+                  backgroundColor: withOpacity(themeColors.primaryDeep, .9),
+                  borderColor:withOpacity(themeColors.accent, 0.4),
                   borderRadius: 12,
                   zIndex: 3000,
                 }}
@@ -501,8 +516,8 @@ export default function Settings() {
               onPress={() => setCityModalVisible(true)}
               accessibilityRole="button"
               style={{
-                backgroundColor: themeColors.primarySurfaceAlt,
-                borderColor: themeColors.accent,
+                backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
+                borderColor:withOpacity(themeColors.accent, 0.4),
                 borderWidth: 1,
                 borderRadius: 12,
                 paddingVertical: 14,
