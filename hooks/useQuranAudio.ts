@@ -7,7 +7,6 @@ import {
 import * as Network from "expo-network";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
-
 import { getSurahAudioUrl } from "@/services/quranAudio";
 
 type UseQuranAudioOptions = {
@@ -322,10 +321,6 @@ export function useQuranAudio({
     const wasOnline = previousOnlineStatusRef.current;
     if (wasOnline && !isOnline && isPlaying) {
       stopAudio();
-      Alert.alert(
-        "Offline",
-        "Your connection dropped, so Quran audio was paused."
-      );
     }
     previousOnlineStatusRef.current = isOnline;
   }, [isOnline, isPlaying, stopAudio]);

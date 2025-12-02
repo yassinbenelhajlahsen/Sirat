@@ -26,10 +26,13 @@ import {
   ListRenderItem,
   ListRenderItemInfo,
 } from "@shopify/flash-list";
+import { setIsAudioActiveAsync } from "expo-audio";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  AppState,
+  AppStateStatus,
   Image,
   InteractionManager,
   StyleSheet,
@@ -229,6 +232,22 @@ export default function QuranScreen() {
     stopAudio,
     offlinePillVisible,
   } = useQuranAudio({ currentSurahNumber: currentAyah.surahNumber });
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        setIsAudioActiveAsync(true).catch((error) =>
+          console.warn("Failed to reactivate audio session", error)
+        );
+      }
+    };
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     let mounted = true;

@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.0.8",
+    version: "1.0.9",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
@@ -19,7 +19,7 @@ export default {
       userInterfaceStyle: "dark",
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
-      buildNumber: "1.0.3",
+      buildNumber: "1.0.4",
       teamId: "5AN795CL7Z",
       infoPlist: {
         CFBundleDisplayName: "Sirat",
@@ -28,6 +28,7 @@ export default {
           "Sirat uses your location to show accurate prayer times for your area, determine the Qibla direction, and find nearby mosques.",
         NSUserNotificationsUsageDescription:
           "Sirat sends prayer time reminders and notifications you enable in the app settings.",
+        UIBackgroundModes: ["audio"],
       },
     },
     plugins: [
