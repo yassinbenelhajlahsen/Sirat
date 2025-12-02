@@ -9,7 +9,7 @@ It helps users stay connected to their faith with accurate prayer times, Qibla d
 
 - 🕌 **Accurate Prayer Times** – powered by the Aladhan API, adjusted to the user’s precise location
 - 🧭 **Qibla Direction** – live compass using device orientation sensors
-- 📖 **Quran Reader** – full text with translation, fuzzy surah/juz search, juz jumping, and auto-resume
+- 📖 **Quran Reader** – full audio & text with translation, fuzzy surah/juz search, juz jumping, and auto-resume 
 - 📍 **Nearby Mosques** – integrates Google Maps and Places API for mosque discovery
 - 🔔 **Prayer Notifications** – customizable alerts with prayer names and times
 - 💾 **Offline Support** – locally cached preferences and last known prayer data

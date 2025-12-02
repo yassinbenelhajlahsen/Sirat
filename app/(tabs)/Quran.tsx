@@ -1,4 +1,5 @@
 import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { useQuranAudio } from "@/hooks/useQuranAudio";
 import {
   QuranBookmark,
   deleteBookmark,
@@ -18,6 +19,7 @@ import {
   saveLastReadAyahIndex,
   saveLastReadSurahAndAyah,
 } from "@/services/quranProgress";
+import { Ionicons } from "@expo/vector-icons";
 import {
   FlashList,
   FlashListRef,
@@ -28,13 +30,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  Image,
   InteractionManager,
   StyleSheet,
   Text,
   View,
   ViewToken,
   useWindowDimensions,
-  Image
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PressableScale from "../components/PressableScale";
@@ -217,6 +219,16 @@ export default function QuranScreen() {
     bookmark?: QuranBookmark;
   } | null>(null);
   const [bookmarkSaving, setBookmarkSaving] = useState(false);
+  const {
+    isPlaying,
+    isAudioLoading,
+    audioIconName,
+    audioAccessibilityLabel,
+    playCurrentSurah,
+    pauseAudio,
+    stopAudio,
+    offlinePillVisible,
+  } = useQuranAudio({ currentSurahNumber: currentAyah.surahNumber });
 
   useEffect(() => {
     let mounted = true;
@@ -664,7 +676,7 @@ export default function QuranScreen() {
           left: 0,
           right: 0,
           bottom: 0,
-          opacity: 0.05, 
+          opacity: 0.05,
           resizeMode: "repeat",
           width: "100%",
           height: "100%",
@@ -696,13 +708,52 @@ export default function QuranScreen() {
                   Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
                 </Text>
               </View>
-              <PressableScale
-                style={styles.jumpButton}
-                onPress={() => setNavigatorOpen(true)}
-                accessibilityRole="button"
-              >
-                <Text style={styles.jumpButtonText}>Navigate</Text>
-              </PressableScale>
+              <View style={styles.headerActions}>
+                {!offlinePillVisible ? (
+                  <PressableScale
+                    style={[
+                      styles.audioButton,
+                      isAudioLoading && styles.audioButtonDisabled,
+                    ]}
+                    onPress={isPlaying ? pauseAudio : playCurrentSurah}
+                    onLongPress={stopAudio}
+                    disabled={isAudioLoading}
+                    accessibilityRole="button"
+                    accessibilityLabel={audioAccessibilityLabel}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name={audioIconName}
+                      size={18}
+                      color={themeColors.primaryDeep}
+                      style={styles.audioIcon}
+                    />
+                  </PressableScale>
+                ) : (
+                  <View
+                    style={[
+                      styles.audioButton,
+                      styles.audioButtonDisabled,
+                      styles.audioOfflinePill,
+                    ]}
+                    accessibilityRole="text"
+                  >
+                    <Ionicons
+                      name="cloud-offline-outline"
+                      size={18}
+                      color={themeColors.primaryDeep}
+                    />
+                    <Text style={styles.audioOfflineText}>Offline</Text>
+                  </View>
+                )}
+                <PressableScale
+                  style={styles.jumpButton}
+                  onPress={() => setNavigatorOpen(true)}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.jumpButtonText}>Navigate</Text>
+                </PressableScale>
+              </View>
             </View>
           </View>
 
@@ -788,6 +839,10 @@ const styles = StyleSheet.create({
   headerDetails: {
     flexShrink: 1,
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   headerSurahEnglish: {
     color: themeColors.white,
     fontSize: 18,
@@ -804,6 +859,28 @@ const styles = StyleSheet.create({
     color: themeColors.white,
     fontSize: 14,
     opacity: 0.75,
+  },
+  audioButton: {
+    backgroundColor: themeColors.accent,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  audioButtonDisabled: {
+    opacity: 0.6,
+  },
+  audioIcon: {
+    alignSelf: "center",
+  },
+  audioOfflinePill: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  audioOfflineText: {
+    color: themeColors.primaryDeep,
+    fontWeight: "600",
+    fontSize: 12,
+    marginLeft: 6,
   },
   jumpButton: {
     backgroundColor: themeColors.accent,
