@@ -1,9 +1,9 @@
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useCallback, useEffect, useState } from "react";
 
-import { SoundMode } from "./constants";
+import { SoundMode } from "../util/notifications/constants";
 
-const ADHAN_SOURCE = require("../../../assets/sounds/adhan.wav");
+const ADHAN_SOURCE = require("../assets/sounds/adhan.wav");
 
 export function useAdhanPreview(enabled: boolean) {
   const player = useAudioPlayer(ADHAN_SOURCE);

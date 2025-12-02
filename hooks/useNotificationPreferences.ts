@@ -11,7 +11,7 @@ import {
   STORAGE_ENABLED,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
-} from "./constants";
+} from "../util/notifications/constants";
 
 const SAFE_DEFAULT_SOUND: SoundMode = "default";
 

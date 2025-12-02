@@ -12,18 +12,18 @@ import {
   View,
 } from "react-native";
 
+import { useAdhanPreview } from "../../hooks/useAdhanPreview";
+import { useNotificationPreferences } from "../../hooks/useNotificationPreferences";
 import {
   PRAYERS,
   SOUND_OPTIONS,
   SOUND_SEGMENT_GAP,
   type PrayerKey,
   type SoundMode,
-} from "./notification/constants";
-import { notificationStyles as styles } from "./notification/styles";
-import { useAdhanPreview } from "./notification/useAdhanPreview";
-import { useNotificationPreferences } from "./notification/useNotificationPreferences";
+} from "../../util/notifications/constants";
+import { notificationStyles as styles } from "../../util/notifications/styles";
 
-export { NOTIF_PREFS_UPDATED_EVENT } from "./notification/constants";
+export { NOTIF_PREFS_UPDATED_EVENT } from "../../util/notifications/constants";
 
 type Props = {
   // From Settings.tsx: "granted" | "denied" | null
@@ -36,6 +36,12 @@ export default function NotificationSettings({ notifStatus }: Props) {
     accent: themeColors.accent,
     divider: withOpacity(themeColors.white, 0.08),
     pillOffBg: withOpacity(themeColors.white, 0.04),
+    rowOnBg: withOpacity(themeColors.accent, 0.18),
+    rowOnBorder: withOpacity(themeColors.accent, 0.75),
+    rowOffBg: withOpacity(themeColors.white, 0.03),
+    rowOffBorder: withOpacity(themeColors.white, 0.12),
+    rowOffText: withOpacity(themeColors.white, 0.65),
+    rowDisabledText: withOpacity(themeColors.white, 0.4),
   } as const;
 
   const {
@@ -236,11 +242,26 @@ export default function NotificationSettings({ notifStatus }: Props) {
         {PRAYERS.map((p) => {
           const isOn = prefs[p];
           const anim = bellAnimRef.current[p];
-          const iconColor = enabled
-            ? isOn
-              ? colors.accent
-              : withOpacity(colors.text, 0.55)
-            : withOpacity(colors.text, 0.35);
+          const labelColor = !enabled
+            ? colors.rowDisabledText
+            : isOn
+            ? colors.text
+            : colors.rowOffText;
+          const indicatorColor = !enabled
+            ? withOpacity(colors.text, 0.35)
+            : isOn
+            ? colors.accent
+            : colors.rowOffText;
+          const cardBg = !enabled
+            ? colors.pillOffBg
+            : isOn
+            ? colors.rowOnBg
+            : colors.rowOffBg;
+          const cardBorder = !enabled
+            ? colors.divider
+            : isOn
+            ? colors.rowOnBorder
+            : colors.rowOffBorder;
 
           return (
             <Animated.View
@@ -265,6 +286,10 @@ export default function NotificationSettings({ notifStatus }: Props) {
                 style={({ pressed }) => [
                   styles.rowBase,
                   styles.rowSurface,
+                  {
+                    backgroundColor: cardBg,
+                    borderColor: cardBorder,
+                  },
                   isOn && enabled ? styles.rowActive : undefined,
                   pressed && enabled ? styles.rowPressed : undefined,
                 ]}
@@ -272,6 +297,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                 <Text
                   style={[
                     styles.rowLabel,
+                    { color: labelColor },
                     !enabled ? styles.rowLabelDisabled : undefined,
                   ]}
                 >
@@ -281,9 +307,11 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   <Ionicons
                     name={isOn ? "notifications" : "notifications-off-outline"}
                     size={18}
-                    color={iconColor}
+                    color={indicatorColor}
                   />
-                  <Text style={[styles.rowIndicatorText, { color: iconColor }]}>
+                  <Text
+                    style={[styles.rowIndicatorText, { color: indicatorColor }]}
+                  >
                     {isOn ? "On" : "Off"}
                   </Text>
                 </View>

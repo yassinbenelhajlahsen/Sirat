@@ -22,7 +22,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import useQibla from "../../util/useQibla";
+import useQibla from "../../hooks/useQibla";
 
 type Perm = "undetermined" | "denied" | "granted";
 
