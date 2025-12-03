@@ -5,16 +5,18 @@ import { Slot } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
 import * as Updates from "expo-updates";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, DeviceEventEmitter } from "react-native";
+import { AppState, DeviceEventEmitter, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
+import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { preloadQuranData } from "@/services/quranData";
 import { NotificationService } from "../services/notificationService";
 import SplashScreen from "./components/SplashScreen";
+import { QuranMiniPlayerPortal } from "./components/quran/QuranMiniPlayerPortal";
 
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
@@ -198,7 +200,12 @@ export default function RootLayout() {
           onFinished={() => setShowSplash(false)}
         />
       ) : (
-        <Slot />
+        <QuranAudioProvider>
+          <View style={{ flex: 1 }}>
+            <Slot />
+            <QuranMiniPlayerPortal />
+          </View>
+        </QuranAudioProvider>
       )}
     </SafeAreaProvider>
   );

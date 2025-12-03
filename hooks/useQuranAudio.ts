@@ -1,3 +1,4 @@
+import { getSurahAudioUrl } from "@/services/quranAudio";
 import type { AudioPlayer, AudioStatus } from "expo-audio";
 import {
   createAudioPlayer,
@@ -7,7 +8,6 @@ import {
 import * as Network from "expo-network";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
-import { getSurahAudioUrl } from "@/services/quranAudio";
 
 type UseQuranAudioOptions = {
   currentSurahNumber: number;
@@ -19,6 +19,9 @@ export type UseQuranAudioResult = {
   isAudioLoading: boolean;
   audioIconName: "play" | "pause";
   audioAccessibilityLabel: string;
+  audioPlayer: AudioPlayer | null;
+  playbackDuration: number;
+  playbackPosition: number;
   playCurrentSurah: () => Promise<void>;
   pauseAudio: () => Promise<void>;
   stopAudio: () => Promise<void>;
@@ -37,6 +40,8 @@ export function useQuranAudio({
     null
   );
   const [isOnline, setIsOnline] = useState(true);
+  const [playbackDuration, setPlaybackDuration] = useState(0);
+  const [playbackPosition, setPlaybackPosition] = useState(0);
 
   const playbackSubscriptionRef = useRef<{ remove: () => void } | null>(null);
   const hasConfiguredAudioSessionRef = useRef(false);
@@ -79,6 +84,8 @@ export function useQuranAudio({
         currentTime: 0,
       };
       setIsPlaying(false);
+      setPlaybackDuration(0);
+      setPlaybackPosition(0);
       return;
     }
 
@@ -102,6 +109,10 @@ export function useQuranAudio({
       playing: status.playing,
       currentTime: status.currentTime ?? 0,
     };
+    setPlaybackDuration((prev) =>
+      typeof status.duration === "number" ? status.duration : prev
+    );
+    setPlaybackPosition(status.currentTime ?? 0);
   }, []);
 
   const pauseAudio = useCallback(async () => {
@@ -130,6 +141,7 @@ export function useQuranAudio({
       console.warn("Failed to stop surah audio", error);
     } finally {
       setIsPlaying(false);
+      setPlaybackPosition(0);
       if (audioSessionActiveRef.current) {
         setIsAudioActiveAsync(false)
           .then(() => {
@@ -190,6 +202,8 @@ export function useQuranAudio({
       const player = createAudioPlayer(audioUrl);
       setAudioPlayer(player);
       setActiveSurahNumber(currentSurahNumber);
+      setPlaybackDuration(0);
+      setPlaybackPosition(0);
 
       player.play();
       setIsPlaying(true);
@@ -279,6 +293,9 @@ export function useQuranAudio({
         }
       }
 
+      setPlaybackDuration(0);
+      setPlaybackPosition(0);
+
       if (audioSessionActiveRef.current) {
         setIsAudioActiveAsync(false).catch((error) =>
           console.warn("Failed to deactivate audio", error)
@@ -315,6 +332,8 @@ export function useQuranAudio({
     setIsPlaying(false);
     setAudioPlayer(null);
     setActiveSurahNumber(null);
+    setPlaybackDuration(0);
+    setPlaybackPosition(0);
   }, [audioPlayer, activeSurahNumber, currentSurahNumber]);
 
   useEffect(() => {
@@ -336,6 +355,9 @@ export function useQuranAudio({
     isAudioLoading,
     audioIconName,
     audioAccessibilityLabel,
+    audioPlayer,
+    playbackDuration,
+    playbackPosition,
     playCurrentSurah,
     pauseAudio,
     stopAudio,

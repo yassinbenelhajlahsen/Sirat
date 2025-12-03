@@ -1,5 +1,5 @@
 import { colors as themeColors, withOpacity } from "@/constants/theme";
-import { useQuranAudio } from "@/hooks/useQuranAudio";
+import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import {
   QuranBookmark,
   deleteBookmark,
@@ -227,11 +227,13 @@ export default function QuranScreen() {
     isAudioLoading,
     audioIconName,
     audioAccessibilityLabel,
-    playCurrentSurah,
     pauseAudio,
     stopAudio,
     offlinePillVisible,
-  } = useQuranAudio({ currentSurahNumber: currentAyah.surahNumber });
+    playSurah,
+    pendingSurahFocusNumber,
+    clearPendingSurahFocus,
+  } = useQuranAudioController();
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
@@ -355,6 +357,30 @@ export default function QuranScreen() {
     },
     [ayahToItemIndex, scrollToItemIndex]
   );
+
+  useEffect(() => {
+    if (
+      pendingSurahFocusNumber == null ||
+      !listReady ||
+      !hasAppliedInitialScrollRef.current
+    ) {
+      return;
+    }
+
+    try {
+      const ayahIndex = getAyatIndexForSurahAndAyah(pendingSurahFocusNumber, 1);
+      scrollToAyahIndex(ayahIndex);
+    } catch (error) {
+      console.warn("Failed to focus requested surah", error);
+    } finally {
+      clearPendingSurahFocus();
+    }
+  }, [
+    pendingSurahFocusNumber,
+    listReady,
+    scrollToAyahIndex,
+    clearPendingSurahFocus,
+  ]);
 
   const scrollToTopAnimated = useCallback(() => {
     const list = flashListRef.current;
@@ -501,6 +527,23 @@ export default function QuranScreen() {
     });
   }, [bookmarks, surahMap]);
   const currentSurahMeta = surahMap.get(currentAyah.surahNumber);
+
+  const handleAudioButtonPress = useCallback(() => {
+    if (isPlaying) {
+      pauseAudio();
+      return;
+    }
+
+    const englishName =
+      currentSurahMeta?.englishName ?? currentAyah.surahNameEn;
+    const arabicName = currentSurahMeta?.arabicName ?? currentAyah.surahNameAr;
+
+    playSurah({
+      surahNumber: currentAyah.surahNumber,
+      englishName,
+      arabicName,
+    });
+  }, [currentAyah, currentSurahMeta, isPlaying, pauseAudio, playSurah]);
 
   const filteredSurahs = useMemo<NormalizedSurahMeta[]>(() => {
     const query = surahSearchQuery.trim();
@@ -734,7 +777,7 @@ export default function QuranScreen() {
                       styles.audioButton,
                       isAudioLoading && styles.audioButtonDisabled,
                     ]}
-                    onPress={isPlaying ? pauseAudio : playCurrentSurah}
+                    onPress={handleAudioButtonPress}
                     onLongPress={stopAudio}
                     disabled={isAudioLoading}
                     accessibilityRole="button"
