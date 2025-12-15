@@ -50,7 +50,7 @@ export function QuranMiniPlayer({
 }: QuranMiniPlayerProps) {
   const insets = useSafeAreaInsets();
   const TAB_BAR_GAP = 64;
-  const animatedValue = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const animatedValue = useRef(new Animated.Value(0)).current;
   const [duration, setDuration] = useState(playbackDuration);
   const [position, setPosition] = useState(playbackPosition);
   const router = useRouter();

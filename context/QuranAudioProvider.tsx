@@ -5,11 +5,15 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 import type { UseQuranAudioResult } from "@/hooks/useQuranAudio";
 import { useQuranAudio } from "@/hooks/useQuranAudio";
+import { getSurahMeta } from "@/services/quranData";
+
+const TOTAL_SURAHS = 114;
 
 export type QuranSurahMeta = {
   surahNumber: number;
@@ -38,7 +42,60 @@ export function QuranAudioProvider({ children }: PropsWithChildren) {
     number | null
   >(null);
 
-  const audio = useQuranAudio({ currentSurahNumber });
+  const onSurahCompleteRef = useRef<((surahNumber: number) => void) | null>(
+    null
+  );
+
+  const surahMetaList = useMemo(() => {
+    try {
+      return getSurahMeta();
+    } catch (error) {
+      console.warn("Failed to load Quran surah metadata", error);
+      return [];
+    }
+  }, []);
+
+  const surahMetaByNumber = useMemo(() => {
+    const map = new Map<number, QuranSurahMeta>();
+    for (const meta of surahMetaList) {
+      map.set(meta.surahNumber, {
+        surahNumber: meta.surahNumber,
+        englishName: meta.englishName,
+        arabicName: meta.arabicName,
+      });
+    }
+    return map;
+  }, [surahMetaList]);
+
+  const lastSurahNumber = useMemo(
+    () => surahMetaList[surahMetaList.length - 1]?.surahNumber ?? TOTAL_SURAHS,
+    [surahMetaList]
+  );
+
+  const queueSurahByNumber = useCallback(
+    (surahNumber: number) => {
+      const metaFromLookup = surahMetaByNumber.get(surahNumber);
+      const meta: QuranSurahMeta =
+        metaFromLookup ??
+        ({
+          surahNumber,
+        } as QuranSurahMeta);
+
+      setCurrentSurahMeta(meta);
+      setCurrentSurahNumber(surahNumber);
+      setPendingAction("play");
+    },
+    [surahMetaByNumber]
+  );
+
+  const handleSurahCompleteBridge = useCallback((surahNumber: number) => {
+    onSurahCompleteRef.current?.(surahNumber);
+  }, []);
+
+  const audio = useQuranAudio({
+    currentSurahNumber,
+    onSurahComplete: handleSurahCompleteBridge,
+  });
   const {
     audioPlayer,
     isAudioLoading,
@@ -138,6 +195,24 @@ export function QuranAudioProvider({ children }: PropsWithChildren) {
       clearPendingSurahFocus,
     ]
   );
+
+  const handleSurahComplete = useCallback(
+    (completedSurahNumber: number) => {
+      const nextSurahNumber = completedSurahNumber + 1;
+
+      if (nextSurahNumber > lastSurahNumber) {
+        stopPlaybackSession();
+        return;
+      }
+
+      queueSurahByNumber(nextSurahNumber);
+    },
+    [lastSurahNumber, queueSurahByNumber, stopPlaybackSession]
+  );
+
+  useEffect(() => {
+    onSurahCompleteRef.current = handleSurahComplete;
+  }, [handleSurahComplete]);
 
   return (
     <QuranAudioContext.Provider value={value}>

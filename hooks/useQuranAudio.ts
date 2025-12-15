@@ -11,6 +11,7 @@ import { Alert } from "react-native";
 
 type UseQuranAudioOptions = {
   currentSurahNumber: number;
+  onSurahComplete?: (surahNumber: number) => void;
 };
 
 export type UseQuranAudioResult = {
@@ -32,6 +33,7 @@ const NETWORK_POLL_INTERVAL_MS = 3000;
 
 export function useQuranAudio({
   currentSurahNumber,
+  onSurahComplete,
 }: UseQuranAudioOptions): UseQuranAudioResult {
   const [audioPlayer, setAudioPlayer] = useState<AudioPlayer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -50,6 +52,7 @@ export function useQuranAudio({
     isLoaded: boolean;
     playing: boolean;
     currentTime: number;
+    didJustFinish: boolean;
   } | null>(null);
   const previousOnlineStatusRef = useRef(true);
 
@@ -76,44 +79,65 @@ export function useQuranAudio({
     }
   }, []);
 
-  const handlePlaybackStatusUpdate = useCallback((status: AudioStatus) => {
-    if (!status?.isLoaded) {
-      lastPlaybackStatusRef.current = {
-        isLoaded: false,
-        playing: false,
-        currentTime: 0,
-      };
-      setIsPlaying(false);
-      setPlaybackDuration(0);
-      setPlaybackPosition(0);
-      return;
-    }
+  const handlePlaybackStatusUpdate = useCallback(
+    (status: AudioStatus) => {
+      const previouslyFinished =
+        lastPlaybackStatusRef.current?.didJustFinish === true;
 
-    if (status.didJustFinish) {
-      setIsPlaying(false);
-      if (audioSessionActiveRef.current) {
-        setIsAudioActiveAsync(false)
-          .then(() => {
-            audioSessionActiveRef.current = false;
-          })
-          .catch((error) =>
-            console.warn("Failed to deactivate audio after completion", error)
-          );
+      if (!status?.isLoaded) {
+        lastPlaybackStatusRef.current = {
+          isLoaded: false,
+          playing: false,
+          currentTime: 0,
+          didJustFinish: false,
+        };
+        setIsPlaying(false);
+        setPlaybackDuration(0);
+        setPlaybackPosition(0);
+        return;
       }
-    } else {
-      setIsPlaying(status.playing);
-    }
 
-    lastPlaybackStatusRef.current = {
-      isLoaded: status.isLoaded,
-      playing: status.playing,
-      currentTime: status.currentTime ?? 0,
-    };
-    setPlaybackDuration((prev) =>
-      typeof status.duration === "number" ? status.duration : prev
-    );
-    setPlaybackPosition(status.currentTime ?? 0);
-  }, []);
+      const justFinished = status.didJustFinish && !previouslyFinished;
+
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+        if (audioSessionActiveRef.current) {
+          setIsAudioActiveAsync(false)
+            .then(() => {
+              audioSessionActiveRef.current = false;
+            })
+            .catch((error) =>
+              console.warn("Failed to deactivate audio after completion", error)
+            );
+        }
+      } else {
+        setIsPlaying(status.playing);
+      }
+
+      lastPlaybackStatusRef.current = {
+        isLoaded: status.isLoaded,
+        playing: status.playing,
+        currentTime: status.currentTime ?? 0,
+        didJustFinish: !!status.didJustFinish,
+      };
+      setPlaybackDuration((prev) =>
+        typeof status.duration === "number" ? status.duration : prev
+      );
+      setPlaybackPosition(status.currentTime ?? 0);
+
+      if (justFinished && onSurahComplete) {
+        const completedSurahNumber =
+          activeSurahNumber ?? currentSurahNumber ?? null;
+        if (
+          typeof completedSurahNumber === "number" &&
+          Number.isFinite(completedSurahNumber)
+        ) {
+          onSurahComplete(completedSurahNumber);
+        }
+      }
+    },
+    [activeSurahNumber, currentSurahNumber, onSurahComplete]
+  );
 
   const pauseAudio = useCallback(async () => {
     if (!audioPlayer) {
