@@ -71,7 +71,15 @@ function QuranAyahCard({
         <Text style={styles.surahTag}>
           {ayah.surahNumber}:{ayah.ayahNumber}
         </Text>
-        <Text style={styles.arabic}>{ayah.arabicText}</Text>
+        <Text
+          style={styles.arabic}
+          allowFontScaling={false}
+          // @ts-expect-error includeFontPadding is available on React Native Text for Android layout
+          includeFontPadding={false}
+          textBreakStrategy="highQuality"
+        >
+          {ayah.arabicText}
+        </Text>
         <Text style={styles.translation}>{ayah.englishText}</Text>
       </Pressable>
     </View>
@@ -141,14 +149,13 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   ayahCardPressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.95,
+    opacity: 0.92,
   },
   arabic: {
     fontSize: 28,
     textAlign: "right",
     color: themeColors.white,
-    lineHeight: 38,
+    lineHeight: 42,
     marginBottom: 12,
   },
   translation: {

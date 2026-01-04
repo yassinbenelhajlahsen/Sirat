@@ -72,7 +72,7 @@ type JumpTarget =
   | { kind: "surah"; surahNumber: number }
   | { kind: "juz"; juzNumber: number };
 
-const ESTIMATED_ITEM_SIZE = 120;
+const ESTIMATED_ITEM_SIZE = 260;
 
 function normalizeSearchValue(value: string): string {
   return value
@@ -640,7 +640,14 @@ export default function QuranScreen() {
   );
 
   const getItemType = useCallback((item: QuranListItem) => {
-    return item.type === "ayah" ? "ayah" : "divider";
+    if (item.type === "completion") {
+      return "completion";
+    }
+
+    const isSurahStart =
+      item.ayah.ayahNumber === 1 && item.ayahGlobalIndex !== 0;
+
+    return isSurahStart ? "ayahWithDivider" : "ayah";
   }, []);
 
   const keyExtractor = useCallback((item: QuranListItem) => item.key, []);
@@ -823,12 +830,12 @@ export default function QuranScreen() {
             <FlashList
               ref={flashListRef}
               data={listData}
+              showsVerticalScrollIndicator={false}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               estimatedItemSize={ESTIMATED_ITEM_SIZE}
               getItemType={getItemType}
               style={styles.list}
-              disableAutoLayout={true}
               contentContainerStyle={styles.listContent}
               initialScrollIndex={initialScrollIndexValue}
               onViewableItemsChanged={handleViewableItemsChanged}
@@ -838,12 +845,6 @@ export default function QuranScreen() {
           ) : (
             <View style={styles.listPlaceholder} />
           )}
-
-          <View style={styles.footerNoteContainer}>
-            <Text style={styles.footerNote}>
-              Double tap an Ayah to make a bookmark.
-            </Text>
-          </View>
 
           <NavigatorModal
             visible={navigatorOpen}
