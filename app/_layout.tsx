@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Asset } from "expo-asset";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
@@ -27,6 +28,12 @@ const NOTIF_ENABLED_KEY = "notif_enabled_v1";
 const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
 const SETTINGS_CHANGED_EVENT = "settingsChanged";
 const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
+
+async function preloadImages() {
+  await Asset.loadAsync([
+    require("../assets/images/qibla-compass-svgrepo-com.png"),
+  ]);
+}
 
 // Safe JSON parse helper
 function parseJSON<T>(raw: string | null, fallback: T): T {
@@ -152,6 +159,7 @@ export default function RootLayout() {
           syncLocationPermissionToSettings(),
           syncNotificationPermissionToToggle(),
           preloadQuranData(),
+          preloadImages(),
         ]);
       } catch (error) {
         console.error("Failed to complete initial app sync", error);
