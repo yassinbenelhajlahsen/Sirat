@@ -123,10 +123,14 @@ export default function RootLayout() {
   const [initialSynced, setInitialSynced] = useState(false);
   const appStateRef = useRef(AppState.currentState);
 
-  // Your existing init
   useEffect(() => {
     NotificationService.init();
   }, []);
+
+  // Clear old Adhan notifications when the app opens so the tray stays clean.
+  useEffect(() => {
+  Notifications.dismissAllNotificationsAsync().catch(() => {});
+}, []);
 
   // OTA update check
   useEffect(() => {
