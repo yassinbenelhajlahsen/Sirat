@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ENV } from "../config/env.js";
-import type { Dua } from "../utils/duaDatabase";
-import { formatDuaMetadataForContext } from "../utils/duaDatabase";
+import type { Dua } from "../utils/duaDatabase.js";
+import { formatDuaMetadataForContext } from "../utils/duaDatabase.js";
 
 interface OpenAIResponse {
   duaId: number;
