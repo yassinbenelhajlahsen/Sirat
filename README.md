@@ -1,72 +1,211 @@
-# Sirat 📿
+# Sirat 📿 - Mono-Repo
 
-**Sirat** is a modern, mobile-first Islamic companion app built with **React Native** and **Expo**.  
-It helps users stay connected to their faith with accurate prayer times, Qibla direction, mosque discovery, and daily reminders — all in a clean, minimalist interface.
+**Sirat** is a modern, mobile-first Islamic companion app providing prayer times, Qibla direction, Quran reading with audio, mosque discovery, and AI-powered dua search.
+
+---
+
+## 🏗️ Repository Structure
+
+This is a **mono-repo** with strict separation between frontend and backend:
+
+```
+/
+├── frontend/      → React Native + Expo mobile app
+├── backend/       → Node.js API server (dua service)
+├── docs/          → Documentation website
+├── .github/       → CI/CD workflows & GitHub config
+├── .gitignore     → Git ignore rules
+└── README.md      → This file
+```
+
+---
+
+## 🚀 Quick Start
+
+### Frontend (Mobile App)
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+See detailed instructions: [`frontend/README.md`](./frontend/README.md)
+
+### Backend (API Server)
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+See detailed instructions: [`backend/README.md`](./backend/README.md)
 
 ---
 
 ## ✨ Features
 
-- 🕌 **Accurate Prayer Times** – powered by the Aladhan API, adjusted to the user’s precise location
-- 🧭 **Qibla Direction** – live compass using device orientation sensors
-- 📖 **Quran Reader** – full audio & text with translation, fuzzy surah/juz search, juz jumping, and auto-resume
-- 📍 **Nearby Mosques** – integrates Google Maps and Places API for mosque discovery
-- 🔔 **Prayer Notifications** – customizable alerts with prayer names and times
-- 💾 **Offline Support** – locally cached preferences and last known prayer data
+- 🕌 **Accurate Prayer Times** – Aladhan API with precise location-based calculations
+- 🧭 **Qibla Direction** – Live compass using device orientation sensors
+- 📖 **Quran Reader** – Full audio & text with translation, bookmarks, and auto-resume
+- 📍 **Nearby Mosques** – Google Maps/Places API integration
+- 🔔 **Prayer Notifications** – Customizable alerts for each prayer
+- 💾 **Offline Support** – Cached preferences and prayer data
+- 🤲 **AI-Powered Dua Search** – GPT-4 powered dua discovery and recommendations
+- 🗓️ **Islamic Calendar** – Hijri date support with prayer schedules
 
 ---
 
 ## 🛠️ Tech Stack
 
+### Frontend
 - **Framework:** React Native + Expo Router
-- **Styling:** Tailwind CSS (via NativeWind)
-- **APIs:** Aladhan API, Google Maps / Places API
-- **Storage:** AsyncStorage for local persistence
-- **Core Libraries:**
-  - `expo-location` – user geolocation
-  - `expo-sensors` – compass heading
-  - `expo-notifications` – scheduled reminders
-  - `axios` – API data fetching
-  - `expo-updates` – over-the-air updates via EAS
+- **Language:** TypeScript
+- **Styling:** NativeWind (Tailwind CSS for React Native)
+- **State Management:** React Context + Hooks
+- **Storage:** AsyncStorage
+- **Key Libraries:**
+  - `expo-location` – GPS & geolocation
+  - `expo-sensors` – Compass heading
+  - `expo-notifications` – Local notifications
+  - `expo-audio` – Audio playback
+  - `expo-router` – File-based navigation
+
+### Backend
+- **Runtime:** Node.js 18+
+- **Language:** TypeScript
+- **Framework:** Express.js
+- **AI Integration:** OpenAI GPT-4 API
+- **Deployment:** Railway
 
 ---
 
-## 🧭 Architecture
+## 🧭 Architecture Overview
 
-- **Frontend:** Modular React Native components for screens, utilities, and services
-- **Logic Layer:** Hooks-based services for location, notifications, and API integration
-- **UI Design:** Built for mobile-first responsiveness using TailwindCSS + Safe Area context
-- **OTA Updates:** Instant over-the-air JS updates via Expo EAS Updates
+### Frontend
+- **Service Layer:** Modular services for prayer times, notifications, Quran data, and location
+- **Context Providers:** Global state management for audio playback and settings
+- **Expo Router:** File-based routing with tab navigation
+- **Offline-First:** AsyncStorage caching for core functionality
+
+### Backend
+- **RESTful API:** Express-based endpoints for dua search
+- **AI Service:** OpenAI integration for intelligent dua recommendations
+- **Static Assets:** Pre-loaded dua database with metadata
 
 ---
 
-## 📚 APIs Used
+## 📚 APIs & Services
 
-| API                                                                                                      | Purpose                                     |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| [Aladhan API](https://aladhan.com/prayer-times-api)                                                      | Prayer times, calendar, and date conversion |
-| [Google Maps / Places API](https://developers.google.com/maps/documentation/places/web-service/overview) | Mosque locations                            |
+| Service                                                                  | Purpose                                     |
+| ------------------------------------------------------------------------ | ------------------------------------------- |
+| [Aladhan API](https://aladhan.com/prayer-times-api)                      | Prayer times, calendar, date conversion     |
+| [Google Maps/Places](https://developers.google.com/maps)                 | Mosque locations & map integration          |
+| [OpenAI GPT-4](https://platform.openai.com/)                             | Dua search & recommendations                |
+| [Expo Updates](https://docs.expo.dev/eas-update/introduction/)           | OTA updates for mobile app                  |
+
+---
+
+## 🔧 Environment Variables
+
+### Frontend (`frontend/.env`)
+
+```env
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+```
+
+### Backend (`backend/.env`)
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+PORT=3000
+NODE_ENV=development
+```
 
 ---
 
 ## 🚧 Roadmap
 
-- 🌍 Multilingual support (English, Arabic, French, more)
-- ☁️ Backend integration for user profiles and sync
-- 📆 Widget & Apple Watch support
-- 🎨 Advanced theme customization and user-selected color palettes
+- [ ] 🌍 Multilingual support (English, Arabic, French)
+- [ ] ☁️ User profiles and cloud sync
+- [ ] 📆 Home screen widgets (iOS & Android)
+- [ ] ⌚ Apple Watch companion app
+- [ ] 🎨 Theme customization with user-selected palettes
+- [ ] 📊 Prayer statistics and tracking
+- [ ] 🤝 Community features (shared duas, mosque reviews)
 
 ---
 
-## 🌐 Learn More
+## 🌐 Links
 
-Visit the official landing page for more info and download links:  
-👉 [**sirat.dev**](https://sirat.dev)
+- **Website:** [sirat.dev](https://sirat.dev)
+- **Documentation:** [`docs/`](./docs/)
+- **Frontend README:** [`frontend/README.md`](./frontend/README.md)
+- **Backend README:** [`backend/README.md`](./backend/README.md)
 
 ---
 
+## 🧑‍💻 Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Expo CLI (for frontend)
+- iOS Simulator (macOS) or Android Emulator (for mobile testing)
+
+### Project Setup
+
+```bash
+# Clone repository
+git clone https://github.com/yassinbenelhajlahsen/Sirat.git
+cd Sirat
+
+# Setup frontend
+cd frontend
+npm install
+npm start
+
+# Setup backend (in new terminal)
+cd ../backend
+npm install
+npm run dev
+```
+
+---
+
+## 📝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is private and proprietary. All rights reserved.
+
+---
 
 ## 🧑‍💻 Author
 
 **Yassin Benelhajlahsen**  
-Built with 💚 and a goal to make daily faith practice easier through thoughtful technology.
+Built with 💚 to make daily faith practice easier through thoughtful technology.
+
+- GitHub: [@yassinbenelhajlahsen](https://github.com/yassinbenelhajlahsen)
+- Website: [sirat.dev](https://sirat.dev)
+
+---
+
+## 🙏 Acknowledgments
+
+- Aladhan API for prayer time calculations
+- OpenAI for GPT-4 API
+- Expo team for the amazing React Native framework
+- The Muslim developer community for inspiration and feedback
