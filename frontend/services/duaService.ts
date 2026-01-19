@@ -12,7 +12,7 @@ import axios from "axios";
  * - NO Islamic decisions
  *
  * Responsibilities:
- * 1. Call backend /api/dua/match with user input
+ * 1. Call backend /api/dua with user input
  * 2. Cache dua history locally
  * 3. Render returned dua
  */
@@ -39,7 +39,7 @@ const DUA_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
  * Regex matching is instant (<1ms), but feels abrupt
  * Add a small delay to make it feel like "thinking"
  */
-const SIMULATED_DELAY_MS = 800; // 0.8 seconds
+const SIMULATED_DELAY_MS = 1200; // 0.8 seconds
 
 /**
  * Request a dua from backend based on user input
