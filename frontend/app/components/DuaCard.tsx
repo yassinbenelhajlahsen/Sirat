@@ -54,7 +54,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
       <Text
         style={{
           color: colors.accent,
-          fontSize: 16,
+          fontSize: 18,
           fontFamily: "SFProDisplay-Semibold",
           marginBottom: 12,
         }}
@@ -65,7 +65,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
       <Text
         style={{
           color: colors.grayMuted,
-          fontSize: 12,
+          fontSize: 14,
           fontFamily: "SFProDisplay-Regular",
           marginBottom: 10,
         }}
@@ -90,7 +90,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
           borderRadius: 10,
           color: colors.white,
           padding: 12,
-          fontSize: 14,
+          fontSize: 16,
           fontFamily: "SFProDisplay-Regular",
           marginBottom: 12,
           minHeight: 60,
@@ -98,18 +98,6 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
           borderColor: withOpacity(colors.white, 0.15),
         }}
       />
-
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text
-          style={{
-            color: colors.grayMuted,
-            fontSize: 11,
-            fontFamily: "SFProDisplay-Regular",
-          }}
-        >
-          {userInput.length}/150
-        </Text>
-      </View>
 
       <PressableScale
         disabled={loading || !userInput.trim()}
@@ -137,7 +125,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
             <Text
               style={{
                 color: colors.primary,
-                fontSize: 16,
+                fontSize: 18,
                 fontFamily: "SFProDisplay-Bold",
                 marginLeft: 8,
               }}
@@ -149,7 +137,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
           <Text
             style={{
               color: colors.primary,
-              fontSize: 16,
+              fontSize: 18,
               fontFamily: "SFProDisplay-Bold",
             }}
           >
