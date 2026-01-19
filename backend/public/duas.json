@@ -1,0 +1,124 @@
+{
+  "duas": [
+    {
+      "id": 1,
+      "category": "healing",
+      "tags": ["health", "illness", "recovery", "sickness", "pain"],
+      "arabic": "بِسْمِ اللَّهِ أَرْقِيكَ مِنْ كُلِّ شَيْءٍ يُؤْذِيكَ",
+      "english": "In the name of Allah, I perform ruqya (healing prayer) upon you from everything that harms you",
+      "transliteration": "Bismillahi arqika min kulli shay'in yu'dhika",
+      "reference": "Sahih Muslim",
+      "source": "Hadith"
+    },
+    {
+      "id": 2,
+      "category": "anxiety",
+      "tags": ["worry", "fear", "anxiety", "stress", "exam", "pressure"],
+      "arabic": "حَسْبِيَ اللَّهُ لا إِلَهَ إِلا هُوَ عَلَيْهِ تَوَكَّلْتُ",
+      "english": "Allah is sufficient for me; there is no deity except Him. I rely upon Him",
+      "transliteration": "Hasbi Allah la ilaha illa hu, alayhi tawakaltu",
+      "reference": "Quran 9:129",
+      "source": "Quran"
+    },
+    {
+      "id": 3,
+      "category": "gratitude",
+      "tags": ["thankful", "blessing", "grateful", "favor", "appreciation"],
+      "arabic": "الحمد لله الذي بنعمته تتم الصالحات",
+      "english": "All praise is due to Allah by whose favor good deeds are completed",
+      "transliteration": "Al-hamdu lilahi alladhi bini'matihi tatimmu as-salihaat",
+      "reference": "Sunan Ibn Majah",
+      "source": "Hadith"
+    },
+    {
+      "id": 4,
+      "category": "protection",
+      "tags": ["safety", "protection", "defense", "evil", "harm"],
+      "arabic": "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ",
+      "english": "I seek refuge in Allah from Satan, the rejected",
+      "transliteration": "A'udhu billahi min ash-shaytan ar-rajim",
+      "reference": "Quran 16:98",
+      "source": "Quran"
+    },
+    {
+      "id": 5,
+      "category": "forgiveness",
+      "tags": ["repentance", "sin", "forgiveness", "guilt", "atonement"],
+      "arabic": "رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ",
+      "english": "My Lord, forgive me and turn to me in mercy. Indeed, You are the Ever-Returning, the Merciful",
+      "transliteration": "Rabbi ighfir li wa tub alayya innaka anta at-tawwabu ar-rahim",
+      "reference": "Sunan Ibn Majah",
+      "source": "Hadith"
+    },
+    {
+      "id": 6,
+      "category": "guidance",
+      "tags": ["direction", "wisdom", "knowledge", "understanding", "clarity"],
+      "arabic": "رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي",
+      "english": "My Lord, expand for me my chest and ease for me my task",
+      "transliteration": "Rabbi inshrah li sadri wa yassir li amri",
+      "reference": "Quran 20:25-26",
+      "source": "Quran"
+    },
+    {
+      "id": 7,
+      "category": "success",
+      "tags": ["achievement", "victory", "success", "prosperity", "excellence"],
+      "arabic": "اللَّهُمَّ أَنْتَ أَسْلَمْتُ نَفْسِي إِلَيْكَ",
+      "english": "O Allah, I have submitted myself to You",
+      "transliteration": "Allahumma anta aslamtu nafsi ilayk",
+      "reference": "Sahih Muslim",
+      "source": "Hadith"
+    },
+    {
+      "id": 8,
+      "category": "patience",
+      "tags": ["patience", "hardship", "trial", "difficulty", "endurance"],
+      "arabic": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+      "english": "Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire",
+      "transliteration": "Rabbana atina fi ad-dunya hasanah wa fi al-akhirah hasanah wa qina adha ab-nar",
+      "reference": "Quran 2:201",
+      "source": "Quran"
+    },
+    {
+      "id": 9,
+      "category": "family",
+      "tags": ["children", "marriage", "family", "offspring", "spouse"],
+      "arabic": "رَبِّ اجْعَلْ لِي آيَةً وَاجْعَلْهُ مِنَ الصَّالِحِينَ",
+      "english": "My Lord, give me a blessed offspring. Indeed, You are the Hearer of supplication",
+      "transliteration": "Rabbi j'al li ayatan wa'j'alhu min as-saliheen",
+      "reference": "Quran 37:100",
+      "source": "Quran"
+    },
+    {
+      "id": 10,
+      "category": "provision",
+      "tags": ["sustenance", "wealth", "provision", "rizq", "abundance"],
+      "arabic": "رَبِّ اغْفِرْ وَارْحَمْ وَأَنْتَ خَيْرُ الرَّاحِمِينَ",
+      "english": "My Lord, forgive and have mercy, for You are the best of the merciful",
+      "transliteration": "Rabbi ighfir wa arham wa anta khayru ar-rahimeen",
+      "reference": "Sunan Abu Dawud",
+      "source": "Hadith"
+    },
+    {
+      "id": 11,
+      "category": "peace",
+      "tags": ["tranquility", "calm", "serenity", "rest", "relief"],
+      "arabic": "يَا أَرْحَمَ الرَّاحِمِينَ",
+      "english": "O Most Merciful of the Merciful",
+      "transliteration": "Ya Arhama ar-rahimeen",
+      "reference": "Sahih Muslim",
+      "source": "Hadith"
+    },
+    {
+      "id": 12,
+      "category": "knowledge",
+      "tags": ["learning", "understanding", "education", "intellect", "wisdom"],
+      "arabic": "رَبِّ زِدْنِي عِلْمًا",
+      "english": "My Lord, increase me in knowledge",
+      "transliteration": "Rabbi zidni ilm",
+      "reference": "Quran 20:114",
+      "source": "Quran"
+    }
+  ]
+}
