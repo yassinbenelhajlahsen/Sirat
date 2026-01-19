@@ -452,7 +452,7 @@
     },
     {
       "id": 46,
-      "category": "laylatul_qadr",
+      "category": "laylatul qadr",
       "tags": ["laylatul qadr", "ramadan", "night", "power", "blessing"],
       "arabic": "اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي",
       "english": "O Allah, You are Pardoning and You love to pardon, so pardon me",
@@ -815,7 +815,7 @@
       "category": "jealousy",
       "tags": ["jealousy", "envy", "hasad", "evil eye", "protection"],
       "arabic": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ",
-      "english": "Say: I seek refuge in the Lord of daybreak",
+      "english": "I seek refuge in the Lord of daybreak",
       "transliteration": "Qul a'udhu bi Rabbi al-Falaq",
       "reference": "Quran 113:1",
       "source": "Quran"
@@ -825,7 +825,7 @@
       "category": "jealousy",
       "tags": ["jealousy", "envy", "evil", "protection", "refuge"],
       "arabic": "قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
-      "english": "Say: I seek refuge in the Lord of mankind",
+      "english": "I seek refuge in the Lord of mankind",
       "transliteration": "Qul a'udhu bi Rabbi an-Nas",
       "reference": "Quran 114:1",
       "source": "Quran"

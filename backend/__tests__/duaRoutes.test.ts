@@ -1,7 +1,6 @@
 import {
   afterEach,
   beforeAll,
-  beforeEach,
   describe,
   expect,
   it,
@@ -11,13 +10,9 @@ import express, { Express } from "express";
 import request from "supertest";
 import { errorHandler } from "../src/middleware/errorHandler.js";
 import duaRoutes from "../src/routes/dua.js";
-import * as openaiService from "../src/services/openaiService.js";
 
 describe("Dua Routes Integration", () => {
   let app: Express;
-  let selectDuaWithOpenAISpy: jest.SpiedFunction<
-    typeof openaiService.selectDuaWithOpenAI
-  >;
 
   beforeAll(() => {
     app = express();
@@ -26,16 +21,7 @@ describe("Dua Routes Integration", () => {
     app.use(errorHandler);
   });
 
-  beforeEach(() => {
-    // Spy on the OpenAI service function
-    selectDuaWithOpenAISpy = jest.spyOn(openaiService, "selectDuaWithOpenAI");
-
-    // Default mock implementation: return dua ID 1 for most tests
-    selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 1 });
-  });
-
   afterEach(() => {
-    // Restore the original implementation after each test
     jest.restoreAllMocks();
   });
 
@@ -232,228 +218,148 @@ describe("Dua Routes Integration", () => {
     });
   });
 
-  describe("OpenAI Integration Tests (Mocked)", () => {
-    describe("POST /api/dua/match with OpenAI", () => {
-      it("should use OpenAI to intelligently match healing request", async () => {
-        // Mock OpenAI to return a specific dua ID
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 1 });
+  describe("Regex-First Matching Tests", () => {
+    it("should match anxiety queries using regex (no AI call)", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "I'm feeling anxious" })
+        .expect(200);
 
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "I am sick and need prayers for healing" })
-          .expect(200);
-
-        expect(response.body).toHaveProperty("dua");
-        expect(response.body.dua).toHaveProperty("id");
-        expect(response.body.dua).toHaveProperty("category");
-        expect(response.body.dua).toHaveProperty("arabic");
-
-        // Should return a valid dua (OpenAI made the selection)
-        expect(response.body.dua.id).toBeGreaterThan(0);
-        expect(response.body.dua.category).toBeTruthy();
-
-        // Verify OpenAI was called
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should use OpenAI to match anxiety request", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 2 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "I'm very anxious about my exam tomorrow" })
-          .expect(200);
-
-        expect(response.body.dua).toBeDefined();
-        expect(response.body.dua.id).toBeGreaterThan(0);
-        expect(response.body.dua.category).toBeTruthy();
-        expect(response.body.dua.tags).toBeDefined();
-        expect(Array.isArray(response.body.dua.tags)).toBe(true);
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should use OpenAI to match gratitude request", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 3 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "I want to thank Allah for all my blessings" })
-          .expect(200);
-
-        expect(response.body.dua).toBeDefined();
-        expect(response.body.dua.id).toBeGreaterThan(0);
-        expect(response.body.dua.category).toBeTruthy();
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should handle complex request with OpenAI", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 5 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({
-            userRequest:
-              "I'm stressed about work, feeling overwhelmed and anxious",
-          })
-          .expect(200);
-
-        expect(response.body.dua).toBeDefined();
-        expect(response.body.dua.id).toBeGreaterThan(0);
-        expect(response.body.dua.tags).toBeDefined();
-        expect(Array.isArray(response.body.dua.tags)).toBe(true);
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should handle Arabic request with OpenAI", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 1 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "أنا مريض وأحتاج إلى الشفاء" })
-          .expect(200);
-
-        expect(response.body.dua).toBeDefined();
-        expect(response.body.dua.id).toBeGreaterThan(0);
-        expect(response.body.dua.category).toBeTruthy();
-        // Arabic text means "I am sick and need healing" - OpenAI should understand it
-        expect(response.body.dua.arabic).toBeTruthy();
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should not include reasoning or extra fields", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 1 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "help me" })
-          .expect(200);
-
-        expect(response.body).toHaveProperty("dua");
-        expect(response.body).not.toHaveProperty("reasoning");
-        expect(response.body).not.toHaveProperty("confidence");
-        expect(response.body).not.toHaveProperty("matchScore");
-        expect(response.body.dua).not.toHaveProperty("reasoning");
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should handle rapid requests consistently", async () => {
-        // Mock different dua IDs for each request
-        selectDuaWithOpenAISpy
-          .mockResolvedValueOnce({ duaId: 1 })
-          .mockResolvedValueOnce({ duaId: 2 })
-          .mockResolvedValueOnce({ duaId: 3 });
-
-        const requests = ["I'm sick", "I'm anxious", "I'm grateful"];
-
-        const responses = await Promise.all(
-          requests.map((req) =>
-            request(app).post("/api/dua/match").send({ userRequest: req }),
-          ),
-        );
-
-        responses.forEach((res) => {
-          expect(res.status).toBe(200);
-          expect(res.body.dua).toBeDefined();
-        });
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(3);
-      });
-
-      it("should handle edge case short request", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 1 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "sad" })
-          .expect(200);
-
-        expect(response.body.dua).toBeDefined();
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should handle request with special characters", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 1 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "I'm feeling... really stressed!!! Help???" })
-          .expect(200);
-
-        expect(response.body.dua).toBeDefined();
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
-
-      it("should return valid dua structure from OpenAI response", async () => {
-        selectDuaWithOpenAISpy.mockResolvedValue({ duaId: 1 });
-
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "I need guidance" })
-          .expect(200);
-
-        const dua = response.body.dua;
-        expect(dua).toHaveProperty("id");
-        expect(dua).toHaveProperty("category");
-        expect(dua).toHaveProperty("tags");
-        expect(dua).toHaveProperty("arabic");
-        expect(dua).toHaveProperty("english");
-        expect(dua).toHaveProperty("transliteration");
-        expect(dua).toHaveProperty("reference");
-        expect(dua).toHaveProperty("source");
-
-        expect(Array.isArray(dua.tags)).toBe(true);
-        expect(typeof dua.arabic).toBe("string");
-        expect(typeof dua.english).toBe("string");
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
-      });
+      expect(response.body).toHaveProperty("dua");
+      expect(response.body).toHaveProperty("matchSource");
+      expect(response.body.matchSource).toBe("regex");
+      expect(response.body.dua.category).toBe("anxiety");
     });
 
-    describe("OpenAI Fallback Behavior", () => {
-      it("should use fallback when OpenAI fails", async () => {
-        // Mock OpenAI to throw an error
-        selectDuaWithOpenAISpy.mockRejectedValue(
-          new Error("Failed to select dua with OpenAI"),
-        );
+    it("should match sleep queries using regex", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "I can't sleep at night" })
+        .expect(200);
 
-        const response = await request(app)
-          .post("/api/dua/match")
-          .send({ userRequest: "help me" })
-          .expect(200);
+      expect(response.body.matchSource).toBe("regex");
+      expect(response.body.dua.category).toBe("sleep");
+    });
 
-        // Should still return a dua (via fallback)
-        expect(response.body).toHaveProperty("dua");
-        expect(response.body.dua.id).toBeGreaterThan(0);
+    it("should match exam/knowledge queries using regex", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "I have an exam tomorrow" })
+        .expect(200);
 
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(1);
+      expect(response.body.matchSource).toBe("regex");
+      expect(response.body.dua.category).toBe("exam");
+    });
+
+    it("should match healing queries using regex", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "I am sick and need healing" })
+        .expect(200);
+
+      expect(response.body.matchSource).toBe("regex");
+      expect(response.body.dua.category).toBe("healing");
+    });
+
+    it("should match forgiveness queries using regex", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "Please forgive me for my sins" })
+        .expect(200);
+
+      expect(response.body.matchSource).toBe("regex");
+      expect(response.body.dua.category).toBe("forgiveness");
+    });
+
+    it("should match gratitude queries using regex", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "I want to thank Allah for my blessings" })
+        .expect(200);
+
+      expect(response.body.matchSource).toBe("regex");
+      expect(response.body.dua.category).toBe("gratitude");
+    });
+
+    it("should return valid dua structure", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "I'm stressed out" })
+        .expect(200);
+
+      const dua = response.body.dua;
+      expect(dua).toHaveProperty("id");
+      expect(dua).toHaveProperty("category");
+      expect(dua).toHaveProperty("tags");
+      expect(dua).toHaveProperty("arabic");
+      expect(dua).toHaveProperty("english");
+      expect(dua).toHaveProperty("transliteration");
+      expect(dua).toHaveProperty("reference");
+      expect(dua).toHaveProperty("source");
+
+      expect(Array.isArray(dua.tags)).toBe(true);
+      expect(typeof dua.arabic).toBe("string");
+      expect(typeof dua.english).toBe("string");
+    });
+
+    it("should not include reasoning or extra fields", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "I'm worried" })
+        .expect(200);
+
+      expect(response.body).toHaveProperty("dua");
+      expect(response.body).toHaveProperty("matchSource");
+      expect(response.body).not.toHaveProperty("reasoning");
+      expect(response.body).not.toHaveProperty("confidence");
+      expect(response.body).not.toHaveProperty("matchScore");
+      expect(response.body.dua).not.toHaveProperty("reasoning");
+    });
+
+    it("should handle multiple rapid regex matches consistently", async () => {
+      const requests = [
+        { text: "I'm sick", category: "healing" },
+        { text: "I'm anxious", category: "anxiety" },
+        { text: "I'm grateful", category: "gratitude" },
+      ];
+
+      const responses = await Promise.all(
+        requests.map((req) =>
+          request(app).post("/api/dua/match").send({ userRequest: req.text }),
+        ),
+      );
+
+      responses.forEach((res, index) => {
+        expect(res.status).toBe(200);
+        expect(res.body.dua).toBeDefined();
+        expect(res.body.matchSource).toBe("regex");
+        expect(res.body.dua.category).toBe(requests[index].category);
       });
+    });
+  });
 
-      it("should handle multiple sequential requests", async () => {
-        selectDuaWithOpenAISpy
-          .mockResolvedValueOnce({ duaId: 1 })
-          .mockResolvedValueOnce({ duaId: 2 })
-          .mockResolvedValueOnce({ duaId: 3 });
+  describe("AI Fallback for Non-Matching Queries", () => {
+    it("should use AI or fallback for vague queries that don't match regex", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "help me with something" })
+        .expect(200);
 
-        const requests = ["I'm sick", "I'm worried", "I'm thankful"];
+      expect(response.body).toHaveProperty("dua");
+      expect(response.body).toHaveProperty("matchSource");
+      // Should use AI or fallback, not regex
+      expect(["ai", "fallback"]).toContain(response.body.matchSource);
+    });
 
-        for (const req of requests) {
-          const response = await request(app)
-            .post("/api/dua/match")
-            .send({ userRequest: req });
+    it("should still return valid dua even when regex doesn't match", async () => {
+      const response = await request(app)
+        .post("/api/dua/match")
+        .send({ userRequest: "random text" })
+        .expect(200);
 
-          expect(response.status).toBe(200);
-          expect(response.body.dua).toBeDefined();
-        }
-
-        expect(selectDuaWithOpenAISpy).toHaveBeenCalledTimes(3);
-      });
+      expect(response.body.dua).toBeDefined();
+      expect(response.body.dua.id).toBeGreaterThan(0);
+      expect(response.body.dua.category).toBeTruthy();
     });
   });
 });

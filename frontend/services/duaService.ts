@@ -27,20 +27,36 @@ export interface Dua {
   source: string;
 }
 
-const DUA_API_BASE =
-  process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+interface DuaResponse {
+  dua: Dua;
+  matchSource?: "regex" | "ai" | "fallback";
+}
+
+const DUA_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+
+/**
+ * Simulated delay to make UX feel more natural
+ * Regex matching is instant (<1ms), but feels abrupt
+ * Add a small delay to make it feel like "thinking"
+ */
+const SIMULATED_DELAY_MS = 800; // 0.8 seconds
 
 /**
  * Request a dua from backend based on user input
  *
  * Backend handles:
  * - Loading duas.json
- * - Calling OpenAI
+ * - Regex pattern matching (fast, deterministic)
+ * - Calling OpenAI (fallback if regex doesn't match)
  * - Selecting appropriate dua
  * - Fallback to random if OpenAI fails
  * - Validating dua ID
  *
- * Frontend only receives: { dua: Dua }
+ * Frontend receives: { dua: Dua, matchSource: "regex" | "ai" | "fallback" }
+ *
+ * UX Enhancement:
+ * - If matchSource is "regex", add simulated delay to feel more natural
+ * - If matchSource is "ai", no delay (real API latency already exists)
  */
 export async function requestDua(userRequest: string): Promise<Dua> {
   try {
@@ -50,12 +66,32 @@ export async function requestDua(userRequest: string): Promise<Dua> {
 
     console.log(`📤 Requesting dua for: "${userRequest}"`);
 
-    const response = await axios.post(`${DUA_API_BASE}/api/dua/match`, {
-      userRequest: userRequest.trim(),
-    });
+    // Start timer to measure response time
+    const startTime = Date.now();
 
-    // Backend returns: { dua: {...} }
-    const dua = response.data.dua as Dua;
+    const response = await axios.post<DuaResponse>(
+      `${DUA_API_BASE}/api/dua/match`,
+      {
+        userRequest: userRequest.trim(),
+      },
+    );
+
+    const { dua, matchSource } = response.data;
+    const responseTime = Date.now() - startTime;
+
+    console.log(
+      `✅ Received dua: ${dua.id} (${dua.category}) via ${matchSource || "unknown"} in ${responseTime}ms`,
+    );
+
+    // Simulate loading delay for instant regex matches
+    // This makes the UX feel more polished and intentional
+    if (matchSource === "regex" && responseTime < 300) {
+      const delayNeeded = SIMULATED_DELAY_MS - responseTime;
+      if (delayNeeded > 0) {
+        console.log(`⏱️  Adding ${delayNeeded}ms simulated delay for UX`);
+        await new Promise((resolve) => setTimeout(resolve, delayNeeded));
+      }
+    }
 
     // Validate structure
     if (
@@ -68,7 +104,6 @@ export async function requestDua(userRequest: string): Promise<Dua> {
       throw new Error("Invalid dua structure received from backend");
     }
 
-    console.log(`✅ Received dua: ${dua.id} (${dua.category})`);
     return dua;
   } catch (err: any) {
     console.error("❌ Dua request error:", err.message);

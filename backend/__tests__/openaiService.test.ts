@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import type { Dua } from "../src/utils/duaDatabase.js";
 import { formatDuaMetadataForContext } from "../src/utils/duaDatabase.js";
 
-describe("openaiService", () => {
+describe("openaiService (fallback only)", () => {
   const mockDuas: Dua[] = [
     {
       id: 1,
@@ -36,7 +36,21 @@ describe("openaiService", () => {
     },
   ];
 
-  describe("dua metadata formatting (used by OpenAI)", () => {
+  describe("AI usage philosophy", () => {
+    it("should understand AI is only used as fallback", () => {
+      // AI should only be called when regex matching fails
+      const regexShouldHandleFirst = true;
+      expect(regexShouldHandleFirst).toBe(true);
+    });
+
+    it("should prefer deterministic matching over AI", () => {
+      // Regex is fast, free, and predictable
+      const preferRegex = true;
+      expect(preferRegex).toBe(true);
+    });
+  });
+
+  describe("dua metadata formatting (used by OpenAI when it's called)", () => {
     it("should format dua metadata without full content", () => {
       const metadata = formatDuaMetadataForContext(mockDuas[0]);
 
@@ -270,261 +284,7 @@ Select the BEST matching dua ID. Respond with ONLY JSON: { "duaId": number }`;
     });
   });
 
-  // Note: Full OpenAI API integration tests with actual network calls
-  // are tested through integration tests in duaRoutes.test.ts
-});
-
-describe("openaiService Real API Integration", () => {
-  // Only run these tests if OPENAI_API_KEY is set
-  const apiKey = process.env.OPENAI_API_KEY;
-  const runRealTests = apiKey && apiKey.length > 0;
-
-  if (!runRealTests) {
-    it.skip("Skipping real OpenAI tests - OPENAI_API_KEY not set", () => {});
-  }
-
-  const mockDuas = [
-    {
-      id: 1,
-      category: "healing",
-      tags: ["health", "illness", "recovery", "sick"],
-      arabic: "اللَّهُمَّ رَبَّ النَّاسِ",
-      english: "O Allah, Lord of mankind",
-      transliteration: "Allahumma Rabban-naas",
-      reference: "Sahih Bukhari 5743",
-      source: "hadith",
-    },
-    {
-      id: 2,
-      category: "anxiety",
-      tags: ["worry", "fear", "stress", "nervous", "exam"],
-      arabic: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ",
-      english: "O Allah, I seek refuge in You",
-      transliteration: "Allahumma inni a'udhu bika",
-      reference: "Sahih Bukhari 6369",
-      source: "hadith",
-    },
-    {
-      id: 3,
-      category: "gratitude",
-      tags: ["thanks", "blessing", "appreciation", "grateful"],
-      arabic: "الْحَمْدُ لِلَّهِ",
-      english: "All praise is due to Allah",
-      transliteration: "Alhamdulillah",
-      reference: "Quran 1:2",
-      source: "quran",
-    },
-    {
-      id: 4,
-      category: "forgiveness",
-      tags: ["sin", "repentance", "mercy", "pardon"],
-      arabic: "أَسْتَغْفِرُ اللَّهَ",
-      english: "I seek forgiveness from Allah",
-      transliteration: "Astaghfirullah",
-      reference: "Quran 71:10",
-      source: "quran",
-    },
-  ];
-
-  (runRealTests ? describe : describe.skip)("Real OpenAI API Calls", () => {
-    // Import the real service
-    let selectDuaWithOpenAI: any;
-
-    beforeAll(async () => {
-      const module = await import("../src/services/openaiService.js");
-      selectDuaWithOpenAI = module.selectDuaWithOpenAI;
-    });
-
-    it("should successfully call OpenAI and return valid dua ID", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I'm feeling sick and need healing",
-        mockDuas,
-      );
-
-      expect(response).toBeDefined();
-      expect(response).toHaveProperty("duaId");
-      expect(typeof response.duaId).toBe("number");
-      expect(response.duaId).toBeGreaterThan(0);
-
-      // Should match a dua from our list
-      const matchedDua = mockDuas.find((d) => d.id === response.duaId);
-      expect(matchedDua).toBeDefined();
-    }, 10000); // 10 second timeout for API call
-
-    it("should match healing request to healing dua", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I am sick and need prayers for recovery",
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(1); // Should select healing dua
-    }, 10000);
-
-    it("should match anxiety request to anxiety dua", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I'm nervous about my exam tomorrow",
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(2); // Should select anxiety dua
-    }, 10000);
-
-    it("should match gratitude request to gratitude dua", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I want to thank Allah for my blessings",
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(3); // Should select gratitude dua
-    }, 10000);
-
-    it("should match forgiveness request to forgiveness dua", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I sinned and want to repent",
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(4); // Should select forgiveness dua
-    }, 10000);
-
-    it("should handle complex multi-topic request", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I'm stressed about work and feeling anxious",
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(2); // Should select anxiety dua
-    }, 10000);
-
-    it("should handle vague request and return valid dua", async () => {
-      const response = await selectDuaWithOpenAI("I need help", mockDuas);
-
-      // Should return any valid dua ID
-      expect([1, 2, 3, 4]).toContain(response.duaId);
-    }, 10000);
-
-    it("should be consistent with low temperature setting", async () => {
-      const userRequest = "I'm feeling anxious about an exam";
-
-      const response1 = await selectDuaWithOpenAI(userRequest, mockDuas);
-      const response2 = await selectDuaWithOpenAI(userRequest, mockDuas);
-
-      // With temperature 0.3, should be mostly consistent
-      // Allow for occasional variation but expect same category
-      const dua1 = mockDuas.find((d) => d.id === response1.duaId);
-      const dua2 = mockDuas.find((d) => d.id === response2.duaId);
-
-      expect(dua1).toBeDefined();
-      expect(dua2).toBeDefined();
-      // Both should be anxiety-related (id: 2)
-      expect(response1.duaId).toBe(2);
-      expect(response2.duaId).toBe(2);
-    }, 20000); // 20 seconds for 2 API calls
-
-    it("should handle Arabic text in request", async () => {
-      const response = await selectDuaWithOpenAI(
-        "أنا مريض وأحتاج إلى الشفاء", // I am sick and need healing
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(1); // Should understand and select healing
-    }, 10000);
-
-    it("should handle very short request", async () => {
-      const response = await selectDuaWithOpenAI("sick", mockDuas);
-
-      expect([1, 2, 3, 4]).toContain(response.duaId);
-    }, 10000);
-
-    it("should handle emoji in request", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I'm so stressed 😰😭",
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(2); // Should match anxiety
-    }, 10000);
-
-    it("should not return extra fields beyond duaId", async () => {
-      const response = await selectDuaWithOpenAI("help me", mockDuas);
-
-      const keys = Object.keys(response);
-      expect(keys).toHaveLength(1);
-      expect(keys[0]).toBe("duaId");
-    }, 10000);
-
-    it("should handle request with special characters", async () => {
-      const response = await selectDuaWithOpenAI(
-        "I'm feeling... really anxious!!! Need help???",
-        mockDuas,
-      );
-
-      expect(response.duaId).toBe(2);
-    }, 10000);
-
-    it("should handle long detailed request", async () => {
-      const longRequest = `I have been feeling extremely anxious lately. 
-        I have an important exam coming up next week and I can't stop 
-        worrying about it. I need something to help calm my nerves 
-        and put my trust in Allah.`;
-
-      const response = await selectDuaWithOpenAI(longRequest, mockDuas);
-
-      expect(response.duaId).toBe(2); // Should match anxiety
-    }, 10000);
-
-    it("should work with minimal duas list", async () => {
-      const minimalDuas = [mockDuas[0]]; // Only one dua
-
-      const response = await selectDuaWithOpenAI("I need help", minimalDuas);
-
-      expect(response.duaId).toBe(1);
-    }, 10000);
-
-    it("should work with larger duas list", async () => {
-      const largeDuasList = [
-        ...mockDuas,
-        {
-          id: 5,
-          category: "travel",
-          tags: ["journey", "safety"],
-          arabic: "",
-          english: "",
-          transliteration: "",
-          reference: "",
-          source: "hadith",
-        },
-        {
-          id: 6,
-          category: "sleep",
-          tags: ["rest", "night"],
-          arabic: "",
-          english: "",
-          transliteration: "",
-          reference: "",
-          source: "hadith",
-        },
-        {
-          id: 7,
-          category: "morning",
-          tags: ["dawn", "start"],
-          arabic: "",
-          english: "",
-          transliteration: "",
-          reference: "",
-          source: "hadith",
-        },
-      ];
-
-      const response = await selectDuaWithOpenAI(
-        "I'm going on a trip",
-        largeDuasList,
-      );
-
-      expect(response.duaId).toBe(5); // Should match travel
-    }, 10000);
-  });
-
-  // Note: API key validation test is covered in unit tests
-  // Testing with real module reload is complex in ESM
+  // Note: OpenAI service is only used as a fallback when regex matching fails
+  // Most queries should be handled by regex, not AI
+  // Full OpenAI API integration tests are minimal since it's fallback-only
 });

@@ -50,3 +50,27 @@ export function getRandomDua(duas: Dua[]): Dua | null {
   const randomIndex = Math.floor(Math.random() * duas.length);
   return duas[randomIndex];
 }
+
+/**
+ * Get all duas matching a specific category
+ * Returns array of matching duas
+ */
+export function getDuasByCategory(duas: Dua[], category: string): Dua[] {
+  return duas.filter(
+    (dua) => dua.category.toLowerCase() === category.toLowerCase(),
+  );
+}
+
+/**
+ * Get a random dua from a specific category
+ * Returns null if no duas found in that category
+ */
+export function getRandomDuaByCategory(
+  duas: Dua[],
+  category: string,
+): Dua | null {
+  const matchingDuas = getDuasByCategory(duas, category);
+  if (matchingDuas.length === 0) return null;
+  const randomIndex = Math.floor(Math.random() * matchingDuas.length);
+  return matchingDuas[randomIndex];
+}
