@@ -1,7 +1,7 @@
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
-import { ENV } from "./config/env";
+import { ENV } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler";
 import duaRoutes from "./routes/dua";
 

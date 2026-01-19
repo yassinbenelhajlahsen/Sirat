@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ENV } from "../config/env";
+import { ENV } from "../config/env.js";
 import type { Dua } from "../utils/duaDatabase";
 import { formatDuaMetadataForContext } from "../utils/duaDatabase";
 
