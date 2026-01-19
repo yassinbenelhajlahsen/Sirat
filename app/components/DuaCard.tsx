@@ -15,7 +15,7 @@ interface DuaCardProps {
   loading?: boolean;
 }
 
-export function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
+function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   const [userInput, setUserInput] = React.useState("");
 
   const handleSubmit = async () => {
@@ -25,9 +25,9 @@ export function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
     }
 
     try {
-      Keyboard.dismiss();
       await onSubmit(userInput);
       setUserInput("");
+      Keyboard.dismiss();
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to find a dua");
     }
@@ -82,6 +82,7 @@ export function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
         multiline
         returnKeyType="done"
         blurOnSubmit={true}
+        onSubmitEditing={handleSubmit}
         maxLength={150}
         editable={!loading}
         style={{
@@ -159,3 +160,5 @@ export function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
     </View>
   );
 }
+
+export default DuaCard;

@@ -10,17 +10,13 @@ interface DuaResultCardProps {
   onSaveBookmark?: () => Promise<void>;
 }
 
-export function DuaResultCard({
-  dua,
-  onClose,
-  onSaveBookmark,
-}: DuaResultCardProps) {
+function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
   const [bookmarkLoading, setBookmarkLoading] = React.useState(false);
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `✨ Check out this dua:\n\n${dua.arabic}\n\n${dua.transliteration}\n\n${dua.english}\n\n— ${dua.reference}`,
+        message: `Check out this dua 🤲:\n\n${dua.arabic}\n\n${dua.transliteration}\n\n${dua.english}\n\n— ${dua.reference}`,
         title: "Islamic Dua",
       });
     } catch (err) {
@@ -334,3 +330,5 @@ export function DuaResultCard({
     </View>
   );
 }
+
+export default DuaResultCard;

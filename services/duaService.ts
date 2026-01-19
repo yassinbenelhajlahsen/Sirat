@@ -28,7 +28,7 @@ export interface Dua {
 }
 
 const DUA_API_BASE =
-  process.env.EXPO_PUBLIC_DUA_API_URL || "http://localhost:3001";
+  process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 
 /**
  * Request a dua from backend based on user input

@@ -28,8 +28,8 @@ import {
 } from "../../services/prayerTimes";
 import CITIES, { City, cityKey } from "../../util/cities";
 import getTimeUntil from "../../util/getTimeUntil";
-import { DuaCard } from "../components/DuaCard";
-import { DuaResultCard } from "../components/DuaResultCard";
+import DuaCard from "../components/DuaCard";
+import DuaResultCard from "../components/DuaResultCard";
 import PrayerTimesList from "../components/PrayerTimesList";
 import PressableScale from "../components/PressableScale";
 
@@ -369,13 +369,13 @@ export default function Home() {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        keyboardVerticalOffset={-60}
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
           <ScrollView
             ref={scrollViewRef}
-            contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
+            contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
             refreshControl={
