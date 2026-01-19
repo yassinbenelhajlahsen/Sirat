@@ -36,19 +36,19 @@ export function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   return (
     <View
       style={{
-        backgroundColor: withOpacity(colors.primarySurface, 0.5),
-        borderRadius: 12,
-        padding: 16,
         marginTop: 20,
-        marginBottom: 12,
-        borderWidth: 2,
-        borderColor: withOpacity(colors.white, 0.12),
-        shadowColor: withOpacity(colors.black, 0.15),
-        shadowOpacity: 0.3,
-        shadowRadius: 22,
-        shadowOffset: { width: 0, height: 12 },
+        backgroundColor: withOpacity(colors.black, 0.2),
+        borderRadius: 18,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: withOpacity(colors.white, 0.08),
+        shadowColor: colors.primaryDark,
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 16 },
         elevation: 6,
-        overflow: "hidden",
+        position: "relative",
+        zIndex: 1,
       }}
     >
       <Text
