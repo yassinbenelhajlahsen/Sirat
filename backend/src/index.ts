@@ -2,8 +2,8 @@ import cors from "cors";
 import "dotenv/config";
 import express from "express";
 import { ENV } from "./config/env.js";
-import { errorHandler } from "./middleware/errorHandler";
-import duaRoutes from "./routes/dua";
+import { errorHandler } from "./middleware/errorHandler.js";
+import duaRoutes from "./routes/dua.js";
 
 const app = express();
 

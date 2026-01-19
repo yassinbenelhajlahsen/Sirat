@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { selectDuaWithOpenAI } from "../services/openaiService";
-import { getRandomDua, loadDuas } from "../utils/duaDatabase";
+import { selectDuaWithOpenAI } from "../services/openaiService.js";
+import { getRandomDua, loadDuas } from "../utils/duaDatabase.js";
 
 /**
  * POST /api/dua/match

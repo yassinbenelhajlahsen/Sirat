@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { health, matchDua } from "../controllers/duaController";
+import { health, matchDua } from "../controllers/duaController.js";
 
 const router = Router();
 
