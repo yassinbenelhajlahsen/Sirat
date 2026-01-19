@@ -52,8 +52,6 @@ ${duasMetadata}
 Select the BEST matching dua ID. Respond with ONLY JSON: { "duaId": number }`;
 
   try {
-    console.log(`📤 Sending request to OpenAI (${duas.length} duas available)`);
-
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
