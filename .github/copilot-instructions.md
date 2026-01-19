@@ -2,33 +2,57 @@
 
 ## Project Overview
 
-**Sirat** is a React Native + Expo mobile app providing Islamic utilities: prayer times, Qibla direction, Quran reading with audio, mosque discovery, and prayer notifications. The architecture emphasizes modular services, context-based state management, and Expo's ecosystem integration.
+**Sirat** is a mono-repo containing:
+
+- **Frontend:** React Native + Expo mobile app (`frontend/`)
+- **Backend:** Node.js + Express API server (`backend/`)
+
+The mobile app provides Islamic utilities: prayer times, Qibla direction, Quran reading with audio, mosque discovery, and prayer notifications. The backend provides AI-powered dua search via OpenAI.
+
+The frontend architecture emphasizes modular services, context-based state management, and Expo's ecosystem integration.
+
+## Mono-Repo Structure
+
+All frontend code is located in `frontend/`:
+
+- `frontend/app/` - Expo Router screens and components
+- `frontend/services/` - Business logic and API integrations
+- `frontend/hooks/` - Custom React hooks
+- `frontend/context/` - React context providers
+- `frontend/constants/` - Theme and design tokens
+- `frontend/assets/` - Images, fonts, sounds, data files
+- `frontend/util/` - Helper functions
+
+All backend code is located in `backend/`:
+
+- `backend/src/` - Express server, routes, controllers
+- `backend/public/` - Static assets (dua database)
 
 ## Key Architecture Patterns
 
 ### Service Layer
 
-- **Location-independent services** in `services/`: `prayerTimes.ts`, `notificationService.ts`, `quranData.ts`, `quranAudio.ts`
+- **Location-independent services** in `frontend/services/`: `prayerTimes.ts`, `notificationService.ts`, `quranData.ts`, `quranAudio.ts`
 - Services handle **device permissions, caching, and external API calls** (Aladhan, Google Places)
 - Each service manages its own **AsyncStorage keys** for persistence (e.g., `prayerSettings`, `notif_enabled_v1`)
 - Use **DeviceEventEmitter** for cross-component events (e.g., `SETTINGS_CHANGED_EVENT`, `NOTIF_PREFS_UPDATED_EVENT`)
 
 ### Context Providers
 
-- `QuranAudioProvider` in `context/`: Manages Quran playback state, surah metadata, and session coordination
+- `QuranAudioProvider` in `frontend/context/`: Manages Quran playback state, surah metadata, and session coordination
 - Exposed via custom hooks (e.g., `useQuranAudio`) to avoid prop drilling
 - Complex state transitions (loading, playing, paused) are handled here, not in components
 
 ### Routing & Navigation
 
-- **Expo Router** (`app/` directory) with file-based routing
-- Tab-based layout in `app/(tabs)/` with 5 main screens: Home, Mosques, Qibla, Quran, Calendar
-- Use relative imports with `@/` alias pointing to workspace root
+- **Expo Router** (`frontend/app/` directory) with file-based routing
+- Tab-based layout in `frontend/app/(tabs)/` with 5 main screens: Home, Mosques, Qibla, Quran, Calendar
+- Use relative imports with `@/` alias pointing to `frontend/` root (configured in `frontend/tsconfig.json`)
 
 ### Styling & UI
 
 - **NativeWind** (Tailwind CSS for React Native) for consistent design
-- **Central theme** in `constants/theme.ts`: colors, opacity helpers, and design tokens
+- **Central theme** in `frontend/constants/theme.ts`: colors, opacity helpers, and design tokens
 - Predefined color palette with semantic names (primary, accent, success, danger)
 - Use `withOpacity()` helper for dynamic alpha transparency
 
@@ -42,8 +66,8 @@
 
 **Quran Data Pipeline:**
 
-- Raw data shipped as JSON assets (`assets/data/quran/quran.json`, `meta.json`)
-- Normalized via `NormalizedAyah` & `NormalizedSurahMeta` types in `services/quranData.ts`
+- Raw data shipped as JSON assets (`frontend/assets/data/quran/quran.json`, `meta.json`)
+- Normalized via `NormalizedAyah` & `NormalizedSurahMeta` types in `frontend/services/quranData.ts`
 - Surah audio URLs constructed via `getSurahAudioUrl()` with fallback handling for offline
 
 **Notification Scheduling:**
@@ -57,6 +81,9 @@
 ### Build & Run
 
 ```bash
+# Navigate to frontend directory
+cd frontend
+
 # Expo development server
 npm start
 
@@ -167,11 +194,11 @@ useEffect(() => {
 
 ## File Organization Rules
 
-- **Components:** Reusable UI in `app/components/`; screen-level logic stays in `app/(tabs)/`
-- **Services:** Business logic, API calls, caching → `services/`
-- **Hooks:** Custom React hooks that wrap services → `hooks/`
-- **Utilities:** Pure functions (time formatting, city lookups) → `util/`
-- **Context & Providers:** Global state → `context/`
+- **Components:** Reusable UI in `frontend/app/components/`; screen-level logic stays in `frontend/app/(tabs)/`
+- **Services:** Business logic, API calls, caching → `frontend/services/`
+- **Hooks:** Custom React hooks that wrap services → `frontend/hooks/`
+- **Utilities:** Pure functions (time formatting, city lookups) → `frontend/util/`
+- **Context & Providers:** Global state → `frontend/context/`
 - **Types:** Leverage TypeScript; define inline or in service files (avoid separate `types/` unless complex)
 
 ## Debugging Tips
@@ -183,7 +210,7 @@ useEffect(() => {
 
 ## When Modifying Existing Features
 
-1. **Prayer times:** Check `services/prayerTimes.ts` for caching strategy; update composite cache key if settings structure changes
-2. **Notifications:** Review `notificationService.ts` for scheduling logic and platform-specific limits before adding prayers
-3. **Quran:** Ensure audio URLs remain valid and normalization matches asset structure in `services/quranData.ts`
+1. **Prayer times:** Check `frontend/services/prayerTimes.ts` for caching strategy; update composite cache key if settings structure changes
+2. **Notifications:** Review `frontend/services/notificationService.ts` for scheduling logic and platform-specific limits before adding prayers
+3. **Quran:** Ensure audio URLs remain valid and normalization matches asset structure in `frontend/services/quranData.ts`
 4. **UI:** Maintain theme color usage; avoid hardcoded hex values; respect safe area in layouts
