@@ -13,9 +13,10 @@ import PressableScale from "./PressableScale";
 interface DuaCardProps {
   onSubmit: (request: string) => Promise<void>;
   loading?: boolean;
+  onInputFocus?: () => void;
 }
 
-function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
+function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
   const [userInput, setUserInput] = React.useState("");
 
   const handleSubmit = async () => {
@@ -85,6 +86,10 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
         onSubmitEditing={handleSubmit}
         maxLength={150}
         editable={!loading}
+        onFocus={() => {
+          // Let focus happen first, then scroll
+          requestAnimationFrame(() => onInputFocus?.());
+        }}
         style={{
           backgroundColor: withOpacity(colors.black, 0.3),
           borderRadius: 10,

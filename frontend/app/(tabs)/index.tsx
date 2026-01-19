@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -316,6 +316,40 @@ export default function Home() {
     };
   }, []);
 
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const scrollToBottom = useCallback((animated: boolean) => {
+    // Do it after the current frame, when layout is more likely settled
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollToEnd({ animated });
+    });
+  }, []);
+
+  useEffect(() => {
+    const willShowSub =
+      Platform.OS === "ios"
+        ? Keyboard.addListener("keyboardWillShow", () => {
+            setKeyboardOpen(true);
+            // Scroll immediately, same frame as keyboard animation
+            requestAnimationFrame(() => scrollToBottom(true));
+          })
+        : null;
+
+    const didShowSub = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardOpen(true);
+      requestAnimationFrame(() => scrollToBottom(false));
+    });
+
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardOpen(false);
+    });
+
+    return () => {
+      willShowSub?.remove();
+      didShowSub.remove();
+      hideSub.remove();
+    };
+  }, [scrollToBottom]);
+
   useEffect(() => {
     if (!nextPrayer) return;
     setTimeLeft(getTimeUntil(nextPrayer.dateObj));
@@ -380,6 +414,9 @@ export default function Home() {
             contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
+            onContentSizeChange={() => {
+              if (keyboardOpen) scrollToBottom(false);
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -514,7 +551,11 @@ export default function Home() {
                 onClose={() => setSelectedDua(null)}
               />
             ) : (
-              <DuaCard onSubmit={handleDuaSubmit} loading={duaLoading} />
+              <DuaCard
+                onSubmit={handleDuaSubmit}
+                loading={duaLoading}
+                onInputFocus={() => scrollToBottom(true)}
+              />
             )}
 
             {!nextPrayer && nextDayFajr && (
