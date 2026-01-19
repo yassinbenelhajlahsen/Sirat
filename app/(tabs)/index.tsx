@@ -301,9 +301,10 @@ export default function Home() {
 
   // Smooth keyboard scroll - use keyboardWillShow on iOS for simultaneous animation
   useEffect(() => {
-    const keyboardEvent =
+    const keyboardShowEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const showSubscription = Keyboard.addListener(keyboardEvent, () => {
+
+    const showSubscription = Keyboard.addListener(keyboardShowEvent, () => {
       // Scroll past the end to ensure DuaCard is well above keyboard
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -375,6 +376,7 @@ export default function Home() {
         <SafeAreaView style={{ flex: 1 }}>
           <ScrollView
             ref={scrollViewRef}
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
