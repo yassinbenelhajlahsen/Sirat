@@ -69,12 +69,9 @@ export async function requestDua(userRequest: string): Promise<Dua> {
     // Start timer to measure response time
     const startTime = Date.now();
 
-    const response = await axios.post<DuaResponse>(
-      `${DUA_API_BASE}/api/dua/match`,
-      {
-        userRequest: userRequest.trim(),
-      },
-    );
+    const response = await axios.post<DuaResponse>(`${DUA_API_BASE}/api/dua`, {
+      userRequest: userRequest.trim(),
+    });
 
     const { dua, matchSource } = response.data;
     const responseTime = Date.now() - startTime;

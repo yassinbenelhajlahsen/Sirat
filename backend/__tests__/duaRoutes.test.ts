@@ -25,10 +25,10 @@ describe("Dua Routes Integration", () => {
     jest.restoreAllMocks();
   });
 
-  describe("POST /api/dua/match", () => {
+  describe("POST /api/dua", () => {
     it("should return 400 for missing userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({})
         .expect("Content-Type", /json/)
         .expect(400);
@@ -39,7 +39,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for empty userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "" })
         .expect("Content-Type", /json/)
         .expect(400);
@@ -49,7 +49,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for short userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "ab" })
         .expect("Content-Type", /json/)
         .expect(400);
@@ -60,7 +60,7 @@ describe("Dua Routes Integration", () => {
 
     it("should handle valid request (uses actual duas.json)", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I need healing from illness" })
         .expect("Content-Type", /json/)
         .expect(200);
@@ -74,7 +74,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return dua without extra fields", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "help with anxiety" })
         .expect(200);
 
@@ -118,7 +118,7 @@ describe("Dua Routes Integration", () => {
   describe("Edge Cases & Error Scenarios", () => {
     it("should return 400 for null userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: null })
         .expect(400);
 
@@ -127,7 +127,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for undefined userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: undefined })
         .expect(400);
 
@@ -136,7 +136,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for number userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: 123 })
         .expect(400);
 
@@ -145,7 +145,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for boolean userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: true })
         .expect(400);
 
@@ -154,7 +154,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for array userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: ["help"] })
         .expect(400);
 
@@ -163,7 +163,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for object userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: { text: "help" } })
         .expect(400);
 
@@ -172,7 +172,7 @@ describe("Dua Routes Integration", () => {
 
     it("should trim whitespace from userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "   help me with anxiety   " })
         .expect(200);
 
@@ -181,7 +181,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return 400 for whitespace-only userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "   " })
         .expect(400);
 
@@ -190,7 +190,7 @@ describe("Dua Routes Integration", () => {
 
     it("should handle unicode characters in userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "أحتاج مساعدة" })
         .expect(200);
 
@@ -199,7 +199,7 @@ describe("Dua Routes Integration", () => {
 
     it("should handle special characters in userRequest", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I'm feeling anxious!" })
         .expect(200);
 
@@ -210,7 +210,7 @@ describe("Dua Routes Integration", () => {
       const longRequest =
         "I need help with anxiety about my upcoming exam and I'm also worried about my health and family";
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: longRequest })
         .expect(200);
 
@@ -221,7 +221,7 @@ describe("Dua Routes Integration", () => {
   describe("Regex-First Matching Tests", () => {
     it("should match anxiety queries using regex (no AI call)", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I'm feeling anxious" })
         .expect(200);
 
@@ -233,7 +233,7 @@ describe("Dua Routes Integration", () => {
 
     it("should match sleep queries using regex", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I can't sleep at night" })
         .expect(200);
 
@@ -243,7 +243,7 @@ describe("Dua Routes Integration", () => {
 
     it("should match exam/knowledge queries using regex", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I have an exam tomorrow" })
         .expect(200);
 
@@ -253,7 +253,7 @@ describe("Dua Routes Integration", () => {
 
     it("should match healing queries using regex", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I am sick and need healing" })
         .expect(200);
 
@@ -263,7 +263,7 @@ describe("Dua Routes Integration", () => {
 
     it("should match forgiveness queries using regex", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "Please forgive me for my sins" })
         .expect(200);
 
@@ -273,7 +273,7 @@ describe("Dua Routes Integration", () => {
 
     it("should match gratitude queries using regex", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I want to thank Allah for my blessings" })
         .expect(200);
 
@@ -283,7 +283,7 @@ describe("Dua Routes Integration", () => {
 
     it("should return valid dua structure", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I'm stressed out" })
         .expect(200);
 
@@ -304,7 +304,7 @@ describe("Dua Routes Integration", () => {
 
     it("should not include reasoning or extra fields", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "I'm worried" })
         .expect(200);
 
@@ -325,7 +325,7 @@ describe("Dua Routes Integration", () => {
 
       const responses = await Promise.all(
         requests.map((req) =>
-          request(app).post("/api/dua/match").send({ userRequest: req.text }),
+          request(app).post("/api/dua").send({ userRequest: req.text }),
         ),
       );
 
@@ -341,7 +341,7 @@ describe("Dua Routes Integration", () => {
   describe("AI Fallback for Non-Matching Queries", () => {
     it("should use AI or fallback for vague queries that don't match regex", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "help me with something" })
         .expect(200);
 
@@ -353,7 +353,7 @@ describe("Dua Routes Integration", () => {
 
     it("should still return valid dua even when regex doesn't match", async () => {
       const response = await request(app)
-        .post("/api/dua/match")
+        .post("/api/dua")
         .send({ userRequest: "random text" })
         .expect(200);
 

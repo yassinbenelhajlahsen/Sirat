@@ -8,7 +8,7 @@ import {
 import { matchByRegex, type MatchSource } from "../utils/duaMatcher.js";
 
 /**
- * POST /api/dua/match
+ * POST /api/dua
  *
  * Main endpoint: Match user request to appropriate dua
  *

@@ -4,12 +4,12 @@ import { health, matchDua } from "../controllers/duaController.js";
 const router = Router();
 
 /**
- * POST /api/dua/match
+ * POST /api/dua
  * Match user request to a dua
  * Body: { userRequest: string }
- * Response: { dua: Dua }
+ * Response: { dua: Dua, matchSource: "regex" | "ai" | "fallback" }
  */
-router.post("/match", matchDua);
+router.post("/", matchDua);
 
 /**
  * GET /api/dua/health

@@ -32,7 +32,7 @@ app.get("/", (req, res) => {
     version: "1.0.0",
     status: "running",
     endpoints: {
-      "POST /api/dua/match": "Match user request to a dua",
+      "POST /api/dua": "Match user request to a dua",
       "GET /api/dua/health": "Health check",
     },
   });
