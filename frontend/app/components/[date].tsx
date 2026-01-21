@@ -159,18 +159,17 @@ export default function CalendarDetail() {
                 useNativeDriver: true,
               }),
             ]).start(() => {
-              router.replace({
-                pathname: "/components/[date]",
-                params: {
-                  date: nextDate.toISOString(),
-                  month: nextDate.getMonth().toString(),
-                  year: nextDate.getFullYear().toString(),
-                },
-              });
+              // Reset animation values
               fadeAnim.setValue(0);
               slideAnim.setValue(screenWidth);
               prayerTimesAnim.setValue(0);
               prayerTimesSlide.setValue(screenWidth);
+
+              // Update state instead of navigating
+              setSelectedDate(nextDate);
+              setFetchNonce((n) => n + 1);
+
+              // Animate in the new content
               Animated.parallel([
                 Animated.timing(fadeAnim, {
                   toValue: 1,
@@ -226,18 +225,17 @@ export default function CalendarDetail() {
                 useNativeDriver: true,
               }),
             ]).start(() => {
-              router.replace({
-                pathname: "/components/[date]",
-                params: {
-                  date: prevDate.toISOString(),
-                  month: prevDate.getMonth().toString(),
-                  year: prevDate.getFullYear().toString(),
-                },
-              });
+              // Reset animation values
               fadeAnim.setValue(0);
               slideAnim.setValue(-screenWidth);
               prayerTimesAnim.setValue(0);
               prayerTimesSlide.setValue(-screenWidth);
+
+              // Update state instead of navigating
+              setSelectedDate(prevDate);
+              setFetchNonce((n) => n + 1);
+
+              // Animate in the new content
               Animated.parallel([
                 Animated.timing(fadeAnim, {
                   toValue: 1,
@@ -600,20 +598,20 @@ export default function CalendarDetail() {
     ]).start(() => {
       const newDate = new Date(selectedDate);
       newDate.setDate(newDate.getDate() + daysOffset);
-      router.replace({
-        pathname: "/components/[date]",
-        params: {
-          date: newDate.toISOString(),
-          month: newDate.getMonth().toString(),
-          year: newDate.getFullYear().toString(),
-        },
-      });
+
+      // Reset animation values
       fadeAnim.setValue(0);
       slideAnim.setValue(direction === "next" ? screenWidth : -screenWidth);
       prayerTimesAnim.setValue(0);
       prayerTimesSlide.setValue(
         direction === "next" ? screenWidth : -screenWidth,
       );
+
+      // Update state instead of navigating
+      setSelectedDate(newDate);
+      setFetchNonce((n) => n + 1);
+
+      // Animate in the new content
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -830,38 +828,19 @@ export default function CalendarDetail() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              backgroundColor: withOpacity(colors.white, 0.08),
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: withOpacity(colors.accent, 0.15),
-              shadowColor: colors.black,
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 2 },
-              elevation: 2,
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              borderRadius: 10,
+              backgroundColor: "transparent",
             }}
           >
-            <View
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                backgroundColor: withOpacity(colors.accent, 0.12),
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 8,
-              }}
-            >
-              <Ionicons name="chevron-back" size={18} color={colors.accent} />
-            </View>
+            <Ionicons name="chevron-back" size={22} color={colors.accent} />
             <Text
               style={{
-                color: colors.white,
+                color: colors.accent,
                 fontSize: 16,
-                fontFamily: "SFProDisplay-Semibold",
-                letterSpacing: 0.3,
+                fontFamily: "SFProDisplay-Medium",
+                marginLeft: 2,
               }}
             >
               Calendar
@@ -923,7 +902,7 @@ export default function CalendarDetail() {
                   marginBottom: 2,
                 }}
               >
-                Previous
+                Prev
               </Text>
               {!isPrevDisabled && (
                 <Text
@@ -1212,10 +1191,6 @@ export default function CalendarDetail() {
               shadowOffset: { width: 0, height: 16 },
               elevation: 6,
               overflow: "hidden",
-
-              // This is the key
-              minHeight: 350, // lock vertical footprint
-              justifyContent: "center",
             }}
           >
             <Animated.View

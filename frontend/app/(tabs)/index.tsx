@@ -525,8 +525,9 @@ export default function Home() {
                 shadowRadius: 24,
                 shadowOffset: { width: 0, height: 16 },
                 elevation: 6,
-                position: "relative",
-                zIndex: 1,
+
+                minHeight: 360, // lock footprint
+                justifyContent: "center",
               }}
             >
               <PrayerTimesList
@@ -536,67 +537,68 @@ export default function Home() {
               />
             </View>
 
-            {nextPrayer && (
-              <View style={{ marginTop: 10, alignItems: "center" }}>
+            <View
+              style={{ minHeight: 90, marginTop: 10, alignItems: "center" }}
+            >
+              {nextPrayer ? (
                 <Text style={{ color: colors.accent, fontSize: 16 }}>
                   Next: {nextPrayer.label} in {timeLeft}
                 </Text>
-              </View>
-            )}
-            {!nextPrayer && nextDayFajr && (
-              <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
-                <PressableScale
-                  onPress={() =>
-                    router.push({
-                      pathname: "/components/[date]",
-                      params: {
-                        date: tomorrowParam,
-                        month: tomorrow.getMonth().toString(),
-                        year: tomorrow.getFullYear().toString(),
-                      },
-                    })
-                  }
-                  style={{
-                    backgroundColor: withOpacity(
-                      colors.primarySurfaceAlt,
-                      0.25,
-                    ),
-                    borderRadius: 12,
-                    paddingVertical: 18,
-                    paddingHorizontal: 24,
-                    borderWidth: 2,
-                    borderColor: withOpacity(colors.accent, 0.75),
-                    shadowColor: colors.accent,
-                    shadowOpacity: 0.6,
-                    shadowRadius: 8,
-                    elevation: 5,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
+              ) : nextDayFajr ? (
+                <Animated.View style={{ opacity: fadeAnim, width: "100%" }}>
+                  <PressableScale
+                    onPress={() =>
+                      router.push({
+                        pathname: "/components/[date]",
+                        params: {
+                          date: tomorrowParam,
+                          month: tomorrow.getMonth().toString(),
+                          year: tomorrow.getFullYear().toString(),
+                        },
+                      })
+                    }
                     style={{
-                      color: colors.accent,
-                      fontSize: 18,
-                      fontFamily: "SFProDisplay-Bold",
-                      textAlign: "center",
-                      marginBottom: 4,
+                      backgroundColor: withOpacity(
+                        colors.primarySurfaceAlt,
+                        0.25,
+                      ),
+                      borderRadius: 12,
+                      paddingVertical: 18,
+                      paddingHorizontal: 24,
+                      borderWidth: 2,
+                      borderColor: withOpacity(colors.accent, 0.75),
+                      shadowColor: colors.accent,
+                      shadowOpacity: 0.6,
+                      shadowRadius: 8,
+                      elevation: 5,
+                      alignItems: "center",
                     }}
                   >
-                    Finished all prayers!
-                  </Text>
-                  <Text
-                    style={{
-                      color: colors.white,
-                      fontSize: 16,
-                      fontFamily: "SFProDisplay-Semibold",
-                      textAlign: "center",
-                    }}
-                  >
-                    Tap to see tomorrow’s prayer times
-                  </Text>
-                </PressableScale>
-              </Animated.View>
-            )}
+                    <Text
+                      style={{
+                        color: colors.accent,
+                        fontSize: 18,
+                        fontFamily: "SFProDisplay-Bold",
+                        textAlign: "center",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Finished all prayers!
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.white,
+                        fontSize: 16,
+                        fontFamily: "SFProDisplay-Semibold",
+                        textAlign: "center",
+                      }}
+                    >
+                      Tap to see tomorrow's prayer times
+                    </Text>
+                  </PressableScale>
+                </Animated.View>
+              ) : null}
+            </View>
             {/* Dua Section */}
             {selectedDua ? (
               <DuaResultCard
@@ -610,7 +612,6 @@ export default function Home() {
                 onInputFocus={() => scrollToBottom(true)}
               />
             )}
-
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
