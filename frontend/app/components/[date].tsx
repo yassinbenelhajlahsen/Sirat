@@ -127,7 +127,7 @@ export default function CalendarDetail() {
         if (!currentDate) return;
 
         const today = new Date();
-        const minDate = new Date(today.getFullYear() - 1, 0);
+        const minDate = new Date(today.getFullYear(), 0);
         const maxDate = new Date(today.getFullYear() + 1, 11, 31);
 
         // Swipe left (next day)
@@ -557,7 +557,7 @@ export default function CalendarDetail() {
     year: "numeric",
   }).format(selectedDate);
 
-  const minDate = new Date(today.getFullYear() - 1, 0);
+  const minDate = new Date(today.getFullYear(), 0);
   const maxDate = new Date(today.getFullYear() + 1, 11, 31);
   const prevDate = new Date(selectedDate);
   prevDate.setDate(prevDate.getDate() - 1);
@@ -878,7 +878,6 @@ export default function CalendarDetail() {
                 shadowRadius: 8,
                 shadowOffset: { width: 0, height: 2 },
                 elevation: isPrevDisabled ? 0 : 2,
-                opacity: isPrevDisabled ? 0.4 : 1,
               }}
             >
               <View
@@ -886,17 +885,30 @@ export default function CalendarDetail() {
                   width: 32,
                   height: 32,
                   borderRadius: 10,
-                  backgroundColor: withOpacity(colors.accent, 0.12),
+                  backgroundColor: withOpacity(
+                    colors.accent,
+                    isPrevDisabled ? 0.05 : 0.12,
+                  ),
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 6,
                 }}
               >
-                <Ionicons name="chevron-back" size={20} color={colors.accent} />
+                <Ionicons
+                  name="chevron-back"
+                  size={20}
+                  color={
+                    isPrevDisabled
+                      ? withOpacity(colors.accent, 0.3)
+                      : colors.accent
+                  }
+                />
               </View>
               <Text
                 style={{
-                  color: colors.white,
+                  color: isPrevDisabled
+                    ? withOpacity(colors.white, 0.3)
+                    : colors.white,
                   fontSize: 13,
                   fontFamily: "SFProDisplay-Medium",
                   marginBottom: 2,
@@ -973,7 +985,6 @@ export default function CalendarDetail() {
                 shadowRadius: 8,
                 shadowOffset: { width: 0, height: 2 },
                 elevation: isNextDisabled ? 0 : 2,
-                opacity: isNextDisabled ? 0.4 : 1,
               }}
             >
               <View
@@ -981,7 +992,10 @@ export default function CalendarDetail() {
                   width: 32,
                   height: 32,
                   borderRadius: 10,
-                  backgroundColor: withOpacity(colors.accent, 0.12),
+                  backgroundColor: withOpacity(
+                    colors.accent,
+                    isNextDisabled ? 0.05 : 0.12,
+                  ),
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 6,
@@ -990,12 +1004,18 @@ export default function CalendarDetail() {
                 <Ionicons
                   name="chevron-forward"
                   size={20}
-                  color={colors.accent}
+                  color={
+                    isNextDisabled
+                      ? withOpacity(colors.accent, 0.3)
+                      : colors.accent
+                  }
                 />
               </View>
               <Text
                 style={{
-                  color: colors.white,
+                  color: isNextDisabled
+                    ? withOpacity(colors.white, 0.3)
+                    : colors.white,
                   fontSize: 13,
                   fontFamily: "SFProDisplay-Medium",
                   marginBottom: 2,
