@@ -129,28 +129,34 @@ export default function RootLayout() {
 
   // Clear old Adhan notifications when the app opens so the tray stays clean.
   useEffect(() => {
-  Notifications.dismissAllNotificationsAsync().catch(() => {});
-}, []);
+    Notifications.dismissAllNotificationsAsync().catch(() => {});
+  }, []);
 
-  // OTA update check
+  // OTA update check - runs in background, non-blocking
   useEffect(() => {
     if (Constants.appOwnership === "expo") {
       return;
     }
 
-    async function checkForOTAUpdate() {
-      try {
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
+    // Run after a short delay to avoid blocking initial render
+    const timer = setTimeout(() => {
+      (async () => {
+        try {
+          const update = await Updates.checkForUpdateAsync();
+          if (update.isAvailable) {
+            await Updates.fetchUpdateAsync();
+            // Only reload if app is in foreground
+            if (AppState.currentState === "active") {
+              await Updates.reloadAsync();
+            }
+          }
+        } catch (error) {
+          console.error("OTA update check failed", error);
         }
-      } catch (error) {
-        console.error("OTA update check failed", error);
-      }
-    }
+      })();
+    }, 1000); // 1 second delay
 
-    checkForOTAUpdate();
+    return () => clearTimeout(timer);
   }, []);
 
   // Do the initial permission syncs on launch, and re-sync on foreground
