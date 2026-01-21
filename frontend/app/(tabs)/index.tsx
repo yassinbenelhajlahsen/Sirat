@@ -538,7 +538,7 @@ export default function Home() {
             </View>
 
             <View
-              style={{ minHeight: 90, marginTop: 10, alignItems: "center" }}
+              style={{ marginTop: 10, marginBottom: 12, alignItems: "center" }}
             >
               {nextPrayer ? (
                 <Text style={{ color: colors.accent, fontSize: 16 }}>

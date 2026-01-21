@@ -24,10 +24,9 @@ import {
 import {
   computeRamadanEnd,
   findRamadanStart,
-  getRamadanMap,
+  getMissedFastDays,
   getRamadanPeriodSummary,
   isInRamadanWindow,
-  RamadanStatus,
 } from "../../services/ramadanTracker";
 import PressableScale from "../components/PressableScale";
 
@@ -69,7 +68,7 @@ export default function CalendarScreen() {
   const [navigating, setNavigating] = useState(false);
 
   // Ramadan tracking state
-  const [ramadanMap, setRamadanMap] = useState<Record<string, RamadanStatus>>(
+  const [missedFastsMap, setMissedFastsMap] = useState<Record<string, boolean>>(
     {},
   );
   const [ramadanMonthActive, setRamadanMonthActive] = useState(false);
@@ -107,8 +106,8 @@ export default function CalendarScreen() {
   // Compute Ramadan summary for the entire Ramadan period
   const ramadanSummary = useMemo(() => {
     if (!ramadanMonthActive || !ramadanStart || !ramadanEnd) return null;
-    return getRamadanPeriodSummary(ramadanMap, ramadanStart, ramadanEnd);
-  }, [ramadanMap, ramadanMonthActive, ramadanStart, ramadanEnd]);
+    return getRamadanPeriodSummary(missedFastsMap, ramadanStart, ramadanEnd);
+  }, [missedFastsMap, ramadanMonthActive, ramadanStart, ramadanEnd]);
 
   // Load holidays for the visible year
   useEffect(() => {
@@ -136,8 +135,8 @@ export default function CalendarScreen() {
     (async () => {
       try {
         // Load Ramadan tracker data
-        const map = await getRamadanMap();
-        if (mounted) setRamadanMap(map);
+        const map = await getMissedFastDays();
+        if (mounted) setMissedFastsMap(map);
 
         // Check if current month is in Ramadan window
         const holidays = await getHolidaysForYear(viewYear);
@@ -168,7 +167,7 @@ export default function CalendarScreen() {
       } catch (e) {
         console.warn("Failed to load Ramadan data:", e);
         if (mounted) {
-          setRamadanMap({});
+          setMissedFastsMap({});
           setRamadanMonthActive(false);
           setRamadanStart(null);
           setRamadanEnd(null);
@@ -185,8 +184,8 @@ export default function CalendarScreen() {
     useCallback(() => {
       (async () => {
         try {
-          const map = await getRamadanMap();
-          setRamadanMap(map);
+          const map = await getMissedFastDays();
+          setMissedFastsMap(map);
         } catch (e) {
           console.warn("Failed to reload Ramadan map on focus:", e);
         }
@@ -387,7 +386,6 @@ export default function CalendarScreen() {
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
         <View style={{ padding: 16 }}>
-
           <Text
             style={{
               color: colors.white,

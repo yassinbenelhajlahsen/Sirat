@@ -1,9 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Holiday } from "./holidayService";
 
-// Two-state model: explicitly tracked or null (not yet marked)
-export type RamadanStatus = "fasted" | "not_fasted";
-
 // Storage key (versioned)
 const RAMADAN_TRACKER_KEY = "ramadan_tracker_v1";
 
@@ -22,10 +19,10 @@ function dateKey(date: Date): string {
 }
 
 /**
- * Get all Ramadan statuses from storage
- * @returns Record mapping "YYYY-MM-DD" to RamadanStatus
+ * Get all missed fast days from storage
+ * @returns Record mapping "YYYY-MM-DD" to true (day was missed)
  */
-export async function getRamadanMap(): Promise<Record<string, RamadanStatus>> {
+export async function getMissedFastDays(): Promise<Record<string, boolean>> {
   try {
     const raw = await AsyncStorage.getItem(RAMADAN_TRACKER_KEY);
     return raw ? JSON.parse(raw) : {};
@@ -36,31 +33,41 @@ export async function getRamadanMap(): Promise<Record<string, RamadanStatus>> {
 }
 
 /**
- * Get Ramadan status for a specific date
- * @returns RamadanStatus if marked, null if not yet tracked
+ * Check if a specific date was marked as a missed fast
+ * @returns true if the day was missed, false otherwise
  */
-export async function getRamadanStatus(
-  date: Date,
-): Promise<RamadanStatus | null> {
-  const map = await getRamadanMap();
-  return map[dateKey(date)] ?? null;
+export async function wasFastMissed(date: Date): Promise<boolean> {
+  const map = await getMissedFastDays();
+  return map[dateKey(date)] === true;
 }
 
 /**
- * Set Ramadan status for a specific date
- * @param date - Date to mark
- * @param status - "fasted" or "not_fasted"
+ * Mark a day as a missed fast
+ * @param date - Date to mark as missed
  */
-export async function setRamadanStatus(
-  date: Date,
-  status: RamadanStatus,
-): Promise<void> {
+export async function markFastAsMissed(date: Date): Promise<void> {
   try {
-    const map = await getRamadanMap();
-    map[dateKey(date)] = status;
+    const map = await getMissedFastDays();
+    map[dateKey(date)] = true;
     await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
   } catch (e) {
-    console.error("Failed to save Ramadan status:", e);
+    console.error("Failed to mark missed fast:", e);
+    throw e;
+  }
+}
+
+/**
+ * Remove the missed fast marking for a specific date
+ * @param date - Date to clear
+ */
+export async function clearMissedFast(date: Date): Promise<void> {
+  try {
+    const map = await getMissedFastDays();
+    const key = dateKey(date);
+    delete map[key];
+    await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
+  } catch (e) {
+    console.error("Failed to clear missed fast:", e);
     throw e;
   }
 }
@@ -122,13 +129,13 @@ export function computeRamadanEnd(ramadanStart: Date): Date {
 
 /**
  * Get Ramadan summary for the entire Ramadan period (35-38 days including buffer)
- * @param map - Full Ramadan status map
+ * @param map - Full missed fast days map
  * @param ramadanStart - First day of Ramadan
  * @param ramadanEnd - Last day of Ramadan
  * @returns Summary with missed count and formatted date strings for entire period
  */
 export function getRamadanPeriodSummary(
-  map: Record<string, RamadanStatus>,
+  map: Record<string, boolean>,
   ramadanStart: Date,
   ramadanEnd: Date,
 ): {
@@ -147,8 +154,8 @@ export function getRamadanPeriodSummary(
   windowStart.setHours(0, 0, 0, 0);
   windowEnd.setHours(0, 0, 0, 0);
 
-  for (const [dateStr, status] of Object.entries(map)) {
-    if (status !== "not_fasted") continue;
+  for (const [dateStr, isMissed] of Object.entries(map)) {
+    if (!isMissed) continue;
 
     // Parse date string parts directly to avoid timezone issues
     const [y, m, d] = dateStr.split("-").map(Number);

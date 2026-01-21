@@ -26,12 +26,12 @@ import {
   PrayerTime,
 } from "../../services/prayerTimes";
 import {
+  clearMissedFast,
   computeRamadanEnd,
   findRamadanStart,
-  getRamadanStatus,
   isInRamadanWindow,
-  RamadanStatus,
-  setRamadanStatus,
+  markFastAsMissed,
+  wasFastMissed,
 } from "../../services/ramadanTracker";
 import getTimeUntil from "../../util/getTimeUntil";
 import PrayerTimesList from "../components/PrayerTimesList";
@@ -67,9 +67,7 @@ export default function CalendarDetail() {
   const [fetchNonce, setFetchNonce] = useState(0);
 
   // Ramadan tracking state
-  const [ramadanStatus, setRamadanStatusState] = useState<RamadanStatus | null>(
-    null,
-  );
+  const [isFastMissed, setIsFastMissed] = useState(false);
   const [isRamadan, setIsRamadan] = useState(false);
   const [loadingRamadan, setLoadingRamadan] = useState(false);
 
@@ -349,8 +347,8 @@ export default function CalendarDetail() {
       if (!selectedDate) return;
       setLoadingRamadan(true);
       try {
-        // Load status for this date
-        const status = await getRamadanStatus(selectedDate);
+        // Load missed fast status for this date
+        const missed = await wasFastMissed(selectedDate);
 
         // Check if we have preloaded Ramadan dates from Calendar screen
         const hasPreloadedDates =
@@ -383,19 +381,19 @@ export default function CalendarDetail() {
           );
           if (mounted) {
             setIsRamadan(inWindow);
-            setRamadanStatusState(status);
+            setIsFastMissed(missed);
           }
         } else {
           if (mounted) {
             setIsRamadan(false);
-            setRamadanStatusState(null);
+            setIsFastMissed(false);
           }
         }
       } catch (e) {
         console.warn("Failed to load Ramadan status:", e);
         if (mounted) {
           setIsRamadan(false);
-          setRamadanStatusState(null);
+          setIsFastMissed(false);
         }
       } finally {
         if (mounted) setLoadingRamadan(false);
@@ -666,14 +664,20 @@ export default function CalendarDetail() {
     } catch {}
   };
 
-  // Handle Ramadan status change
-  const handleRamadanStatusChange = async (status: RamadanStatus) => {
+  // Handle Ramadan missed fast toggle
+  const handleMissedFastToggle = async () => {
     if (!selectedDate) return;
     try {
-      await setRamadanStatus(selectedDate, status);
-      setRamadanStatusState(status);
+      // Toggle the missed fast status
+      if (isFastMissed) {
+        await clearMissedFast(selectedDate);
+        setIsFastMissed(false);
+      } else {
+        await markFastAsMissed(selectedDate);
+        setIsFastMissed(true);
+      }
     } catch (e) {
-      console.error("Failed to update Ramadan status:", e);
+      console.error("Failed to update missed fast status:", e);
     }
   };
 
@@ -1086,98 +1090,42 @@ export default function CalendarDetail() {
                   marginBottom: 14,
                 }}
               >
-                Fast Status
+                Fasting Status
               </Text>
 
-              <View
+              <PressableScale
+                onPress={handleMissedFastToggle}
                 style={{
-                  flexDirection: "row",
-                  gap: 12,
-                  justifyContent: "center",
+                  backgroundColor: isFastMissed
+                    ? colors.accent
+                    : colors.primaryDark,
+                  paddingVertical: 14,
+                  paddingHorizontal: 24,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  borderWidth: 2,
+                  borderColor: isFastMissed
+                    ? withOpacity(colors.accent, 0.8)
+                    : withOpacity(colors.white, 0.05),
+                  shadowColor: isFastMissed
+                    ? colors.accent
+                    : withOpacity(colors.black, 0.3),
+                  shadowOpacity: isFastMissed ? 0.5 : 0.2,
+                  shadowRadius: isFastMissed ? 12 : 8,
+                  shadowOffset: { width: 0, height: 6 },
+                  elevation: isFastMissed ? 8 : 4,
                 }}
               >
-                <PressableScale
-                  onPress={() => handleRamadanStatusChange("fasted")}
+               <Text
                   style={{
-                    flex: 1,
-                    backgroundColor:
-                      ramadanStatus === "fasted"
-                        ? colors.accent
-                        : colors.primaryDark,
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
-                    borderRadius: 10,
-                    alignItems: "center",
-                    borderWidth: 2,
-                    borderColor:
-                      ramadanStatus === "fasted"
-                        ? withOpacity(colors.accent, 0.8)
-                        : withOpacity(colors.white, 0.05),
-                    shadowColor:
-                      ramadanStatus === "fasted"
-                        ? colors.accent
-                        : withOpacity(colors.black, 0.3),
-                    shadowOpacity: ramadanStatus === "fasted" ? 0.5 : 0.2,
-                    shadowRadius: ramadanStatus === "fasted" ? 12 : 8,
-                    shadowOffset: { width: 0, height: 6 },
-                    elevation: ramadanStatus === "fasted" ? 8 : 4,
+                    color: isFastMissed ? colors.primaryDark : colors.white,
+                    fontSize: 16,
+                    fontFamily: "SFProDisplay-Semibold",
                   }}
                 >
-                  <Text
-                    style={{
-                      color:
-                        ramadanStatus === "fasted"
-                          ? colors.primaryDark
-                          : colors.white,
-                      fontSize: 16,
-                      fontFamily: "SFProDisplay-Semibold",
-                    }}
-                  >
-                    Fasted
-                  </Text>
-                </PressableScale>
-
-                <PressableScale
-                  onPress={() => handleRamadanStatusChange("not_fasted")}
-                  style={{
-                    flex: 1,
-                    backgroundColor:
-                      ramadanStatus === "not_fasted"
-                        ? colors.accent
-                        : colors.primaryDark,
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
-                    borderRadius: 10,
-                    alignItems: "center",
-                    borderWidth: 2,
-                    borderColor:
-                      ramadanStatus === "not_fasted"
-                        ? withOpacity(colors.accent, 0.8)
-                        : withOpacity(colors.white, 0.05),
-                    shadowColor:
-                      ramadanStatus === "not_fasted"
-                        ? colors.accent
-                        : withOpacity(colors.black, 0.3),
-                    shadowOpacity: ramadanStatus === "not_fasted" ? 0.5 : 0.2,
-                    shadowRadius: ramadanStatus === "not_fasted" ? 12 : 8,
-                    shadowOffset: { width: 0, height: 6 },
-                    elevation: ramadanStatus === "not_fasted" ? 8 : 4,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color:
-                        ramadanStatus === "not_fasted"
-                          ? colors.primaryDark
-                          : colors.white,
-                      fontSize: 16,
-                      fontFamily: "SFProDisplay-Semibold",
-                    }}
-                  >
-                    Not Fasted
-                  </Text>
-                </PressableScale>
-              </View>
+                  {isFastMissed ? "✓ Missed Fast" : "Missed Fast"}
+                </Text>
+              </PressableScale>
             </View>
           )}
 
