@@ -121,6 +121,7 @@ export default function RootLayout() {
 
   const [showSplash, setShowSplash] = useState(true);
   const [initialSynced, setInitialSynced] = useState(false);
+  const [otaChecked, setOtaChecked] = useState(false);
   const appStateRef = useRef(AppState.currentState);
 
   useEffect(() => {
@@ -132,31 +133,36 @@ export default function RootLayout() {
     Notifications.dismissAllNotificationsAsync().catch(() => {});
   }, []);
 
-  // OTA update check - runs in background, non-blocking
+  // OTA update check - runs early and blocks splash screen
   useEffect(() => {
-    if (Constants.appOwnership === "expo") {
-      return;
-    }
+    let mounted = true;
 
-    // Run after a short delay to avoid blocking initial render
-    const timer = setTimeout(() => {
-      (async () => {
-        try {
-          const update = await Updates.checkForUpdateAsync();
-          if (update.isAvailable) {
-            await Updates.fetchUpdateAsync();
-            // Only reload if app is in foreground
-            if (AppState.currentState === "active") {
-              await Updates.reloadAsync();
-            }
-          }
-        } catch (error) {
-          console.error("OTA update check failed", error);
+    (async () => {
+      try {
+        // Skip OTA check in Expo Go development
+        if (Constants.appOwnership === "expo") {
+          if (mounted) setOtaChecked(true);
+          return;
         }
-      })();
-    }, 1000); // 1 second delay
 
-    return () => clearTimeout(timer);
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          // Only reload if app is in foreground
+          if (AppState.currentState === "active") {
+            await Updates.reloadAsync();
+          }
+        }
+      } catch (error) {
+        console.error("OTA update check failed", error);
+      } finally {
+        if (mounted) setOtaChecked(true);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Do the initial permission syncs on launch, and re-sync on foreground
@@ -206,7 +212,7 @@ export default function RootLayout() {
     } catch {}
   }, []);
 
-  const appReady = fontsLoaded && initialSynced;
+  const appReady = fontsLoaded && initialSynced && otaChecked;
 
   return (
     <SafeAreaProvider>

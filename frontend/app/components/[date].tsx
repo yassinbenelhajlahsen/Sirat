@@ -1123,7 +1123,7 @@ export default function CalendarDetail() {
                     fontFamily: "SFProDisplay-Semibold",
                   }}
                 >
-                  {isFastMissed ? "✓ Missed Fast" : "Missed Fast"}
+                 Missed Fast
                 </Text>
               </PressableScale>
             </View>
