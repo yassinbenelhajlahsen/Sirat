@@ -81,7 +81,7 @@ export default function SplashScreen({
       }).start(({ finished }) => {
         if (finished && onFinished) onFinished();
       });
-    }, 2000);
+    }, 500);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
