@@ -1,24 +1,34 @@
-import { colors } from "@/constants/theme";
+import { colors, withOpacity } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   Easing,
+  Image,
   PanResponder,
   Text,
-  View,
   useWindowDimensions,
-  Image
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   dateKeyFromDate,
   getHolidayMapForYear,
+  getHolidaysForYear,
 } from "../../services/holidayService";
+import {
+  computeRamadanEnd,
+  findRamadanStart,
+  getRamadanMap,
+  getRamadanPeriodSummary,
+  isInRamadanWindow,
+  RamadanStatus,
+} from "../../services/ramadanTracker";
 import PressableScale from "../components/PressableScale";
 
 const getMonthMatrix = (year: number, month: number) => {
@@ -58,6 +68,14 @@ export default function CalendarScreen() {
   const [loadingHolidays, setLoadingHolidays] = useState(false);
   const [navigating, setNavigating] = useState(false);
 
+  // Ramadan tracking state
+  const [ramadanMap, setRamadanMap] = useState<Record<string, RamadanStatus>>(
+    {},
+  );
+  const [ramadanMonthActive, setRamadanMonthActive] = useState(false);
+  const [ramadanStart, setRamadanStart] = useState<Date | null>(null);
+  const [ramadanEnd, setRamadanEnd] = useState<Date | null>(null);
+
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const { width: screenWidth } = useWindowDimensions();
@@ -76,15 +94,21 @@ export default function CalendarScreen() {
 
   const matrix = useMemo(
     () => getMonthMatrix(viewYear, viewMonth),
-    [viewYear, viewMonth]
+    [viewYear, viewMonth],
   );
   const monthName = useMemo(
     () =>
       new Date(viewYear, viewMonth).toLocaleString("default", {
         month: "long",
       }),
-    [viewYear, viewMonth]
+    [viewYear, viewMonth],
   );
+
+  // Compute Ramadan summary for the entire Ramadan period
+  const ramadanSummary = useMemo(() => {
+    if (!ramadanMonthActive || !ramadanStart || !ramadanEnd) return null;
+    return getRamadanPeriodSummary(ramadanMap, ramadanStart, ramadanEnd);
+  }, [ramadanMap, ramadanMonthActive, ramadanStart, ramadanEnd]);
 
   // Load holidays for the visible year
   useEffect(() => {
@@ -106,11 +130,75 @@ export default function CalendarScreen() {
     };
   }, [viewYear]);
 
+  // Load Ramadan data and check if current month is in Ramadan window
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        // Load Ramadan tracker data
+        const map = await getRamadanMap();
+        if (mounted) setRamadanMap(map);
+
+        // Check if current month is in Ramadan window
+        const holidays = await getHolidaysForYear(viewYear);
+        const startDate = findRamadanStart(holidays);
+
+        if (startDate) {
+          const endDate = computeRamadanEnd(startDate);
+          const firstOfMonth = new Date(viewYear, viewMonth, 1);
+          const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
+
+          // Month is "Ramadan active" if any day in the month is in window
+          const monthInWindow =
+            isInRamadanWindow(firstOfMonth, startDate, endDate) ||
+            isInRamadanWindow(lastOfMonth, startDate, endDate);
+
+          if (mounted) {
+            setRamadanMonthActive(monthInWindow);
+            setRamadanStart(startDate);
+            setRamadanEnd(endDate);
+          }
+        } else {
+          if (mounted) {
+            setRamadanMonthActive(false);
+            setRamadanStart(null);
+            setRamadanEnd(null);
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load Ramadan data:", e);
+        if (mounted) {
+          setRamadanMap({});
+          setRamadanMonthActive(false);
+          setRamadanStart(null);
+          setRamadanEnd(null);
+        }
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [viewYear, viewMonth]);
+
+  // Reload Ramadan map when returning to Calendar (after marking a day)
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const map = await getRamadanMap();
+          setRamadanMap(map);
+        } catch (e) {
+          console.warn("Failed to reload Ramadan map on focus:", e);
+        }
+      })();
+    }, []),
+  );
+
   // Slide + fade animation helper. dir = 1 => next month (slide left), dir = -1 => previous month (slide right)
   const animateSlideChange = (
     dir: 1 | -1,
     targetYear: number,
-    targetMonth: number
+    targetMonth: number,
   ) => {
     // if already animating, ignore
     if (navigating) return;
@@ -240,7 +328,7 @@ export default function CalendarScreen() {
           useNativeDriver: true,
         }).start();
       },
-    })
+    }),
   ).current;
 
   // Animate fade-out before navigating to date details
@@ -264,6 +352,8 @@ export default function CalendarScreen() {
               month: viewMonth.toString(),
               year: viewYear.toString(),
               holiday: holidayName || "",
+              ramadanStart: ramadanStart?.toISOString() || "",
+              ramadanEnd: ramadanEnd?.toISOString() || "",
             },
           });
           // do NOT reset fadeAnim immediately; let new screen take over
@@ -280,23 +370,24 @@ export default function CalendarScreen() {
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
-            <Image
-              source={require("@/assets/patterns/islamic-gold.png")}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                opacity: 0.05, 
-                resizeMode: "repeat",
-                width: "100%",
-                height: "100%",
-              }}
-            />
+      <Image
+        source={require("@/assets/patterns/islamic-gold.png")}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.05,
+          resizeMode: "repeat",
+          width: "100%",
+          height: "100%",
+        }}
+      />
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
         <View style={{ padding: 16 }}>
+
           <Text
             style={{
               color: colors.white,
@@ -358,13 +449,37 @@ export default function CalendarScreen() {
           </View>
         </View>
 
-        {/* Animated calendar area (swipe + slide animations applied here only) */}
+        {/* Day of week header (static, not animated) */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+            marginTop: 12,
+          }}
+        >
+          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+            <Text
+              key={`${d}-${i}`}
+              style={{
+                color: colors.accent,
+                fontSize: 16,
+                fontFamily: "SFProDisplay-Regular",
+                width: 32,
+                textAlign: "center",
+              }}
+            >
+              {d}
+            </Text>
+          ))}
+        </View>
+
+        {/* Animated calendar grid (swipe + slide animations applied here only) */}
         <Animated.View
           {...panResponder.panHandlers}
           style={{
             flex: 1,
-            padding: 16,
-            paddingBottom: tabBarHeight + 24,
+            paddingHorizontal: 16,
             opacity: fadeAnim,
             transform: [
               {
@@ -381,26 +496,6 @@ export default function CalendarScreen() {
         >
           {/* Calendar Grid */}
           <View style={{ flex: 1, justifyContent: "flex-start" }}>
-            {/* Day of week */}
-            <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
-            >
-              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                <Text
-                  key={`${d}-${i}`}
-                  style={{
-                    color: colors.accent,
-                    fontSize: 16,
-                    fontFamily: "SFProDisplay-Regular",
-                    width: 32,
-                    textAlign: "center",
-                  }}
-                >
-                  {d}
-                </Text>
-              ))}
-            </View>
-
             {loadingHolidays ? (
               <View style={{ marginTop: 30, alignItems: "center" }}>
                 <ActivityIndicator size="small" color={colors.accent} />
@@ -445,7 +540,7 @@ export default function CalendarScreen() {
                               const selectedDate = new Date(
                                 viewYear,
                                 viewMonth,
-                                day
+                                day,
                               );
                               handleDatePress(selectedDate, holidayName || "");
                             }
@@ -458,8 +553,8 @@ export default function CalendarScreen() {
                             backgroundColor: isToday
                               ? colors.accent
                               : isHoliday
-                              ? colors.primaryBorder
-                              : "transparent",
+                                ? colors.primaryBorder
+                                : "transparent",
                             borderColor: isHoliday
                               ? colors.accent
                               : "transparent",
@@ -473,8 +568,8 @@ export default function CalendarScreen() {
                               color: isToday
                                 ? colors.primaryDark
                                 : isHoliday
-                                ? colors.accent
-                                : colors.white,
+                                  ? colors.accent
+                                  : colors.white,
                               fontFamily: "SFProDisplay-Regular",
                               fontSize: 16,
                             }}
@@ -489,8 +584,59 @@ export default function CalendarScreen() {
               </View>
             )}
           </View>
+        </Animated.View>
 
-          {/* Back to Today */}
+        {/* Ramadan Summary (static, not animated) */}
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingBottom: tabBarHeight + 8,
+          }}
+        >
+          {ramadanSummary && ramadanSummary.totalMissed > 0 && (
+            <View
+              style={{
+                backgroundColor: withOpacity(colors.black, 0.25),
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 14,
+                borderWidth: 1,
+                borderColor: withOpacity(colors.accent, 0.3),
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.accent,
+                  fontSize: 14,
+                  fontFamily: "SFProDisplay-Semibold",
+                  marginBottom: 6,
+                }}
+              >
+                Ramadan Summary
+              </Text>
+              <Text
+                style={{
+                  color: colors.white,
+                  fontSize: 13,
+                  fontFamily: "SFProDisplay-Regular",
+                }}
+              >
+                Missed: {ramadanSummary.totalMissed}
+              </Text>
+              <Text
+                style={{
+                  color: colors.white,
+                  fontSize: 13,
+                  fontFamily: "SFProDisplay-Regular",
+                  marginTop: 2,
+                }}
+              >
+                Days: {ramadanSummary.missedDays.join(", ")}
+              </Text>
+            </View>
+          )}
+
+          {/* Back to Today (static, not animated) */}
           {!isViewingToday && (
             <PressableScale
               onPress={() => {
@@ -504,7 +650,8 @@ export default function CalendarScreen() {
                 animateSlideChange(dir, targetYear, targetMonth);
               }}
               style={{
-                marginTop: 24,
+                marginTop: 8,
+                marginBottom: 24,
                 alignSelf: "center",
                 backgroundColor: colors.accent,
                 paddingHorizontal: 20,
@@ -523,7 +670,7 @@ export default function CalendarScreen() {
               </Text>
             </PressableScale>
           )}
-        </Animated.View>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
