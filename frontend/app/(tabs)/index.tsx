@@ -543,21 +543,6 @@ export default function Home() {
                 </Text>
               </View>
             )}
-
-            {/* Dua Section */}
-            {selectedDua ? (
-              <DuaResultCard
-                dua={selectedDua}
-                onClose={() => setSelectedDua(null)}
-              />
-            ) : (
-              <DuaCard
-                onSubmit={handleDuaSubmit}
-                loading={duaLoading}
-                onInputFocus={() => scrollToBottom(true)}
-              />
-            )}
-
             {!nextPrayer && nextDayFajr && (
               <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
                 <PressableScale
@@ -612,6 +597,20 @@ export default function Home() {
                 </PressableScale>
               </Animated.View>
             )}
+            {/* Dua Section */}
+            {selectedDua ? (
+              <DuaResultCard
+                dua={selectedDua}
+                onClose={() => setSelectedDua(null)}
+              />
+            ) : (
+              <DuaCard
+                onSubmit={handleDuaSubmit}
+                loading={duaLoading}
+                onInputFocus={() => scrollToBottom(true)}
+              />
+            )}
+
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
