@@ -317,15 +317,19 @@ export default function CalendarDetail() {
     if (typeof date === "string") {
       setSelectedDate(new Date(decodeURIComponent(date)));
     }
+
+    // Seed once on entry, never lock it
     if (hasHolidayParam && holidayValue) {
       setHoliday(holidayValue);
     }
-  }, [date, holidayValue, hasHolidayParam]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      if (!selectedDate || hasHolidayParam) return;
+      if (!selectedDate) return;
+
       try {
         const map = await getHolidayMapForYear(selectedDate.getFullYear());
         const key = dateKeyFromDate(selectedDate);
@@ -335,10 +339,11 @@ export default function CalendarDetail() {
         console.warn("Failed to resolve holiday:", e);
       }
     })();
+
     return () => {
       mounted = false;
     };
-  }, [selectedDate, hasHolidayParam]);
+  }, [selectedDate]);
 
   // Load Ramadan status and check if date is in Ramadan window
   useEffect(() => {
@@ -1116,14 +1121,14 @@ export default function CalendarDetail() {
                   elevation: isFastMissed ? 8 : 4,
                 }}
               >
-               <Text
+                <Text
                   style={{
                     color: isFastMissed ? colors.primaryDark : colors.white,
                     fontSize: 16,
                     fontFamily: "SFProDisplay-Semibold",
                   }}
                 >
-                 Missed Fast
+                  Missed Fast
                 </Text>
               </PressableScale>
             </View>
