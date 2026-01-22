@@ -62,7 +62,7 @@ function SkeletonBar({
         duration: 1200,
         easing: Easing.linear,
         useNativeDriver: true,
-      })
+      }),
     );
     loop.start();
     return () => loop.stop();
@@ -172,7 +172,7 @@ function PrayerTimesSkeletonList({ rows = 6 }: { rows?: number }) {
         duration: 1200,
         easing: Easing.linear,
         useNativeDriver: true,
-      })
+      }),
     );
     loop.start();
     return () => loop.stop();
@@ -192,10 +192,14 @@ export default function PrayerTimesList({
   loading,
   prayerTimes,
   nextPrayerLabel,
+  timeOpacity,
+  timeSlide,
 }: {
   loading: boolean;
   prayerTimes: PrayerTime[];
   nextPrayerLabel?: string | null;
+  timeOpacity?: Animated.Value;
+  timeSlide?: Animated.Value;
 }) {
   if (loading) {
     return <PrayerTimesSkeletonList rows={6} />;
@@ -220,9 +224,20 @@ export default function PrayerTimesList({
               <Text style={[ROW_STYLES.labelText, styles.nextRowLabel]}>
                 {label}
               </Text>
-              <Text style={[ROW_STYLES.timeText, styles.nextRowTime]}>
+              <Animated.Text
+                style={[
+                  ROW_STYLES.timeText,
+                  styles.nextRowTime,
+                  timeOpacity && timeSlide
+                    ? {
+                        opacity: timeOpacity,
+                        transform: [{ translateX: timeSlide }],
+                      }
+                    : {},
+                ]}
+              >
                 {time}
-              </Text>
+              </Animated.Text>
             </LinearGradient>
           );
         }
@@ -233,7 +248,19 @@ export default function PrayerTimesList({
             style={[ROW_STYLES.containerBase, styles.rowSurface]}
           >
             <Text style={ROW_STYLES.labelText}>{label}</Text>
-            <Text style={ROW_STYLES.timeText}>{time}</Text>
+            <Animated.Text
+              style={[
+                ROW_STYLES.timeText,
+                timeOpacity && timeSlide
+                  ? {
+                      opacity: timeOpacity,
+                      transform: [{ translateX: timeSlide }],
+                    }
+                  : {},
+              ]}
+            >
+              {time}
+            </Animated.Text>
           </View>
         );
       })}

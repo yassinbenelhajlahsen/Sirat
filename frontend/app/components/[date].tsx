@@ -10,6 +10,7 @@ import {
   Linking,
   PanResponder,
   Platform,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -87,8 +88,8 @@ export default function CalendarDetail() {
   // Animations
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
-  const prayerTimesAnim = useRef(new Animated.Value(1)).current;
-  const prayerTimesSlide = useRef(new Animated.Value(0)).current;
+  const timesOpacityAnim = useRef(new Animated.Value(1)).current;
+  const timesSlideAnim = useRef(new Animated.Value(0)).current;
 
   // keep refs for current date state so PanResponder callbacks read fresh values
   const selectedDateRef = useRef(selectedDate);
@@ -104,17 +105,17 @@ export default function CalendarDetail() {
       onPanResponderGrant: () => {
         // stop any ongoing animations
         slideAnim.stopAnimation();
-        prayerTimesSlide.stopAnimation();
+        timesSlideAnim.stopAnimation();
       },
       onPanResponderMove: (_, gestureState) => {
-        // follow finger for both date and prayer times
+        // follow finger for date but not prayer times container
         slideAnim.setValue(gestureState.dx);
-        prayerTimesSlide.setValue(gestureState.dx);
+        timesSlideAnim.setValue(gestureState.dx);
         // subtle fade while dragging
         const fade =
           1 - Math.min(Math.abs(gestureState.dx) / screenWidth, 0.25);
         fadeAnim.setValue(fade);
-        prayerTimesAnim.setValue(fade);
+        timesOpacityAnim.setValue(fade);
       },
       onPanResponderRelease: (_, gestureState) => {
         const dx = gestureState.dx;
@@ -146,12 +147,12 @@ export default function CalendarDetail() {
                 duration: 120,
                 useNativeDriver: true,
               }),
-              Animated.timing(prayerTimesAnim, {
+              Animated.timing(timesOpacityAnim, {
                 toValue: 0,
                 duration: 120,
                 useNativeDriver: true,
               }),
-              Animated.timing(prayerTimesSlide, {
+              Animated.timing(timesSlideAnim, {
                 toValue: offset,
                 duration: 120,
                 useNativeDriver: true,
@@ -160,8 +161,8 @@ export default function CalendarDetail() {
               // Reset animation values
               fadeAnim.setValue(0);
               slideAnim.setValue(screenWidth);
-              prayerTimesAnim.setValue(0);
-              prayerTimesSlide.setValue(screenWidth);
+              timesOpacityAnim.setValue(0);
+              timesSlideAnim.setValue(screenWidth);
 
               // Update state instead of navigating
               setSelectedDate(nextDate);
@@ -179,12 +180,12 @@ export default function CalendarDetail() {
                   duration: 200,
                   useNativeDriver: true,
                 }),
-                Animated.timing(prayerTimesAnim, {
+                Animated.timing(timesOpacityAnim, {
                   toValue: 1,
                   duration: 200,
                   useNativeDriver: true,
                 }),
-                Animated.timing(prayerTimesSlide, {
+                Animated.timing(timesSlideAnim, {
                   toValue: 0,
                   duration: 200,
                   useNativeDriver: true,
@@ -212,12 +213,12 @@ export default function CalendarDetail() {
                 duration: 120,
                 useNativeDriver: true,
               }),
-              Animated.timing(prayerTimesAnim, {
+              Animated.timing(timesOpacityAnim, {
                 toValue: 0,
                 duration: 120,
                 useNativeDriver: true,
               }),
-              Animated.timing(prayerTimesSlide, {
+              Animated.timing(timesSlideAnim, {
                 toValue: offset,
                 duration: 120,
                 useNativeDriver: true,
@@ -226,8 +227,8 @@ export default function CalendarDetail() {
               // Reset animation values
               fadeAnim.setValue(0);
               slideAnim.setValue(-screenWidth);
-              prayerTimesAnim.setValue(0);
-              prayerTimesSlide.setValue(-screenWidth);
+              timesOpacityAnim.setValue(0);
+              timesSlideAnim.setValue(-screenWidth);
 
               // Update state instead of navigating
               setSelectedDate(prevDate);
@@ -245,12 +246,12 @@ export default function CalendarDetail() {
                   duration: 200,
                   useNativeDriver: true,
                 }),
-                Animated.timing(prayerTimesAnim, {
+                Animated.timing(timesOpacityAnim, {
                   toValue: 1,
                   duration: 200,
                   useNativeDriver: true,
                 }),
-                Animated.timing(prayerTimesSlide, {
+                Animated.timing(timesSlideAnim, {
                   toValue: 0,
                   duration: 200,
                   useNativeDriver: true,
@@ -268,7 +269,7 @@ export default function CalendarDetail() {
             duration: 180,
             useNativeDriver: true,
           }),
-          Animated.timing(prayerTimesSlide, {
+          Animated.timing(timesSlideAnim, {
             toValue: 0,
             duration: 180,
             useNativeDriver: true,
@@ -278,7 +279,7 @@ export default function CalendarDetail() {
             duration: 160,
             useNativeDriver: true,
           }),
-          Animated.timing(prayerTimesAnim, {
+          Animated.timing(timesOpacityAnim, {
             toValue: 1,
             duration: 160,
             useNativeDriver: true,
@@ -293,7 +294,7 @@ export default function CalendarDetail() {
             duration: 180,
             useNativeDriver: true,
           }),
-          Animated.timing(prayerTimesSlide, {
+          Animated.timing(timesSlideAnim, {
             toValue: 0,
             duration: 180,
             useNativeDriver: true,
@@ -303,7 +304,7 @@ export default function CalendarDetail() {
             duration: 180,
             useNativeDriver: true,
           }),
-          Animated.timing(prayerTimesAnim, {
+          Animated.timing(timesOpacityAnim, {
             toValue: 1,
             duration: 180,
             useNativeDriver: true,
@@ -587,13 +588,13 @@ export default function CalendarDetail() {
         duration: 120,
         useNativeDriver: true,
       }),
-      // Animate prayer times content
-      Animated.timing(prayerTimesAnim, {
+      // Animate only the times, not the whole prayer times content
+      Animated.timing(timesOpacityAnim, {
         toValue: 0,
         duration: 120,
         useNativeDriver: true,
       }),
-      Animated.timing(prayerTimesSlide, {
+      Animated.timing(timesSlideAnim, {
         toValue: offset,
         duration: 120,
         useNativeDriver: true,
@@ -605,8 +606,8 @@ export default function CalendarDetail() {
       // Reset animation values
       fadeAnim.setValue(0);
       slideAnim.setValue(direction === "next" ? screenWidth : -screenWidth);
-      prayerTimesAnim.setValue(0);
-      prayerTimesSlide.setValue(
+      timesOpacityAnim.setValue(0);
+      timesSlideAnim.setValue(
         direction === "next" ? screenWidth : -screenWidth,
       );
 
@@ -626,12 +627,12 @@ export default function CalendarDetail() {
           duration: 200,
           useNativeDriver: true,
         }),
-        Animated.timing(prayerTimesAnim, {
+        Animated.timing(timesOpacityAnim, {
           toValue: 1,
           duration: 200,
           useNativeDriver: true,
         }),
-        Animated.timing(prayerTimesSlide, {
+        Animated.timing(timesSlideAnim, {
           toValue: 0,
           duration: 200,
           useNativeDriver: true,
@@ -858,8 +859,10 @@ export default function CalendarDetail() {
         </View>
 
         {/* Content area with proper layout and swipe gesture support */}
-        <View
-          style={{ flex: 1, padding: 20 }}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 20 }}
+          showsVerticalScrollIndicator={false}
           {...panResponderRef.current.panHandlers}
         >
           {/* Static Prev / Next Row (no animation) */}
@@ -1166,24 +1169,19 @@ export default function CalendarDetail() {
               overflow: "hidden",
             }}
           >
-            <Animated.View
-              style={{
-                opacity: prayerTimesAnim,
-                transform: [{ translateX: prayerTimesSlide }],
-              }}
-            >
-              {error ? (
-                <ErrorBox />
-              ) : !loading && prayerTimes.length === 0 ? (
-                <EmptyBox />
-              ) : (
-                <PrayerTimesList
-                  loading={loading}
-                  prayerTimes={prayerTimes}
-                  nextPrayerLabel={nextPrayer?.label ?? null}
-                />
-              )}
-            </Animated.View>
+            {error ? (
+              <ErrorBox />
+            ) : !loading && prayerTimes.length === 0 ? (
+              <EmptyBox />
+            ) : (
+              <PrayerTimesList
+                loading={loading}
+                prayerTimes={prayerTimes}
+                nextPrayerLabel={nextPrayer?.label ?? null}
+                timeOpacity={timesOpacityAnim}
+                timeSlide={timesSlideAnim}
+              />
+            )}
           </View>
 
           {/* Time until next prayer (static) */}
@@ -1194,7 +1192,7 @@ export default function CalendarDetail() {
               </Text>
             </View>
           )}
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
