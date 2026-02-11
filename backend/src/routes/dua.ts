@@ -7,7 +7,7 @@ const router = Router();
  * POST /api/dua
  * Match user request to a dua
  * Body: { userRequest: string }
- * Response: { dua: Dua, matchSource: "regex" | "ai" | "fallback" }
+ * Response: { dua: Dua, matchSource: "ai" | "fallback" }
  */
 router.post("/", matchDua);
 

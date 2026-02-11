@@ -1,20 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import * as Network from "expo-network";
+import { matchByRegex } from "./duaMatcher";
 
 /**
- * Frontend Dua Service
- *
- * STRICT PRINCIPLE: Frontend is a pure renderer only
- * - NO duas.json
- * - NO matching logic
- * - NO fallback selection
- * - NO OpenAI calls
- * - NO Islamic decisions
- *
- * Responsibilities:
- * 1. Call backend /api/dua with user input
- * 2. Cache dua history locally
- * 3. Render returned dua
+ * Frontend Dua Service (offline-first)
+ * - Regex matching runs locally (works offline)
+ * - AI matching runs on backend (requires internet)
+ * - If offline + no regex match, return a general dua
  */
 
 export interface Dua {
@@ -29,66 +22,117 @@ export interface Dua {
 
 interface DuaResponse {
   dua: Dua;
-  matchSource?: "regex" | "ai" | "fallback";
+  matchSource?: "ai" | "fallback";
 }
 
 const DUA_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+const LOCAL_DUA_DATA = require("../assets/data/duas.json") as {
+  duas: LocalDua[];
+};
+const LOCAL_DUAS = LOCAL_DUA_DATA.duas;
 
 /**
  * Simulated delay to make UX feel more natural
- * Regex matching is instant (<1ms), but feels abrupt
+ * Local matching is instant (<1ms), but feels abrupt
  * Add a small delay to make it feel like "thinking"
  */
-const SIMULATED_DELAY_MS = 1200; // 0.8 seconds
+const SIMULATED_DELAY_MS = 1200;
+
+interface LocalDua extends Dua {
+  tags: string[];
+}
+
+function toDua(localDua: LocalDua): Dua {
+  return {
+    id: localDua.id,
+    category: localDua.category,
+    arabic: localDua.arabic,
+    english: localDua.english,
+    transliteration: localDua.transliteration,
+    reference: localDua.reference,
+    source: localDua.source,
+  };
+}
+
+function getRandomDuaByCategory(category: string): Dua | null {
+  const matches = LOCAL_DUAS.filter((dua) => dua.category === category);
+  if (matches.length === 0) {
+    return null;
+  }
+  const randomIndex = Math.floor(Math.random() * matches.length);
+  return toDua(matches[randomIndex]);
+}
+
+function getGeneralFallbackDua(): Dua {
+  const general = LOCAL_DUAS.find(
+    (dua) => dua.category.toLowerCase() === "general",
+  );
+  if (general) {
+    return toDua(general);
+  }
+  return toDua(LOCAL_DUAS[0]);
+}
+
+async function applySimulatedLoading(startTime: number): Promise<void> {
+  const elapsed = Date.now() - startTime;
+  const delayNeeded = SIMULATED_DELAY_MS - elapsed;
+  if (delayNeeded > 0) {
+    await new Promise((resolve) => setTimeout(resolve, delayNeeded));
+  }
+}
+
+async function hasInternetConnection(): Promise<boolean> {
+  try {
+    const state = await Network.getNetworkStateAsync();
+    return Boolean(state.isConnected && state.isInternetReachable !== false);
+  } catch {
+    return false;
+  }
+}
 
 /**
- * Request a dua from backend based on user input
- *
- * Backend handles:
- * - Loading duas.json
- * - Regex pattern matching (fast, deterministic)
- * - Calling OpenAI (fallback if regex doesn't match)
- * - Selecting appropriate dua
- * - Fallback to random if OpenAI fails
- * - Validating dua ID
- *
- * Frontend receives: { dua: Dua, matchSource: "regex" | "ai" | "fallback" }
- *
- * UX Enhancement:
- * - If matchSource is "regex", add simulated delay to feel more natural
- * - If matchSource is "ai", no delay (real API latency already exists)
+ * Request flow:
+ * 1) Try local regex + local duas
+ * 2) If no local match and online, ask backend AI
+ * 3) If no local match and offline, return local general dua
  */
 export async function requestDua(userRequest: string): Promise<Dua> {
+  const startTime = Date.now();
   try {
-    if (!userRequest.trim()) {
+    const trimmedRequest = userRequest.trim();
+    if (!trimmedRequest) {
       throw new Error("Please enter what you need help with");
     }
 
-    console.log(`📤 Requesting dua for: "${userRequest}"`);
+    const regexCategory = matchByRegex(trimmedRequest);
+    if (regexCategory) {
+      const matchedDua = getRandomDuaByCategory(regexCategory);
+      if (matchedDua) {
+        console.log(
+          `✅ Local regex match: "${trimmedRequest}" → ${regexCategory} → ${matchedDua.id}`,
+        );
+        await applySimulatedLoading(startTime);
+        return matchedDua;
+      }
+    }
 
-    // Start timer to measure response time
-    const startTime = Date.now();
+    const isOnline = await hasInternetConnection();
+    if (!isOnline) {
+      const fallbackDua = getGeneralFallbackDua();
+      console.log(
+        `📴 Offline + no regex match: using general dua ${fallbackDua.id}`,
+      );
+      await applySimulatedLoading(startTime);
+      return fallbackDua;
+    }
 
+    console.log(`📤 No local regex match. Requesting AI backup for "${trimmedRequest}"`);
     const response = await axios.post<DuaResponse>(`${DUA_API_BASE}/api/dua`, {
-      userRequest: userRequest.trim(),
+      userRequest: trimmedRequest,
     });
 
     const { dua, matchSource } = response.data;
-    const responseTime = Date.now() - startTime;
-
-    console.log(
-      `✅ Received dua: ${dua.id} (${dua.category}) via ${matchSource || "unknown"} in ${responseTime}ms`,
-    );
-
-    // Simulate loading delay for instant regex matches
-    // This makes the UX feel more polished and intentional
-    if (matchSource === "regex" && responseTime < 300) {
-      const delayNeeded = SIMULATED_DELAY_MS - responseTime;
-      if (delayNeeded > 0) {
-        console.log(`⏱️  Adding ${delayNeeded}ms simulated delay for UX`);
-        await new Promise((resolve) => setTimeout(resolve, delayNeeded));
-      }
-    }
+    console.log(`✅ AI backup dua: ${dua.id} (${dua.category}) via ${matchSource || "unknown"}`);
 
     // Validate structure
     if (
@@ -105,16 +149,25 @@ export async function requestDua(userRequest: string): Promise<Dua> {
   } catch (err: any) {
     console.error("❌ Dua request error:", err.message);
 
+    const isNetworkError =
+      err.code === "ECONNREFUSED" ||
+      err.code === "ERR_NETWORK" ||
+      err.message === "Network Error";
+    if (isNetworkError) {
+      const fallbackDua = getGeneralFallbackDua();
+      console.log(
+        `📴 Network error while using AI backup. Using general dua ${fallbackDua.id}`,
+      );
+      await applySimulatedLoading(startTime);
+      return fallbackDua;
+    }
+
     if (err.response?.status === 400) {
       throw new Error(err.response.data.error || "Invalid request");
     }
 
     if (err.response?.status === 500) {
       throw new Error("Backend error. Please try again.");
-    }
-
-    if (err.code === "ECONNREFUSED") {
-      throw new Error("Cannot connect to backend. Is it running?");
     }
 
     throw new Error(err.message || "Failed to find a dua. Please try again.");

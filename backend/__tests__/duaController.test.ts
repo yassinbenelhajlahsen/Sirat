@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
 import type { Dua } from "../src/utils/duaDatabase.js";
-import { matchByRegex } from "../src/utils/duaMatcher.js";
 
 describe("duaController", () => {
   const mockDuas: Dua[] = [
@@ -234,104 +233,23 @@ describe("duaController", () => {
     it("should include matchSource field", () => {
       const response = {
         dua: mockDuas[0],
-        matchSource: "regex" as const,
+        matchSource: "ai" as const,
       };
 
       expect(response).toHaveProperty("matchSource");
-      expect(["regex", "ai", "fallback"]).toContain(response.matchSource);
-    });
-  });
-
-  describe("regex-first matching flow", () => {
-    it("should match anxiety queries with regex", () => {
-      const category = matchByRegex("I'm feeling anxious");
-      expect(category).toBe("anxiety");
-
-      const matchingDuas = mockDuas.filter((d) => d.category === category);
-      expect(matchingDuas.length).toBeGreaterThan(0);
-    });
-
-    it("should match sleep queries with regex", () => {
-      const category = matchByRegex("I can't sleep");
-      expect(category).toBe("sleep");
-
-      const matchingDuas = mockDuas.filter((d) => d.category === category);
-      expect(matchingDuas.length).toBeGreaterThan(0);
-    });
-
-    it("should match exam queries with regex", () => {
-      const category = matchByRegex("I have an exam tomorrow");
-      expect(category).toBe("exam");
-
-      const matchingDuas = mockDuas.filter((d) => d.category === category);
-      expect(matchingDuas.length).toBeGreaterThan(0);
-    });
-
-    it("should match healing queries with regex", () => {
-      const category = matchByRegex("I'm sick and need healing");
-      expect(category).toBe("healing");
-
-      const matchingDuas = mockDuas.filter((d) => d.category === category);
-      expect(matchingDuas.length).toBeGreaterThan(0);
-    });
-
-    it("should return null for non-matching queries", () => {
-      const category = matchByRegex("random text that doesn't match");
-      expect(category).toBeNull();
-    });
-
-    it("should filter duas by category correctly", () => {
-      const anxietyDuas = mockDuas.filter((d) => d.category === "anxiety");
-      const healingDuas = mockDuas.filter((d) => d.category === "healing");
-
-      expect(anxietyDuas.length).toBe(1);
-      expect(anxietyDuas[0].id).toBe(2);
-      expect(healingDuas.length).toBe(1);
-      expect(healingDuas[0].id).toBe(1);
-    });
-
-    it("should select random dua from category", () => {
-      const category = "anxiety";
-      const matchingDuas = mockDuas.filter((d) => d.category === category);
-
-      if (matchingDuas.length > 0) {
-        const randomIndex = Math.floor(Math.random() * matchingDuas.length);
-        const selected = matchingDuas[randomIndex];
-
-        expect(selected).toBeDefined();
-        expect(selected.category).toBe(category);
-      }
+      expect(["ai", "fallback"]).toContain(response.matchSource);
     });
   });
 
   describe("match source tracking", () => {
-    it("should track regex matches", () => {
-      const category = matchByRegex("I'm anxious");
-
-      if (category) {
-        const matchSource = "regex";
-        expect(matchSource).toBe("regex");
-      }
+    it("should track AI matches", () => {
+      const matchSource = "ai";
+      expect(matchSource).toBe("ai");
     });
 
-    it("should indicate AI fallback when regex fails", () => {
-      const category = matchByRegex("some random query");
-
-      if (!category) {
-        // Would try AI next
-        const matchSource = "ai";
-        expect(matchSource).toBe("ai");
-      }
-    });
-
-    it("should indicate ultimate fallback when both fail", () => {
-      const category = matchByRegex("random query");
-      const aiSuccess = false; // Simulating AI failure
-
-      if (!category && !aiSuccess) {
-        const matchSource = "fallback";
-        expect(matchSource).toBe("fallback");
-      }
+    it("should track fallback matches", () => {
+      const matchSource = "fallback";
+      expect(matchSource).toBe("fallback");
     });
   });
 
@@ -398,7 +316,7 @@ describe("duaController", () => {
     });
   });
 
-  describe("AI response validation (only used as fallback)", () => {
+  describe("AI response validation", () => {
     it("should validate AI response structure", () => {
       const aiResponse = { duaId: 1 };
 
@@ -441,27 +359,21 @@ describe("duaController", () => {
   });
 
   describe("request/response flow", () => {
-    it("should simulate regex match flow", () => {
+    it("should simulate AI match flow", () => {
       const userRequest = "I'm feeling anxious";
-      const category = matchByRegex(userRequest);
+      expect(typeof userRequest).toBe("string");
 
-      expect(category).toBe("anxiety");
-
-      const matchingDuas = mockDuas.filter((d) => d.category === category);
-      const selectedDua = matchingDuas[0];
+      const aiSelectedId = 2;
+      const selectedDua = mockDuas.find((d) => d.id === aiSelectedId);
 
       expect(selectedDua).toBeDefined();
-      expect(selectedDua.category).toBe("anxiety");
+      expect(selectedDua?.category).toBe("anxiety");
     });
 
-    it("should simulate AI fallback flow", () => {
+    it("should simulate AI match for broad query", () => {
       const userRequest = "help me with something unusual";
-      const category = matchByRegex(userRequest);
+      expect(typeof userRequest).toBe("string");
 
-      expect(category).toBeNull();
-
-      // Would proceed to AI here in actual flow
-      // For test, we simulate AI selecting a dua
       const aiSelectedId = 1;
       const selectedDua = mockDuas.find((d) => d.id === aiSelectedId);
 
@@ -471,9 +383,7 @@ describe("duaController", () => {
 
     it("should simulate ultimate fallback flow", () => {
       const userRequest = "random text";
-      const category = matchByRegex(userRequest);
-
-      expect(category).toBeNull();
+      expect(typeof userRequest).toBe("string");
 
       // Simulate AI failure, proceed to random
       const randomIndex = Math.floor(Math.random() * mockDuas.length);

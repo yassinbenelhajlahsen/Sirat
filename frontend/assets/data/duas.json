@@ -1,0 +1,1266 @@
+{
+  "duas": [
+    {
+      "id": 1,
+      "category": "healing",
+      "tags": ["health", "illness", "recovery", "sickness", "pain"],
+      "arabic": "بِسْمِ اللَّهِ أَرْقِيكَ مِنْ كُلِّ شَيْءٍ يُؤْذِيكَ",
+      "english": "In the name of Allah, I perform ruqya (healing prayer) upon you from everything that harms you",
+      "transliteration": "Bismillahi arqika min kulli shay'in yu'dhika",
+      "reference": "Sahih Muslim 2186",
+      "source": "Hadith"
+    },
+    {
+      "id": 2,
+      "category": "anxiety",
+      "tags": ["worry", "fear", "anxiety", "stress", "exam", "pressure"],
+      "arabic": "حَسْبِيَ اللَّهُ لا إِلَهَ إِلا هُوَ عَلَيْهِ تَوَكَّلْتُ",
+      "english": "Allah is sufficient for me; there is no deity except Him. I rely upon Him",
+      "transliteration": "Hasbi Allahu la ilaha illa Huwa 'alayhi tawakkaltu",
+      "reference": "Quran 9:129",
+      "source": "Quran"
+    },
+    {
+      "id": 3,
+      "category": "gratitude",
+      "tags": ["thankful", "blessing", "grateful", "favor", "appreciation"],
+      "arabic": "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ",
+      "english": "All praise is due to Allah by whose favor good deeds are completed",
+      "transliteration": "Al-hamdu lillahi alladhi bi ni'matihi tatimmu as-salihat",
+      "reference": "Sunan Ibn Majah 3803",
+      "source": "Hadith"
+    },
+    {
+      "id": 4,
+      "category": "protection",
+      "tags": ["safety", "protection", "defense", "evil", "harm"],
+      "arabic": "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ",
+      "english": "I seek refuge in Allah from Satan, the rejected",
+      "transliteration": "A'udhu billahi min ash-shaytani ar-rajim",
+      "reference": "Quran 16:98",
+      "source": "Quran"
+    },
+    {
+      "id": 5,
+      "category": "forgiveness",
+      "tags": ["repentance", "sin", "forgiveness", "guilt", "atonement"],
+      "arabic": "رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ",
+      "english": "My Lord, forgive me and turn to me in mercy. Indeed, You are the Ever-Returning, the Merciful",
+      "transliteration": "Rabbi ighfir li wa tub 'alayya innaka anta at-Tawwabu ar-Rahim",
+      "reference": "Sunan at-Tirmidhi 3434",
+      "source": "Hadith"
+    },
+    {
+      "id": 6,
+      "category": "guidance",
+      "tags": ["direction", "wisdom", "knowledge", "understanding", "clarity"],
+      "arabic": "رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي",
+      "english": "My Lord, expand for me my chest and ease for me my task",
+      "transliteration": "Rabbi ishrah li sadri wa yassir li amri",
+      "reference": "Quran 20:25-26",
+      "source": "Quran"
+    },
+    {
+      "id": 7,
+      "category": "success",
+      "tags": ["achievement", "victory", "success", "prosperity", "excellence"],
+      "arabic": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً",
+      "english": "Our Lord, give us good in this world and good in the Hereafter",
+      "transliteration": "Rabbana atina fi ad-dunya hasanatan wa fi al-akhirati hasanatan",
+      "reference": "Quran 2:201",
+      "source": "Quran"
+    },
+    {
+      "id": 8,
+      "category": "patience",
+      "tags": ["patience", "hardship", "trial", "difficulty", "endurance"],
+      "arabic": "رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَثَبِّتْ أَقْدَامَنَا",
+      "english": "Our Lord, pour upon us patience and plant firmly our feet",
+      "transliteration": "Rabbana afrigh 'alayna sabran wa thabbit aqdamana",
+      "reference": "Quran 2:250",
+      "source": "Quran"
+    },
+    {
+      "id": 9,
+      "category": "family",
+      "tags": ["children", "marriage", "family", "offspring", "spouse"],
+      "arabic": "رَبِّ هَبْ لِي مِنَ الصَّالِحِينَ",
+      "english": "My Lord, grant me righteous offspring",
+      "transliteration": "Rabbi hab li min as-salihin",
+      "reference": "Quran 37:100",
+      "source": "Quran"
+    },
+    {
+      "id": 10,
+      "category": "provision",
+      "tags": ["sustenance", "wealth", "provision", "rizq", "abundance"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى",
+      "english": "O Allah, I ask You for guidance, piety, chastity and self-sufficiency",
+      "transliteration": "Allahumma inni as'aluka al-huda wa at-tuqa wa al-'afafa wa al-ghina",
+      "reference": "Sahih Muslim 2721",
+      "source": "Hadith"
+    },
+    {
+      "id": 11,
+      "category": "peace",
+      "tags": ["tranquility", "calm", "serenity", "rest", "relief"],
+      "arabic": "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ",
+      "english": "O Allah, You are Peace and from You comes peace",
+      "transliteration": "Allahumma anta as-Salam wa minka as-salam",
+      "reference": "Sahih Muslim 592",
+      "source": "Hadith"
+    },
+    {
+      "id": 12,
+      "category": "knowledge",
+      "tags": ["learning", "understanding", "education", "intellect", "wisdom"],
+      "arabic": "رَبِّ زِدْنِي عِلْمًا",
+      "english": "My Lord, increase me in knowledge",
+      "transliteration": "Rabbi zidni 'ilma",
+      "reference": "Quran 20:114",
+      "source": "Quran"
+    },
+    {
+      "id": 13,
+      "category": "sleep",
+      "tags": ["sleep", "rest", "night", "bedtime", "insomnia"],
+      "arabic": "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",
+      "english": "In Your Name, O Allah, I die and I live",
+      "transliteration": "Bismika Allahumma amutu wa ahya",
+      "reference": "Sahih al-Bukhari 6312",
+      "source": "Hadith"
+    },
+    {
+      "id": 14,
+      "category": "sleep",
+      "tags": ["sleep", "protection", "night", "bedtime", "safety"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْلَمْتُ نَفْسِي إِلَيْكَ",
+      "english": "O Allah, I have submitted myself to You",
+      "transliteration": "Allahumma inni aslamtu nafsi ilayka",
+      "reference": "Sahih al-Bukhari 247",
+      "source": "Hadith"
+    },
+    {
+      "id": 15,
+      "category": "sleep",
+      "tags": ["sleep", "dreams", "nightmares", "rest", "peace"],
+      "arabic": "اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ",
+      "english": "O Allah, protect me from Your punishment on the Day You resurrect Your servants",
+      "transliteration": "Allahumma qini 'adhabaka yawma tab'athu 'ibadaka",
+      "reference": "Sunan Abu Dawud 5045",
+      "source": "Hadith"
+    },
+    {
+      "id": 16,
+      "category": "morning",
+      "tags": ["morning", "awakening", "dawn", "start", "day"],
+      "arabic": "الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ",
+      "english": "All praise is for Allah who gave us life after having taken it from us, and unto Him is the resurrection",
+      "transliteration": "Alhamdu lillahi alladhi ahyana ba'da ma amatana wa ilayhi an-nushur",
+      "reference": "Sahih al-Bukhari 6312",
+      "source": "Hadith"
+    },
+    {
+      "id": 17,
+      "category": "exam",
+      "tags": ["exam", "test", "study", "knowledge", "memory"],
+      "arabic": "اللَّهُمَّ لَا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا",
+      "english": "O Allah, nothing is easy except what You make easy",
+      "transliteration": "Allahumma la sahla illa ma ja'altahu sahla",
+      "reference": "Sahih Ibn Hibban 3/255",
+      "source": "Hadith"
+    },
+    {
+      "id": 18,
+      "category": "exam",
+      "tags": ["exam", "test", "anxiety", "worry", "performance"],
+      "arabic": "اللَّهُمَّ انْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي",
+      "english": "O Allah, benefit me with what You have taught me, and teach me what will benefit me",
+      "transliteration": "Allahumma infa'ni bima 'allamtani wa 'allimni ma yanfa'uni",
+      "reference": "Sunan Ibn Majah 251",
+      "source": "Hadith"
+    },
+    {
+      "id": 19,
+      "category": "marriage",
+      "tags": ["marriage", "spouse", "wedding", "relationship", "partner"],
+      "arabic": "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ",
+      "english": "Our Lord, grant us from among our spouses and offspring comfort to our eyes",
+      "transliteration": "Rabbana hab lana min azwajina wa dhurriyyatina qurrata a'yunin",
+      "reference": "Quran 25:74",
+      "source": "Quran"
+    },
+    {
+      "id": 20,
+      "category": "marriage",
+      "tags": ["marriage", "seeking", "spouse", "partner", "righteous"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ خَيْرِهَا وَخَيْرِ مَا جَبَلْتَهَا عَلَيْهِ",
+      "english": "O Allah, I ask You for her goodness and the goodness upon which You have created her",
+      "transliteration": "Allahumma inni as'aluka min khayriha wa khayri ma jabaltaha 'alayh",
+      "reference": "Sunan Abu Dawud 2160",
+      "source": "Hadith"
+    },
+    {
+      "id": 21,
+      "category": "worry",
+      "tags": ["worry", "sadness", "grief", "distress", "concern"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ",
+      "english": "O Allah, I seek refuge in You from anxiety and grief",
+      "transliteration": "Allahumma inni a'udhu bika min al-hammi wa al-hazan",
+      "reference": "Sahih al-Bukhari 6369",
+      "source": "Hadith"
+    },
+    {
+      "id": 22,
+      "category": "worry",
+      "tags": ["worry", "stress", "anxiety", "fear", "concern"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْعَجْزِ وَالْكَسَلِ",
+      "english": "O Allah, I seek refuge in You from weakness and laziness",
+      "transliteration": "Allahumma inni a'udhu bika min al-'ajzi wa al-kasal",
+      "reference": "Sahih al-Bukhari 6369",
+      "source": "Hadith"
+    },
+    {
+      "id": 23,
+      "category": "debt",
+      "tags": ["debt", "financial", "money", "burden", "loan"],
+      "arabic": "اللَّهُمَّ اكْفِنِي بِحَلَالِكَ عَنْ حَرَامِكَ وَأَغْنِنِي بِفَضْلِكَ عَمَّنْ سِوَاكَ",
+      "english": "O Allah, make what is lawful enough for me, as opposed to what is unlawful, and spare me by Your grace, of need of others",
+      "transliteration": "Allahumma ikfini bi halalika 'an haramika wa aghnini bi fadlika 'amman siwak",
+      "reference": "Sunan at-Tirmidhi 3563",
+      "source": "Hadith"
+    },
+    {
+      "id": 24,
+      "category": "debt",
+      "tags": ["debt", "burden", "worry", "financial", "relief"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْمَأْثَمِ وَالْمَغْرَمِ",
+      "english": "O Allah, I seek refuge in You from sin and heavy debt",
+      "transliteration": "Allahumma inni a'udhu bika min al-ma'thami wa al-maghram",
+      "reference": "Sahih al-Bukhari 832",
+      "source": "Hadith"
+    },
+    {
+      "id": 25,
+      "category": "travel",
+      "tags": ["travel", "journey", "trip", "safety", "protection"],
+      "arabic": "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ",
+      "english": "Glory is to Him Who has subjected this to us, and we could never have it by our efforts",
+      "transliteration": "Subhana alladhi sakhkhara lana hadha wa ma kunna lahu muqrinin",
+      "reference": "Quran 43:13-14",
+      "source": "Quran"
+    },
+    {
+      "id": 26,
+      "category": "travel",
+      "tags": ["travel", "return", "journey", "homecoming", "safe"],
+      "arabic": "آيِبُونَ تَائِبُونَ عَابِدُونَ لِرَبِّنَا حَامِدُونَ",
+      "english": "We are returning, repenting, worshipping our Lord and praising Him",
+      "transliteration": "Ayibuna ta'ibuna 'abiduna li rabbina hamidun",
+      "reference": "Sahih al-Bukhari 1797",
+      "source": "Hadith"
+    },
+    {
+      "id": 27,
+      "category": "rain",
+      "tags": ["rain", "weather", "blessing", "mercy", "water"],
+      "arabic": "اللَّهُمَّ صَيِّبًا نَافِعًا",
+      "english": "O Allah, may it be a beneficial rain cloud",
+      "transliteration": "Allahumma sayyiban nafi'a",
+      "reference": "Sahih al-Bukhari 1032",
+      "source": "Hadith"
+    },
+    {
+      "id": 28,
+      "category": "eating",
+      "tags": ["food", "eating", "meal", "blessing", "sustenance"],
+      "arabic": "بِسْمِ اللَّهِ وَعَلَى بَرَكَةِ اللَّهِ",
+      "english": "In the name of Allah and with the blessings of Allah",
+      "transliteration": "Bismillahi wa 'ala barakatillah",
+      "reference": "Sunan Abu Dawud 3767",
+      "source": "Hadith"
+    },
+    {
+      "id": 29,
+      "category": "eating",
+      "tags": ["food", "finished", "gratitude", "meal", "thanks"],
+      "arabic": "الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ",
+      "english": "All praise is to Allah who fed me this and provided it for me without any might or power from myself",
+      "transliteration": "Alhamdu lillahi alladhi at'amani hadha wa razaqanihi min ghayri hawlin minni wa la quwwah",
+      "reference": "Sunan Abu Dawud 4023",
+      "source": "Hadith"
+    },
+    {
+      "id": 30,
+      "category": "parents",
+      "tags": ["parents", "mother", "father", "family", "mercy"],
+      "arabic": "رَبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا",
+      "english": "My Lord, have mercy upon them as they brought me up when I was small",
+      "transliteration": "Rabbi irhamhuma kama rabbayanî saghira",
+      "reference": "Quran 17:24",
+      "source": "Quran"
+    },
+    {
+      "id": 31,
+      "category": "anger",
+      "tags": ["anger", "rage", "calm", "control", "patience"],
+      "arabic": "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ",
+      "english": "I seek refuge in Allah from Satan, the rejected",
+      "transliteration": "A'udhu billahi min ash-shaytani ar-rajim",
+      "reference": "Sahih al-Bukhari 3282",
+      "source": "Hadith"
+    },
+    {
+      "id": 32,
+      "category": "entering_home",
+      "tags": ["home", "entering", "house", "family", "blessing"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ الْمَوْلِجِ وَخَيْرَ الْمَخْرَجِ",
+      "english": "O Allah, I ask You for the best entering and the best exiting",
+      "transliteration": "Allahumma inni as'aluka khayra al-mawliji wa khayra al-makhraji",
+      "reference": "Sunan Abu Dawud 5096",
+      "source": "Hadith"
+    },
+    {
+      "id": 33,
+      "category": "leaving_home",
+      "tags": ["leaving", "home", "going", "protection", "journey"],
+      "arabic": "بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ",
+      "english": "In the name of Allah, I place my trust in Allah",
+      "transliteration": "Bismillahi tawakkaltu 'ala Allah",
+      "reference": "Sunan Abu Dawud 5095",
+      "source": "Hadith"
+    },
+    {
+      "id": 34,
+      "category": "mosque",
+      "tags": ["mosque", "masjid", "prayer", "worship", "entering"],
+      "arabic": "اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ",
+      "english": "O Allah, open the gates of Your mercy for me",
+      "transliteration": "Allahumma iftah li abwaba rahmatik",
+      "reference": "Sahih Muslim 713",
+      "source": "Hadith"
+    },
+    {
+      "id": 35,
+      "category": "mosque",
+      "tags": ["mosque", "masjid", "leaving", "exiting", "worship"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ",
+      "english": "O Allah, I ask You from Your bounty",
+      "transliteration": "Allahumma inni as'aluka min fadlik",
+      "reference": "Sahih Muslim 713",
+      "source": "Hadith"
+    },
+    {
+      "id": 36,
+      "category": "illness",
+      "tags": ["illness", "sick", "pain", "health", "healing"],
+      "arabic": "اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ الْبَأْسَ اشْفِ أَنْتَ الشَّافِي",
+      "english": "O Allah, Lord of mankind, remove the hardship and heal, You are the Healer",
+      "transliteration": "Allahumma Rabba an-nasi adhhib al-ba'sa ishfi anta ash-Shafi",
+      "reference": "Sahih al-Bukhari 5743",
+      "source": "Hadith"
+    },
+    {
+      "id": 37,
+      "category": "visiting_sick",
+      "tags": ["visiting", "sick", "comfort", "support", "healing"],
+      "arabic": "لَا بَأْسَ طَهُورٌ إِنْ شَاءَ اللَّهُ",
+      "english": "Never mind, may it be a purification, if Allah wills",
+      "transliteration": "La ba'sa tahurun in sha' Allah",
+      "reference": "Sahih al-Bukhari 3616",
+      "source": "Hadith"
+    },
+    {
+      "id": 38,
+      "category": "fear",
+      "tags": ["fear", "afraid", "scary", "terror", "safety"],
+      "arabic": "اللَّهُ اللَّهُ رَبِّي لَا أُشْرِكُ بِهِ شَيْئًا",
+      "english": "Allah, Allah is my Lord, I do not associate anything with Him",
+      "transliteration": "Allahu Allahu Rabbi la ushriku bihi shay'a",
+      "reference": "Sunan Abu Dawud 1525",
+      "source": "Hadith"
+    },
+    {
+      "id": 39,
+      "category": "difficulty",
+      "tags": ["difficulty", "hardship", "challenge", "struggle", "relief"],
+      "arabic": "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ",
+      "english": "O Ever-Living, O Sustainer, by Your mercy I seek help",
+      "transliteration": "Ya Hayyu ya Qayyum bi rahmatika astaghith",
+      "reference": "Sunan at-Tirmidhi 3524",
+      "source": "Hadith"
+    },
+    {
+      "id": 40,
+      "category": "oppression",
+      "tags": ["oppression", "injustice", "wronged", "help", "justice"],
+      "arabic": "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
+      "english": "Allah is sufficient for us, and He is the best Disposer of affairs",
+      "transliteration": "Hasbuna Allahu wa ni'ma al-wakil",
+      "reference": "Quran 3:173",
+      "source": "Quran"
+    },
+    {
+      "id": 41,
+      "category": "loneliness",
+      "tags": ["lonely", "alone", "isolation", "companionship", "comfort"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْوَحْشَةِ",
+      "english": "O Allah, I seek refuge in You from loneliness",
+      "transliteration": "Allahumma inni a'udhu bika min al-wahshah",
+      "reference": "Al-Adab Al-Mufrad 1247",
+      "source": "Hadith"
+    },
+    {
+      "id": 42,
+      "category": "jealousy",
+      "tags": ["envy", "jealousy", "evil eye", "protection", "hasad"],
+      "arabic": "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+      "english": "I seek refuge in the perfect words of Allah from the evil of what He has created",
+      "transliteration": "A'udhu bi kalimat Allahi at-tammati min sharri ma khalaq",
+      "reference": "Sahih Muslim 2708",
+      "source": "Hadith"
+    },
+    {
+      "id": 43,
+      "category": "children",
+      "tags": ["children", "kids", "protection", "blessing", "family"],
+      "arabic": "أُعِيذُكُمَا بِكَلِمَاتِ اللَّهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ",
+      "english": "I seek protection for you in the perfect words of Allah from every devil and poisonous pest",
+      "transliteration": "U'idhu kuma bi kalimat Allahi at-tammati min kulli shaytanin wa hammah",
+      "reference": "Sahih al-Bukhari 3371",
+      "source": "Hadith"
+    },
+    {
+      "id": 44,
+      "category": "NewBorn",
+      "tags": ["baby", "newborn", "birth", "blessing", "child"],
+      "arabic": "بَارَكَ اللَّهُ لَكَ فِي الْمَوْهُوبِ لَكَ",
+      "english": "May Allah bless you with His gift to you",
+      "transliteration": "Baraka Allahu laka fi al-mawhubi lak",
+      "reference": "Al-Adab Al-Mufrad 223",
+      "source": "Hadith"
+    },
+    {
+      "id": 45,
+      "category": "decision",
+      "tags": ["decision", "choice", "istikhara", "guidance", "confusion"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ وَأَسْتَقْدِرُكَ بِقُدْرَتِكَ",
+      "english": "O Allah, I seek Your guidance by Your knowledge, and Your power by Your might",
+      "transliteration": "Allahumma inni astakhiruka bi 'ilmika wa astaqdiruka bi qudratik",
+      "reference": "Sahih al-Bukhari 1162",
+      "source": "Hadith"
+    },
+    {
+      "id": 46,
+      "category": "laylatul qadr",
+      "tags": ["laylatul qadr", "ramadan", "night", "power", "blessing"],
+      "arabic": "اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي",
+      "english": "O Allah, You are Pardoning and You love to pardon, so pardon me",
+      "transliteration": "Allahumma innaka 'afuwwun tuhibbu al-'afwa fa'fu 'anni",
+      "reference": "Sunan at-Tirmidhi 3513",
+      "source": "Hadith"
+    },
+    {
+      "id": 47,
+      "category": "thunder",
+      "tags": ["thunder", "lightning", "storm", "weather", "fear"],
+      "arabic": "سُبْحَانَ الَّذِي يُسَبِّحُ الرَّعْدُ بِحَمْدِهِ",
+      "english": "Glory is to Him Whom thunder and angels glorify due to fear of Him",
+      "transliteration": "Subhana alladhi yusabbihu ar-ra'du bi hamdihi",
+      "reference": "Al-Adab Al-Mufrad 723",
+      "source": "Hadith"
+    },
+    {
+      "id": 48,
+      "category": "bathroom",
+      "tags": ["bathroom", "toilet", "entering", "restroom", "protection"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْخُبُثِ وَالْخَبَائِثِ",
+      "english": "O Allah, I seek refuge in You from evil and evil deeds",
+      "transliteration": "Allahumma inni a'udhu bika min al-khubuthi wa al-khaba'ith",
+      "reference": "Sahih al-Bukhari 142",
+      "source": "Hadith"
+    },
+    {
+      "id": 49,
+      "category": "bathroom",
+      "tags": ["bathroom", "toilet", "exiting", "restroom", "forgiveness"],
+      "arabic": "غُفْرَانَكَ",
+      "english": "I seek Your forgiveness",
+      "transliteration": "Ghufranaka",
+      "reference": "Sunan Abu Dawud 30",
+      "source": "Hadith"
+    },
+    {
+      "id": 50,
+      "category": "mirror",
+      "tags": ["mirror", "beauty", "appearance", "reflection", "character"],
+      "arabic": "اللَّهُمَّ كَمَا حَسَّنْتَ خَلْقِي فَحَسِّنْ خُلُقِي",
+      "english": "O Allah, as You have made my external features beautiful, make my character beautiful as well",
+      "transliteration": "Allahumma kama hassanta khalqi fa hassin khuluqi",
+      "reference": "Musnad Ahmad 24333",
+      "source": "Hadith"
+    },
+    {
+      "id": 51,
+      "category": "new_clothes",
+      "tags": ["clothes", "clothing", "new", "dress", "garment"],
+      "arabic": "الْحَمْدُ لِلَّهِ الَّذِي كَسَانِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ",
+      "english": "All praise is to Allah who has clothed me with this and provided it for me without any might or power from myself",
+      "transliteration": "Alhamdu lillahi alladhi kasani hadha wa razaqanihi min ghayri hawlin minni wa la quwwah",
+      "reference": "Sunan Abu Dawud 4023",
+      "source": "Hadith"
+    },
+    {
+      "id": 52,
+      "category": "breaking_fast",
+      "tags": ["fasting", "iftar", "breaking fast", "ramadan", "food"],
+      "arabic": "ذَهَبَ الظَّمَأُ وَابْتَلَّتِ الْعُرُوقُ وَثَبَتَ الْأَجْرُ إِنْ شَاءَ اللَّهُ",
+      "english": "The thirst has gone, the veins are moistened and the reward is confirmed, if Allah wills",
+      "transliteration": "Dhahaba adh-dhama'u wa ibtalat al-'uruqu wa thabata al-ajru in sha' Allah",
+      "reference": "Sunan Abu Dawud 2357",
+      "source": "Hadith"
+    },
+    {
+      "id": 53,
+      "category": "market",
+      "tags": ["market", "shopping", "bazaar", "store", "remembrance"],
+      "arabic": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ يُحْيِي وَيُمِيتُ وَهُوَ حَيٌّ لَا يَمُوتُ",
+      "english": "There is none worthy of worship but Allah alone, He has no partner, His is the dominion and to Him is all praise. He gives life and causes death, and He is living and does not die",
+      "transliteration": "La ilaha illa Allahu wahdahu la sharika lah, lahu al-mulku wa lahu al-hamdu yuhyi wa yumit wa huwa hayyun la yamut",
+      "reference": "Sunan at-Tirmidhi 3428",
+      "source": "Hadith"
+    },
+    {
+      "id": 54,
+      "category": "meeting",
+      "tags": ["meeting", "gathering", "assembly", "sitting", "social"],
+      "arabic": "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا أَنْتَ أَسْتَغْفِرُكَ وَأَتُوبُ إِلَيْكَ",
+      "english": "Glory is to You, O Allah, and praise. I bear witness that there is none worthy of worship but You. I seek Your forgiveness and repent to You",
+      "transliteration": "Subhanaka Allahumma wa bihamdika ashhadu an la ilaha illa anta astaghfiruka wa atubu ilayk",
+      "reference": "Sunan Abu Dawud 4859",
+      "source": "Hadith"
+    },
+    {
+      "id": 55,
+      "category": "adhan",
+      "tags": ["adhan", "call to prayer", "azan", "prayer time", "response"],
+      "arabic": "اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ آتِ مُحَمَّدًا الْوَسِيلَةَ وَالْفَضِيلَةَ",
+      "english": "O Allah, Lord of this perfect call and established prayer, grant Muhammad the means and superiority",
+      "transliteration": "Allahumma Rabba hadhihi ad-da'wati at-tammati wa as-salati al-qa'imati ati Muhammadan al-wasilata wa al-fadilah",
+      "reference": "Sahih al-Bukhari 614",
+      "source": "Hadith"
+    },
+    {
+      "id": 56,
+      "category": "after_prayer",
+      "tags": ["after prayer", "salah", "tasbih", "dhikr", "remembrance"],
+      "arabic": "سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَاللَّهُ أَكْبَرُ",
+      "english": "Glory is to Allah, and all praise is to Allah, and Allah is the Greatest",
+      "transliteration": "Subhana Allah wa alhamdu lillah wa Allahu akbar",
+      "reference": "Sahih Muslim 596",
+      "source": "Hadith"
+    },
+    {
+      "id": 57,
+      "category": "after_prayer",
+      "tags": ["after prayer", "protection", "refuge", "dhikr", "remembrance"],
+      "arabic": "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+      "english": "O Allah, help me to remember You, to give thanks to You, and to worship You in the best manner",
+      "transliteration": "Allahumma a'inni 'ala dhikrika wa shukrika wa husni 'ibadatik",
+      "reference": "Sunan Abu Dawud 1522",
+      "source": "Hadith"
+    },
+    {
+      "id": 58,
+      "category": "witr",
+      "tags": ["witr", "night prayer", "tahajjud", "qunoot", "supplication"],
+      "arabic": "اللَّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ وَعَافِنِي فِيمَنْ عَافَيْتَ",
+      "english": "O Allah, guide me among those You have guided, and pardon me among those You have pardoned",
+      "transliteration": "Allahumma ihdini fiman hadayta wa 'afini fiman 'afayt",
+      "reference": "Sunan Abu Dawud 1425",
+      "source": "Hadith"
+    },
+    {
+      "id": 59,
+      "category": "quran",
+      "tags": ["quran", "recitation", "reading", "understanding", "guidance"],
+      "arabic": "اللَّهُمَّ اجْعَلِ الْقُرْآنَ رَبِيعَ قَلْبِي",
+      "english": "O Allah, make the Quran the spring of my heart",
+      "transliteration": "Allahumma ij'al al-Qur'ana rabi'a qalbi",
+      "reference": "Musnad Ahmad 3712",
+      "source": "Hadith"
+    },
+    {
+      "id": 60,
+      "category": "deceased",
+      "tags": ["deceased", "death", "funeral", "condolence", "janazah"],
+      "arabic": "اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ",
+      "english": "O Allah, forgive him and have mercy on him",
+      "transliteration": "Allahumma ighfir lahu wa irhamhu",
+      "reference": "Sahih Muslim 963",
+      "source": "Hadith"
+    },
+    {
+      "id": 61,
+      "category": "deceased",
+      "tags": ["deceased", "death", "grave", "burial", "comfort"],
+      "arabic": "اللَّهُمَّ عَافِهِ وَاعْفُ عَنْهُ وَأَكْرِمْ نُزُلَهُ",
+      "english": "O Allah, pardon him, have mercy on him, and honor his reception",
+      "transliteration": "Allahumma 'afihi wa'fu 'anhu wa akrim nuzulah",
+      "reference": "Sahih Muslim 963",
+      "source": "Hadith"
+    },
+    {
+      "id": 62,
+      "category": "calamity",
+      "tags": ["calamity", "disaster", "tragedy", "loss", "patience"],
+      "arabic": "إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ",
+      "english": "Indeed we belong to Allah, and indeed to Him we will return",
+      "transliteration": "Inna lillahi wa inna ilayhi raji'un",
+      "reference": "Quran 2:156",
+      "source": "Quran"
+    },
+    {
+      "id": 63,
+      "category": "calamity",
+      "tags": ["calamity", "trial", "affliction", "patience", "reward"],
+      "arabic": "اللَّهُمَّ أْجُرْنِي فِي مُصِيبَتِي وَأَخْلِفْ لِي خَيْرًا مِنْهَا",
+      "english": "O Allah, reward me in my affliction and replace it for me with something better",
+      "transliteration": "Allahumma ujurni fi musibati wa akhlif li khayran minha",
+      "reference": "Sahih Muslim 918",
+      "source": "Hadith"
+    },
+    {
+      "id": 64,
+      "category": "good_news",
+      "tags": ["good news", "joy", "happiness", "blessing", "celebration"],
+      "arabic": "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ",
+      "english": "All praise is to Allah by whose favor good deeds are completed",
+      "transliteration": "Alhamdu lillahi alladhi bi ni'matihi tatimmu as-salihat",
+      "reference": "Sunan Ibn Majah 3803",
+      "source": "Hadith"
+    },
+    {
+      "id": 65,
+      "category": "bad_news",
+      "tags": ["bad news", "sadness", "disappointment", "trial", "patience"],
+      "arabic": "الْحَمْدُ لِلَّهِ عَلَى كُلِّ حَالٍ",
+      "english": "All praise is to Allah in all circumstances",
+      "transliteration": "Alhamdu lillahi 'ala kulli hal",
+      "reference": "Sunan Ibn Majah 3803",
+      "source": "Hadith"
+    },
+    {
+      "id": 66,
+      "category": "job",
+      "tags": ["job", "work", "employment", "career", "seeking"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ وَرَحْمَتِكَ",
+      "english": "O Allah, I ask You from Your bounty and Your mercy",
+      "transliteration": "Allahumma inni as'aluka min fadlika wa rahmatik",
+      "reference": "Sahih Muslim 713",
+      "source": "Hadith"
+    },
+    {
+      "id": 67,
+      "category": "pregnancy",
+      "tags": ["pregnancy", "baby", "expecting", "child", "mother"],
+      "arabic": "رَبِّ هَبْ لِي مِن لَّدُنْكَ ذُرِّيَّةً طَيِّبَةً",
+      "english": "My Lord, grant me from Yourself a good offspring",
+      "transliteration": "Rabbi hab li min ladunka dhurriyyatan tayyibah",
+      "reference": "Quran 3:38",
+      "source": "Quran"
+    },
+    {
+      "id": 68,
+      "category": "success",
+      "tags": ["success", "achievement", "goal", "accomplishment", "victory"],
+      "arabic": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً",
+      "english": "Our Lord, give us good in this world and good in the Hereafter",
+      "transliteration": "Rabbana atina fi ad-dunya hasanatan wa fi al-akhirati hasanatan",
+      "reference": "Quran 2:201",
+      "source": "Quran"
+    },
+    {
+      "id": 69,
+      "category": "humility",
+      "tags": ["humility", "humble", "modesty", "pride", "arrogance"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكِبْرِ وَالْعُجْبِ",
+      "english": "O Allah, I seek refuge in You from arrogance and vanity",
+      "transliteration": "Allahumma inni a'udhu bika min al-kibri wa al-'ujb",
+      "reference": "Sunan an-Nasa'i 5464",
+      "source": "Hadith"
+    },
+    {
+      "id": 70,
+      "category": "sincerity",
+      "tags": ["sincerity", "intention", "ikhlas", "purity", "honesty"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ أَنْ أُشْرِكَ بِكَ شَيْئًا وَأَنَا أَعْلَمُ",
+      "english": "O Allah, I seek refuge in You from knowingly associating anything with You",
+      "transliteration": "Allahumma inni a'udhu bika an ushrika bika shay'an wa ana a'lam",
+      "reference": "Musnad Ahmad 18719",
+      "source": "Hadith"
+    },
+    {
+      "id": 71,
+      "category": "charity",
+      "tags": ["charity", "giving", "sadaqah", "donation", "generosity"],
+      "arabic": "اللَّهُمَّ بَارِكْ لَنَا فِيمَا رَزَقْتَنَا",
+      "english": "O Allah, bless us in what You have provided for us",
+      "transliteration": "Allahumma barik lana fima razaqtana",
+      "reference": "Sunan at-Tirmidhi 3458",
+      "source": "Hadith"
+    },
+    {
+      "id": 72,
+      "category": "temptation",
+      "tags": ["temptation", "desire", "lust", "sin", "resistance"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ شَرِّ سَمْعِي وَمِنْ شَرِّ بَصَرِي",
+      "english": "O Allah, I seek refuge in You from the evil of my hearing and the evil of my sight",
+      "transliteration": "Allahumma inni a'udhu bika min sharri sam'i wa min sharri basari",
+      "reference": "Sunan Abu Dawud 1551",
+      "source": "Hadith"
+    },
+    {
+      "id": 73,
+      "category": "steadfastness",
+      "tags": ["steadfast", "firmness", "consistency", "faith", "perseverance"],
+      "arabic": "يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ",
+      "english": "O Turner of hearts, keep my heart firm on Your religion",
+      "transliteration": "Ya Muqallib al-qulub thabbit qalbi 'ala dinik",
+      "reference": "Sunan at-Tirmidhi 2140",
+      "source": "Hadith"
+    },
+    {
+      "id": 74,
+      "category": "enemy",
+      "tags": ["enemy", "opponent", "conflict", "protection", "victory"],
+      "arabic": "اللَّهُمَّ إِنَّا نَجْعَلُكَ فِي نُحُورِهِمْ",
+      "english": "O Allah, we place You before them",
+      "transliteration": "Allahumma inna naj'aluka fi nuhurihim",
+      "reference": "Sunan Abu Dawud 1537",
+      "source": "Hadith"
+    },
+    {
+      "id": 75,
+      "category": "forgiveness",
+      "tags": ["forgiveness", "sin", "repentance", "mercy", "pardon"],
+      "arabic": "أَسْتَغْفِرُ اللَّهَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيَّ الْقَيُّومَ وَأَتُوبُ إِلَيْهِ",
+      "english": "I seek forgiveness from Allah, there is none worthy of worship except Him, the Ever-Living, the Sustainer, and I repent to Him",
+      "transliteration": "Astaghfiru Allah alladhi la ilaha illa Huwa al-Hayy al-Qayyum wa atubu ilayh",
+      "reference": "Sunan Abu Dawud 1517",
+      "source": "Hadith"
+    },
+    {
+      "id": 76,
+      "category": "night",
+      "tags": ["night", "evening", "darkness", "protection", "sleep"],
+      "arabic": "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ",
+      "english": "We have entered evening and the dominion belongs to Allah",
+      "transliteration": "Amsayna wa amsa al-mulku lillah",
+      "reference": "Sahih Muslim 2723",
+      "source": "Hadith"
+    },
+    {
+      "id": 77,
+      "category": "morning",
+      "tags": ["morning", "dawn", "awakening", "start", "day"],
+      "arabic": "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ",
+      "english": "We have entered morning and the dominion belongs to Allah",
+      "transliteration": "Asbahna wa asbaha al-mulku lillah",
+      "reference": "Sahih Muslim 2723",
+      "source": "Hadith"
+    },
+    {
+      "id": 78,
+      "category": "confusion",
+      "tags": ["confusion", "doubt", "uncertainty", "clarity", "guidance"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْعَجْزِ وَالْكَسَلِ وَالْجُبْنِ",
+      "english": "O Allah, I seek refuge in You from helplessness, laziness and cowardice",
+      "transliteration": "Allahumma inni a'udhu bika min al-'ajzi wa al-kasali wa al-jubni",
+      "reference": "Sahih al-Bukhari 6369",
+      "source": "Hadith"
+    },
+    {
+      "id": 79,
+      "category": "backbiting",
+      "tags": ["backbiting", "gossip", "slander", "tongue", "protection"],
+      "arabic": "اللَّهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ وَاجْعَلْنِي مِنَ الْمُتَطَهِّرِينَ",
+      "english": "O Allah, make me among those who repent and make me among those who are purified",
+      "transliteration": "Allahumma ij'alni min at-tawwabin wa ij'alni min al-mutatahhirin",
+      "reference": "Sunan at-Tirmidhi 55",
+      "source": "Hadith"
+    },
+    {
+      "id": 80,
+      "category": "hope",
+      "tags": ["hope", "optimism", "expectation", "trust", "faith"],
+      "arabic": "إِنَّ مَعَ الْعُسْرِ يُسْرًا",
+      "english": "Indeed, with hardship comes ease",
+      "transliteration": "Inna ma'a al-'usri yusra",
+      "reference": "Quran 94:6",
+      "source": "Quran"
+    },
+    {
+      "id": 81,
+      "category": "accident",
+      "tags": ["accident", "injury", "harm", "protection", "safety"],
+      "arabic": "قَدَرُ اللَّهِ وَمَا شَاءَ فَعَلَ",
+      "english": "It is the decree of Allah, and what He wills, He does",
+      "transliteration": "Qadaru Allahi wa ma sha'a fa'al",
+      "reference": "Sahih Muslim 2664",
+      "source": "Hadith"
+    },
+    {
+      "id": 82,
+      "category": "jealousy",
+      "tags": ["jealousy", "envy", "hasad", "evil eye", "protection"],
+      "arabic": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ",
+      "english": "I seek refuge in the Lord of daybreak",
+      "transliteration": "Qul a'udhu bi Rabbi al-Falaq",
+      "reference": "Quran 113:1",
+      "source": "Quran"
+    },
+    {
+      "id": 83,
+      "category": "jealousy",
+      "tags": ["jealousy", "envy", "evil", "protection", "refuge"],
+      "arabic": "قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
+      "english": "I seek refuge in the Lord of mankind",
+      "transliteration": "Qul a'udhu bi Rabbi an-Nas",
+      "reference": "Quran 114:1",
+      "source": "Quran"
+    },
+    {
+      "id": 84,
+      "category": "Friday",
+      "tags": ["friday", "jummah", "blessing", "salawat", "prophet"],
+      "arabic": "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ",
+      "english": "O Allah, send blessings upon Muhammad and upon the family of Muhammad",
+      "transliteration": "Allahumma salli 'ala Muhammadin wa 'ala ali Muhammad",
+      "reference": "Sahih al-Bukhari 3370",
+      "source": "Hadith"
+    },
+    {
+      "id": 85,
+      "category": "vehicle",
+      "tags": ["vehicle", "car", "transportation", "travel", "safety"],
+      "arabic": "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا",
+      "english": "Glory to Him who has subjected this to us",
+      "transliteration": "Subhana alladhi sakhkhara lana hadha",
+      "reference": "Quran 43:13",
+      "source": "Quran"
+    },
+    {
+      "id": 86,
+      "category": "drinking_water",
+      "tags": ["water", "drinking", "thirst", "blessing", "sustenance"],
+      "arabic": "الْحَمْدُ لِلَّهِ الَّذِي سَقَانَا عَذْبًا فُرَاتًا بِرَحْمَتِهِ",
+      "english": "All praise is to Allah who gave us sweet, refreshing water to drink by His mercy",
+      "transliteration": "Alhamdu lillahi alladhi saqana 'adhban furatan bi rahmatihi",
+      "reference": "Al-Adab Al-Mufrad 831",
+      "source": "Hadith"
+    },
+    {
+      "id": 87,
+      "category": "gift",
+      "tags": ["gift", "present", "receiving", "gratitude", "blessing"],
+      "arabic": "جَزَاكَ اللَّهُ خَيْرًا",
+      "english": "May Allah reward you with goodness",
+      "transliteration": "Jazaka Allahu khayra",
+      "reference": "Sunan at-Tirmidhi 2035",
+      "source": "Hadith"
+    },
+    {
+      "id": 88,
+      "category": "sneezing",
+      "tags": ["sneeze", "sneezing", "health", "blessing", "response"],
+      "arabic": "الْحَمْدُ لِلَّهِ",
+      "english": "All praise is to Allah",
+      "transliteration": "Alhamdu lillah",
+      "reference": "Sahih al-Bukhari 6224",
+      "source": "Hadith"
+    },
+    {
+      "id": 89,
+      "category": "sneezing",
+      "tags": ["sneeze", "response", "blessing", "reply", "health"],
+      "arabic": "يَرْحَمُكَ اللَّهُ",
+      "english": "May Allah have mercy on you",
+      "transliteration": "Yarhamuka Allah",
+      "reference": "Sahih al-Bukhari 6224",
+      "source": "Hadith"
+    },
+    {
+      "id": 90,
+      "category": "praise",
+      "tags": ["praise", "compliment", "admiration", "protection", "humility"],
+      "arabic": "اللَّهُمَّ لَا تُؤَاخِذْنِي بِمَا يَقُولُونَ",
+      "english": "O Allah, do not take me to account for what they say",
+      "transliteration": "Allahumma la tu'akhidhni bima yaqulun",
+      "reference": "Al-Adab Al-Mufrad 761",
+      "source": "Hadith"
+    },
+    {
+      "id": 91,
+      "category": "seeing_disabled",
+      "tags": ["disabled", "affliction", "gratitude", "health", "blessing"],
+      "arabic": "الْحَمْدُ لِلَّهِ الَّذِي عَافَانِي مِمَّا ابْتَلَاكَ بِهِ",
+      "english": "All praise is to Allah who has spared me what He has afflicted you with",
+      "transliteration": "Alhamdu lillahi alladhi 'afani mimma ibtalaka bihi",
+      "reference": "Sunan at-Tirmidhi 3432",
+      "source": "Hadith"
+    },
+    {
+      "id": 92,
+      "category": "sitting",
+      "tags": ["sitting", "gathering", "company", "assembly", "meeting"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ مَجْلِسِ السُّوءِ",
+      "english": "O Allah, I seek refuge in You from bad company",
+      "transliteration": "Allahumma inni a'udhu bika min majlisi as-su'",
+      "reference": "Al-Adab Al-Mufrad 1095",
+      "source": "Hadith"
+    },
+    {
+      "id": 93,
+      "category": "inheritance",
+      "tags": ["inheritance", "wealth", "legacy", "blessing", "family"],
+      "arabic": "اللَّهُمَّ بَارِكْ لَنَا فِيهِ وَزِدْنَا مِنْهُ",
+      "english": "O Allah, bless it for us and increase it for us",
+      "transliteration": "Allahumma barik lana fihi wa zidna minhu",
+      "reference": "Sahih al-Bukhari 5458",
+      "source": "Hadith"
+    },
+    {
+      "id": 94,
+      "category": "business",
+      "tags": ["business", "trade", "commerce", "work", "blessing"],
+      "arabic": "اللَّهُمَّ بَارِكْ لِأُمَّتِي فِي بُكُورِهَا",
+      "english": "O Allah, bless my nation in their early mornings",
+      "transliteration": "Allahumma barik li ummati fi bukuriha",
+      "reference": "Sunan Abu Dawud 2606",
+      "source": "Hadith"
+    },
+    {
+      "id": 95,
+      "category": "consultation",
+      "tags": ["consultation", "advice", "decision", "counsel", "guidance"],
+      "arabic": "مَا خَابَ مَنِ اسْتَخَارَ وَلَا نَدِمَ مَنِ اسْتَشَارَ",
+      "english": "He who makes istikhara will not fail, and he who seeks counsel will not regret",
+      "transliteration": "Ma khaba man istakhara wa la nadima man istashara",
+      "reference": "Al-Mu'jam al-Awsat 6286",
+      "source": "Hadith"
+    },
+    {
+      "id": 96,
+      "category": "longing",
+      "tags": ["longing", "missing", "separation", "reunion", "love"],
+      "arabic": "اللَّهُمَّ اجْمَعْ بَيْنَنَا فِي خَيْرٍ",
+      "english": "O Allah, unite us in goodness",
+      "transliteration": "Allahumma ijma' baynana fi khayr",
+      "reference": "Al-Adab Al-Mufrad 980",
+      "source": "Hadith"
+    },
+    {
+      "id": 97,
+      "category": "heart",
+      "tags": ["heart", "softness", "mercy", "compassion", "kindness"],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ قَلْبٍ لَا يَخْشَعُ",
+      "english": "O Allah, I seek refuge in You from a heart that does not have humility",
+      "transliteration": "Allahumma inni a'udhu bika min qalbin la yakhsha'",
+      "reference": "Sunan at-Tirmidhi 3482",
+      "source": "Hadith"
+    },
+    {
+      "id": 98,
+      "category": "remembrance",
+      "tags": [
+        "remembrance",
+        "dhikr",
+        "meditation",
+        "reflection",
+        "mindfulness"
+      ],
+      "arabic": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ",
+      "english": "There is none worthy of worship but Allah alone, He has no partner",
+      "transliteration": "La ilaha illa Allahu wahdahu la sharika lah",
+      "reference": "Sahih al-Bukhari 6404",
+      "source": "Hadith"
+    },
+    {
+      "id": 99,
+      "category": "paradise",
+      "tags": ["paradise", "jannah", "heaven", "afterlife", "eternal"],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْجَنَّةَ وَأَعُوذُ بِكَ مِنَ النَّارِ",
+      "english": "O Allah, I ask You for Paradise and seek refuge in You from the Fire",
+      "transliteration": "Allahumma inni as'aluka al-jannata wa a'udhu bika min an-nar",
+      "reference": "Sunan Abu Dawud 792",
+      "source": "Hadith"
+    },
+    {
+      "id": 100,
+      "category": "General",
+      "tags": [
+        "comprehensive",
+        "all-purpose",
+        "general",
+        "complete",
+        "universal"
+      ],
+      "arabic": "رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا",
+      "english": "Our Lord, grant us from Yourself mercy and prepare for us from our affair right guidance",
+      "transliteration": "Rabbana atina min ladunka rahmatan wa hayyi' lana min amrina rashada",
+      "reference": "Quran 18:10",
+      "source": "Quran"
+    },
+    {
+      "id": 101,
+      "category": "depression",
+      "tags": [
+        "depression",
+        "sadness",
+        "despair",
+        "hopelessness",
+        "mental health",
+        "grief"
+      ],
+      "arabic": "اللَّهُمَّ إِنِّي عَبْدُكَ ابْنُ عَبْدِكَ ابْنُ أَمَتِكَ نَاصِيَتِي بِيَدِكَ",
+      "english": "O Allah, I am Your servant, son of Your servant, son of Your maidservant. My forelock is in Your hand",
+      "transliteration": "Allahumma inni 'abduka ibnu 'abdika ibnu amatika nasiyati biyadik",
+      "reference": "Musnad Ahmad 3712",
+      "source": "Hadith"
+    },
+    {
+      "id": 102,
+      "category": "job_interview",
+      "tags": [
+        "job interview",
+        "employment",
+        "career",
+        "work",
+        "opportunity",
+        "success"
+      ],
+      "arabic": "رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي يَفْقَهُوا قَوْلِي",
+      "english": "My Lord, expand for me my chest, ease for me my task, and untie the knot from my tongue that they may understand my speech",
+      "transliteration": "Rabbi ishrah li sadri wa yassir li amri wahlul 'uqdatan min lisani yafqahu qawli",
+      "reference": "Quran 20:25-28",
+      "source": "Quran"
+    },
+    {
+      "id": 103,
+      "category": "moving_home",
+      "tags": [
+        "moving",
+        "new home",
+        "relocation",
+        "house",
+        "dwelling",
+        "blessing"
+      ],
+      "arabic": "رَبِّ أَنزِلْنِي مُنزَلًا مُّبَارَكًا وَأَنتَ خَيْرُ الْمُنزِلِينَ",
+      "english": "My Lord, let me land at a blessed landing place, and You are the best to accommodate",
+      "transliteration": "Rabbi anzilni munzalan mubarakan wa anta khayru al-munzilin",
+      "reference": "Quran 23:29",
+      "source": "Quran"
+    },
+    {
+      "id": 104,
+      "category": "divorce",
+      "tags": [
+        "divorce",
+        "separation",
+        "relationship problems",
+        "marriage conflict",
+        "family"
+      ],
+      "arabic": "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا",
+      "english": "Our Lord, grant us from among our spouses and offspring comfort to our eyes and make us an example for the righteous",
+      "transliteration": "Rabbana hab lana min azwajina wa dhurriyyatina qurrata a'yunin wa ij'alna lil-muttaqina imama",
+      "reference": "Quran 25:74",
+      "source": "Quran"
+    },
+    {
+      "id": 105,
+      "category": "addiction",
+      "tags": [
+        "addiction",
+        "substance abuse",
+        "recovery",
+        "weakness",
+        "temptation",
+        "strength"
+      ],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ",
+      "english": "O Allah, I ask You for well-being in this world and the Hereafter",
+      "transliteration": "Allahumma inni as'aluka al-'afiyata fi ad-dunya wa al-akhirah",
+      "reference": "Sunan Ibn Majah 3851",
+      "source": "Hadith"
+    },
+    {
+      "id": 106,
+      "category": "loss",
+      "tags": [
+        "loss",
+        "death",
+        "loved one",
+        "bereavement",
+        "grief",
+        "mourning"
+      ],
+      "arabic": "إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ اللَّهُمَّ أْجُرْنِي فِي مُصِيبَتِي",
+      "english": "Indeed we belong to Allah, and indeed to Him we will return. O Allah, reward me in my affliction",
+      "transliteration": "Inna lillahi wa inna ilayhi raji'un Allahumma ujurni fi musibati",
+      "reference": "Sahih Muslim 918",
+      "source": "Hadith"
+    },
+    {
+      "id": 107,
+      "category": "business",
+      "tags": [
+        "starting business",
+        "entrepreneur",
+        "venture",
+        "success",
+        "blessing",
+        "rizq"
+      ],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ عِلْمٍ لَا يَنْفَعُ وَمِنْ عَمَلٍ لَا يُرْفَعُ",
+      "english": "O Allah, I seek refuge in You from knowledge that does not benefit and from deeds that are not raised",
+      "transliteration": "Allahumma inni a'udhu bika min 'ilmin la yanfa'u wa min 'amalin la yurfa'",
+      "reference": "Sunan an-Nasa'i 5511",
+      "source": "Hadith"
+    },
+    {
+      "id": 108,
+      "category": "medical",
+      "tags": [
+        "medical diagnosis",
+        "illness",
+        "disease",
+        "health",
+        "cure",
+        "healing"
+      ],
+      "arabic": "اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ الْبَأْسَ اشْفِ وَأَنْتَ الشَّافِي لَا شِفَاءَ إِلَّا شِفَاؤُكَ",
+      "english": "O Allah, Lord of mankind, remove the harm and heal, for You are the Healer. There is no healing except Your healing",
+      "transliteration": "Allahumma Rabba an-nasi adhhib al-ba'sa ishfi wa anta ash-Shafi la shifa'a illa shifa'uk",
+      "reference": "Sahih al-Bukhari 5743",
+      "source": "Hadith"
+    },
+    {
+      "id": 109,
+      "category": "legal",
+      "tags": [
+        "court",
+        "legal matters",
+        "justice",
+        "trial",
+        "lawsuit",
+        "judgment"
+      ],
+      "arabic": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الظُّلْمِ وَالْمَظْلَمَةِ",
+      "english": "O Allah, I seek refuge in You from oppression and being oppressed",
+      "transliteration": "Allahumma inni a'udhu bika min adh-dhulmi wa al-madhlamah",
+      "reference": "Musnad Ahmad 7178",
+      "source": "Hadith"
+    },
+    {
+      "id": 110,
+      "category": "forgiveness_from_people",
+      "tags": [
+        "seeking forgiveness",
+        "apology",
+        "reconciliation",
+        "wronged someone",
+        "amends"
+      ],
+      "arabic": "اللَّهُمَّ اجْعَلْ فِي قَلْبِهِ رَحْمَةً وَعَفْوًا",
+      "english": "O Allah, place mercy and pardon in their heart",
+      "transliteration": "Allahumma ij'al fi qalbihi rahmatan wa 'afwa",
+      "reference": "Al-Adab Al-Mufrad 462",
+      "source": "Hadith"
+    },
+    {
+      "id": 111,
+      "category": "family_conflict",
+      "tags": [
+        "family conflict",
+        "family problems",
+        "relatives",
+        "reconciliation",
+        "peace"
+      ],
+      "arabic": "رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا الَّذِينَ سَبَقُونَا بِالْإِيمَانِ",
+      "english": "Our Lord, forgive us and our brothers who preceded us in faith",
+      "transliteration": "Rabbana ighfir lana wa li-ikhwanina alladhina sabaquna bi al-iman",
+      "reference": "Quran 59:10",
+      "source": "Quran"
+    },
+    {
+      "id": 112,
+      "category": "repentance",
+      "tags": [
+        "haram exposure",
+        "repentance",
+        "sin",
+        "specific sins",
+        "tawbah",
+        "seeking forgiveness"
+      ],
+      "arabic": "رَبِّ إِنِّي ظَلَمْتُ نَفْسِي فَاغْفِرْ لِي",
+      "english": "My Lord, indeed I have wronged myself, so forgive me",
+      "transliteration": "Rabbi inni dhalamtu nafsi faghfir li",
+      "reference": "Quran 28:16",
+      "source": "Quran"
+    },
+    {
+      "id": 113,
+      "category": "chastity",
+      "tags": [
+        "sexual temptation",
+        "zina prevention",
+        "chastity",
+        "purity",
+        "desire control"
+      ],
+      "arabic": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى",
+      "english": "O Allah, I ask You for guidance, piety, chastity and self-sufficiency",
+      "transliteration": "Allahumma inni as'aluka al-huda wa at-tuqa wa al-'afafa wa al-ghina",
+      "reference": "Sahih Muslim 2721",
+      "source": "Hadith"
+    },
+    {
+      "id": 114,
+      "category": "injustice",
+      "tags": [
+        "legal injustice",
+        "oppression",
+        "wronged",
+        "justice",
+        "unfair treatment"
+      ],
+      "arabic": "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ نِعْمَ الْمَوْلَى وَنِعْمَ النَّصِيرُ",
+      "english": "Allah is sufficient for us, and He is the best Disposer of affairs, the best Protector and the best Helper",
+      "transliteration": "Hasbuna Allahu wa ni'ma al-wakil ni'ma al-mawla wa ni'ma an-nasir",
+      "reference": "Quran 3:173 & 8:40",
+      "source": "Quran"
+    },
+    {
+      "id": 115,
+      "category": "major_decision",
+      "tags": [
+        "major decision",
+        "life-changing",
+        "fear",
+        "big choice",
+        "uncertainty",
+        "guidance"
+      ],
+      "arabic": "اللَّهُمَّ خِرْ لِي وَاخْتَرْ لِي",
+      "english": "O Allah, choose what is best for me and make the choice for me",
+      "transliteration": "Allahumma khir li wakhtir li",
+      "reference": "Musnad Ahmad 23996",
+      "source": "Hadith"
+    }
+  ]
+}

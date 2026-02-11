@@ -2,10 +2,8 @@ import { Request, Response } from "express";
 import { selectDuaWithOpenAI } from "../services/openaiService.js";
 import {
   getRandomDua,
-  getRandomDuaByCategory,
   loadDuas,
 } from "../utils/duaDatabase.js";
-import { matchByRegex, type MatchSource } from "../utils/duaMatcher.js";
 
 /**
  * POST /api/dua
@@ -16,18 +14,17 @@ import { matchByRegex, type MatchSource } from "../utils/duaMatcher.js";
  * { "userRequest": "I'm feeling anxious about an exam" }
  *
  * Response:
- * { "dua": { id, category, tags, arabic, english, transliteration, reference, source }, "matchSource": "regex" | "ai" | "fallback" }
+ * { "dua": { id, category, tags, arabic, english, transliteration, reference, source }, "matchSource": "ai" | "fallback" }
  *
- * Matching strategy (deterministic-first):
- * 1. Try regex pattern matching (fast, free, predictable)
- * 2. If regex fails, try OpenAI (intelligent but costs tokens)
- * 3. If OpenAI fails, use random dua (absolute fallback)
+ * Matching strategy:
+ * 1. Try OpenAI selection
+ * 2. If OpenAI fails, use random dua (absolute fallback)
  *
  * Backend responsibilities:
  * 1. Load duas.json (source of truth)
- * 2. Try regex matching first
- * 3. Fall back to OpenAI only if regex doesn't match
- * 4. Validate the selected dua exists
+ * 2. Try OpenAI selection
+ * 3. Validate the selected dua exists
+ * 4. Fall back to random if AI fails
  * 5. Return the full dua object with match source
  */
 export async function matchDua(req: Request, res: Response) {
@@ -56,59 +53,41 @@ export async function matchDua(req: Request, res: Response) {
     }
 
     let selectedDua;
-    let matchSource: MatchSource = "fallback";
+    let matchSource: "ai" | "fallback" = "fallback";
 
-    // Step 1: Try regex matching (deterministic, fast, free)
-    const regexCategory = matchByRegex(userRequest);
+    try {
+      console.log(`⚙️  Trying AI for: "${userRequest}"`);
 
-    if (regexCategory) {
-      // Regex matched! Get a random dua from this category
-      selectedDua = getRandomDuaByCategory(duas, regexCategory);
+      const aiResponse = await selectDuaWithOpenAI(userRequest, duas);
 
-      if (selectedDua) {
-        matchSource = "regex";
-        console.log(
-          `✅ Regex match: "${userRequest}" → Category: ${regexCategory} → Dua ${selectedDua.id}`,
-        );
+      // Find the dua by ID
+      selectedDua = duas.find((d) => d.id === aiResponse.duaId);
+
+      if (!selectedDua) {
+        throw new Error(`Dua ID ${aiResponse.duaId} not found in database`);
       }
-    }
 
-    // Step 2: If regex didn't match or category has no duas, try AI
-    if (!selectedDua) {
-      try {
-        console.log(`⚙️  Regex didn't match. Trying AI for: "${userRequest}"`);
+      matchSource = "ai";
+      console.log(
+        `✅ AI match: "${userRequest}" → Dua ${selectedDua.id} (${selectedDua.category})`,
+      );
+    } catch (aiError: any) {
+      // Step 2: Absolute fallback - random dua
+      console.warn(
+        `⚠️  AI failed: ${aiError.message}. Using random dua fallback.`,
+      );
 
-        const aiResponse = await selectDuaWithOpenAI(userRequest, duas);
-
-        // Find the dua by ID
-        selectedDua = duas.find((d) => d.id === aiResponse.duaId);
-
-        if (!selectedDua) {
-          throw new Error(`Dua ID ${aiResponse.duaId} not found in database`);
-        }
-
-        matchSource = "ai";
-        console.log(
-          `✅ AI match: "${userRequest}" → Dua ${selectedDua.id} (${selectedDua.category})`,
-        );
-      } catch (aiError: any) {
-        // Step 3: Absolute fallback - random dua
-        console.warn(
-          `⚠️  AI failed: ${aiError.message}. Using random dua fallback.`,
-        );
-
-        selectedDua = getRandomDua(duas);
-        if (!selectedDua) {
-          return res.status(500).json({
-            error: "No duas available for fallback",
-          });
-        }
-
-        matchSource = "fallback";
-        console.log(
-          `⚠️  Fallback used: "${userRequest}" → Random Dua ${selectedDua.id} (${selectedDua.category})`,
-        );
+      selectedDua = getRandomDua(duas);
+      if (!selectedDua) {
+        return res.status(500).json({
+          error: "No duas available for fallback",
+        });
       }
+
+      matchSource = "fallback";
+      console.log(
+        `⚠️  Fallback used: "${userRequest}" → Random Dua ${selectedDua.id} (${selectedDua.category})`,
+      );
     }
 
     // Return the dua object with match source for logging/analytics

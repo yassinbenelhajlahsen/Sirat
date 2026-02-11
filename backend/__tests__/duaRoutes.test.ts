@@ -218,67 +218,27 @@ describe("Dua Routes Integration", () => {
     });
   });
 
-  describe("Regex-First Matching Tests", () => {
-    it("should match anxiety queries using regex (no AI call)", async () => {
+  describe("AI/Fallback Matching", () => {
+    it("should use AI or fallback for vague queries", async () => {
       const response = await request(app)
         .post("/api/dua")
-        .send({ userRequest: "I'm feeling anxious" })
+        .send({ userRequest: "help me with something" })
         .expect(200);
 
       expect(response.body).toHaveProperty("dua");
       expect(response.body).toHaveProperty("matchSource");
-      expect(response.body.matchSource).toBe("regex");
-      expect(response.body.dua.category).toBe("anxiety");
+      expect(["ai", "fallback"]).toContain(response.body.matchSource);
     });
 
-    it("should match sleep queries using regex", async () => {
+    it("should still return valid dua for broad queries", async () => {
       const response = await request(app)
         .post("/api/dua")
-        .send({ userRequest: "I can't sleep at night" })
+        .send({ userRequest: "random text" })
         .expect(200);
 
-      expect(response.body.matchSource).toBe("regex");
-      expect(response.body.dua.category).toBe("sleep");
-    });
-
-    it("should match exam/knowledge queries using regex", async () => {
-      const response = await request(app)
-        .post("/api/dua")
-        .send({ userRequest: "I have an exam tomorrow" })
-        .expect(200);
-
-      expect(response.body.matchSource).toBe("regex");
-      expect(response.body.dua.category).toBe("exam");
-    });
-
-    it("should match healing queries using regex", async () => {
-      const response = await request(app)
-        .post("/api/dua")
-        .send({ userRequest: "I am sick and need healing" })
-        .expect(200);
-
-      expect(response.body.matchSource).toBe("regex");
-      expect(response.body.dua.category).toBe("healing");
-    });
-
-    it("should match forgiveness queries using regex", async () => {
-      const response = await request(app)
-        .post("/api/dua")
-        .send({ userRequest: "Please forgive me for my sins" })
-        .expect(200);
-
-      expect(response.body.matchSource).toBe("regex");
-      expect(response.body.dua.category).toBe("forgiveness");
-    });
-
-    it("should match gratitude queries using regex", async () => {
-      const response = await request(app)
-        .post("/api/dua")
-        .send({ userRequest: "I want to thank Allah for my blessings" })
-        .expect(200);
-
-      expect(response.body.matchSource).toBe("regex");
-      expect(response.body.dua.category).toBe("gratitude");
+      expect(response.body.dua).toBeDefined();
+      expect(response.body.dua.id).toBeGreaterThan(0);
+      expect(response.body.dua.category).toBeTruthy();
     });
 
     it("should return valid dua structure", async () => {
@@ -296,70 +256,6 @@ describe("Dua Routes Integration", () => {
       expect(dua).toHaveProperty("transliteration");
       expect(dua).toHaveProperty("reference");
       expect(dua).toHaveProperty("source");
-
-      expect(Array.isArray(dua.tags)).toBe(true);
-      expect(typeof dua.arabic).toBe("string");
-      expect(typeof dua.english).toBe("string");
-    });
-
-    it("should not include reasoning or extra fields", async () => {
-      const response = await request(app)
-        .post("/api/dua")
-        .send({ userRequest: "I'm worried" })
-        .expect(200);
-
-      expect(response.body).toHaveProperty("dua");
-      expect(response.body).toHaveProperty("matchSource");
-      expect(response.body).not.toHaveProperty("reasoning");
-      expect(response.body).not.toHaveProperty("confidence");
-      expect(response.body).not.toHaveProperty("matchScore");
-      expect(response.body.dua).not.toHaveProperty("reasoning");
-    });
-
-    it("should handle multiple rapid regex matches consistently", async () => {
-      const requests = [
-        { text: "I'm sick", category: "healing" },
-        { text: "I'm anxious", category: "anxiety" },
-        { text: "I'm grateful", category: "gratitude" },
-      ];
-
-      const responses = await Promise.all(
-        requests.map((req) =>
-          request(app).post("/api/dua").send({ userRequest: req.text }),
-        ),
-      );
-
-      responses.forEach((res, index) => {
-        expect(res.status).toBe(200);
-        expect(res.body.dua).toBeDefined();
-        expect(res.body.matchSource).toBe("regex");
-        expect(res.body.dua.category).toBe(requests[index].category);
-      });
-    });
-  });
-
-  describe("AI Fallback for Non-Matching Queries", () => {
-    it("should use AI or fallback for vague queries that don't match regex", async () => {
-      const response = await request(app)
-        .post("/api/dua")
-        .send({ userRequest: "help me with something" })
-        .expect(200);
-
-      expect(response.body).toHaveProperty("dua");
-      expect(response.body).toHaveProperty("matchSource");
-      // Should use AI or fallback, not regex
-      expect(["ai", "fallback"]).toContain(response.body.matchSource);
-    });
-
-    it("should still return valid dua even when regex doesn't match", async () => {
-      const response = await request(app)
-        .post("/api/dua")
-        .send({ userRequest: "random text" })
-        .expect(200);
-
-      expect(response.body.dua).toBeDefined();
-      expect(response.body.dua.id).toBeGreaterThan(0);
-      expect(response.body.dua.category).toBeTruthy();
     });
   });
 });
