@@ -192,7 +192,11 @@ export default function QuranScreen() {
   const flashListRef = useRef<FlashListRef<QuranListItem>>(null);
   const isProgrammaticScrollRef = useRef(false);
   const hasAppliedInitialScrollRef = useRef(false);
+  const hasRestoredInitialPositionRef = useRef(false);
   const animatedScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const initialRestoreTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
 
@@ -273,13 +277,14 @@ export default function QuranScreen() {
       if (safeIndex < 0 || safeIndex >= ayahToItemIndex.length) {
         safeIndex = 0;
       }
+      if (initialRestoreTimeoutRef.current) {
+        clearTimeout(initialRestoreTimeoutRef.current);
+        initialRestoreTimeoutRef.current = null;
+      }
       setInitialAyahIndex(safeIndex);
       setCurrentAyah(ayat[safeIndex] ?? ayat[0]);
       setListReady(true);
-      isProgrammaticScrollRef.current = true;
-      InteractionManager.runAfterInteractions(() => {
-        isProgrammaticScrollRef.current = false;
-      });
+      hasRestoredInitialPositionRef.current = false;
     })();
     return () => {
       mounted = false;
@@ -357,6 +362,30 @@ export default function QuranScreen() {
     },
     [ayahToItemIndex, scrollToItemIndex]
   );
+
+  const handleListLoad = useCallback(() => {
+    if (hasRestoredInitialPositionRef.current || !listReady) {
+      return;
+    }
+
+    hasRestoredInitialPositionRef.current = true;
+
+    if (initialAyahIndex <= 0) {
+      return;
+    }
+
+    scrollToAyahIndex(initialAyahIndex, { animateFinal: false });
+
+    if (initialRestoreTimeoutRef.current) {
+      clearTimeout(initialRestoreTimeoutRef.current);
+      initialRestoreTimeoutRef.current = null;
+    }
+
+    initialRestoreTimeoutRef.current = setTimeout(() => {
+      scrollToAyahIndex(initialAyahIndex, { animateFinal: false });
+      initialRestoreTimeoutRef.current = null;
+    }, 120);
+  }, [initialAyahIndex, listReady, scrollToAyahIndex]);
 
   useEffect(() => {
     if (
@@ -473,6 +502,10 @@ export default function QuranScreen() {
       if (animatedScrollTimeoutRef.current) {
         clearTimeout(animatedScrollTimeoutRef.current);
         animatedScrollTimeoutRef.current = null;
+      }
+      if (initialRestoreTimeoutRef.current) {
+        clearTimeout(initialRestoreTimeoutRef.current);
+        initialRestoreTimeoutRef.current = null;
       }
     };
   }, []);
@@ -651,11 +684,6 @@ export default function QuranScreen() {
   }, []);
 
   const keyExtractor = useCallback((item: QuranListItem) => item.key, []);
-
-  const initialItemIndex = ayahToItemIndex[initialAyahIndex] ?? 0;
-  const initialScrollIndexValue = !hasAppliedInitialScrollRef.current
-    ? initialItemIndex
-    : undefined;
 
   const handleBookmarkSubmit = useCallback(
     async ({ title, note }: QuranBookmarkModalPayload) => {
@@ -837,7 +865,7 @@ export default function QuranScreen() {
               getItemType={getItemType}
               style={styles.list}
               contentContainerStyle={styles.listContent}
-              initialScrollIndex={initialScrollIndexValue}
+              onLoad={handleListLoad}
               onViewableItemsChanged={handleViewableItemsChanged}
               viewabilityConfig={viewabilityConfigRef.current}
               onScrollToIndexFailed={handleScrollToIndexFailed}
