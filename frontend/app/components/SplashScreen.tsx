@@ -118,8 +118,8 @@ export default function SplashScreen({
   // When parent marks ready, fade out with iOS-style animation
   useEffect(() => {
     if (!ready) return;
-    // First launch of the day: longer display (2500ms), subsequent launches: shorter (1200ms)
-    const displayDuration = isFirstLaunchToday ? 2500 : 400;
+    // First launch of the day: longer display (1500ms), subsequent launches: shorter (200ms)
+    const displayDuration = isFirstLaunchToday ? 2000 : 200;
 
     const timeout = setTimeout(() => {
       Animated.parallel([
