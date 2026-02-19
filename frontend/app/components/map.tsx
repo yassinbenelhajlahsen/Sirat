@@ -245,8 +245,11 @@ export default function MapScreen() {
         {mosques.map((m) => (
           <Marker
             key={m.id}
+            identifier={m.id}
             coordinate={{ latitude: m.lat, longitude: m.lng }}
-            tracksViewChanges={false}
+            anchor={{ x: 0.5, y: 1 }}
+            calloutAnchor={{ x: 0.5, y: 0 }}
+            tracksViewChanges={Platform.OS === "ios"}
           >
             <View style={styles.pinContainer}>
               <FontAwesome5
