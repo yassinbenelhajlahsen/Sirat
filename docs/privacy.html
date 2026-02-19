@@ -147,9 +147,11 @@
               1. Location Data
             </h2>
             <p class="mt-2 text-sm">
-              Sirat uses your location only to calculate accurate prayer times
-              and show nearby mosques. Location data is processed on-device and
-              not stored or shared without your consent.
+              Sirat uses location to calculate prayer times, determine Qibla,
+              and show nearby mosques. Depending on the feature, coordinates may
+              be sent to third-party APIs (for example Aladhan and Google
+              Places) to return results. Sirat does not operate its own
+              long-term location database for users.
             </p>
           </div>
 
@@ -158,8 +160,10 @@
               2. Device Information
             </h2>
             <p class="mt-2 text-sm">
-              Basic device info such as timezone and language may be used to
-              personalize the app. This is processed locally and not uploaded.
+              Sirat uses device capabilities and permission state (location,
+              notifications, and audio/session behavior) to provide app
+              features. Core preferences and caches are stored locally on your
+              device.
             </p>
           </div>
 
@@ -179,10 +183,11 @@
             </h2>
             <p class="mt-2 text-sm">
               Sirat fetches data from trusted APIs such as Aladhan and Google
-              Places, and streams Quran audio from reputable online sources to
-              enable in-app playback. All requests are anonymous, and no
-              personal identifiers, listening habits, or usage data are
-              collected or shared.
+              Places, streams Quran audio from online sources, and can call
+              Sirat's dua backend for AI fallback matching. When AI fallback is
+              used, your entered dua request text may be processed by the backend
+              and OpenAI to select a matching dua. Local regex matching is used
+              first in-app when possible.
             </p>
           </div>
 
@@ -191,9 +196,10 @@
               5. Data Retention
             </h2>
             <p class="mt-2 text-sm">
-              No personal data is stored on remote servers by Sirat. Cached
-              preferences and prayer times remain on your device and can be
-              cleared by uninstalling the app.
+              App data such as settings, notification preferences, prayer-time
+              caches, Quran bookmarks/progress, dua history, and Ramadan tracker
+              entries are stored locally on your device. You can clear this data
+              by uninstalling the app or resetting local app storage.
             </p>
           </div>
 
@@ -203,10 +209,11 @@
             </h2>
             <p class="mt-2 text-sm">
               Sirat does not use analytics tools, advertising networks, tracking
-              SDKs, or user profiling services. Third-party APIs such as Google Maps, Aladhan, and Expo are used.
-              Review their privacy policies for details. 
+              SDKs, or user profiling services. Third-party services used for app
+              functionality may include Google Maps/Places, Aladhan, Expo
+              services, and OpenAI (for dua AI fallback). Review their privacy
+              policies for details.
             </p>
-
           </div>
 
           <div>
@@ -226,8 +233,7 @@
               <a
                 href="mailto:yassinbenelhajlahsen@gmail.com"
                 class="underline text-[#f5d36e]"
-                >yassinbenelhajlahsen@gmail.com</a
-              >
+                >yassinbenelhajlahsen@gmail.com</a>
             </p>
           </div>
         </section>

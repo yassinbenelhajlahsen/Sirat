@@ -116,11 +116,9 @@
           />
           <div>
             <span class="block text-xl font-semibold text-[#f5d36e]"
-              >Sirat</span
-            >
+              >Sirat</span>
             <span class="block text-xs text-gray-300 -mt-1"
-              >Your Daily Companion</span
-            >
+              >Your Daily Companion</span>
           </div>
         </a>
       </nav>
@@ -133,12 +131,12 @@
           <h1
             class="text-4xl sm:text-5xl font-extrabold text-[#f5d36e] leading-tight"
           >
-            Stay connected with prayer times, Qibla, and mosques.
+            Stay connected with prayer times, Quran, Qibla, and duas.
           </h1>
           <p class="mt-4 text-gray-200 max-w-lg">
-            Sirat provides precise prayer times, a smooth Qibla compass, and
-            nearby mosque discovery, all optimized for privacy and on-device
-            processing.
+            Sirat provides prayer times, Quran reading and audio, nearby mosque
+            discovery, calendar tracking, and local-first dua matching with AI
+            fallback.
           </p>
 
           <div class="mt-6 flex flex-wrap gap-3">
@@ -160,13 +158,11 @@
               href="https://github.com/yassinbenelhajlahsen/sirat"
               target="_blank"
               class="inline-flex items-center gap-2 border border-[#f5d36e] text-[#f5d36e] px-4 py-3 rounded-lg hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
-              >View on GitHub</a
-            >
+              >View on GitHub</a>
             <a
               href="privacy.html"
               class="inline-flex items-center gap-2 border border-[#f5d36e] text-[#f5d36e] px-4 py-3 rounded-lg hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
-              >Privacy Policy</a
-            >
+              >Privacy Policy</a>
           </div>
         </div>
       </header>
@@ -181,8 +177,8 @@
             Accurate Prayer Times
           </h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Automatic location-based calculations with configurable methods and
-            offsets.
+            Automatic location mode with manual city fallback and configurable
+            calculation methods.
           </p>
         </div>
 
@@ -192,7 +188,8 @@
         >
           <h3 class="text-lg font-semibold text-[#f5d36e]">Real-time Qibla</h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Smooth compass with calibration guidance and degree readout.
+            Compass direction powered by device sensors, with alignment
+            feedback and permission guidance.
           </p>
         </div>
 
@@ -202,7 +199,7 @@
         >
           <h3 class="text-lg font-semibold text-[#f5d36e]">Mosque Discovery</h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Find nearby mosques with live map previews and distance estimations.
+            Find nearby mosques with map previews and quick directions.
           </p>
         </div>
 
@@ -211,10 +208,10 @@
           class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
         >
           <h3 class="text-lg font-semibold text-[#f5d36e]">
-            Custom Notifications
+            Calendar &amp; Ramadan Tracker
           </h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Granular alert settings for each prayer, silent modes, and snooze.
+            Islamic holidays with missed-fast tracking during Ramadan windows.
           </p>
         </div>
         <div
@@ -225,7 +222,7 @@
             Immersive Quran Reader
           </h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Read & listen to the Quran seamlessly with instant search and
+            Read and listen to the Quran seamlessly with instant search and
             automatic progress restore.
           </p>
         </div>
@@ -235,8 +232,8 @@
         >
           <h3 class="text-lg font-semibold text-[#f5d36e]">AI Dua Search</h3>
           <p class="mt-2 text-gray-200 text-sm">
-            Find relevant duas instantly with AI-powered natural language
-            search.
+            Local regex matching works fast and offline, with backend AI used
+            as fallback when needed.
           </p>
         </div>
       </section>
@@ -324,22 +321,14 @@
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Download Sirat on the App Store"
-            class="app-store-btn"
-          >
-            <a
-              href="https://apps.apple.com/us/app/sirat-the-path-to-your-deen/id6753838183"
-              target="_blank"
-              class="ml-2 inline-flex items-center gap-2 bg-[#f5d36e] text-[#0c3605] px-4 py-2 rounded-lg font-medium hover:scale-[1.02] transition shadow-md"
-              >Download</a
-            >
-          </a>
+            class="ml-2 inline-flex items-center gap-2 bg-[#f5d36e] text-[#0c3605] px-4 py-2 rounded-lg font-medium hover:scale-[1.02] transition shadow-md"
+            >Download</a>
 
           <a
             href="https://github.com/yassinbenelhajlahsen/sirat"
             target="_blank"
             class="px-4 py-2 rounded-md border border-[#f5d36e] text-[#f5d36e] hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
-            >View Source</a
-          >
+            >View Source</a>
         </div>
       </section>
 
@@ -349,13 +338,5 @@
       </footer>
     </div>
 
-    <script>
-      // minimal mobile menu toggle
-      const btn = document.getElementById("mobile-menu-btn");
-      btn?.addEventListener("click", () => {
-        const menu = document.querySelector("nav > .sm\\:flex");
-        menu?.classList.toggle("hidden");
-      });
-    </script>
   </body>
 </html>
