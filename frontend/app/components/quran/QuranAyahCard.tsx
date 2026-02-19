@@ -118,90 +118,125 @@ export default memo(QuranAyahCard);
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 28,
+    marginBottom: 24,
   },
+
+  /* SURAH DIVIDER */
   surahDividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 14,
   },
   surahDividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: withOpacity(themeColors.accent, 0.25),
+    backgroundColor: withOpacity(themeColors.accent, 0.18),
   },
   surahDividerLabel: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.35),
-    backgroundColor: themeColors.primary,
+    borderColor: withOpacity(themeColors.accent, 0.28),
+    backgroundColor: withOpacity(themeColors.primarySurface, 0.85),
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 140,
+    minWidth: 150,
   },
   surahDividerArabic: {
     color: themeColors.accent,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
+    letterSpacing: 0.3,
     textAlign: "center",
   },
   surahDividerEnglish: {
     color: themeColors.white,
     fontSize: 12,
-    opacity: 0.75,
+    opacity: 0.65,
     marginTop: 2,
     textAlign: "center",
   },
+
+  /* AYAH CARD */
   ayahCard: {
     backgroundColor: themeColors.primarySurface,
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
+    borderRadius: 18,
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.06),
+
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
+
+  ayahCardPressed: {
+    transform: [{ scale: 0.985 }],
+    opacity: 0.95,
+  },
+
+  /* TOP RIGHT AYAH NUMBER */
   surahTag: {
     alignSelf: "flex-end",
     color: themeColors.accent,
-    opacity: 0.75,
-    fontSize: 12,
-    marginBottom: 6,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: withOpacity(themeColors.accent, 0.08),
   },
+
+  /* BOOKMARK BADGE */
   bookmarkBadge: {
     position: "absolute",
     top: 12,
     left: 12,
-    backgroundColor: withOpacity(themeColors.black, 0.25),
-    borderRadius: 12,
-    padding: 4,
+    backgroundColor: withOpacity(themeColors.black, 0.35),
+    borderRadius: 999,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.08),
   },
-  ayahCardPressed: {
-    opacity: 0.92,
-  },
+
+  /* ARABIC */
   arabic: {
-    fontSize: 28,
+    fontSize: 30,
     textAlign: "right",
     writingDirection: "rtl",
     color: themeColors.white,
-    lineHeight: 42,
+    lineHeight: 46,
+    letterSpacing: 0.2,
   },
+
   textBlockSpacing: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
+
+  /* TRANSLITERATION */
   transliteration: {
-    fontSize: 16,
+    fontSize: 15,
     color: themeColors.white,
-    opacity: 0.82,
-    lineHeight: 24,
+    opacity: 0.75,
+    lineHeight: 23,
     textAlign: "center",
     fontStyle: "italic",
   },
+
+  /* TRANSLATION */
   translation: {
     fontSize: 16,
     color: themeColors.white,
-    opacity: 0.85,
-    lineHeight: 22,
+    opacity: 0.88,
+    lineHeight: 24,
     textAlign: "left",
   },
 });
