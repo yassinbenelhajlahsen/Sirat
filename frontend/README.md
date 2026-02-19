@@ -1,72 +1,70 @@
-# Sirat Frontend 📱
+# Sirat Frontend
 
-React Native + Expo mobile app for Islamic utilities: prayer times, Qibla, Quran, mosques, and notifications.
+Expo Router + React Native app for daily Islamic utilities.
 
----
+## Screens (Tabs)
 
-## 🚀 Quick Start
+- Home: prayer times + next prayer + dua request
+- Mosques: nearby mosque map/list
+- Qibla: compass-based direction to Kaaba
+- Quran: read/listen/search/bookmark ayat
+- Calendar: holidays + Ramadan missed-fast tracker
+- Settings: location/method/city preferences + notification controls
+
+## Run Locally
 
 ```bash
 npm install
 npm start
 ```
 
-### Run on Platforms
+Platform commands:
 
 ```bash
-npm run ios      # iOS simulator
-npm run android  # Android emulator
-npm run web      # Web (limited features)
+npm run ios
+npm run android
+npm run web
+npm run lint
 ```
 
----
+## Environment Variables
 
-## 📁 Structure
-
-```
-frontend/
-├── app/           # Screens & UI components
-├── services/      # Business logic & API calls
-├── hooks/         # Custom React hooks
-├── context/       # State management
-├── assets/        # Images, fonts, sounds, data
-├── constants/     # Theme & design tokens
-└── util/          # Helper functions
-```
-
----
-
-## 🔧 Configuration
-
-Create a `.env` file:
+Create `frontend/.env`:
 
 ```env
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+EXPO_PUBLIC_API_URL=http://localhost:3001
 ```
 
----
+- `GOOGLE_MAPS_API_KEY` is required for mosque discovery.
+- `EXPO_PUBLIC_API_URL` points to backend dua API.
 
-## 🏗️ Tech Stack
+`GOOGLE_MAPS_API_KEY` is injected via `app.config.js` (`expo.extra.GOOGLE_MAPS_API_KEY`).
 
-- **Framework:** React Native + Expo Router
-- **Language:** TypeScript
-- **Styling:** NativeWind (Tailwind CSS)
-- **State:** React Context + Hooks
-- **APIs:** Aladhan (prayer times), Google Maps/Places
+## Current Architecture
 
----
+```text
+frontend/
+├── app/         # Expo Router routes, tabs, and UI components
+├── services/    # API/data/caching/business logic
+├── hooks/       # reusable behavior hooks
+├── context/     # app-level providers (Quran audio)
+├── assets/      # local data, images, fonts, sounds
+├── constants/   # theme tokens
+└── util/        # calculation helpers and shared utilities
+```
 
-## � Key Features
+## Data & Integrations
 
-- 🕌 Prayer times with location-based calculations
-- 🧭 Qibla compass with device sensors
-- � Quran reader with audio playback
-- � Nearby mosque discovery
-- 🔔 Prayer notifications
-- 💾 Offline support with AsyncStorage
+- Aladhan API: prayer times + Hijri/holiday data
+- Google Places API: nearby mosques
+- Sirat backend (`/api/dua`): AI-assisted dua fallback
+- Quran text data: bundled local JSON assets
+- Quran audio: streamed per surah
+- Persistence: AsyncStorage (settings, caches, bookmarks, history)
 
----
+## Notes For Development
 
-## 📚 Documentation
-
-See [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) for detailed architecture patterns and conventions.
+- App startup preloads Quran data/display modes and syncs location/notification permissions in `app/_layout.tsx`.
+- Notification scheduling is handled by `services/notificationService.ts`.
+- Prayer time caching and annual calendar fetch live in `services/prayerTimes.ts`.

@@ -2,215 +2,122 @@
 
 ## Project Overview
 
-**Sirat** is a mono-repo containing:
+Sirat is a monorepo with:
 
-- **Frontend:** React Native + Expo mobile app (`frontend/`)
-- **Backend:** Node.js + Express API server (`backend/`)
+- `frontend/`: Expo Router + React Native app
+- `backend/`: Express + TypeScript dua API
+- `docs/`: public site and privacy policy
 
-The mobile app provides Islamic utilities: prayer times, Qibla direction, Quran reading with audio, mosque discovery, and prayer notifications. The backend provides AI-powered dua search via OpenAI.
+The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, calendar/Ramadan tracking, notifications, and dua matching.
 
-The frontend architecture emphasizes modular services, context-based state management, and Expo's ecosystem integration.
+## Code Layout
 
-## Mono-Repo Structure
+### Frontend
 
-All frontend code is located in `frontend/`:
+- `frontend/app/`: routes and UI
+- `frontend/app/(tabs)/`: `index`, `Mosques`, `Qibla`, `Quran`, `Calendar`, `Settings`
+- `frontend/app/components/`: shared UI (including Quran navigator/modals)
+- `frontend/services/`: data integrations, caching, notifications, domain logic
+- `frontend/hooks/`: reusable hooks
+- `frontend/context/`: providers (`QuranAudioProvider`)
+- `frontend/constants/`: theme tokens
+- `frontend/util/`: calculation and resolver helpers
+- `frontend/assets/data/`: local datasets (`duas.json`, `quran/`, `cities.json`, `hadiths.json`)
 
-- `frontend/app/` - Expo Router screens and components
-- `frontend/services/` - Business logic and API integrations
-- `frontend/hooks/` - Custom React hooks
-- `frontend/context/` - React context providers
-- `frontend/constants/` - Theme and design tokens
-- `frontend/assets/` - Images, fonts, sounds, data files
-- `frontend/util/` - Helper functions
+### Backend
 
-All backend code is located in `backend/`:
+- `backend/src/index.ts`: app setup, CORS, routes, middleware
+- `backend/src/routes/dua.ts`: dua endpoints
+- `backend/src/controllers/duaController.ts`: request validation and selection flow
+- `backend/src/services/openaiService.ts`: OpenAI API call
+- `backend/src/utils/duaDatabase.ts`: dua data loading/cache
+- `backend/public/duas.json`: canonical dua dataset
 
-- `backend/src/` - Express server, routes, controllers
-- `backend/public/` - Static assets (dua database)
+## Important Runtime Flows
 
-## Key Architecture Patterns
+### Dua Selection
 
-### Service Layer
+- Frontend first attempts local regex matching from `frontend/services/duaMatcher.ts`.
+- If no local match and network is available, frontend calls backend `POST /api/dua`.
+- Backend tries OpenAI selection and falls back to random dua.
 
-- **Location-independent services** in `frontend/services/`: `prayerTimes.ts`, `notificationService.ts`, `quranData.ts`, `quranAudio.ts`
-- Services handle **device permissions, caching, and external API calls** (Aladhan, Google Places)
-- Each service manages its own **AsyncStorage keys** for persistence (e.g., `prayerSettings`, `notif_enabled_v1`)
-- Use **DeviceEventEmitter** for cross-component events (e.g., `SETTINGS_CHANGED_EVENT`, `NOTIF_PREFS_UPDATED_EVENT`)
+### Prayer Times and Caching
 
-### Context Providers
+- Core logic: `frontend/services/prayerTimes.ts`
+- Uses Aladhan timings/calendar endpoints
+- Caches by year + settings + location bucket in AsyncStorage
+- Supports location mode and manual city mode
 
-- `QuranAudioProvider` in `frontend/context/`: Manages Quran playback state, surah metadata, and session coordination
-- Exposed via custom hooks (e.g., `useQuranAudio`) to avoid prop drilling
-- Complex state transitions (loading, playing, paused) are handled here, not in components
+### Notifications
 
-### Routing & Navigation
+- Scheduling logic: `frontend/services/notificationService.ts`
+- Prayer-level toggles + master toggle + sound mode (`default` or `adhan`)
+- Rolling horizon scheduling (platform-dependent)
+- Refreshes on app lifecycle and settings/prefs events
 
-- **Expo Router** (`frontend/app/` directory) with file-based routing
-- Tab-based layout in `frontend/app/(tabs)/` with 5 main screens: Home, Mosques, Qibla, Quran, Calendar
-- Use relative imports with `@/` alias pointing to `frontend/` root (configured in `frontend/tsconfig.json`)
+### Quran
 
-### Styling & UI
+- Data normalization/preload: `frontend/services/quranData.ts`
+- Audio URLs: `frontend/services/quranAudio.ts`
+- Bookmarks/progress/display preferences stored in AsyncStorage
+- Audio session/state managed in `QuranAudioProvider`
 
-- **NativeWind** (Tailwind CSS for React Native) for consistent design
-- **Central theme** in `frontend/constants/theme.ts`: colors, opacity helpers, and design tokens
-- Predefined color palette with semantic names (primary, accent, success, danger)
-- Use `withOpacity()` helper for dynamic alpha transparency
+### Calendar and Ramadan
 
-### Data Handling Patterns
+- Holiday ingestion: `frontend/services/holidayService.ts`
+- Missed-fast tracking: `frontend/services/ramadanTracker.ts`
 
-**Prayer Settings & Caching:**
+## Permissions and Sync
 
-- Settings stored as `PrayerSettings` object: `{useLocation, method, city?}`
-- Calendar data cached per year with composite key: `year + settingsKey` (separates manual vs location-based)
-- Aladhan API returns ISO times; format to 12-hour via `formatTo12Hour()`
+- Initial permission sync runs in `frontend/app/_layout.tsx`.
+- Location permission affects prayer location mode.
+- Notification OS permission is mirrored into app toggle state.
+- Cross-screen updates use `DeviceEventEmitter` (e.g. `settingsChanged`, `NOTIF_PREFS_UPDATED`).
 
-**Quran Data Pipeline:**
+## Environment Variables
 
-- Raw data shipped as JSON assets (`frontend/assets/data/quran/quran.json`, `meta.json`)
-- Normalized via `NormalizedAyah` & `NormalizedSurahMeta` types in `frontend/services/quranData.ts`
-- Surah audio URLs constructed via `getSurahAudioUrl()` with fallback handling for offline
+### Frontend
 
-**Notification Scheduling:**
+- `GOOGLE_MAPS_API_KEY`
+- `EXPO_PUBLIC_API_URL` (defaults to `http://localhost:3001` in dua service)
 
-- Rolling 10-14 day horizon (OS-dependent) with platform-specific limits
-- Separate caches for location-based vs manual city notifications
-- Tracks "seen" notifications by `"Label_YYYY-MM-DDTHH:MM"` to prevent duplicates
+### Backend
 
-## Development Workflows
+- `PORT` (default `3001`)
+- `NODE_ENV`
+- `FRONTEND_URL`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (default `gpt-4-turbo`)
 
-### Build & Run
+## Development Commands
+
+### Frontend
 
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Expo development server
+npm install
 npm start
-
-# Platform-specific
-npm run ios      # iOS simulator/device
-npm run android  # Android emulator/device
-npm run web      # Web (limited feature set)
-
-# Lint
-npm run lint     # Expo ESLint config
+npm run ios
+npm run android
+npm run web
+npm run lint
 ```
 
-### Testing Locations & Notifications
+### Backend
 
-- Manually set city in Settings → override location-based detection
-- Use Notification Settings component to toggle per-prayer notifications
-- Test offline mode by disabling network; verify cached data loads
-
-### Hot Reloading
-
-- Changes to JS/TSX reload instantly; native plugin changes require full rebuild
-- AsyncStorage changes may require app restart to reflect
-
-## Project-Specific Conventions
-
-### Storage Keys
-
-- Use versioned keys to avoid stale data conflicts: `notif_enabled_v1`, `prayerSettings`
-- Document storage structure in service files for clarity
-
-### API Error Handling
-
-- Aladhan API: Always provide fallback city or handle network timeout gracefully
-- Google Maps/Places: Wrap in try-catch; show cached results if API fails
-- Network detection via `expo-network`; display offline indicator via `offlinePillVisible` flag
-
-### Permission Flows
-
-- **Location:** Check foreground → request if undecided → check if services enabled (global toggle)
-- **Notifications:** Request at first app launch in `_layout.tsx` via `syncLocationPermissionToSettings()`
-- Store OS permission status separately from user preference (dual state model)
-
-### Time & Date Utilities
-
-- All prayer times: ISO format from API → 12-hour string via `formatTo12Hour()`
-- Use `dateKey()` helper (`YYYY-MM-DD`) for calendar caching keys
-- Hijri date support via `hijri-date` library; used in Calendar screen
-
-### Event Emission Pattern
-
-```typescript
-// Emit settings change across screens
-DeviceEventEmitter.emit(SETTINGS_CHANGED_EVENT);
-
-// Listen in components
-useEffect(() => {
-  const sub = DeviceEventEmitter.addListener(SETTINGS_CHANGED_EVENT, () => {
-    // refetch or reload
-  });
-  return () => sub.remove();
-}, []);
+```bash
+cd backend
+npm install
+npm run dev
+npm run build
+npm start
+npm run lint
+npm test
 ```
 
-## Critical Integration Points
+## Conventions
 
-### Quran Audio Playback
-
-- `useQuranAudio` hook initializes `expo-audio` player and monitors network status
-- Surah completion triggers context update to auto-advance to next surah
-- Mini player portal (`QuranMiniPlayerPortal`) floats above tab bar; state persists across navigation
-
-### Prayer Notifications
-
-- Scheduled via `expo-notifications` with rolling 10-14 day horizon
-- Triggers at exact prayer time; respects user's per-prayer toggle preferences
-- Midnight refresh reschedules notifications for next day (handles day boundaries)
-
-### Location Services
-
-- Dual mode: **location-based** (device GPS) or **manual city selection**
-- If location permission denied, system prompts fallback to manual selection
-- City resolution: autocomplete via city search modal (`CitySearchModal.tsx`)
-
-## Common Patterns to Replicate
-
-**Service initialization with error handling:**
-
-```typescript
-// Fetch with fallback and cache
-const cached = await AsyncStorage.getItem(key);
-try {
-  const fresh = await axiosGet(url);
-  await AsyncStorage.setItem(key, JSON.stringify(fresh));
-  return fresh;
-} catch {
-  return cached ? JSON.parse(cached) : fallbackData;
-}
-```
-
-**Component with event subscription:**
-
-```typescript
-useEffect(() => {
-  const subscription = DeviceEventEmitter.addListener(EVENT_NAME, handler);
-  return () => subscription.remove();
-}, []);
-```
-
-## File Organization Rules
-
-- **Components:** Reusable UI in `frontend/app/components/`; screen-level logic stays in `frontend/app/(tabs)/`
-- **Services:** Business logic, API calls, caching → `frontend/services/`
-- **Hooks:** Custom React hooks that wrap services → `frontend/hooks/`
-- **Utilities:** Pure functions (time formatting, city lookups) → `frontend/util/`
-- **Context & Providers:** Global state → `frontend/context/`
-- **Types:** Leverage TypeScript; define inline or in service files (avoid separate `types/` unless complex)
-
-## Debugging Tips
-
-- Use `console.log()` during development; outputs appear in terminal running `npm start`
-- Inspect AsyncStorage via Expo DevTools (check Settings or notification state)
-- Test Android/iOS notification timing with manual clock adjustments in emulator
-- Verify Aladhan API responses match expected calculation method via browser
-
-## When Modifying Existing Features
-
-1. **Prayer times:** Check `frontend/services/prayerTimes.ts` for caching strategy; update composite cache key if settings structure changes
-2. **Notifications:** Review `frontend/services/notificationService.ts` for scheduling logic and platform-specific limits before adding prayers
-3. **Quran:** Ensure audio URLs remain valid and normalization matches asset structure in `frontend/services/quranData.ts`
-4. **UI:** Maintain theme color usage; avoid hardcoded hex values; respect safe area in layouts
+- Use `@/` import alias for frontend source-root imports.
+- Keep business logic in `services/`; keep screens thin where possible.
+- Reuse theme tokens from `frontend/constants/theme.ts`; avoid ad-hoc palette drift.
+- Use versioned AsyncStorage keys when introducing new persisted shapes.

@@ -1,104 +1,101 @@
-# Sirat Backend 🔧
+# Sirat Backend
 
-Node.js + Express API server providing AI-powered dua search using OpenAI GPT-4.
+Express + TypeScript API used by Sirat for dua selection.
 
----
+## What It Does
 
-## 🚀 Quick Start
+- Loads dua data from `backend/public/duas.json`
+- Accepts natural-language user requests
+- Uses OpenAI to select the best matching dua ID (metadata-only context)
+- Falls back to a random dua if AI is unavailable/fails
+
+## API Endpoints
+
+### `GET /`
+
+Basic service health metadata and endpoint list.
+
+### `POST /api/dua`
+
+Request body:
+
+```json
+{
+  "userRequest": "I feel anxious about exams"
+}
+```
+
+Success response:
+
+```json
+{
+  "dua": {
+    "id": 12,
+    "category": "anxiety",
+    "tags": ["anxiety", "worry"],
+    "arabic": "...",
+    "english": "...",
+    "transliteration": "...",
+    "reference": "...",
+    "source": "..."
+  },
+  "matchSource": "ai"
+}
+```
+
+Validation notes:
+
+- `userRequest` is required
+- must be a string
+- minimum 3 characters
+
+### `GET /api/dua/health`
+
+Returns API status, loaded dua count, and timestamp.
+
+## Run Locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-The server will start on `http://localhost:3000`
+Default port: `3001`
 
----
-
-## 📁 Structure
-
-```
-backend/
-├── src/
-│   ├── controllers/    # Request handlers
-│   ├── routes/         # API endpoints
-│   ├── services/       # Business logic
-│   ├── middleware/     # Error handling
-│   ├── config/         # Configuration
-│   └── utils/          # Helper functions
-├── public/
-│   └── duas.json       # Dua database
-└── package.json
-```
-
----
-
-## 🔧 Configuration
-
-Create a `.env` file:
-
-```env
-OPENAI_API_KEY=your_openai_api_key
-PORT=3000
-NODE_ENV=development
-```
-
----
-
-## 🏗️ Tech Stack
-
-- **Runtime:** Node.js 18+
-- **Framework:** Express.js
-- **Language:** TypeScript
-- **AI:** OpenAI GPT-4 API
-- **Deployment:** Railway
-
----
-
-## 📡 API Endpoints
-
-### `POST /api/dua/search`
-
-Search for duas using natural language queries.
-
-**Request Body:**
-
-```json
-{
-  "query": "dua for patience"
-}
-```
-
-**Response:**
-
-```json
-{
-  "results": [
-    {
-      "id": "123",
-      "arabic": "...",
-      "transliteration": "...",
-      "translation": "...",
-      "reference": "..."
-    }
-  ]
-}
-```
-
----
-
-## 🧪 Development
+## Scripts
 
 ```bash
-npm run dev      # Start with hot reload
-npm run build    # Build TypeScript
-npm start        # Run production build
+npm run dev            # tsx watch
+npm run build          # tsc
+npm start              # run dist/index.js
+npm run lint
+npm test
+npm run test:watch
+npm run test:coverage
 ```
 
----
+## Environment Variables
 
-## 📚 Documentation
+Create `backend/.env`:
 
-- OpenAI integration in `src/services/openaiService.ts`
-- Dua database management in `src/utils/duaDatabase.ts`
-- API routes defined in `src/routes/dua.ts`
+```env
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:8081
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4-turbo
+```
+
+Notes:
+
+- `OPENAI_API_KEY` is optional for runtime continuity; without it, the API uses fallback matching.
+- CORS allows `FRONTEND_URL` plus local Expo dev origins.
+
+## Source Map
+
+- `src/index.ts` - app setup, CORS, routing, health/404/error middleware
+- `src/routes/dua.ts` - dua routes
+- `src/controllers/duaController.ts` - request validation + flow control
+- `src/services/openaiService.ts` - OpenAI chat completion call
+- `src/utils/duaDatabase.ts` - load/cache/query dua dataset
+- `src/config/env.ts` - env parsing/defaults
