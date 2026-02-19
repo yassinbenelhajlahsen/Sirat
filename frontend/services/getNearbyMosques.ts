@@ -2,7 +2,9 @@ import Constants from "expo-constants";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const { GOOGLE_MAPS_API_KEY } = Constants.expoConfig.extra;
+const GOOGLE_MAPS_API_KEY = (
+  Constants.expoConfig?.extra as { GOOGLE_MAPS_API_KEY?: string } | undefined
+)?.GOOGLE_MAPS_API_KEY;
 
 export interface Mosque {
   id: string;
@@ -26,6 +28,10 @@ export async function getNearbyMosques(
     const loc = await Location.getCurrentPositionAsync({});
     latitude = loc.coords.latitude;
     longitude = loc.coords.longitude;
+  }
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    throw new Error("Missing GOOGLE_MAPS_API_KEY in Expo config");
   }
 
   const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=3000&type=mosque&key=${GOOGLE_MAPS_API_KEY}`;

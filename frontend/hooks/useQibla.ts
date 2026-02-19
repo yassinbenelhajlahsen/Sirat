@@ -36,7 +36,7 @@ export default function useQibla(): UseQiblaResult {
   const [error, setError] = useState<string | null>(null);
 
   const smoothRef = useRef<number | null>(null);
-  const subRef = useRef<Location.HeadingSubscription | null>(null);
+  const subRef = useRef<Location.LocationSubscription | null>(null);
 
   // Fetch position once
   useEffect(() => {
@@ -72,7 +72,6 @@ export default function useQibla(): UseQiblaResult {
         setHeading(next);
         setAccuracy(5);
       }, 80);
-      // @ts-expect-error store a removable
       subRef.current = { remove: () => clearInterval(id) };
       return;
     }
