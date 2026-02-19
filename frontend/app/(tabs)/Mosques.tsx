@@ -110,7 +110,7 @@ export default function MosqueScreen() {
     } catch {
       Alert.alert(
         "Open Settings",
-        "Unable to open settings. Please open device settings and grant Location permission."
+        "Unable to open settings. Please open device settings and grant Location permission.",
       );
     }
   };
@@ -123,7 +123,7 @@ export default function MosqueScreen() {
         android:
           "Turn on Location in Quick Settings or Settings → Location, then open Sirat and grant access.",
         default: "Please enable Location Services on your device.",
-      }) as string
+      }) as string,
     );
   };
 
@@ -195,7 +195,7 @@ export default function MosqueScreen() {
         style={styles.gradient}
       >
         <Image
-          source={require("../../assets/patterns/islamic-gold.png")}
+          source={require("../../assets/patterns/islamic-gold2.png")}
           style={{
             position: "absolute",
             top: 0,
@@ -320,7 +320,7 @@ export default function MosqueScreen() {
       style={styles.gradient}
     >
       <Image
-        source={require("../../assets/patterns/islamic-gold.png")}
+        source={require("../../assets/patterns/islamic-gold2.png")}
         style={{
           position: "absolute",
           top: 0,

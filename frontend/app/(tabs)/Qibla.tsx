@@ -7,6 +7,7 @@ import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Image,
   ImageSourcePropType,
   Linking,
   Platform,
@@ -14,7 +15,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Image
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -112,7 +112,7 @@ export default function Qibla() {
     } catch {
       Alert.alert(
         "Open Settings",
-        "Unable to open settings. Please open device settings and grant Location permission."
+        "Unable to open settings. Please open device settings and grant Location permission.",
       );
     }
   };
@@ -125,7 +125,7 @@ export default function Qibla() {
         android:
           "Turn on Location in Quick Settings or Settings → Location, then open Sirat and grant access.",
         default: "Please enable Location Services on your device.",
-      }) as string
+      }) as string,
     );
   };
 
@@ -254,15 +254,15 @@ export default function Qibla() {
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
-            <Image
-        source={require("@/assets/patterns/islamic-gold.png")}
+      <Image
+        source={require("@/assets/patterns/islamic-gold2.png")}
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          opacity: 0.05, 
+          opacity: 0.05,
           resizeMode: "repeat",
           width: "100%",
           height: "100%",

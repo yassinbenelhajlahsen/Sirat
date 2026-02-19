@@ -10,6 +10,7 @@ import {
   AppState,
   DeviceEventEmitter,
   Easing,
+  Image,
   ImageStyle,
   Linking,
   Pressable,
@@ -18,7 +19,6 @@ import {
   Text,
   View,
   useWindowDimensions,
-  Image
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import {
@@ -46,7 +46,7 @@ export default function Settings() {
   const [methodOpen, setMethodOpen] = useState(false);
   const [method, setMethod] = useState(-1);
   const [methodItems, setMethodItems] = useState(
-    CALCULATION_METHODS.map((m) => ({ label: m.name, value: m.id }))
+    CALCULATION_METHODS.map((m) => ({ label: m.name, value: m.id })),
   );
   const methodAnim = useRef(new Animated.Value(0)).current;
 
@@ -95,7 +95,7 @@ export default function Settings() {
             [
               { text: "Open Settings", onPress: () => Linking.openSettings() },
               { text: "Cancel", style: "cancel" },
-            ]
+            ],
           );
           setUseLocation(false);
           return;
@@ -114,7 +114,7 @@ export default function Settings() {
             [
               { text: "Open Settings", onPress: () => Linking.openSettings() },
               { text: "Cancel", style: "cancel" },
-            ]
+            ],
           );
           setUseLocation(false);
         }
@@ -136,7 +136,7 @@ export default function Settings() {
         label: `${c.name}, ${c.country}`,
         value: cityKey(c),
       })),
-    []
+    [],
   );
 
   // Initial load: read prayer settings and read current notification permission once
@@ -304,20 +304,20 @@ export default function Settings() {
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
     >
-            <Image
-              source={require("@/assets/patterns/islamic-gold.png")}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                opacity: 0.05, 
-                resizeMode: "repeat",
-                width: "100%",
-                height: "100%",
-              }}
-            />
+      <Image
+        source={require("@/assets/patterns/islamic-gold2.png")}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.05,
+          resizeMode: "repeat",
+          width: "100%",
+          height: "100%",
+        }}
+      />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{
@@ -385,8 +385,8 @@ export default function Settings() {
                   marginBottom: methodOpen ? 12 : 0,
                 }}
                 dropDownContainerStyle={{
-                  backgroundColor: withOpacity(themeColors.primaryDeep, .9),
-                  borderColor:withOpacity(themeColors.accent, 0.4),
+                  backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
+                  borderColor: withOpacity(themeColors.accent, 0.4),
                   borderRadius: 12,
                   zIndex: 3000,
                 }}
@@ -517,7 +517,7 @@ export default function Settings() {
               accessibilityRole="button"
               style={{
                 backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
-                borderColor:withOpacity(themeColors.accent, 0.4),
+                borderColor: withOpacity(themeColors.accent, 0.4),
                 borderWidth: 1,
                 borderRadius: 12,
                 paddingVertical: 14,

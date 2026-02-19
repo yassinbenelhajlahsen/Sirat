@@ -126,7 +126,7 @@ type BookmarkListItem = {
 
 function computeBookmarkMatchScore(
   item: BookmarkListItem,
-  query: string
+  query: string,
 ): number {
   const fields = [
     item.title,
@@ -194,10 +194,10 @@ export default function QuranScreen() {
   const hasAppliedInitialScrollRef = useRef(false);
   const hasRestoredInitialPositionRef = useRef(false);
   const animatedScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
+    null,
   );
   const initialRestoreTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
+    null,
   );
 
   const [navigatorOpen, setNavigatorOpen] = useState(false);
@@ -216,7 +216,7 @@ export default function QuranScreen() {
       ayahNumber: 1,
       arabicText: "",
       englishText: "",
-    }
+    },
   );
 
   const [bookmarks, setBookmarks] = useState<QuranBookmark[]>([]);
@@ -243,14 +243,14 @@ export default function QuranScreen() {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === "active") {
         setIsAudioActiveAsync(true).catch((error) =>
-          console.warn("Failed to reactivate audio session", error)
+          console.warn("Failed to reactivate audio session", error),
         );
       }
     };
 
     const subscription = AppState.addEventListener(
       "change",
-      handleAppStateChange
+      handleAppStateChange,
     );
     return () => subscription.remove();
   }, []);
@@ -326,7 +326,7 @@ export default function QuranScreen() {
           } catch (fallbackError) {
             console.warn(
               "scrollToOffset fallback failed; list may not be ready yet",
-              fallbackError
+              fallbackError,
             );
             return false;
           }
@@ -351,7 +351,7 @@ export default function QuranScreen() {
         animatedScrollTimeoutRef.current = null;
       }, 50);
     },
-    [listData.length]
+    [listData.length],
   );
 
   const scrollToAyahIndex = useCallback(
@@ -360,7 +360,7 @@ export default function QuranScreen() {
       if (typeof itemIndex !== "number") return;
       scrollToItemIndex(itemIndex, options);
     },
-    [ayahToItemIndex, scrollToItemIndex]
+    [ayahToItemIndex, scrollToItemIndex],
   );
 
   const handleListLoad = useCallback(() => {
@@ -448,7 +448,7 @@ export default function QuranScreen() {
       if (!flashListRef.current) return;
       const offset = Math.max(
         0,
-        index * (averageItemLength || ESTIMATED_ITEM_SIZE)
+        index * (averageItemLength || ESTIMATED_ITEM_SIZE),
       );
       flashListRef.current.scrollToOffset({ offset, animated: false });
       setTimeout(() => {
@@ -464,7 +464,7 @@ export default function QuranScreen() {
         }
       }, 50);
     },
-    []
+    [],
   );
 
   const handleJump = useCallback(
@@ -484,7 +484,7 @@ export default function QuranScreen() {
       }
       setNavigatorOpen(false);
     },
-    [juzFirstItemIndex, scrollToAyahIndex, scrollToItemIndex]
+    [juzFirstItemIndex, scrollToAyahIndex, scrollToItemIndex],
   );
 
   const viewabilityConfigRef = useRef({
@@ -525,7 +525,7 @@ export default function QuranScreen() {
         break;
       }
     },
-    []
+    [],
   );
 
   const bookmarkMap = useMemo(() => {
@@ -533,7 +533,7 @@ export default function QuranScreen() {
     bookmarks.forEach((bookmark) => {
       map.set(
         getBookmarkKey(bookmark.surahNumber, bookmark.ayahNumber),
-        bookmark
+        bookmark,
       );
     });
     return map;
@@ -542,8 +542,8 @@ export default function QuranScreen() {
   const bookmarkedAyahKeys = useMemo(() => {
     return new Set(
       bookmarks.map((bookmark) =>
-        getBookmarkKey(bookmark.surahNumber, bookmark.ayahNumber)
-      )
+        getBookmarkKey(bookmark.surahNumber, bookmark.ayahNumber),
+      ),
     );
   }, [bookmarks]);
 
@@ -589,7 +589,7 @@ export default function QuranScreen() {
         const score = Math.max(
           computeSurahMatchScore(surah.englishName, query),
           computeSurahMatchScore(surah.arabicName, query),
-          computeSurahMatchScore(String(surah.surahNumber), query)
+          computeSurahMatchScore(String(surah.surahNumber), query),
         );
         return { surah, score };
       })
@@ -643,7 +643,7 @@ export default function QuranScreen() {
         bookmark: existing,
       });
     },
-    [bookmarkMap]
+    [bookmarkMap],
   );
 
   const renderItem = useCallback<ListRenderItem<QuranListItem>>(
@@ -669,7 +669,7 @@ export default function QuranScreen() {
 
       return <QuranCompletionCard onBackToTop={scrollToTopAnimated} />;
     },
-    [bookmarkedAyahKeys, handleAyahDoubleTap, scrollToTopAnimated, surahMap]
+    [bookmarkedAyahKeys, handleAyahDoubleTap, scrollToTopAnimated, surahMap],
   );
 
   const getItemType = useCallback((item: QuranListItem) => {
@@ -706,13 +706,13 @@ export default function QuranScreen() {
         console.warn("Failed to save bookmark", error);
         Alert.alert(
           "Bookmark",
-          "Unable to save bookmark right now. Please try again."
+          "Unable to save bookmark right now. Please try again.",
         );
       } finally {
         setBookmarkSaving(false);
       }
     },
-    [bookmarkModalContext]
+    [bookmarkModalContext],
   );
 
   const handleBookmarkModalClose = useCallback(() => {
@@ -727,7 +727,7 @@ export default function QuranScreen() {
       scrollToAyahIndex(bookmark.ayahGlobalIndex);
       setNavigatorOpen(false);
     },
-    [scrollToAyahIndex]
+    [scrollToAyahIndex],
   );
 
   const handleDeleteBookmark = useCallback(async (bookmark: QuranBookmark) => {
@@ -744,7 +744,7 @@ export default function QuranScreen() {
       console.warn("Failed to delete bookmark", error);
       Alert.alert(
         "Bookmark",
-        "Unable to delete bookmark right now. Please try again."
+        "Unable to delete bookmark right now. Please try again.",
       );
     }
   }, []);
@@ -766,7 +766,7 @@ export default function QuranScreen() {
       style={{ flex: 1 }}
     >
       <Image
-        source={require("@/assets/patterns/islamic-gold.png")}
+        source={require("@/assets/patterns/islamic-gold2.png")}
         style={{
           position: "absolute",
           top: 0,

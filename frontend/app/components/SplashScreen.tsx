@@ -167,7 +167,7 @@ export default function SplashScreen({
     >
       {/* Subtle pattern overlay */}
       <Image
-        source={require("@/assets/patterns/islamic-gold.png")}
+        source={require("@/assets/patterns/islamic-gold2.png")}
         style={styles.patternOverlay}
       />
 

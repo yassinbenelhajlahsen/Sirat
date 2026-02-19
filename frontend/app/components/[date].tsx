@@ -808,7 +808,7 @@ export default function CalendarDetail() {
       style={{ flex: 1 }}
     >
       <Image
-        source={require("@/assets/patterns/islamic-gold.png")}
+        source={require("@/assets/patterns/islamic-gold2.png")}
         style={{
           position: "absolute",
           top: 0,
