@@ -24,6 +24,24 @@ export const colors = {
   danger: "#ff7070",
 } as const;
 
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+} as const;
+
+export const typography = {
+  caption: 12,
+  body: 14,
+  bodyLg: 16,
+  subtitle: 18,
+  title: 22,
+  display: 36,
+} as const;
+
 export const withOpacity = (hexColor: string, alpha: number): string => {
   const sanitized = hexColor.replace("#", "");
   const normalized =
@@ -44,5 +62,7 @@ export const withOpacity = (hexColor: string, alpha: number): string => {
 
 export const theme = {
   colors,
+  spacing,
+  typography,
   withOpacity,
 } as const;

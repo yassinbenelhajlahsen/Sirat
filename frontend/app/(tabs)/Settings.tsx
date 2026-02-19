@@ -15,6 +15,7 @@ import {
   Linking,
   Pressable,
   ScrollView,
+  StyleSheet,
   Switch,
   Text,
   View,
@@ -236,57 +237,21 @@ export default function Settings() {
         color: withOpacity(themeColors.white, 0.06),
         borderless: false,
       }}
-      style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: pressed
-          ? withOpacity(themeColors.white, 0.04)
-          : withOpacity(themeColors.primaryDeep, 0.4),
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderWidth: 1,
-        borderColor: withOpacity(themeColors.white, 0.06),
-        shadowColor: themeColors.black,
-        shadowOpacity: 0.12,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 6,
-        width: "100%",
-        maxWidth: 520,
-        transform: [{ scale: pressed ? 0.985 : 1 }],
-      })}
+      style={({ pressed }) => [
+        styles.visitSiteButton,
+        {
+          backgroundColor: pressed
+            ? withOpacity(themeColors.white, 0.04)
+            : withOpacity(themeColors.primaryDeep, 0.4),
+          transform: [{ scale: pressed ? 0.985 : 1 }],
+        },
+      ]}
     >
-      <View
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text
-          style={{
-            color: themeColors.white,
-            fontSize: 14,
-            lineHeight: 20,
-            fontFamily: "SFProDisplay-Semibold",
-            letterSpacing: 0.2,
-            marginRight: 8,
-          }}
-        >
+      <View style={styles.visitSiteRow}>
+        <Text style={styles.visitSiteText}>
           Visit our site
         </Text>
-        <Text
-          style={{
-            color: themeColors.accent,
-            fontSize: 14,
-            lineHeight: 20,
-            fontFamily: "SFProDisplay-Semibold",
-            opacity: 0.95,
-          }}
-        >
+        <Text style={styles.visitSiteArrow}>
           ↗
         </Text>
       </View>
@@ -302,39 +267,25 @@ export default function Settings() {
       ]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+      style={styles.screen}
     >
       <Image
         source={require("@/assets/patterns/islamic-gold2.png")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.05,
-          resizeMode: "repeat",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.patternOverlay}
       />
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.screen}>
         <ScrollView
           contentContainerStyle={{
             paddingBottom: footerPadding,
           }}
           showsVerticalScrollIndicator={false}
-          style={{ zIndex: 0 }}
+          style={styles.scrollView}
         >
           {/* Title */}
-          <View style={{ paddingTop: 10, paddingHorizontal: 20 }}>
+          <View style={styles.titleContainer}>
             <Text
               accessibilityRole="header"
-              style={{
-                color: themeColors.white,
-                fontFamily: "SFProDisplay-Bold",
-                fontSize: isSmall ? 34 : 40,
-              }}
+              style={[styles.title, isSmall ? styles.titleSmall : undefined]}
             >
               Settings
             </Text>
@@ -342,20 +293,9 @@ export default function Settings() {
 
           {/* Calculation Method */}
           <View
-            style={{
-              paddingHorizontal: 20,
-              paddingTop: 14,
-              zIndex: 2000,
-            }}
+            style={styles.sectionTop}
           >
-            <Text
-              style={{
-                color: themeColors.white,
-                fontSize: 16,
-                marginBottom: 8,
-                fontFamily: "SFProDisplay-Semibold",
-              }}
-            >
+            <Text style={styles.sectionTitle}>
               Calculation Method
             </Text>
             <Animated.View
@@ -422,37 +362,30 @@ export default function Settings() {
 
           {/* Location toggle */}
           <Animated.View
-            style={{
-              paddingHorizontal: 20,
-              marginTop: 18,
-              transform: [{ scale: toggleScale }],
-            }}
+            style={[
+              styles.section,
+              {
+                marginTop: 18,
+                transform: [{ scale: toggleScale }],
+              },
+            ]}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <View style={{ flex: 1, paddingRight: 12 }}>
+            <View style={styles.rowBetween}>
+              <View style={styles.rowTextBlock}>
                 <Text
-                  style={{
-                    color: themeColors.white,
-                    fontSize: isSmall ? 15 : 16,
-                    fontFamily: "SFProDisplay-Semibold",
-                  }}
+                  style={[
+                    styles.rowTitle,
+                    isSmall ? styles.rowTitleSmall : undefined,
+                  ]}
                   numberOfLines={1}
                 >
                   Use My Location
                 </Text>
                 <Text
-                  style={{
-                    color: themeColors.white,
-                    opacity: 0.8,
-                    fontSize: isSmall ? 12 : 13,
-                    marginTop: 2,
-                  }}
+                  style={[
+                    styles.rowSubtitle,
+                    isSmall ? styles.rowSubtitleSmall : undefined,
+                  ]}
                   numberOfLines={2}
                 >
                   {permissionStatus === "granted"
@@ -461,7 +394,7 @@ export default function Settings() {
                 </Text>
               </View>
 
-              <View style={{ marginLeft: 8 }}>
+              <View style={styles.switchWrap}>
                 <Switch
                   accessibilityLabel="Use my location"
                   value={useLocation}
@@ -482,49 +415,37 @@ export default function Settings() {
           <Animated.View
             pointerEvents={useLocation ? "none" : "auto"}
             accessibilityElementsHidden={useLocation}
-            style={{
-              paddingHorizontal: 20,
-              marginTop: 18,
-              opacity: locationAnim,
-              transform: [
-                {
-                  translateY: locationAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [6, 0],
-                  }),
-                },
-              ],
-              maxHeight: locationAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 120],
-              }),
-              overflow: "hidden",
-            }}
+            style={[
+              styles.section,
+              {
+                marginTop: 18,
+                opacity: locationAnim,
+                transform: [
+                  {
+                    translateY: locationAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [6, 0],
+                    }),
+                  },
+                ],
+                maxHeight: locationAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 120],
+                }),
+                overflow: "hidden",
+              },
+            ]}
           >
-            <Text
-              style={{
-                color: themeColors.white,
-                fontSize: 16,
-                marginBottom: 8,
-                fontFamily: "SFProDisplay-Semibold",
-              }}
-            >
+            <Text style={styles.sectionTitle}>
               Manual City
             </Text>
 
             <Pressable
               onPress={() => setCityModalVisible(true)}
               accessibilityRole="button"
-              style={{
-                backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
-                borderColor: withOpacity(themeColors.accent, 0.4),
-                borderWidth: 1,
-                borderRadius: 12,
-                paddingVertical: 14,
-                paddingHorizontal: 14,
-              }}
+              style={styles.cityButton}
             >
-              <Text style={{ color: themeColors.white, fontSize: 15 }}>
+              <Text style={styles.cityButtonText}>
                 {city
                   ? `${city.name}${city.country ? ", " + city.country : ""}`
                   : "Select City"}
@@ -545,11 +466,7 @@ export default function Settings() {
 
           {/* Visit site button */}
           <View
-            style={{
-              paddingHorizontal: 16,
-              marginTop: 24,
-              alignItems: "center",
-            }}
+            style={styles.footer}
           >
             <VisitSiteButton />
           </View>
@@ -558,3 +475,112 @@ export default function Settings() {
     </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  scrollView: { zIndex: 0 },
+  patternOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
+    resizeMode: "repeat",
+    width: "100%",
+    height: "100%",
+  },
+  titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
+  title: {
+    color: themeColors.white,
+    fontFamily: "SFProDisplay-Bold",
+    fontSize: 40,
+  },
+  titleSmall: { fontSize: 34 },
+  sectionTop: {
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    zIndex: 2000,
+  },
+  section: {
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    color: themeColors.white,
+    fontSize: 16,
+    marginBottom: 8,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  rowTextBlock: { flex: 1, paddingRight: 12 },
+  rowTitle: {
+    color: themeColors.white,
+    fontSize: 16,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  rowTitleSmall: { fontSize: 15 },
+  rowSubtitle: {
+    color: themeColors.white,
+    opacity: 0.8,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  rowSubtitleSmall: { fontSize: 12 },
+  switchWrap: { marginLeft: 8 },
+  cityButton: {
+    backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
+    borderColor: withOpacity(themeColors.accent, 0.4),
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+  },
+  cityButtonText: { color: themeColors.white, fontSize: 15 },
+  footer: {
+    paddingHorizontal: 16,
+    marginTop: 24,
+    alignItems: "center",
+  },
+  visitSiteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.06),
+    shadowColor: themeColors.black,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+    width: "100%",
+    maxWidth: 520,
+  },
+  visitSiteRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  visitSiteText: {
+    color: themeColors.white,
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: "SFProDisplay-Semibold",
+    letterSpacing: 0.2,
+    marginRight: 8,
+  },
+  visitSiteArrow: {
+    color: themeColors.accent,
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: "SFProDisplay-Semibold",
+    opacity: 0.95,
+  },
+});

@@ -1,8 +1,15 @@
-import { colors, withOpacity } from "@/constants/theme";
+import { colors, spacing, typography, withOpacity } from "@/constants/theme";
 import type { Dua } from "@/services/duaService";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, ScrollView, Share, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 interface DuaResultCardProps {
   dua: Dua;
@@ -38,48 +45,22 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
   };
 
   return (
-    <View
-      style={{
-        marginTop: 16,
-        backgroundColor: withOpacity(colors.black, 0.2),
-        borderRadius: 18,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: withOpacity(colors.white, 0.08),
-        shadowColor: colors.primaryDark,
-        shadowOpacity: 0.25,
-        shadowRadius: 24,
-        shadowOffset: { width: 0, height: 16 },
-        elevation: 6,
-        position: "relative",
-        zIndex: 1,
-      }}
-    >
-      <ScrollView style={{}} showsVerticalScrollIndicator={false}>
+    <View style={styles.card}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header with close button */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
+        <View style={styles.headerRow}>
           <View>
-            <Text
-              style={{
-                color: colors.accent,
-                fontSize: 12,
-                fontFamily: "SFProDisplay-Regular",
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
-            >
+            <Text style={styles.category}>
               {dua.category.charAt(0).toUpperCase() + dua.category.slice(1)}
             </Text>
           </View>
 
-          <Pressable onPress={onClose} hitSlop={8}>
+          <Pressable
+            onPress={onClose}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Close dua details"
+          >
             <Ionicons
               name="close-circle-outline"
               size={24}
@@ -89,191 +70,68 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
         </View>
 
         {/* Arabic Text - Main Display */}
-        <View style={{ marginBottom: 16, alignItems: "center" }}>
-          <Text
-            style={{
-              color: colors.accent,
-              fontSize: 26,
-              fontFamily: "SFProDisplay-Bold",
-              textAlign: "right",
-              lineHeight: 42,
-              marginBottom: 8,
-            }}
-          >
+        <View style={styles.arabicContainer}>
+          <Text style={styles.arabicText}>
             {dua.arabic}
           </Text>
         </View>
 
         {/* Transliteration */}
-        <View
-          style={{
-            marginBottom: 12,
-            backgroundColor: withOpacity(colors.black, 0.25),
-            padding: 12,
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: withOpacity(colors.white, 0.15),
-          }}
-        >
-          <Text
-            style={{
-              color: colors.grayMedium,
-              fontSize: 11,
-              fontFamily: "SFProDisplay-Regular",
-              textTransform: "uppercase",
-              letterSpacing: 0.3,
-            }}
-          >
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>
             Transliteration
           </Text>
-          <Text
-            style={{
-              color: colors.white,
-              fontSize: 13,
-              fontFamily: "SFProDisplay-Regular",
-              marginTop: 6,
-              lineHeight: 18,
-            }}
-          >
+          <Text style={styles.sectionValue}>
             {dua.transliteration}
           </Text>
         </View>
 
         {/* English Translation */}
-        <View
-          style={{
-            marginBottom: 12,
-            backgroundColor: withOpacity(colors.black, 0.25),
-            padding: 12,
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: withOpacity(colors.white, 0.15),
-          }}
-        >
-          <Text
-            style={{
-              color: colors.grayMedium,
-              fontSize: 11,
-              fontFamily: "SFProDisplay-Regular",
-              textTransform: "uppercase",
-              letterSpacing: 0.3,
-            }}
-          >
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>
             English Translation
           </Text>
-          <Text
-            style={{
-              color: colors.white,
-              fontSize: 13,
-              fontFamily: "SFProDisplay-Regular",
-              marginTop: 6,
-              lineHeight: 18,
-            }}
-          >
+          <Text style={styles.sectionValue}>
             {dua.english}
           </Text>
         </View>
 
         {/* Reference & Source */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 16,
-            paddingTop: 12,
-            borderTopWidth: 1,
-            borderTopColor: withOpacity(colors.white, 0.1),
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: colors.grayMuted,
-                fontSize: 10,
-                fontFamily: "SFProDisplay-Regular",
-                textTransform: "uppercase",
-                letterSpacing: 0.3,
-              }}
-            >
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Text style={styles.metaLabel}>
               Reference
             </Text>
-            <Text
-              style={{
-                color: colors.accent,
-                fontSize: 13,
-                fontFamily: "SFProDisplay-Semibold",
-                marginTop: 4,
-              }}
-            >
+            <Text style={styles.metaValue}>
               {dua.reference}
             </Text>
           </View>
 
-          <View style={{ flex: 1, alignItems: "flex-end" }}>
-            <Text
-              style={{
-                color: colors.grayMuted,
-                fontSize: 10,
-                fontFamily: "SFProDisplay-Regular",
-                textTransform: "uppercase",
-                letterSpacing: 0.3,
-              }}
-            >
+          <View style={styles.metaItemRight}>
+            <Text style={styles.metaLabel}>
               Source
             </Text>
-            <Text
-              style={{
-                color: colors.accent,
-                fontSize: 13,
-                fontFamily: "SFProDisplay-Semibold",
-                marginTop: 4,
-              }}
-            >
+            <Text style={styles.metaValue}>
               {dua.source}
             </Text>
           </View>
         </View>
 
         {/* Action Buttons */}
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 8,
-          }}
-        >
+        <View style={styles.actionRow}>
           {/* Share Button */}
           <Pressable
             onPress={handleShare}
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: withOpacity(colors.black, 0.25),
-              borderRadius: 8,
-              paddingVertical: 10,
-              borderWidth: 1,
-              borderColor: withOpacity(colors.white, 0.15),
-              shadowColor: withOpacity(colors.black, 0.15),
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 4 },
-              elevation: 2,
-            }}
+            accessibilityRole="button"
+            accessibilityLabel="Share dua"
+            style={styles.actionButton}
           >
             <Ionicons
               name="share-social-outline"
               size={16}
               color={colors.accent}
             />
-            <Text
-              style={{
-                color: colors.accent,
-                fontSize: 13,
-                fontFamily: "SFProDisplay-Semibold",
-                marginLeft: 6,
-              }}
-            >
+            <Text style={styles.actionButtonText}>
               Share
             </Text>
           </Pressable>
@@ -283,22 +141,9 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
             <Pressable
               onPress={handleBookmark}
               disabled={bookmarkLoading}
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: withOpacity(colors.black, 0.25),
-                borderRadius: 8,
-                paddingVertical: 10,
-                borderWidth: 1,
-                borderColor: withOpacity(colors.white, 0.15),
-                shadowColor: withOpacity(colors.black, 0.15),
-                shadowOpacity: 0.15,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 2,
-              }}
+              accessibilityRole="button"
+              accessibilityLabel="Save dua"
+              style={styles.actionButton}
             >
               {bookmarkLoading ? (
                 <Ionicons
@@ -314,12 +159,10 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
                 />
               )}
               <Text
-                style={{
-                  color: bookmarkLoading ? colors.grayMuted : colors.accent,
-                  fontSize: 13,
-                  fontFamily: "SFProDisplay-Semibold",
-                  marginLeft: 6,
-                }}
+                style={[
+                  styles.actionButtonText,
+                  bookmarkLoading ? styles.actionButtonTextMuted : undefined,
+                ]}
               >
                 Save
               </Text>
@@ -330,5 +173,127 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginTop: spacing.lg,
+    backgroundColor: withOpacity(colors.black, 0.2),
+    borderRadius: 18,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.08),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 6,
+    position: "relative",
+    zIndex: 1,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  category: {
+    color: colors.accent,
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Regular",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  arabicContainer: {
+    marginBottom: spacing.lg,
+    alignItems: "center",
+  },
+  arabicText: {
+    color: colors.accent,
+    fontSize: 26,
+    fontFamily: "SFProDisplay-Bold",
+    textAlign: "right",
+    lineHeight: 42,
+    marginBottom: spacing.sm,
+  },
+  sectionCard: {
+    marginBottom: spacing.md,
+    backgroundColor: withOpacity(colors.black, 0.25),
+    padding: spacing.md,
+    borderRadius: spacing.sm,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.15),
+  },
+  sectionLabel: {
+    color: colors.grayMedium,
+    fontSize: 11,
+    fontFamily: "SFProDisplay-Regular",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  sectionValue: {
+    color: colors.white,
+    fontSize: 13,
+    fontFamily: "SFProDisplay-Regular",
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: withOpacity(colors.white, 0.1),
+  },
+  metaItem: {
+    flex: 1,
+  },
+  metaItemRight: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  metaLabel: {
+    color: colors.grayMuted,
+    fontSize: 10,
+    fontFamily: "SFProDisplay-Regular",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  metaValue: {
+    color: colors.accent,
+    fontSize: 13,
+    fontFamily: "SFProDisplay-Semibold",
+    marginTop: spacing.xs,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: withOpacity(colors.black, 0.25),
+    borderRadius: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.15),
+    shadowColor: withOpacity(colors.black, 0.15),
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  actionButtonText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontFamily: "SFProDisplay-Semibold",
+    marginLeft: 6,
+  },
+  actionButtonTextMuted: {
+    color: colors.grayMuted,
+  },
+});
 
 export default DuaResultCard;

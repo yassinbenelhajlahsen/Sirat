@@ -1,9 +1,10 @@
-import { colors, withOpacity } from "@/constants/theme";
+import { colors, spacing, typography, withOpacity } from "@/constants/theme";
 import React from "react";
 import {
   ActivityIndicator,
   Alert,
   Keyboard,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -35,42 +36,12 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
   };
 
   return (
-    <View
-      style={{
-        marginTop: 20,
-        backgroundColor: withOpacity(colors.black, 0.2),
-        borderRadius: 18,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: withOpacity(colors.white, 0.08),
-        shadowColor: colors.primaryDark,
-        shadowOpacity: 0.25,
-        shadowRadius: 24,
-        shadowOffset: { width: 0, height: 16 },
-        elevation: 6,
-        position: "relative",
-        zIndex: 1,
-      }}
-    >
-      <Text
-        style={{
-          color: colors.accent,
-          fontSize: 18,
-          fontFamily: "SFProDisplay-Semibold",
-          marginBottom: 12,
-        }}
-      >
+    <View style={styles.card}>
+      <Text style={styles.title}>
         ✨ Ask for a Dua
       </Text>
 
-      <Text
-        style={{
-          color: colors.grayMuted,
-          fontSize: 14,
-          fontFamily: "SFProDisplay-Regular",
-          marginBottom: 10,
-        }}
-      >
+      <Text style={styles.description}>
         Describe what you need help with, and we will find the perfect dua for
         you.
       </Text>
@@ -90,62 +61,30 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
           // Let focus happen first, then scroll
           requestAnimationFrame(() => onInputFocus?.());
         }}
-        style={{
-          backgroundColor: withOpacity(colors.black, 0.3),
-          borderRadius: 10,
-          color: colors.white,
-          padding: 12,
-          fontSize: 16,
-          fontFamily: "SFProDisplay-Regular",
-          marginBottom: 12,
-          minHeight: 60,
-          borderWidth: 1,
-          borderColor: withOpacity(colors.white, 0.15),
-        }}
+        accessibilityLabel="Dua request input"
+        accessibilityHint="Describe what you need help with"
+        style={styles.input}
       />
 
       <PressableScale
         disabled={loading || !userInput.trim()}
         onPress={handleSubmit}
-        style={{
-          backgroundColor: loading
-            ? withOpacity(colors.accent, 0.5)
-            : colors.accent,
-          borderRadius: 10,
-          paddingVertical: 12,
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "row",
-          marginTop: 12,
-          shadowColor: withOpacity(colors.accent, 0.4),
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 4,
-        }}
+        accessibilityRole="button"
+        accessibilityLabel={loading ? "Finding dua" : "Find dua"}
+        style={[
+          styles.submitButton,
+          loading ? styles.submitButtonDisabled : undefined,
+        ]}
       >
         {loading ? (
           <>
             <ActivityIndicator color={colors.primary} size="small" />
-            <Text
-              style={{
-                color: colors.primary,
-                fontSize: 18,
-                fontFamily: "SFProDisplay-Bold",
-                marginLeft: 8,
-              }}
-            >
+            <Text style={styles.submitTextLoading}>
               Finding...
             </Text>
           </>
         ) : (
-          <Text
-            style={{
-              color: colors.primary,
-              fontSize: 18,
-              fontFamily: "SFProDisplay-Bold",
-            }}
-          >
+          <Text style={styles.submitText}>
             Find Dua
           </Text>
         )}
@@ -153,5 +92,76 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    marginTop: spacing.xl,
+    backgroundColor: withOpacity(colors.black, 0.2),
+    borderRadius: 18,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.08),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 6,
+    position: "relative",
+    zIndex: 1,
+  },
+  title: {
+    color: colors.accent,
+    fontSize: typography.subtitle,
+    fontFamily: "SFProDisplay-Semibold",
+    marginBottom: spacing.md,
+  },
+  description: {
+    color: colors.grayMuted,
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Regular",
+    marginBottom: spacing.sm + 2,
+  },
+  input: {
+    backgroundColor: withOpacity(colors.black, 0.3),
+    borderRadius: 10,
+    color: colors.white,
+    padding: spacing.md,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Regular",
+    marginBottom: spacing.md,
+    minHeight: 60,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.15),
+    textAlignVertical: "top",
+  },
+  submitButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    marginTop: spacing.md,
+    shadowColor: withOpacity(colors.accent, 0.4),
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  submitButtonDisabled: {
+    backgroundColor: withOpacity(colors.accent, 0.5),
+  },
+  submitText: {
+    color: colors.primary,
+    fontSize: typography.subtitle,
+    fontFamily: "SFProDisplay-Bold",
+  },
+  submitTextLoading: {
+    color: colors.primary,
+    fontSize: typography.subtitle,
+    fontFamily: "SFProDisplay-Bold",
+    marginLeft: spacing.sm,
+  },
+});
 
 export default DuaCard;

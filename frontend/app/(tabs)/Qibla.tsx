@@ -1,5 +1,10 @@
 // app/(tabs)/qibla.tsx
-import { colors, withOpacity } from "@/constants/theme";
+import {
+  colors,
+  spacing,
+  typography,
+  withOpacity,
+} from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -145,7 +150,7 @@ export default function Qibla() {
   }) => (
     <View style={styles.banner}>
       <Ionicons name={icon} size={20} color={iconColor} />
-      <View style={{ flex: 1, marginLeft: 10 }}>
+      <View style={styles.bannerBody}>
         <Text style={styles.bannerTitle}>{title}</Text>
         <Text style={styles.bannerText}>{message}</Text>
         {actions}
@@ -164,12 +169,12 @@ export default function Qibla() {
         colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={{ flex: 1 }}
+        style={styles.gradient}
       >
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
             <Text style={styles.title}>Qibla</Text>
-            <View style={{ flex: 1, marginTop: 20 }}>
+            <View style={styles.gateContent}>
               {servicesOff ? (
                 <InfoBanner
                   icon="location"
@@ -180,6 +185,8 @@ export default function Qibla() {
                       <TouchableOpacity
                         style={styles.ctaPrimary}
                         onPress={openLocationServicesHelp}
+                        accessibilityRole="button"
+                        accessibilityLabel="How to turn on location services"
                       >
                         <Text style={styles.ctaPrimaryText}>
                           How to turn on
@@ -188,6 +195,8 @@ export default function Qibla() {
                       <TouchableOpacity
                         style={styles.ctaSecondary}
                         onPress={checkStatus}
+                        accessibilityRole="button"
+                        accessibilityLabel="Check location services status"
                       >
                         <Text style={styles.ctaSecondaryText}>
                           I turned it on
@@ -207,12 +216,16 @@ export default function Qibla() {
                       <TouchableOpacity
                         style={styles.ctaPrimary}
                         onPress={openDeviceSettings}
+                        accessibilityRole="button"
+                        accessibilityLabel="Open device settings"
                       >
                         <Text style={styles.ctaPrimaryText}>Open Settings</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.ctaSecondary}
                         onPress={requestPermissionAndLoad}
+                        accessibilityRole="button"
+                        accessibilityLabel="Retry location permission"
                       >
                         <Text style={styles.ctaSecondaryText}>Try again</Text>
                       </TouchableOpacity>
@@ -226,8 +239,10 @@ export default function Qibla() {
                   message="Tap enable to calculate the direction to the Kaaba. You can disable anytime in Settings."
                   actions={
                     <TouchableOpacity
-                      style={[styles.ctaPrimary, { alignSelf: "flex-start" }]}
+                      style={styles.ctaPrimary}
                       onPress={requestPermissionAndLoad}
+                      accessibilityRole="button"
+                      accessibilityLabel="Enable location"
                     >
                       <Text style={styles.ctaPrimaryText}>Enable Location</Text>
                     </TouchableOpacity>
@@ -248,25 +263,15 @@ export default function Qibla() {
 
   // ----- Normal Qibla UI -----
   return (
-    <LinearGradient
-      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+      <LinearGradient
+        colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
     >
       <Image
         source={require("@/assets/patterns/islamic-gold2.png")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.05,
-          resizeMode: "repeat",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.patternOverlay}
       />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.titleContainer}>
@@ -310,25 +315,38 @@ export default function Qibla() {
 }
 
 const styles = StyleSheet.create({
+  gradient: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
 
   // Matches the Mosques layout so the banner sits at the top under the title
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: spacing.xl },
+  gateContent: { flex: 1, marginTop: spacing.xl },
+  patternOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
+    resizeMode: "repeat",
+    width: "100%",
+    height: "100%",
+  },
 
-  titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
+  titleContainer: { paddingTop: spacing.sm + 2, paddingHorizontal: spacing.xl },
   title: {
     color: colors.white,
     fontFamily: "SFProDisplay-Bold",
-    fontSize: 44,
+    fontSize: 40,
     letterSpacing: 0.2,
   },
-  subtle: { marginTop: 2, color: colors.accentSoft, fontSize: 13 },
+  subtle: { marginTop: 2, color: colors.accentSoft, fontSize: typography.body - 1 },
 
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
   },
 
   // Banner visuals kept identical to Mosques
@@ -337,27 +355,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: withOpacity(colors.accent, 0.35),
     borderRadius: 14,
-    padding: 12,
+    padding: spacing.md,
     flexDirection: "row",
     alignItems: "flex-start",
   },
+  bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
   bannerTitle: {
     color: colors.accent,
-    fontSize: 16,
+    fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Semibold",
   },
   bannerText: {
     color: colors.white,
     opacity: 0.95,
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: typography.body,
+    marginTop: spacing.xs,
   },
 
-  row: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
+  row: {
+    flexDirection: "row",
+    gap: spacing.sm + 2,
+    marginTop: spacing.sm + 2,
+    flexWrap: "wrap",
+  },
   ctaPrimary: {
     backgroundColor: colors.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
     borderRadius: 10,
     alignSelf: "flex-start",
   },
@@ -365,8 +389,8 @@ const styles = StyleSheet.create({
   ctaSecondary: {
     borderColor: colors.accent,
     borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
     borderRadius: 10,
     alignSelf: "flex-start",
   },
@@ -387,14 +411,14 @@ const styles = StyleSheet.create({
   ringAligned: { shadowOpacity: 0.8, shadowRadius: 20 },
   arrow: { width: 280, height: 280 },
 
-  loadingText: { color: colors.white, fontSize: 18, textAlign: "center" },
-  errorText: { color: colors.danger, fontSize: 16, textAlign: "center" },
+  loadingText: { color: colors.white, fontSize: typography.subtitle, textAlign: "center" },
+  errorText: { color: colors.danger, fontSize: typography.bodyLg, textAlign: "center" },
   noteText: {
     color: colors.accent,
-    fontSize: 14,
-    marginBottom: 10,
+    fontSize: typography.body,
+    marginBottom: spacing.sm + 2,
     textAlign: "center",
   },
-  helper: { color: colors.accentMuted, fontSize: 14, marginTop: 12 },
+  helper: { color: colors.accentMuted, fontSize: typography.body, marginTop: spacing.md },
   link: { color: colors.accent, textDecorationLine: "underline" },
 });

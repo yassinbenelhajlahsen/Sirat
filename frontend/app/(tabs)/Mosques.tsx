@@ -1,4 +1,9 @@
-import { colors, withOpacity } from "@/constants/theme";
+import {
+  colors,
+  spacing,
+  typography,
+  withOpacity,
+} from "@/constants/theme";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -166,7 +171,7 @@ export default function MosqueScreen() {
   }) => (
     <View style={styles.banner}>
       <Ionicons name={icon} size={20} color={iconColor} />
-      <View style={{ flex: 1, marginLeft: 10 }}>
+      <View style={styles.bannerBody}>
         <Text style={styles.bannerTitle}>{title}</Text>
         <Text style={styles.bannerText}>{message}</Text>
         {actions}
@@ -196,23 +201,13 @@ export default function MosqueScreen() {
       >
         <Image
           source={require("../../assets/patterns/islamic-gold2.png")}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: 0.05,
-            resizeMode: "repeat",
-            width: "100%",
-            height: "100%",
-          }}
+          style={styles.patternOverlay}
         />
 
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
             <Text style={styles.title}>Mosques</Text>
-            <View style={{ flex: 1, marginTop: 20 }}>
+            <View style={styles.gateContent}>
               {servicesOff ? (
                 <InfoBanner
                   icon="location"
@@ -223,6 +218,8 @@ export default function MosqueScreen() {
                       <TouchableOpacity
                         style={styles.ctaPrimary}
                         onPress={openLocationServicesHelp}
+                        accessibilityRole="button"
+                        accessibilityLabel="How to turn on location services"
                       >
                         <Text style={styles.ctaPrimaryText}>
                           How to turn on
@@ -231,6 +228,8 @@ export default function MosqueScreen() {
                       <TouchableOpacity
                         style={styles.ctaSecondary}
                         onPress={checkStatus}
+                        accessibilityRole="button"
+                        accessibilityLabel="Check location services status"
                       >
                         <Text style={styles.ctaSecondaryText}>
                           I turned it on
@@ -250,12 +249,16 @@ export default function MosqueScreen() {
                       <TouchableOpacity
                         style={styles.ctaPrimary}
                         onPress={openDeviceSettings}
+                        accessibilityRole="button"
+                        accessibilityLabel="Open device settings"
                       >
                         <Text style={styles.ctaPrimaryText}>Open Settings</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.ctaSecondary}
                         onPress={requestPermissionAndLoad}
+                        accessibilityRole="button"
+                        accessibilityLabel="Retry location permission"
                       >
                         <Text style={styles.ctaSecondaryText}>Try again</Text>
                       </TouchableOpacity>
@@ -269,8 +272,10 @@ export default function MosqueScreen() {
                   message="Tap enable to find mosques near you. You can disable anytime in Settings."
                   actions={
                     <TouchableOpacity
-                      style={[styles.ctaPrimary, { alignSelf: "flex-start" }]}
+                      style={styles.ctaPrimary}
                       onPress={requestPermissionAndLoad}
+                      accessibilityRole="button"
+                      accessibilityLabel="Enable location"
                     >
                       <Text style={styles.ctaPrimaryText}>Enable Location</Text>
                     </TouchableOpacity>
@@ -292,12 +297,15 @@ export default function MosqueScreen() {
       Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
 
     return (
-      <Animated.View style={{ transform: [{ scale }] }}>
+      <Animated.View style={[styles.animatedCard, { transform: [{ scale }] }]}>
         <PressableScale
           onPress={() => openDirections(item.lat, item.lng)}
           onPressIn={onPressIn}
           onPressOut={onPressOut}
           style={styles.card}
+          accessibilityRole="button"
+          accessibilityLabel={`Open directions to ${item.name}`}
+          accessibilityHint="Opens your maps app"
         >
           <View style={styles.cardHeader}>
             <FontAwesome5 name="mosque" size={22} color={colors.accent} solid />
@@ -321,17 +329,7 @@ export default function MosqueScreen() {
     >
       <Image
         source={require("../../assets/patterns/islamic-gold2.png")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.05,
-          resizeMode: "repeat",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.patternOverlay}
       />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
@@ -342,7 +340,7 @@ export default function MosqueScreen() {
             <View style={styles.emptyCard}>
               <View style={styles.emptyRow}>
                 <Ionicons name="search" size={18} color={colors.accent} />
-                <Text style={[styles.emptyText, { marginLeft: 10, flex: 1 }]}>
+                <Text style={styles.emptyTextFill}>
                   No mosques found near your current location.
                 </Text>
               </View>
@@ -364,6 +362,8 @@ export default function MosqueScreen() {
             style={styles.mapContainer}
             onPress={() => router.push("/components/map")}
             activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel="Open full mosque map"
           >
             <MapView
               style={StyleSheet.absoluteFillObject}
@@ -397,6 +397,8 @@ export default function MosqueScreen() {
                       <TouchableOpacity
                         style={styles.directionButton}
                         onPress={() => openDirections(m.lat, m.lng)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Directions to ${m.name}`}
                       >
                         <Ionicons
                           name="navigate"
@@ -431,23 +433,34 @@ const customMapStyle = [
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: spacing.xl },
+  patternOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
+    resizeMode: "repeat",
+    width: "100%",
+    height: "100%",
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: {
     color: colors.white,
     fontFamily: "SFProDisplay-Bold",
-    fontSize: 36,
-    marginBottom: 8,
+    fontSize: typography.display,
+    marginBottom: spacing.sm,
     textShadowColor: withOpacity(colors.black, 0.4),
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 3,
   },
   header: {
     color: colors.accent,
-    fontSize: 22,
+    fontSize: typography.title,
     fontFamily: "SFProDisplay-Bold",
-    marginBottom: 16,
-    marginTop: 4,
+    marginBottom: spacing.lg,
+    marginTop: spacing.xs,
     textShadowColor: withOpacity(colors.black, 0.3),
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
@@ -457,43 +470,52 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: withOpacity(colors.accent, 0.35),
     borderRadius: 14,
-    padding: 12,
+    padding: spacing.md,
     flexDirection: "row",
     alignItems: "flex-start",
   },
+  gateContent: { flex: 1, marginTop: spacing.xl },
+  bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
   bannerTitle: {
     color: colors.accent,
-    fontSize: 16,
+    fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Semibold",
   },
   bannerText: {
     color: colors.white,
     opacity: 0.95,
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: typography.body,
+    marginTop: spacing.xs,
   },
-  row: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
+  row: {
+    flexDirection: "row",
+    gap: spacing.sm + 2,
+    marginTop: spacing.sm + 2,
+    flexWrap: "wrap",
+  },
   ctaPrimary: {
     backgroundColor: colors.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
     borderRadius: 10,
+    alignSelf: "flex-start",
   },
   ctaPrimaryText: { color: colors.primary, fontWeight: "700" },
   ctaSecondary: {
     borderColor: colors.accent,
     borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
     borderRadius: 10,
+    alignSelf: "flex-start",
   },
   ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
+  animatedCard: { marginBottom: spacing.lg },
   card: {
     backgroundColor: colors.primarySurfaceAlt,
     borderRadius: 18,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 18,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
     borderWidth: 1,
     borderColor: withOpacity(colors.accent, 0.25),
     shadowColor: colors.black,
@@ -505,8 +527,8 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 6,
+    gap: spacing.sm + 2,
+    marginBottom: spacing.sm - 2,
   },
   name: {
     color: colors.white,
@@ -520,16 +542,16 @@ const styles = StyleSheet.create({
   address: {
     color: colors.white,
     fontFamily: "SFProDisplay-Regular",
-    fontSize: 15,
+    fontSize: typography.body + 1,
     opacity: 0.85,
-    marginBottom: 4,
+    marginBottom: spacing.xs,
     alignItems: "center",
   },
   mapContainer: {
     height: 230,
     borderRadius: 16,
     overflow: "hidden",
-    marginTop: 6,
+    marginTop: spacing.sm - 2,
     borderWidth: 1,
     borderColor: withOpacity(colors.accent, 0.25),
     shadowColor: colors.black,
@@ -541,12 +563,12 @@ const styles = StyleSheet.create({
   },
   mapSpinner: {
     position: "absolute",
-    right: 10,
-    top: 10,
+    right: spacing.sm + 2,
+    top: spacing.sm + 2,
     backgroundColor: withOpacity(colors.black, 0.35),
     borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.sm - 2,
   },
   pinContainer: {
     backgroundColor: colors.accent,
@@ -562,7 +584,7 @@ const styles = StyleSheet.create({
   callout: {
     backgroundColor: colors.primary,
     borderRadius: 12,
-    padding: 10,
+    padding: spacing.sm + 2,
     width: 200,
     borderColor: colors.accent,
     borderWidth: 1,
@@ -576,7 +598,7 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontFamily: "SFProDisplay-Bold",
     fontSize: 16,
-    marginBottom: 4,
+    marginBottom: spacing.xs,
     textAlign: "center",
   },
   calloutAddress: {
@@ -584,7 +606,7 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Regular",
     fontSize: 13,
     opacity: 0.9,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
     textAlign: "center",
   },
   directionButton: {
@@ -592,14 +614,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.accent,
     borderRadius: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: spacing.sm - 3,
+    paddingHorizontal: spacing.sm + 2,
     justifyContent: "center",
   },
   directionText: {
     color: colors.primary,
     fontWeight: "600",
-    marginLeft: 5,
+    marginLeft: spacing.sm - 3,
     fontSize: 13,
     textAlign: "center",
   },
@@ -608,9 +630,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: withOpacity(colors.accent, 0.25),
-    padding: 14,
+    padding: spacing.lg - 2,
     gap: 6,
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
   emptyRow: {
     flexDirection: "row",
@@ -618,6 +640,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   emptyText: { color: colors.white, fontSize: 15 },
+  emptyTextFill: { color: colors.white, fontSize: 15, marginLeft: 10, flex: 1 },
   emptySub: { color: colors.accent, fontSize: 13 },
   link: { color: colors.accent, textDecorationLine: "underline" },
   list: {
