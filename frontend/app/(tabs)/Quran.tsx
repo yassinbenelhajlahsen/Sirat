@@ -660,7 +660,7 @@ export default function QuranScreen() {
   );
 
   const viewabilityConfigRef = useRef({
-    itemVisiblePercentThreshold: 60,
+    itemVisiblePercentThreshold: 1,
   });
 
   useEffect(() => {
@@ -684,18 +684,36 @@ export default function QuranScreen() {
 
   const handleViewableItemsChanged = useCallback(
     ({ viewableItems }: ViewableItemsChanged) => {
+      let topVisibleAyahItem: AyahItem | null = null;
+      let topVisibleAyahIndex = Number.POSITIVE_INFINITY;
+
       for (const token of viewableItems) {
+        if (!token.isViewable) continue;
+
+        const tokenIndex = token.index;
+        if (typeof tokenIndex !== "number") continue;
+
         const item = token.item as QuranListItem | undefined;
         if (!item || item.type !== "ayah") continue;
-        const ayah = item.ayah;
-        setCurrentAyah(ayah);
-        if (isProgrammaticScrollRef.current) {
-          break;
+
+        if (tokenIndex < topVisibleAyahIndex) {
+          topVisibleAyahIndex = tokenIndex;
+          topVisibleAyahItem = item;
         }
-        saveLastReadAyahIndex(item.ayahGlobalIndex);
-        saveLastReadSurahAndAyah(ayah.surahNumber, ayah.ayahNumber);
-        break;
       }
+
+      if (!topVisibleAyahItem) {
+        return;
+      }
+
+      const ayah = topVisibleAyahItem.ayah;
+      setCurrentAyah(ayah);
+      if (isProgrammaticScrollRef.current) {
+        return;
+      }
+
+      saveLastReadAyahIndex(topVisibleAyahItem.ayahGlobalIndex);
+      saveLastReadSurahAndAyah(ayah.surahNumber, ayah.ayahNumber);
     },
     [],
   );
