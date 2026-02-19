@@ -859,6 +859,7 @@ export default function QuranScreen() {
               ref={flashListRef}
               data={listData}
               showsVerticalScrollIndicator={false}
+              scrollsToTop={false}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               estimatedItemSize={ESTIMATED_ITEM_SIZE}
