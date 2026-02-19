@@ -1151,7 +1151,7 @@ export default function QuranScreen() {
                       <Ionicons
                         name={audioIconName}
                         size={18}
-                        color={themeColors.primaryDeep}
+                        color={themeColors.white}
                         style={styles.audioIcon}
                       />
                     </PressableScale>
@@ -1167,17 +1167,13 @@ export default function QuranScreen() {
                       <Ionicons
                         name="cloud-offline-outline"
                         size={18}
-                        color={themeColors.primaryDeep}
+                        color={themeColors.white}
                       />
                       <Text style={styles.audioOfflineText}>Offline</Text>
                     </View>
                   )}
                   <PressableScale
-                    style={[
-                      styles.capsulePrimary,
-                      styles.capsuleNavigate,
-                      styles.capsuleGap,
-                    ]}
+                    style={[styles.capsulePrimary, styles.capsuleGap]}
                     onPress={() => setNavigatorOpen(true)}
                     accessibilityRole="button"
                   >
@@ -1192,7 +1188,7 @@ export default function QuranScreen() {
                     <Ionicons
                       name="settings-outline"
                       size={18}
-                      color={themeColors.primaryDeep}
+                      color={themeColors.white}
                     />
                   </PressableScale>
                 </View>
@@ -1308,25 +1304,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 999,
-    padding: 6,
-    backgroundColor: withOpacity(themeColors.primarySurface, 0.75),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.08),
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    padding: 5,
     maxWidth: "100%",
   },
   capsulePrimary: {
-    backgroundColor: themeColors.accent,
+    backgroundColor: withOpacity(themeColors.white, 0.08),
     borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-  },
-  capsuleNavigate: {
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.accent, 0.28),
+    minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   capsuleSecondary: {
     borderRadius: 999,
@@ -1344,7 +1334,7 @@ const styles = StyleSheet.create({
     backgroundColor: withOpacity(themeColors.accent, 0.14),
   },
   capsuleGap: {
-    marginLeft: 6,
+    marginLeft: 8,
   },
   headerSurahEnglish: {
     color: themeColors.white,
@@ -1380,7 +1370,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   audioOfflineText: {
-    color: themeColors.primaryDeep,
+    color: withOpacity(themeColors.white, 0.9),
     fontWeight: "600",
     fontSize: typography.caption,
     marginLeft: spacing.sm - 2,
@@ -1402,7 +1392,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   jumpButtonText: {
-    color: themeColors.primaryDeep,
+    color: themeColors.white,
     fontWeight: "600",
     fontSize: typography.body,
   },
