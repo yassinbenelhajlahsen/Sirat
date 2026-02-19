@@ -19,6 +19,7 @@ import {
   getAyatIndexForSurahAndAyah,
   getSurahMeta,
 } from "@/services/quranData";
+import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
 import {
   getLastReadAyahIndex,
   saveLastReadAyahIndex,
@@ -221,8 +222,13 @@ export default function QuranScreen() {
       ayahNumber: 1,
       arabicText: "",
       englishText: "",
+      transliteration: "",
     },
   );
+  const { isModeEnabled } = useQuranDisplayModes();
+  const showArabic = isModeEnabled("arabic");
+  const showEnglish = isModeEnabled("english");
+  const showTransliteration = isModeEnabled("transliteration");
 
   const [bookmarks, setBookmarks] = useState<QuranBookmark[]>([]);
   const [bookmarkModalContext, setBookmarkModalContext] = useState<{
@@ -664,6 +670,9 @@ export default function QuranScreen() {
             ayah={item.ayah}
             isSurahStart={isSurahStart}
             surahMeta={surahMetaForAyah}
+            showArabic={showArabic}
+            showEnglish={showEnglish}
+            showTransliteration={showTransliteration}
             isBookmarked={bookmarkedAyahKeys.has(ayahKey)}
             onDoubleTap={() =>
               handleAyahDoubleTap(item.ayah, item.ayahGlobalIndex, ayahKey)
@@ -674,7 +683,15 @@ export default function QuranScreen() {
 
       return <QuranCompletionCard onBackToTop={scrollToTopAnimated} />;
     },
-    [bookmarkedAyahKeys, handleAyahDoubleTap, scrollToTopAnimated, surahMap],
+    [
+      bookmarkedAyahKeys,
+      handleAyahDoubleTap,
+      scrollToTopAnimated,
+      showArabic,
+      showEnglish,
+      showTransliteration,
+      surahMap,
+    ],
   );
 
   const getItemType = useCallback((item: QuranListItem) => {

@@ -15,6 +15,7 @@ import * as Notifications from "expo-notifications";
 
 import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { preloadQuranData } from "@/services/quranData";
+import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { NotificationService } from "../services/notificationService";
 import SplashScreen from "./components/SplashScreen";
 import { QuranMiniPlayerPortal } from "./components/quran/QuranMiniPlayerPortal";
@@ -175,6 +176,7 @@ export default function RootLayout() {
           syncLocationPermissionToSettings(),
           syncNotificationPermissionToToggle(),
           preloadQuranData(),
+          preloadQuranDisplayModes(),
           preloadImages(),
         ]);
       } catch (error) {

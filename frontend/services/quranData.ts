@@ -1,25 +1,18 @@
 import rawMetaData from "@/assets/data/quran/meta.json";
-import rawQuranData from "@/assets/data/quran/quran.json";
+import rawArabicData from "@/assets/data/quran/ar.json";
+import rawEnglishData from "@/assets/data/quran/en.json";
+import rawTransliterationData from "@/assets/data/quran/transliteration.json";
 
 /**
- * Raw data types as shipped in the JSON assets. These mirror the existing
- * content so the normalization logic can stay type-safe without guessing.
+ * Raw data types as shipped in the JSON assets.
  */
-type RawVerse = {
-  id: number;
+type RawVerseDatasetItem = {
+  chapter: number;
+  verse: number;
   text: string;
-  translation: string;
 };
 
-type RawSurah = {
-  id: number;
-  name: string;
-  transliteration: string;
-  translation: string;
-  type: string;
-  total_verses: number;
-  verses: RawVerse[];
-};
+type RawQuranDataset = Record<string, RawVerseDatasetItem[]>;
 
 type RawMetaJuzRange = {
   index: string;
@@ -40,6 +33,17 @@ type RawMetaRecord = {
   juz: RawMetaJuzRange[];
 };
 
+type VerseTextLookupInput = {
+  datasetName: string;
+  surahNumber: number;
+  verses: RawVerseDatasetItem[] | undefined;
+};
+
+const rawArabic = rawArabicData as RawQuranDataset;
+const rawEnglish = rawEnglishData as RawQuranDataset;
+const rawTransliteration = rawTransliterationData as RawQuranDataset;
+const rawMeta = rawMetaData as RawMetaRecord[];
+
 export type NormalizedAyah = {
   surahNumber: number;
   surahNameAr: string;
@@ -48,6 +52,7 @@ export type NormalizedAyah = {
   ayahNumber: number;
   arabicText: string;
   englishText: string;
+  transliteration?: string;
 };
 
 export type NormalizedSurahMeta = {
@@ -64,9 +69,6 @@ export type NormalizedSurahMeta = {
     endAyah: number;
   }[];
 };
-
-const rawQuran = rawQuranData as RawSurah[];
-const rawMeta = rawMetaData as RawMetaRecord[];
 
 let cachedAyat: NormalizedAyah[] | null = null;
 let cachedSurahs: NormalizedSurahMeta[] | null = null;
@@ -101,6 +103,45 @@ function buildLookupKey(surahNumber: number, ayahNumber: number): string {
   return `${surahNumber}:${ayahNumber}`;
 }
 
+function buildVerseTextLookup({
+  datasetName,
+  surahNumber,
+  verses,
+}: VerseTextLookupInput): Map<number, string> {
+  const lookup = new Map<number, string>();
+
+  if (!Array.isArray(verses)) {
+    return lookup;
+  }
+
+  for (const entry of verses) {
+    const chapter = Number(entry.chapter);
+    const verseNumber = Number(entry.verse);
+
+    if (!Number.isFinite(chapter) || !Number.isFinite(verseNumber)) {
+      continue;
+    }
+
+    if (Math.floor(chapter) !== surahNumber) {
+      throw new Error(
+        `Invalid ${datasetName} verse chapter ${chapter} for surah ${surahNumber}.`
+      );
+    }
+
+    const normalizedVerseNumber = Math.floor(verseNumber);
+    if (normalizedVerseNumber <= 0) {
+      continue;
+    }
+
+    lookup.set(
+      normalizedVerseNumber,
+      typeof entry.text === "string" ? entry.text : ""
+    );
+  }
+
+  return lookup;
+}
+
 function normalizeQuranData(): {
   ayat: NormalizedAyah[];
   surahs: NormalizedSurahMeta[];
@@ -115,15 +156,23 @@ function normalizeQuranData(): {
     metaBySurah.set(surahNumber, record);
   }
 
+  const surahNumbers = Array.from(metaBySurah.keys()).sort((a, b) => a - b);
   const ayatAccumulator: NormalizedAyah[] = [];
   const surahAccumulator: NormalizedSurahMeta[] = [];
   const lookup = new Map<string, number>();
 
-  for (const surah of rawQuran) {
-    const meta = metaBySurah.get(surah.id);
+  for (const surahNumber of surahNumbers) {
+    const meta = metaBySurah.get(surahNumber);
     if (!meta) {
-      throw new Error(`Missing metadata entry for surah ${surah.id}`);
+      continue;
     }
+
+    const arabicVerses = rawArabic[String(surahNumber)];
+    if (!Array.isArray(arabicVerses) || arabicVerses.length === 0) {
+      throw new Error(`Missing Arabic verses for surah ${surahNumber}`);
+    }
+
+    const ayahCount = arabicVerses.length;
 
     const juzRanges = (meta.juz || [])
       .map((entry) => {
@@ -138,7 +187,7 @@ function normalizeQuranData(): {
         return {
           juzNumber,
           startAyah: Number.isFinite(startAyah) ? startAyah : 1,
-          endAyah: Number.isFinite(endAyah) ? endAyah : surah.total_verses,
+          endAyah: Number.isFinite(endAyah) ? endAyah : ayahCount,
         };
       })
       .filter(Boolean) as NormalizedSurahMeta["juzRanges"];
@@ -147,16 +196,15 @@ function normalizeQuranData(): {
       (a, b) => a.startAyah - b.startAyah
     );
 
-    const arabicName = meta.titleAr?.trim() || surah.name;
-    const englishName =
-      meta.title?.trim() || surah.transliteration || surah.translation;
+    const arabicName = meta.titleAr?.trim() || "";
+    const englishName = meta.title?.trim() || `Surah ${surahNumber}`;
     const fallbackJuz = sortedJuzRanges[0]?.juzNumber ?? 1;
 
     const normalizedSurah: NormalizedSurahMeta = {
-      surahNumber: surah.id,
+      surahNumber,
       arabicName,
       englishName,
-      ayahCount: surah.verses.length,
+      ayahCount,
       revelationPlace: meta.place,
       revelationType: meta.type,
       pages: meta.pages,
@@ -165,24 +213,55 @@ function normalizeQuranData(): {
 
     surahAccumulator.push(normalizedSurah);
 
-    for (const verse of surah.verses) {
+    const englishVerseLookup = buildVerseTextLookup({
+      datasetName: "English",
+      surahNumber,
+      verses: rawEnglish[String(surahNumber)],
+    });
+    const transliterationVerseLookup = buildVerseTextLookup({
+      datasetName: "transliteration",
+      surahNumber,
+      verses: rawTransliteration[String(surahNumber)],
+    });
+
+    for (const verse of arabicVerses) {
+      const chapter = Number(verse.chapter);
+      const ayahNumber = Number(verse.verse);
+      if (!Number.isFinite(chapter) || !Number.isFinite(ayahNumber)) {
+        continue;
+      }
+
+      const normalizedChapter = Math.floor(chapter);
+      const normalizedAyahNumber = Math.floor(ayahNumber);
+      if (
+        normalizedChapter !== surahNumber ||
+        !Number.isFinite(normalizedAyahNumber) ||
+        normalizedAyahNumber <= 0
+      ) {
+        continue;
+      }
+
       const matchingJuz = sortedJuzRanges.find(
-        (range) => verse.id >= range.startAyah && verse.id <= range.endAyah
+        (range) =>
+          normalizedAyahNumber >= range.startAyah &&
+          normalizedAyahNumber <= range.endAyah
       );
 
       const normalizedAyah: NormalizedAyah = {
-        surahNumber: surah.id,
+        surahNumber,
         surahNameAr: arabicName,
         surahNameEn: englishName,
         juzNumber: matchingJuz?.juzNumber ?? fallbackJuz,
-        ayahNumber: verse.id,
-        arabicText: verse.text,
-        englishText: verse.translation,
+        ayahNumber: normalizedAyahNumber,
+        arabicText: typeof verse.text === "string" ? verse.text : "",
+        englishText: englishVerseLookup.get(normalizedAyahNumber) ?? "",
+        transliteration:
+          transliterationVerseLookup.get(normalizedAyahNumber) ?? "",
       };
 
       const globalIndex = ayatAccumulator.length;
       ayatAccumulator.push(normalizedAyah);
-      lookup.set(buildLookupKey(surah.id, verse.id), globalIndex);
+      lookup.set(buildLookupKey(surahNumber, normalizedAyahNumber), globalIndex);
     }
   }
 

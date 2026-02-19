@@ -9,6 +9,9 @@ type QuranAyahCardProps = {
   ayah: NormalizedAyah;
   isSurahStart: boolean;
   surahMeta?: NormalizedSurahMeta;
+  showArabic?: boolean;
+  showEnglish?: boolean;
+  showTransliteration?: boolean;
   isBookmarked?: boolean;
   onDoubleTap?: () => void;
 };
@@ -19,11 +22,18 @@ function QuranAyahCard({
   ayah,
   isSurahStart,
   surahMeta,
+  showArabic = true,
+  showEnglish = true,
+  showTransliteration = false,
   isBookmarked = false,
   onDoubleTap,
 }: QuranAyahCardProps) {
   const arabicName = surahMeta?.arabicName ?? ayah.surahNameAr;
   const englishName = surahMeta?.englishName ?? ayah.surahNameEn;
+  const shouldShowArabic = showArabic && Boolean(ayah.arabicText);
+  const shouldShowEnglish = showEnglish && Boolean(ayah.englishText);
+  const shouldShowTransliteration =
+    showTransliteration && Boolean(ayah.transliteration);
   const lastTapRef = useRef(0);
 
   const handlePress = useCallback(() => {
@@ -71,16 +81,34 @@ function QuranAyahCard({
         <Text style={styles.surahTag}>
           {ayah.surahNumber}:{ayah.ayahNumber}
         </Text>
-        <Text
-          style={styles.arabic}
-          allowFontScaling={false}
-          // @ts-expect-error includeFontPadding is available on React Native Text for Android layout
-          includeFontPadding={false}
-          textBreakStrategy="highQuality"
-        >
-          {ayah.arabicText}
-        </Text>
-        <Text style={styles.translation}>{ayah.englishText}</Text>
+        {shouldShowArabic ? (
+          <Text
+            style={[
+              styles.arabic,
+              (shouldShowEnglish || shouldShowTransliteration) &&
+                styles.textBlockSpacing,
+            ]}
+            allowFontScaling={false}
+            // @ts-expect-error includeFontPadding is available on React Native Text for Android layout
+            includeFontPadding={false}
+            textBreakStrategy="highQuality"
+          >
+            {ayah.arabicText}
+          </Text>
+        ) : null}
+        {shouldShowTransliteration ? (
+          <Text
+            style={[
+              styles.transliteration,
+              shouldShowEnglish && styles.textBlockSpacing,
+            ]}
+          >
+            {ayah.transliteration}
+          </Text>
+        ) : null}
+        {shouldShowEnglish ? (
+          <Text style={styles.translation}>{ayah.englishText}</Text>
+        ) : null}
       </Pressable>
     </View>
   );
@@ -154,9 +182,20 @@ const styles = StyleSheet.create({
   arabic: {
     fontSize: 28,
     textAlign: "right",
+    writingDirection: "rtl",
     color: themeColors.white,
     lineHeight: 42,
+  },
+  textBlockSpacing: {
     marginBottom: 12,
+  },
+  transliteration: {
+    fontSize: 16,
+    color: themeColors.white,
+    opacity: 0.82,
+    lineHeight: 24,
+    textAlign: "center",
+    fontStyle: "italic",
   },
   translation: {
     fontSize: 16,
