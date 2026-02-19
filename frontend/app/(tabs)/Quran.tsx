@@ -820,62 +820,68 @@ export default function QuranScreen() {
                 </Text>
               </View>
               <View style={styles.headerActions}>
-                {!offlinePillVisible ? (
+                <View style={styles.capsuleBar}>
+                  {!offlinePillVisible ? (
+                    <PressableScale
+                      style={[
+                        styles.capsulePrimary,
+                        isAudioLoading && styles.audioButtonDisabled,
+                      ]}
+                      onPress={handleAudioButtonPress}
+                      onLongPress={stopAudio}
+                      disabled={isAudioLoading}
+                      accessibilityRole="button"
+                      accessibilityLabel={audioAccessibilityLabel}
+                      hitSlop={8}
+                    >
+                      <Ionicons
+                        name={audioIconName}
+                        size={18}
+                        color={themeColors.primaryDeep}
+                        style={styles.audioIcon}
+                      />
+                    </PressableScale>
+                  ) : (
+                    <View
+                      style={[
+                        styles.capsulePrimary,
+                        styles.audioButtonDisabled,
+                        styles.audioOfflinePill,
+                      ]}
+                      accessibilityRole="text"
+                    >
+                      <Ionicons
+                        name="cloud-offline-outline"
+                        size={18}
+                        color={themeColors.primaryDeep}
+                      />
+                      <Text style={styles.audioOfflineText}>Offline</Text>
+                    </View>
+                  )}
                   <PressableScale
                     style={[
-                      styles.audioButton,
-                      isAudioLoading && styles.audioButtonDisabled,
+                      styles.capsulePrimary,
+                      styles.capsuleNavigate,
+                      styles.capsuleGap,
                     ]}
-                    onPress={handleAudioButtonPress}
-                    onLongPress={stopAudio}
-                    disabled={isAudioLoading}
+                    onPress={() => setNavigatorOpen(true)}
                     accessibilityRole="button"
-                    accessibilityLabel={audioAccessibilityLabel}
-                    hitSlop={8}
+                  >
+                    <Text style={styles.jumpButtonText}>Navigate</Text>
+                  </PressableScale>
+                  <PressableScale
+                    style={[styles.capsulePrimary, styles.capsuleGap]}
+                    onPress={() => setDisplaySettingsOpen(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Display settings"
                   >
                     <Ionicons
-                      name={audioIconName}
+                      name="settings-outline"
                       size={18}
                       color={themeColors.primaryDeep}
-                      style={styles.audioIcon}
                     />
                   </PressableScale>
-                ) : (
-                  <View
-                    style={[
-                      styles.audioButton,
-                      styles.audioButtonDisabled,
-                      styles.audioOfflinePill,
-                    ]}
-                    accessibilityRole="text"
-                  >
-                    <Ionicons
-                      name="cloud-offline-outline"
-                      size={18}
-                      color={themeColors.primaryDeep}
-                    />
-                    <Text style={styles.audioOfflineText}>Offline</Text>
-                  </View>
-                )}
-                <PressableScale
-                  style={styles.jumpButton}
-                  onPress={() => setNavigatorOpen(true)}
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.jumpButtonText}>Navigate</Text>
-                </PressableScale>
-                <PressableScale
-                  style={styles.settingsButton}
-                  onPress={() => setDisplaySettingsOpen(true)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Display settings"
-                >
-                  <Ionicons
-                    name="settings-outline"
-                    size={18}
-                    color={themeColors.primaryDeep}
-                  />
-                </PressableScale>
+                </View>
               </View>
             </View>
           </View>
@@ -977,6 +983,49 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
+    marginLeft: spacing.sm,
+  },
+  capsuleBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 999,
+    padding: 6,
+    backgroundColor: withOpacity(themeColors.primarySurface, 0.75),
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.08),
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+    maxWidth: "100%",
+  },
+  capsulePrimary: {
+    backgroundColor: themeColors.accent,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+  },
+  capsuleNavigate: {
+    paddingVertical: 12,
+  },
+  capsuleSecondary: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.accent, 0.5),
+    backgroundColor: withOpacity(themeColors.accent, 0.18),
+  },
+  capsuleUtility: {
+    borderRadius: 999,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.accent, 0.4),
+    backgroundColor: withOpacity(themeColors.accent, 0.14),
+  },
+  capsuleGap: {
+    marginLeft: 6,
   },
   headerSurahEnglish: {
     color: themeColors.white,
