@@ -1,4 +1,4 @@
-import { colors, withOpacity } from "@/constants/theme";
+import { colors, spacing, typography, withOpacity } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -11,6 +11,7 @@ import {
   PanResponder,
   Platform,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -689,54 +690,25 @@ export default function CalendarDetail() {
 
   const ErrorBox = () =>
     !error ? null : (
-      <View
-        style={{
-          backgroundColor: colors.primarySurface,
-          borderRadius: 12,
-          padding: 14,
-          marginTop: 0,
-          marginBottom: 14,
-          borderWidth: 2,
-          borderColor: colors.accent,
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+      <View style={styles.errorCard}>
+        <View style={styles.errorHeader}>
           <Ionicons name="alert-circle" size={20} color={colors.accent} />
-          <Text
-            style={{
-              color: colors.accent,
-              fontSize: 16,
-              marginLeft: 8,
-              fontFamily: "SFProDisplay-Semibold",
-            }}
-          >
+          <Text style={styles.errorTitle}>
             Problem loading prayer times
           </Text>
         </View>
-        <Text style={{ color: colors.white, marginTop: 8, lineHeight: 20 }}>
+        <Text style={styles.errorMessage}>
           {error.message}
         </Text>
 
-        <View
-          style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}
-        >
+        <View style={styles.errorActions}>
           <TouchableOpacity
             onPress={handleRetry}
-            style={{
-              backgroundColor: colors.accent,
-              paddingVertical: 8,
-              paddingHorizontal: 14,
-              borderRadius: 8,
-              marginRight: 10,
-            }}
+            style={styles.retryButton}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading prayer times"
           >
-            <Text
-              style={{
-                color: colors.primary,
-                fontSize: 14,
-                fontFamily: "SFProDisplay-Semibold",
-              }}
-            >
+            <Text style={styles.retryButtonText}>
               Try again
             </Text>
           </TouchableOpacity>
@@ -744,21 +716,11 @@ export default function CalendarDetail() {
           {error.code === "PERMISSION" && (
             <TouchableOpacity
               onPress={openSettings}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: colors.accent,
-              }}
+              style={styles.settingsButton}
+              accessibilityRole="button"
+              accessibilityLabel="Open app settings"
             >
-              <Text
-                style={{
-                  color: colors.accent,
-                  fontSize: 14,
-                  fontFamily: "SFProDisplay-Semibold",
-                }}
-              >
+              <Text style={styles.settingsButtonText}>
                 Open Settings
               </Text>
             </TouchableOpacity>
@@ -768,32 +730,17 @@ export default function CalendarDetail() {
     );
 
   const EmptyBox = () => (
-    <View
-      style={{
-        backgroundColor: colors.primarySurface,
-        borderRadius: 12,
-        padding: 16,
-        marginTop: 0,
-        marginBottom: 0,
-        borderWidth: 2,
-        borderColor: colors.primarySurface,
-      }}
-    >
-      <Text style={{ color: colors.white, textAlign: "center" }}>
+    <View style={styles.emptyCard}>
+      <Text style={styles.emptyText}>
         No prayer times available for this date.
       </Text>
       <TouchableOpacity
         onPress={handleRetry}
-        style={{
-          alignSelf: "center",
-          marginTop: 10,
-          backgroundColor: colors.accent,
-          paddingVertical: 6,
-          paddingHorizontal: 12,
-          borderRadius: 8,
-        }}
+        style={styles.emptyRetryButton}
+        accessibilityRole="button"
+        accessibilityLabel="Retry loading prayer times"
       >
-        <Text style={{ color: colors.primary, fontWeight: "600" }}>
+        <Text style={styles.emptyRetryButtonText}>
           Try again
         </Text>
       </TouchableOpacity>
@@ -805,23 +752,13 @@ export default function CalendarDetail() {
       colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+      style={styles.screen}
     >
       <Image
         source={require("@/assets/patterns/islamic-gold2.png")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.05,
-          resizeMode: "repeat",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.patternOverlay}
       />
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.screen}>
         {/* Top Navigation Bar - stays fixed */}
         <View
           style={{
@@ -860,8 +797,8 @@ export default function CalendarDetail() {
 
         {/* Content area with proper layout and swipe gesture support */}
         <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 20 }}
+          style={styles.screen}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           {...panResponderRef.current.panHandlers}
         >
@@ -1186,8 +1123,8 @@ export default function CalendarDetail() {
 
           {/* Time until next prayer (static) */}
           {isToday && nextPrayer && !error && (
-            <View style={{ marginTop: 10, alignItems: "center" }}>
-              <Text style={{ color: colors.accent, fontSize: 16 }}>
+            <View style={styles.nextPrayerContainer}>
+              <Text style={styles.nextPrayerText}>
                 Next: {nextPrayer.label} in {timeLeft}
               </Text>
             </View>
@@ -1197,3 +1134,99 @@ export default function CalendarDetail() {
     </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  patternOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
+    resizeMode: "repeat",
+    width: "100%",
+    height: "100%",
+  },
+  scrollContent: { padding: spacing.xl },
+  errorCard: {
+    backgroundColor: colors.primarySurface,
+    borderRadius: 12,
+    padding: spacing.lg - 2,
+    marginBottom: spacing.lg - 2,
+    borderWidth: 2,
+    borderColor: colors.accent,
+  },
+  errorHeader: { flexDirection: "row", alignItems: "center" },
+  errorTitle: {
+    color: colors.accent,
+    fontSize: typography.bodyLg,
+    marginLeft: spacing.sm,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  errorMessage: {
+    color: colors.white,
+    marginTop: spacing.sm,
+    lineHeight: 20,
+  },
+  errorActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.md,
+  },
+  retryButton: {
+    backgroundColor: colors.accent,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg - 2,
+    borderRadius: 8,
+    marginRight: spacing.sm + 2,
+  },
+  retryButtonText: {
+    color: colors.primary,
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  settingsButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg - 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  settingsButtonText: {
+    color: colors.accent,
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  emptyCard: {
+    backgroundColor: colors.primarySurface,
+    borderRadius: 12,
+    padding: spacing.lg,
+    borderWidth: 2,
+    borderColor: colors.primarySurface,
+  },
+  emptyText: {
+    color: colors.white,
+    textAlign: "center",
+  },
+  emptyRetryButton: {
+    alignSelf: "center",
+    marginTop: spacing.sm + 2,
+    backgroundColor: colors.accent,
+    paddingVertical: spacing.sm - 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: 8,
+  },
+  emptyRetryButtonText: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  nextPrayerContainer: {
+    marginTop: spacing.sm + 2,
+    alignItems: "center",
+  },
+  nextPrayerText: {
+    color: colors.accent,
+    fontSize: typography.bodyLg,
+  },
+});

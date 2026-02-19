@@ -1,4 +1,9 @@
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import {
+  colors as themeColors,
+  spacing,
+  typography,
+  withOpacity,
+} from "@/constants/theme";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
@@ -171,28 +176,23 @@ export default function MapScreen() {
 
   if (needGate) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: themeColors.primary,
-          paddingTop: 50,
-          paddingHorizontal: 20,
-        }}
-      >
+      <View style={styles.gateScreen}>
         <TouchableOpacity
           onPress={() => router.push("/(tabs)/Mosques")}
           style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Back to mosques"
         >
           <Ionicons name="arrow-back" size={22} color={themeColors.accent} />
         </TouchableOpacity>
 
-        <View style={[styles.banner, { marginTop: 20 }]}>
+        <View style={[styles.banner, styles.gateBanner]}>
           <Ionicons
             name="location-outline"
             size={20}
             color={themeColors.primary}
           />
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={styles.bannerBody}>
             <Text style={styles.bannerTitle}>Location required</Text>
             <Text style={styles.bannerText}>
               Turn on Location Services and allow access to search this map.
@@ -201,12 +201,16 @@ export default function MapScreen() {
               <TouchableOpacity
                 style={styles.ctaPrimary}
                 onPress={openLocationServicesHelp}
+                accessibilityRole="button"
+                accessibilityLabel="How to turn on location"
               >
                 <Text style={styles.ctaPrimaryText}>How to turn on</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.ctaSecondary}
                 onPress={openDeviceSettings}
+                accessibilityRole="button"
+                accessibilityLabel="Open device settings"
               >
                 <Text style={styles.ctaSecondaryText}>Open Settings</Text>
               </TouchableOpacity>
@@ -220,10 +224,12 @@ export default function MapScreen() {
   const empty = mosques.length === 0;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.screen}>
       <TouchableOpacity
         onPress={() => router.push("/(tabs)/Mosques")}
         style={styles.backButton}
+        accessibilityRole="button"
+        accessibilityLabel="Back to mosques"
       >
         <Ionicons name="arrow-back" size={22} color={themeColors.accent} />
       </TouchableOpacity>
@@ -286,6 +292,8 @@ export default function MapScreen() {
         <TouchableOpacity
           style={styles.searchButton}
           onPress={handleSearchThisArea}
+          accessibilityRole="button"
+          accessibilityLabel="Search this area"
         >
           <Ionicons name="search" size={18} color={themeColors.primary} />
           <Text style={styles.searchButtonText}>Search this area</Text>
@@ -314,6 +322,13 @@ const customMapStyle = [
 ];
 
 const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  gateScreen: {
+    flex: 1,
+    backgroundColor: themeColors.primary,
+    paddingTop: 50,
+    paddingHorizontal: spacing.xl,
+  },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -334,39 +349,46 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
+  gateBanner: { marginTop: spacing.xl },
   banner: {
     backgroundColor: withOpacity(themeColors.accent, 0.18),
     borderWidth: 1,
     borderColor: withOpacity(themeColors.accent, 0.35),
     borderRadius: 14,
-    padding: 12,
+    padding: spacing.md,
     flexDirection: "row",
     alignItems: "flex-start",
   },
+  bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
   bannerTitle: {
     color: themeColors.accent,
-    fontSize: 16,
+    fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Semibold",
   },
   bannerText: {
     color: themeColors.white,
     opacity: 0.95,
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: typography.body,
+    marginTop: spacing.xs,
   },
-  row: { flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" },
+  row: {
+    flexDirection: "row",
+    gap: spacing.sm + 2,
+    marginTop: spacing.sm + 2,
+    flexWrap: "wrap",
+  },
   ctaPrimary: {
     backgroundColor: themeColors.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
     borderRadius: 10,
   },
   ctaPrimaryText: { color: themeColors.primary, fontWeight: "700" },
   ctaSecondary: {
     borderColor: themeColors.accent,
     borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
     borderRadius: 10,
   },
   ctaSecondaryText: { color: themeColors.accent, fontWeight: "600" },
@@ -414,14 +436,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: themeColors.accent,
     borderRadius: 8,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: spacing.sm - 3,
+    paddingHorizontal: spacing.sm + 2,
     justifyContent: "center",
   },
   directionText: {
     color: themeColors.primary,
     fontWeight: "600",
-    marginLeft: 5,
+    marginLeft: spacing.sm - 3,
     fontSize: 13,
     textAlign: "center",
   },
@@ -431,8 +453,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     flexDirection: "row",
     backgroundColor: withOpacity(themeColors.accent, 0.95),
-    paddingVertical: 10,
-    paddingHorizontal: 18,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg + 2,
     borderRadius: 25,
     alignItems: "center",
     shadowColor: themeColors.black,
@@ -442,7 +464,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   searchButtonText: {
-    marginLeft: 6,
+    marginLeft: spacing.sm - 2,
     fontWeight: "600",
     color: themeColors.primary,
     fontSize: 15,
@@ -459,8 +481,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     backgroundColor: withOpacity(themeColors.black, 0.35),
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     alignItems: "center",
     gap: 4,
   },
