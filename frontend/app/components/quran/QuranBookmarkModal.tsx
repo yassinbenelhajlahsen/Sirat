@@ -93,7 +93,12 @@ function QuranBookmarkModal({
         >
           <View style={styles.card}>
             <View style={styles.headerRow}>
-              <Text style={styles.headerTitle}>New Bookmark</Text>
+              <View>
+                <Text style={styles.headerTitle}>New Bookmark</Text>
+                <Text style={styles.headerSubtitle}>
+                  Save this ayah for quick return
+                </Text>
+              </View>
               <PressableScale
                 accessibilityRole="button"
                 onPress={onClose}
@@ -171,35 +176,51 @@ export default QuranBookmarkModal;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: withOpacity(themeColors.black, 0.6),
+    backgroundColor: withOpacity(themeColors.black, 0.62),
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 18,
   },
   cardWrapper: {
     flex: 1,
     justifyContent: "center",
   },
   card: {
-    backgroundColor: withOpacity(themeColors.primaryDeep, .95),
-    borderRadius: 20,
+    backgroundColor: withOpacity(themeColors.primaryDeep, 0.97),
+    borderRadius: 24,
     paddingHorizontal: 20,
     paddingVertical: 24,
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.5),
+    borderColor: withOpacity(themeColors.accent, 0.38),
+    shadowColor: themeColors.black,
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 16,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    alignItems: "flex-start",
+    marginBottom: 14,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
     color: themeColors.white,
   },
+  headerSubtitle: {
+    marginTop: 4,
+    color: withOpacity(themeColors.white, 0.66),
+    fontSize: 12,
+    letterSpacing: 0.3,
+  },
   dismissButton: {
-    padding: 6,
+    padding: 8,
+    marginTop: -2,
+    borderRadius: 999,
+    backgroundColor: withOpacity(themeColors.white, 0.08),
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.12),
   },
   dismissIcon: {
     width: 18,
@@ -221,8 +242,8 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "-45deg" }],
   },
   ayahMeta: {
-    marginBottom: 16,
-    gap: 4,
+    marginBottom: 18,
+    gap: 3,
   },
   ayahMetaEnglish: {
     color: themeColors.white,
@@ -234,27 +255,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   ayahMetaLabel: {
-    color: withOpacity(themeColors.white, 0.75),
+    color: withOpacity(themeColors.white, 0.68),
     fontSize: 13,
   },
   fieldGroup: {
-    marginBottom: 14,
+    marginBottom: 15,
   },
   fieldLabel: {
-    color: withOpacity(themeColors.white, 0.75),
-    fontSize: 13,
-    marginBottom: 6,
+    color: withOpacity(themeColors.white, 0.86),
+    fontSize: 12,
+    marginBottom: 7,
     fontWeight: "600",
+    letterSpacing: 0.35,
+    textTransform: "uppercase",
   },
   input: {
-    backgroundColor: themeColors.primaryDark,
-    borderRadius: 14,
+    backgroundColor: withOpacity(themeColors.white, 0.09),
+    borderRadius: 15,
     paddingHorizontal: 16,
     paddingVertical: 12,
     color: themeColors.white,
     fontSize: 15,
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.3),
+    borderColor: withOpacity(themeColors.white, 0.16),
   },
   multilineInput: {
     minHeight: 110,
@@ -262,11 +285,18 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: themeColors.accent,
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: 15,
     alignItems: "center",
+    shadowColor: themeColors.accent,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 7,
   },
   submitDisabled: {
-    backgroundColor: withOpacity(themeColors.accent, 0.4),
+    backgroundColor: withOpacity(themeColors.accent, 0.42),
+    shadowOpacity: 0,
+    elevation: 0,
   },
   submitText: {
     color: themeColors.primaryDeep,
