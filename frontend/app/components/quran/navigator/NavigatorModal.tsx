@@ -53,10 +53,7 @@ function NavigatorModal({
   onDeleteBookmark,
   onClose,
 }: QuranNavigatorModalProps) {
-  const hasBookmarks = bookmarks.length > 0;
-  const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>(
-    hasBookmarks ? "bookmarks" : "goto"
-  );
+  const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>("goto");
 
   const [shouldRender, setShouldRender] = useState(visible);
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -122,10 +119,10 @@ function NavigatorModal({
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
-      setSelectedTab(hasBookmarks ? "bookmarks" : "goto");
+      setSelectedTab("goto");
     }
     previousVisibleRef.current = visible;
-  }, [hasBookmarks, visible]);
+  }, [visible]);
 
   const handleSelectTab = useCallback((tab: NavigatorTabKey) => {
     setSelectedTab(tab);
