@@ -66,7 +66,6 @@ export default function CalendarDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<UIError | null>(null);
   const [fetchNonce, setFetchNonce] = useState(0);
-  const prayerTimesCacheRef = useRef<Record<string, PrayerTime[]>>({});
 
   // Ramadan tracking state
   const [isFastMissed, setIsFastMissed] = useState(false);
@@ -94,84 +93,9 @@ export default function CalendarDetail() {
 
   // keep refs for current date state so PanResponder callbacks read fresh values
   const selectedDateRef = useRef(selectedDate);
-  const isDraggingRef = useRef(false);
   useEffect(() => {
     selectedDateRef.current = selectedDate;
   }, [selectedDate]);
-
-  const runIncomingAnimation = (direction: "next" | "prev") => {
-    const entryOffset = direction === "next" ? screenWidth : -screenWidth;
-    slideAnim.setValue(entryOffset);
-    timesSlideAnim.setValue(entryOffset);
-    fadeAnim.setValue(0);
-    timesOpacityAnim.setValue(0);
-
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(timesOpacityAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(timesSlideAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const transitionToDate = (targetDate: Date, direction: "next" | "prev") => {
-    const targetKey = dateKeyFromDate(targetDate);
-    const cached = prayerTimesCacheRef.current[targetKey];
-
-    setError(null);
-    if (cached) {
-      setPrayerTimes(cached);
-      setLoading(false);
-    } else {
-      setPrayerTimes([]);
-      setLoading(true);
-    }
-
-    setSelectedDate(targetDate);
-    setFetchNonce((n) => n + 1);
-    runIncomingAnimation(direction);
-  };
-
-  const snapBackToCenter = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-      Animated.timing(timesSlideAnim, {
-        toValue: 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.timing(timesOpacityAnim, {
-        toValue: 1,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
 
   // PanResponder for horizontal swipes
   const panResponderRef = useRef(
@@ -179,15 +103,11 @@ export default function CalendarDetail() {
       onMoveShouldSetPanResponder: (_, gestureState) =>
         Math.abs(gestureState.dx) > 8 && Math.abs(gestureState.dy) < 20,
       onPanResponderGrant: () => {
-        isDraggingRef.current = true;
         // stop any ongoing animations
-        fadeAnim.stopAnimation();
         slideAnim.stopAnimation();
-        timesOpacityAnim.stopAnimation();
         timesSlideAnim.stopAnimation();
       },
       onPanResponderMove: (_, gestureState) => {
-        if (!isDraggingRef.current) return;
         // follow finger for date but not prayer times container
         slideAnim.setValue(gestureState.dx);
         timesSlideAnim.setValue(gestureState.dx);
@@ -198,16 +118,12 @@ export default function CalendarDetail() {
         timesOpacityAnim.setValue(fade);
       },
       onPanResponderRelease: (_, gestureState) => {
-        isDraggingRef.current = false;
         const dx = gestureState.dx;
         const vx = gestureState.vx;
         const threshold = Math.min(0.25 * screenWidth, 80);
 
         const currentDate = selectedDateRef.current;
-        if (!currentDate) {
-          snapBackToCenter();
-          return;
-        }
+        if (!currentDate) return;
 
         const today = new Date();
         const minDate = new Date(today.getFullYear(), 0);
@@ -218,8 +134,63 @@ export default function CalendarDetail() {
           const nextDate = new Date(currentDate);
           nextDate.setDate(nextDate.getDate() + 1);
           if (nextDate <= maxDate) {
-            requestAnimationFrame(() => {
-              transitionToDate(nextDate, "next");
+            // Trigger next animation
+            const offset = -screenWidth;
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+              Animated.timing(slideAnim, {
+                toValue: offset,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+              Animated.timing(timesOpacityAnim, {
+                toValue: 0,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+              Animated.timing(timesSlideAnim, {
+                toValue: offset,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              // Reset animation values
+              fadeAnim.setValue(0);
+              slideAnim.setValue(screenWidth);
+              timesOpacityAnim.setValue(0);
+              timesSlideAnim.setValue(screenWidth);
+
+              // Update state instead of navigating
+              setSelectedDate(nextDate);
+              setFetchNonce((n) => n + 1);
+
+              // Animate in the new content
+              Animated.parallel([
+                Animated.timing(fadeAnim, {
+                  toValue: 1,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(slideAnim, {
+                  toValue: 0,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(timesOpacityAnim, {
+                  toValue: 1,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(timesSlideAnim, {
+                  toValue: 0,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+              ]).start();
             });
             return;
           }
@@ -229,19 +200,116 @@ export default function CalendarDetail() {
           const prevDate = new Date(currentDate);
           prevDate.setDate(prevDate.getDate() - 1);
           if (prevDate >= minDate) {
-            requestAnimationFrame(() => {
-              transitionToDate(prevDate, "prev");
+            // Trigger prev animation
+            const offset = screenWidth;
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+              Animated.timing(slideAnim, {
+                toValue: offset,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+              Animated.timing(timesOpacityAnim, {
+                toValue: 0,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+              Animated.timing(timesSlideAnim, {
+                toValue: offset,
+                duration: 120,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              // Reset animation values
+              fadeAnim.setValue(0);
+              slideAnim.setValue(-screenWidth);
+              timesOpacityAnim.setValue(0);
+              timesSlideAnim.setValue(-screenWidth);
+
+              // Update state instead of navigating
+              setSelectedDate(prevDate);
+              setFetchNonce((n) => n + 1);
+
+              // Animate in the new content
+              Animated.parallel([
+                Animated.timing(fadeAnim, {
+                  toValue: 1,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(slideAnim, {
+                  toValue: 0,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(timesOpacityAnim, {
+                  toValue: 1,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+                Animated.timing(timesSlideAnim, {
+                  toValue: 0,
+                  duration: 200,
+                  useNativeDriver: true,
+                }),
+              ]).start();
             });
             return;
           }
         }
 
-        snapBackToCenter();
+        // Snap back to center
+        Animated.parallel([
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(timesSlideAnim, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 160,
+            useNativeDriver: true,
+          }),
+          Animated.timing(timesOpacityAnim, {
+            toValue: 1,
+            duration: 160,
+            useNativeDriver: true,
+          }),
+        ]).start();
       },
       onPanResponderTerminate: () => {
-        isDraggingRef.current = false;
         // Snap back
-        snapBackToCenter();
+        Animated.parallel([
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(timesSlideAnim, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(timesOpacityAnim, {
+            toValue: 1,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+        ]).start();
       },
     }),
   );
@@ -390,63 +458,36 @@ export default function CalendarDetail() {
   useEffect(() => {
     if (!selectedDate) return;
     let mounted = true;
-    const dateKey = dateKeyFromDate(selectedDate);
-    const cachedTimes = prayerTimesCacheRef.current[dateKey];
-    const hasCachedTimes = Array.isArray(cachedTimes);
-
-    if (hasCachedTimes) {
-      setPrayerTimes(cachedTimes);
-      setLoading(false);
-    } else {
-      setPrayerTimes([]);
-      setLoading(true);
-    }
-    setError(null);
 
     (async () => {
+      // Don't show loading state immediately - keep old data visible during transition
+      // Only set loading if we don't have any prayer times yet
+      if (prayerTimes.length === 0) {
+        setLoading(true);
+      }
+      setError(null);
+
       try {
         const settings: PrayerSettings = { useLocation: true, method: 2 };
-        const currentDate = new Date(selectedDate);
-        const times = await getPrayerTimesForDate(settings, currentDate);
+        const times = await getPrayerTimesForDate(settings, selectedDate);
         if (!mounted) return;
 
-        prayerTimesCacheRef.current[dateKey] = times;
         resetRetry();
         setPrayerTimes(times);
         setLoading(false);
-
-        // Preload adjacent days so swipe transitions can show data immediately.
-        const preloadOffsets = [-1, 1];
-        preloadOffsets.forEach((offset) => {
-          const adjacentDate = new Date(currentDate);
-          adjacentDate.setDate(adjacentDate.getDate() + offset);
-          const adjacentKey = dateKeyFromDate(adjacentDate);
-          if (prayerTimesCacheRef.current[adjacentKey]) return;
-
-          getPrayerTimesForDate(settings, adjacentDate)
-            .then((adjacentTimes) => {
-              if (adjacentTimes.length > 0) {
-                prayerTimesCacheRef.current[adjacentKey] = adjacentTimes;
-              }
-            })
-            .catch(() => {
-              // Keep prefetch failures silent; primary date load already succeeded.
-            });
-        });
       } catch (err) {
         if (!mounted) return;
         console.warn("Prayer times fetch error:", err);
 
         if (isPermissionError(err)) {
           resetRetry();
-          if (!hasCachedTimes) {
-            setError({
-              code: "PERMISSION",
-              message:
-                "Location is off. Turn it on in Settings or choose a saved city, then try again.",
-            });
-            setPrayerTimes([]);
-          }
+          setError({
+            code: "PERMISSION",
+            message:
+              "Location is off. Turn it on in Settings or choose a saved city, then try again.",
+          });
+          // Only clear prayer times if we have an error
+          setPrayerTimes([]);
           setLoading(false);
           return;
         }
@@ -454,20 +495,20 @@ export default function CalendarDetail() {
         if (isTransient(err)) {
           // stay in spinner mode and silently retry until it works
           setError(null);
-          setLoading(!hasCachedTimes);
+          // Don't clear prayer times on transient errors
+          setLoading(prayerTimes.length === 0);
           scheduleRetry();
           return;
         }
 
         // generic visible error
         resetRetry();
-        if (!hasCachedTimes) {
-          setError({
-            code: "GENERIC",
-            message: "Could not load prayer times. Please try again later.",
-          });
-          setPrayerTimes([]);
-        }
+        setError({
+          code: "GENERIC",
+          message: "Could not load prayer times. Please try again later.",
+        });
+        // Only clear prayer times if we have an error
+        setPrayerTimes([]);
         setLoading(false);
       }
     })();
@@ -534,9 +575,70 @@ export default function CalendarDetail() {
     direction: "next" | "prev",
     daysOffset: number,
   ) => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() + daysOffset);
-    transitionToDate(newDate, direction);
+    const offset = direction === "next" ? -screenWidth : screenWidth;
+    Animated.parallel([
+      // Animate date text
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: offset,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      // Animate only the times, not the whole prayer times content
+      Animated.timing(timesOpacityAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(timesSlideAnim, {
+        toValue: offset,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      const newDate = new Date(selectedDate);
+      newDate.setDate(newDate.getDate() + daysOffset);
+
+      // Reset animation values
+      fadeAnim.setValue(0);
+      slideAnim.setValue(direction === "next" ? screenWidth : -screenWidth);
+      timesOpacityAnim.setValue(0);
+      timesSlideAnim.setValue(
+        direction === "next" ? screenWidth : -screenWidth,
+      );
+
+      // Update state instead of navigating
+      setSelectedDate(newDate);
+      setFetchNonce((n) => n + 1);
+
+      // Animate in the new content
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(timesOpacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(timesSlideAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
   };
 
   // Smooth fade when going Back to Calendar
