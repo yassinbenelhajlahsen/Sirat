@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { memo, useCallback, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors as themeColors, withOpacity } from "@/constants/theme";
@@ -35,6 +35,17 @@ function QuranAyahCard({
   const shouldShowTransliteration =
     showTransliteration && Boolean(ayah.transliteration);
   const lastTapRef = useRef(0);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isDoubleTapFeedbackVisible, setIsDoubleTapFeedbackVisible] =
+    useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handlePress = useCallback(() => {
     if (!onDoubleTap) {
@@ -43,6 +54,13 @@ function QuranAyahCard({
     const now = Date.now();
     if (now - lastTapRef.current <= DOUBLE_TAP_INTERVAL_MS) {
       lastTapRef.current = 0;
+      setIsDoubleTapFeedbackVisible(true);
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setIsDoubleTapFeedbackVisible(false);
+      }, 140);
       onDoubleTap();
     } else {
       lastTapRef.current = now;
@@ -65,9 +83,9 @@ function QuranAyahCard({
       ) : null}
 
       <Pressable
-        style={({ pressed }) => [
+        style={[
           styles.ayahCard,
-          pressed && onDoubleTap ? styles.ayahCardPressed : null,
+          isDoubleTapFeedbackVisible && onDoubleTap ? styles.ayahCardPressed : null,
         ]}
         onPress={handlePress}
         accessibilityRole="button"
