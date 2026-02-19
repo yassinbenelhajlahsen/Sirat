@@ -236,19 +236,19 @@ export function QuranMiniPlayer({
             onPress={handleStop}
             style={[styles.controlButton, styles.stopButton]}
           >
-            <Ionicons name="stop" size={18} color={themeColors.accent} />
+            <Ionicons name="stop" size={18} color={themeColors.white} />
           </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
             accessibilityHint="Controls the current surah audio playback"
             onPress={onPressControl}
-            style={styles.controlButton}
+            style={[styles.controlButton, styles.playButton]}
           >
             <Ionicons
               name={isPlaying ? "pause" : "play"}
               size={22}
-              color={themeColors.accent}
+              color={themeColors.primaryDeep}
             />
           </Pressable>
         </View>
@@ -270,21 +270,26 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     bottom: 0,
+    shadowColor: "#000",
+    shadowOpacity: 0.24,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
   },
   innerContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 12,
-    borderRadius: 16,
-    backgroundColor: withOpacity(themeColors.primarySurface, 0.9),
+    padding: 14,
+    borderRadius: 20,
+    backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.35),
-    shadowColor: themeColors.accent,
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
+    borderColor: withOpacity(themeColors.white, 0.16),
+    shadowColor: "#000",
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 14,
   },
   textSection: {
     flex: 1,
@@ -305,22 +310,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   controlButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: withOpacity(themeColors.white, 0.12),
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.22),
   },
   stopButton: {
     marginRight: 8,
-    backgroundColor: withOpacity(themeColors.white, 0.08),
+    backgroundColor: withOpacity(themeColors.white, 0.1),
+  },
+  playButton: {
+    backgroundColor: themeColors.accent,
+    borderColor: withOpacity(themeColors.accent, 0.85),
   },
   progressTrack: {
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: withOpacity(themeColors.white, 0.2),
-    marginTop: 6,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: withOpacity(themeColors.white, 0.18),
+    marginTop: 8,
     overflow: "hidden",
   },
   progressFill: {
