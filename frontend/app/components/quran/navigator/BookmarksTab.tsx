@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 18,
     paddingTop: 8,
   },
   sectionHeading: {
@@ -261,28 +261,30 @@ const styles = StyleSheet.create({
   searchInput: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: withOpacity(themeColors.white, 0.1),
+    borderRadius: 15,
+    backgroundColor: withOpacity(themeColors.white, 0.09),
     color: themeColors.white,
     fontSize: 15,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.16),
   },
   bookmarkList: {
     marginBottom: 12,
   },
   bookmarkRow: {
-    borderRadius: 14,
+    borderRadius: 15,
     overflow: "hidden",
-    marginBottom: 10,
+    marginBottom: 11,
   },
   bookmarkButton: {
-    paddingVertical: 14,
+    paddingVertical: 15,
     paddingLeft: 16,
     paddingRight: 36,
-    borderRadius: 14,
-    backgroundColor: themeColors.primaryDark,
+    borderRadius: 15,
+    backgroundColor: withOpacity(themeColors.white, 0.07),
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.35),
+    borderColor: withOpacity(themeColors.accent, 0.28),
   },
   bookmarkTitle: {
     color: themeColors.white,
@@ -291,7 +293,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   bookmarkMeta: {
-    color: withOpacity(themeColors.white, 0.65),
+    color: withOpacity(themeColors.white, 0.68),
     fontSize: 12,
     marginBottom: 2,
   },
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   bookmarkNote: {
-    color: withOpacity(themeColors.white, 0.75),
+    color: withOpacity(themeColors.white, 0.8),
     fontSize: 13,
   },
   bookmarkEmptyText: {
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   bookmarkSwipeHint: {
-    color: withOpacity(themeColors.white, 0.65),
+    color: withOpacity(themeColors.white, 0.62),
     fontSize: 12,
   },
   deleteActionContainer: {
@@ -320,13 +322,15 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   deleteAction: {
-    backgroundColor: "#D10000",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 14,
+    backgroundColor: withOpacity("#C44545", 0.92),
+    paddingVertical: 17,
+    paddingHorizontal: 17,
+    borderRadius: 15,
     marginRight: 4,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.22),
   },
   deleteActionContent: {
     flexDirection: "row",

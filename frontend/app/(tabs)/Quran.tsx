@@ -77,15 +77,42 @@ type ViewableItemsChanged = {
 
 type JumpTarget =
   | { kind: "surah"; surahNumber: number }
-  | { kind: "juz"; juzNumber: number };
+  | { kind: "juz"; juzNumber: number }
+  | { kind: "ayah"; surahNumber: number; ayahNumber: number };
+
+type QuranAyahSearchResult = {
+  surahNumber: number;
+  ayahNumber: number;
+  surahEnglishName: string;
+  englishText: string;
+};
+
+type QuranJuzSearchResult = {
+  juzNumber: number;
+};
 
 const ESTIMATED_ITEM_SIZE = 260;
 
-function normalizeSearchValue(value: string): string {
+function normalizeArabicDigits(value: string): string {
   return value
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
+}
+
+function normalizeSearchValue(value: string): string {
+  return normalizeArabicDigits(value)
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function normalizeTransliterationValue(value: string): string {
+  return normalizeSearchValue(value)
+    .replace(/[^a-z0-9]/g, "")
+    .replace(/(aa|ah)/g, "a")
+    .replace(/(ee|ii)/g, "i")
+    .replace(/(oo|uu)/g, "u")
+    .replace(/yy/g, "y");
 }
 
 function computeSurahMatchScore(value: string, query: string): number {
@@ -121,6 +148,128 @@ function computeSurahMatchScore(value: string, query: string): number {
   }
 
   return Math.max(score, 1);
+}
+
+function parseNumericLookup(
+  query: string,
+): { surahNumber: number; ayahNumber?: number } | null {
+  const normalized = normalizeArabicDigits(query).trim().replace(/\s+/g, "");
+  const match = normalized.match(/^(\d{1,3})(?:[:.](\d{1,3}))?$/);
+  if (!match) {
+    return null;
+  }
+
+  const surahNumber = Number(match[1]);
+  if (!Number.isFinite(surahNumber) || surahNumber <= 0) {
+    return null;
+  }
+
+  if (!match[2]) {
+    return { surahNumber };
+  }
+
+  const ayahNumber = Number(match[2]);
+  if (!Number.isFinite(ayahNumber) || ayahNumber <= 0) {
+    return null;
+  }
+
+  return { surahNumber, ayahNumber };
+}
+
+function parseJuzLookup(query: string): number | null {
+  const normalized = normalizeArabicDigits(query).trim().toLowerCase();
+  const match = normalized.match(/^(?:j|juz)\s*(\d{1,2})$/);
+  if (!match) {
+    return null;
+  }
+  const juzNumber = Number(match[1]);
+  if (!Number.isFinite(juzNumber) || juzNumber < 1 || juzNumber > 30) {
+    return null;
+  }
+  return juzNumber;
+}
+
+function parseMixedSurahAyahLookup(
+  query: string,
+  surahs: readonly NormalizedSurahMeta[],
+): { surahNumber: number; ayahNumber: number } | null {
+  const normalized = normalizeSearchValue(query).trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const numberMatch = normalized.match(/\b(\d{1,3})\b/);
+  if (!numberMatch) {
+    return null;
+  }
+
+  const ayahNumber = Number(numberMatch[1]);
+  if (!Number.isFinite(ayahNumber) || ayahNumber <= 0) {
+    return null;
+  }
+
+  const textPart = normalized.replace(numberMatch[0], " ").trim();
+  if (!textPart) {
+    return null;
+  }
+
+  const bestMatch = surahs
+    .map((surah) => ({
+      surah,
+      score: computeSurahSearchScore(surah, textPart),
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)[0];
+
+  if (!bestMatch || ayahNumber > bestMatch.surah.ayahCount) {
+    return null;
+  }
+
+  return {
+    surahNumber: bestMatch.surah.surahNumber,
+    ayahNumber,
+  };
+}
+
+function getSurahSearchCandidates(surah: NormalizedSurahMeta): string[] {
+  const base = surah.englishName;
+  const normalized = normalizeSearchValue(base);
+  const noPrefix = normalized.replace(/^al[\s-]*/, "");
+
+  const aliases: string[] = [];
+  if (surah.surahNumber === 2) {
+    aliases.push("baqarah", "baqara", "baqar");
+  }
+  if (surah.surahNumber === 36) {
+    aliases.push("yasin", "ya sin", "yaseen", "yaseen");
+  }
+  if (surah.surahNumber === 67) {
+    aliases.push("mulk");
+  }
+
+  return [base, normalized, noPrefix, ...aliases];
+}
+
+function computeSurahSearchScore(
+  surah: NormalizedSurahMeta,
+  query: string,
+): number {
+  const queryNormalized = normalizeSearchValue(query);
+  const queryPhonetic = normalizeTransliterationValue(query);
+  const candidates = [
+    ...getSurahSearchCandidates(surah),
+    surah.arabicName,
+    String(surah.surahNumber),
+  ];
+
+  return candidates.reduce((maxScore, candidate) => {
+    const directScore = computeSurahMatchScore(candidate, queryNormalized);
+    const phoneticCandidate = normalizeTransliterationValue(candidate);
+    const phoneticScore = queryPhonetic
+      ? computeSurahMatchScore(phoneticCandidate, queryPhonetic)
+      : 0;
+    return Math.max(maxScore, directScore, phoneticScore);
+  }, 0);
 }
 
 type BookmarkListItem = {
@@ -494,6 +643,16 @@ export default function QuranScreen() {
         if (typeof itemIndex === "number") {
           scrollToItemIndex(itemIndex);
         }
+      } else if (target.kind === "ayah") {
+        try {
+          const ayahIndex = getAyatIndexForSurahAndAyah(
+            target.surahNumber,
+            target.ayahNumber,
+          );
+          scrollToAyahIndex(ayahIndex);
+        } catch (error) {
+          console.warn("Failed to locate ayah", error);
+        }
       }
       setNavigatorOpen(false);
     },
@@ -597,14 +756,31 @@ export default function QuranScreen() {
       return surahs;
     }
 
+    const juzLookup = parseJuzLookup(query);
+    if (juzLookup) {
+      return [];
+    }
+
+    const numericLookup = parseNumericLookup(query);
+    if (numericLookup && !numericLookup.ayahNumber) {
+      const exactSurah = surahMap.get(numericLookup.surahNumber);
+      return exactSurah ? [exactSurah] : [];
+    }
+
+    const normalized = normalizeSearchValue(query);
+    const tokenizedQuery = normalized
+      .split(/\s+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0 && !/^\d+$/.test(token));
+
     return surahs
       .map((surah) => {
-        const score = Math.max(
-          computeSurahMatchScore(surah.englishName, query),
-          computeSurahMatchScore(surah.arabicName, query),
-          computeSurahMatchScore(String(surah.surahNumber), query),
-        );
-        return { surah, score };
+        const fullQueryScore = computeSurahSearchScore(surah, query);
+        const tokenScore = tokenizedQuery.reduce((maxScore, token) => {
+          return Math.max(maxScore, computeSurahSearchScore(surah, token));
+        }, 0);
+
+        return { surah, score: Math.max(fullQueryScore, tokenScore) };
       })
       .filter((entry) => entry.score > 0)
       .sort((a, b) => {
@@ -614,7 +790,145 @@ export default function QuranScreen() {
         return a.surah.surahNumber - b.surah.surahNumber;
       })
       .map((entry) => entry.surah);
-  }, [surahSearchQuery, surahs]);
+  }, [surahMap, surahSearchQuery, surahs]);
+
+  const filteredAyahResults = useMemo<QuranAyahSearchResult[]>(() => {
+    const query = surahSearchQuery.trim();
+    if (!query) {
+      return [];
+    }
+
+    const results = new Map<string, QuranAyahSearchResult>();
+    const numericLookup = parseNumericLookup(query);
+    const juzLookup = parseJuzLookup(query);
+
+    if (juzLookup) {
+      return [];
+    }
+
+    if (numericLookup?.ayahNumber) {
+      try {
+        const ayahIndex = getAyatIndexForSurahAndAyah(
+          numericLookup.surahNumber,
+          numericLookup.ayahNumber,
+        );
+        const ayah = ayat[ayahIndex];
+        if (ayah) {
+          results.set(`${ayah.surahNumber}:${ayah.ayahNumber}`, {
+            surahNumber: ayah.surahNumber,
+            ayahNumber: ayah.ayahNumber,
+            surahEnglishName:
+              surahMap.get(ayah.surahNumber)?.englishName ??
+              ayah.surahNameEn ??
+              `Surah ${ayah.surahNumber}`,
+            englishText: ayah.englishText,
+          });
+        }
+      } catch {
+        // Invalid numeric ayah lookup.
+      }
+    }
+
+    if (numericLookup && !numericLookup.ayahNumber && numericLookup.surahNumber === 255) {
+      try {
+        const ayahIndex = getAyatIndexForSurahAndAyah(2, 255);
+        const ayah = ayat[ayahIndex];
+        if (ayah) {
+          results.set("2:255", {
+            surahNumber: 2,
+            ayahNumber: 255,
+            surahEnglishName:
+              surahMap.get(2)?.englishName ?? ayah.surahNameEn ?? "Surah 2",
+            englishText: ayah.englishText,
+          });
+        }
+      } catch {
+        // Ignore if dataset is missing this ayah.
+      }
+    }
+
+    const mixedLookup = parseMixedSurahAyahLookup(query, surahs);
+    if (mixedLookup) {
+      try {
+        const ayahIndex = getAyatIndexForSurahAndAyah(
+          mixedLookup.surahNumber,
+          mixedLookup.ayahNumber,
+        );
+        const ayah = ayat[ayahIndex];
+        if (ayah) {
+          results.set(`${ayah.surahNumber}:${ayah.ayahNumber}`, {
+            surahNumber: ayah.surahNumber,
+            ayahNumber: ayah.ayahNumber,
+            surahEnglishName:
+              surahMap.get(ayah.surahNumber)?.englishName ??
+              ayah.surahNameEn ??
+              `Surah ${ayah.surahNumber}`,
+            englishText: ayah.englishText,
+          });
+        }
+      } catch {
+        // Ignore invalid mixed lookup.
+      }
+    }
+
+    const normalizedQuery = normalizeSearchValue(query);
+    if (!normalizedQuery || /^\d+$/.test(normalizedQuery)) {
+      return Array.from(results.values());
+    }
+
+    const textMatches = ayat
+      .map((ayah) => {
+        const normalizedEnglish = normalizeSearchValue(ayah.englishText);
+        const matchIndex = normalizedEnglish.indexOf(normalizedQuery);
+        if (matchIndex === -1) {
+          return null;
+        }
+        const score = normalizedEnglish.startsWith(normalizedQuery)
+          ? 1000 - normalizedEnglish.length
+          : 800 - matchIndex;
+        return { ayah, score };
+      })
+      .filter(
+        (
+          entry,
+        ): entry is {
+          ayah: NormalizedAyah;
+          score: number;
+        } => entry !== null,
+      )
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 18);
+
+    for (const entry of textMatches) {
+      const ayahKey = `${entry.ayah.surahNumber}:${entry.ayah.ayahNumber}`;
+      if (results.has(ayahKey)) {
+        continue;
+      }
+      results.set(ayahKey, {
+        surahNumber: entry.ayah.surahNumber,
+        ayahNumber: entry.ayah.ayahNumber,
+        surahEnglishName:
+          surahMap.get(entry.ayah.surahNumber)?.englishName ??
+          entry.ayah.surahNameEn ??
+          `Surah ${entry.ayah.surahNumber}`,
+        englishText: entry.ayah.englishText,
+      });
+    }
+
+    return Array.from(results.values());
+  }, [ayat, surahMap, surahSearchQuery, surahs]);
+
+  const filteredJuzResult = useMemo<QuranJuzSearchResult | null>(() => {
+    const query = surahSearchQuery.trim();
+    if (!query) {
+      return null;
+    }
+    const juzNumber = parseJuzLookup(query);
+    if (!juzNumber) {
+      return null;
+    }
+    return { juzNumber };
+  }, [surahSearchQuery]);
 
   const filteredBookmarkItems = useMemo<BookmarkListItem[]>(() => {
     const query = bookmarkSearchQuery.trim();
@@ -911,6 +1225,8 @@ export default function QuranScreen() {
             visible={navigatorOpen}
             surahs={surahs}
             filteredSurahs={filteredSurahs}
+            ayahSearchResults={filteredAyahResults}
+            juzSearchResult={filteredJuzResult}
             surahSearchQuery={surahSearchQuery}
             bookmarks={bookmarkItems}
             filteredBookmarks={filteredBookmarkItems}
@@ -919,6 +1235,9 @@ export default function QuranScreen() {
             onBookmarkSearchQueryChange={setBookmarkSearchQuery}
             onSelectSurah={(surahNumber) =>
               handleJump({ kind: "surah", surahNumber })
+            }
+            onSelectAyah={(surahNumber, ayahNumber) =>
+              handleJump({ kind: "ayah", surahNumber, ayahNumber })
             }
             onSelectJuz={(juzNumber) => handleJump({ kind: "juz", juzNumber })}
             onSelectBookmark={handleSelectBookmark}

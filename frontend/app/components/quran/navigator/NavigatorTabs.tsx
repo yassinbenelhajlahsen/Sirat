@@ -5,7 +5,7 @@ import { colors as themeColors, withOpacity } from "@/constants/theme";
 
 import PressableScale from "../../PressableScale";
 
-export type NavigatorTabKey = "surah" | "juz" | "bookmarks";
+export type NavigatorTabKey = "goto" | "bookmarks";
 
 type NavigatorTabsProps = {
   selectedTab: NavigatorTabKey;
@@ -16,9 +16,8 @@ const TAB_ITEMS: readonly {
   key: NavigatorTabKey;
   label: string;
 }[] = [
+  { key: "goto", label: "Go To" },
   { key: "bookmarks", label: "Bookmarks" },
-  { key: "surah", label: "Surah" },
-  { key: "juz", label: "Juz" },
 ];
 
 function NavigatorTabs({ selectedTab, onSelectTab }: NavigatorTabsProps) {
@@ -56,15 +55,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     paddingHorizontal: 20,
-    paddingBottom: 8,
+    paddingBottom: 10,
+    paddingTop: 2,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderRadius: 999,
-    backgroundColor: withOpacity(themeColors.white, 0.12),
+    backgroundColor: withOpacity(themeColors.white, 0.08),
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.12),
+    borderColor: withOpacity(themeColors.white, 0.16),
     alignItems: "center",
     justifyContent: "center",
   },
@@ -74,11 +74,17 @@ const styles = StyleSheet.create({
   tabButtonActive: {
     backgroundColor: themeColors.accent,
     borderColor: themeColors.accent,
+    shadowColor: themeColors.accent,
+    shadowOpacity: 0.32,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
   tabLabel: {
-    color: withOpacity(themeColors.white, 0.78),
-    fontSize: 14,
+    color: withOpacity(themeColors.white, 0.8),
+    fontSize: 13,
     fontWeight: "600",
+    letterSpacing: 0.3,
   },
   tabLabelActive: {
     color: themeColors.primaryDeep,

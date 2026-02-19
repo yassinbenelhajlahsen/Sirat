@@ -8,14 +8,18 @@ import { NormalizedSurahMeta } from "@/services/quranData";
 
 import PressableScale from "../../PressableScale";
 import BookmarksTab, { BookmarkNavigatorItem } from "./BookmarksTab";
-import JuzTab from "./JuzTab";
 import NavigatorTabs, { NavigatorTabKey } from "./NavigatorTabs";
-import SurahTab from "./SurahTab";
+import SurahTab, {
+  QuranAyahSearchResult,
+  QuranJuzSearchResult,
+} from "./SurahTab";
 
 type QuranNavigatorModalProps = {
   visible: boolean;
   surahs: readonly NormalizedSurahMeta[];
   filteredSurahs: readonly NormalizedSurahMeta[];
+  ayahSearchResults: readonly QuranAyahSearchResult[];
+  juzSearchResult: QuranJuzSearchResult | null;
   surahSearchQuery: string;
   bookmarks: readonly BookmarkNavigatorItem[];
   filteredBookmarks: readonly BookmarkNavigatorItem[];
@@ -23,6 +27,7 @@ type QuranNavigatorModalProps = {
   onSurahSearchQueryChange: (value: string) => void;
   onBookmarkSearchQueryChange: (value: string) => void;
   onSelectSurah: (surahNumber: number) => void;
+  onSelectAyah: (surahNumber: number, ayahNumber: number) => void;
   onSelectJuz: (juzNumber: number) => void;
   onSelectBookmark: (bookmark: QuranBookmark) => void;
   onDeleteBookmark: (bookmark: QuranBookmark) => void;
@@ -33,6 +38,8 @@ function NavigatorModal({
   visible,
   surahs,
   filteredSurahs,
+  ayahSearchResults,
+  juzSearchResult,
   surahSearchQuery,
   bookmarks,
   filteredBookmarks,
@@ -40,6 +47,7 @@ function NavigatorModal({
   onSurahSearchQueryChange,
   onBookmarkSearchQueryChange,
   onSelectSurah,
+  onSelectAyah,
   onSelectJuz,
   onSelectBookmark,
   onDeleteBookmark,
@@ -47,7 +55,7 @@ function NavigatorModal({
 }: QuranNavigatorModalProps) {
   const hasBookmarks = bookmarks.length > 0;
   const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>(
-    hasBookmarks ? "bookmarks" : "surah"
+    hasBookmarks ? "bookmarks" : "goto"
   );
 
   const [shouldRender, setShouldRender] = useState(visible);
@@ -114,7 +122,7 @@ function NavigatorModal({
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
-      setSelectedTab(hasBookmarks ? "bookmarks" : "surah");
+      setSelectedTab(hasBookmarks ? "bookmarks" : "goto");
     }
     previousVisibleRef.current = visible;
   }, [hasBookmarks, visible]);
@@ -148,7 +156,12 @@ function NavigatorModal({
             ]}
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Navigation</Text>
+              <View>
+                <Text style={styles.modalTitle}>Navigation</Text>
+                <Text style={styles.modalSubtitle}>
+                  Jump by surah, ayah, juz, or bookmark
+                </Text>
+              </View>
               <PressableScale
                 accessibilityRole="button"
                 onPress={onClose}
@@ -193,32 +206,24 @@ function NavigatorModal({
               <View
                 style={[
                   styles.tabPanel,
-                  selectedTab === "surah"
+                  selectedTab === "goto"
                     ? styles.tabPanelActive
                     : styles.tabPanelInactive,
                 ]}
-                pointerEvents={selectedTab === "surah" ? "auto" : "none"}
+                pointerEvents={selectedTab === "goto" ? "auto" : "none"}
               >
                 <SurahTab
                   surahs={surahs}
                   filteredSurahs={filteredSurahs}
+                  ayahSearchResults={ayahSearchResults}
+                  juzSearchResult={juzSearchResult}
                   surahSearchQuery={surahSearchQuery}
                   onSurahSearchQueryChange={onSurahSearchQueryChange}
                   onSelectSurah={onSelectSurah}
+                  onSelectAyah={onSelectAyah}
+                  onSelectJuz={onSelectJuz}
                   onClose={onClose}
                 />
-              </View>
-
-              <View
-                style={[
-                  styles.tabPanel,
-                  selectedTab === "juz"
-                    ? styles.tabPanelActive
-                    : styles.tabPanelInactive,
-                ]}
-                pointerEvents={selectedTab === "juz" ? "auto" : "none"}
-              >
-                <JuzTab onSelectJuz={onSelectJuz} onClose={onClose} />
               </View>
             </View>
           </Animated.View>
@@ -234,34 +239,50 @@ export type { BookmarkNavigatorItem, QuranNavigatorModalProps };
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: withOpacity(themeColors.black, 0.45),
+    backgroundColor: withOpacity(themeColors.black, 0.62),
     justifyContent: "center",
-    padding: 20,
+    padding: 18,
   },
   modalCard: {
-    backgroundColor: withOpacity(themeColors.primaryDeep, .95),
-    borderRadius: 20,
+    backgroundColor: withOpacity(themeColors.primaryDeep, 0.97),
+    borderRadius: 24,
     paddingBottom: 12,
-    minHeight: 700,
-    maxHeight: "70%",
+    minHeight: 680,
+    maxHeight: "74%",
     borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.5),
+    borderColor: withOpacity(themeColors.accent, 0.38),
+    shadowColor: themeColors.black,
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 16,
   },
   modalHeader: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingTop: 18,
+    paddingBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "700",
     color: themeColors.white,
   },
+  modalSubtitle: {
+    marginTop: 4,
+    color: withOpacity(themeColors.white, 0.66),
+    fontSize: 12,
+    letterSpacing: 0.3,
+  },
   dismissButton: {
-    padding: 6,
+    padding: 8,
+    marginTop: -2,
+    borderRadius: 999,
+    backgroundColor: withOpacity(themeColors.white, 0.08),
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.white, 0.12),
   },
   dismissIcon: {
     width: 18,
@@ -285,6 +306,7 @@ const styles = StyleSheet.create({
   tabContentContainer: {
     flex: 1,
     minHeight: 0,
+    paddingTop: 2,
   },
   tabPanel: {
     flex: 1,
