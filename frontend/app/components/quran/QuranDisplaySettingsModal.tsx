@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Modal,
   Pressable,
   StyleSheet,
@@ -35,6 +37,8 @@ export default function QuranDisplaySettingsModal({
   const { displayModes, isModeEnabled, toggleDisplayMode } =
     useQuranDisplayModes();
   const selectedDisplayModeCount = displayModes.length;
+  const [shouldRender, setShouldRender] = useState(visible);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const handleDisplayModePress = useCallback(
     (mode: QuranDisplayMode) => {
@@ -43,14 +47,45 @@ export default function QuranDisplaySettingsModal({
     [toggleDisplayMode]
   );
 
+  useEffect(() => {
+    fadeAnim.stopAnimation();
+
+    if (visible) {
+      setShouldRender(true);
+      fadeAnim.setValue(0);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 130,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 90,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setShouldRender(false);
+      }
+    });
+  }, [fadeAnim, visible]);
+
+  if (!shouldRender) {
+    return null;
+  }
+
   return (
     <Modal
-      animationType="fade"
+      animationType="none"
       transparent
-      visible={visible}
+      visible={shouldRender}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={styles.card}>
           <View style={styles.headerRow}>
@@ -117,7 +152,7 @@ export default function QuranDisplaySettingsModal({
             })}
           </View>
         </View>
-      </View>
+      </Animated.View>
     </Modal>
   );
 }
