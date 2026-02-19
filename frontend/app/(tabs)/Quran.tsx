@@ -55,6 +55,7 @@ import QuranBookmarkModal, {
   QuranBookmarkModalPayload,
 } from "../components/quran/QuranBookmarkModal";
 import QuranCompletionCard from "../components/quran/QuranCompletionCard";
+import QuranDisplaySettingsModal from "../components/quran/QuranDisplaySettingsModal";
 
 type AyahItem = {
   type: "ayah";
@@ -207,6 +208,7 @@ export default function QuranScreen() {
   );
 
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
   const [surahSearchQuery, setSurahSearchQuery] = useState("");
   const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
 
@@ -862,6 +864,18 @@ export default function QuranScreen() {
                 >
                   <Text style={styles.jumpButtonText}>Navigate</Text>
                 </PressableScale>
+                <PressableScale
+                  style={styles.settingsButton}
+                  onPress={() => setDisplaySettingsOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Display settings"
+                >
+                  <Ionicons
+                    name="settings-outline"
+                    size={18}
+                    color={themeColors.primaryDeep}
+                  />
+                </PressableScale>
               </View>
             </View>
           </View>
@@ -914,6 +928,11 @@ export default function QuranScreen() {
             onSubmit={handleBookmarkSubmit}
             onClose={handleBookmarkModalClose}
             isSubmitting={bookmarkSaving}
+          />
+
+          <QuranDisplaySettingsModal
+            visible={displaySettingsOpen}
+            onClose={() => setDisplaySettingsOpen(false)}
           />
         </View>
       </SafeAreaView>
@@ -1004,6 +1023,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg + 2,
     paddingVertical: spacing.sm,
     marginLeft: spacing.md,
+  },
+  settingsButton: {
+    backgroundColor: themeColors.accent,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginLeft: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
   },
   jumpButtonText: {
     color: themeColors.primaryDeep,
