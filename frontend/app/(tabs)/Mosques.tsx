@@ -361,7 +361,6 @@ export default function MosqueScreen() {
           <PressableScale
             style={styles.mapContainer}
             onPress={() => router.push("/components/map")}
-            activeOpacity={0.9}
             accessibilityRole="button"
             accessibilityLabel="Open full mosque map"
           >

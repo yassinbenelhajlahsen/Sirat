@@ -1,4 +1,9 @@
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import {
+  colors as themeColors,
+  spacing,
+  typography,
+  withOpacity,
+} from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import {
   QuranBookmark,
@@ -763,23 +768,13 @@ export default function QuranScreen() {
       ]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+      style={styles.screen}
     >
       <Image
         source={require("@/assets/patterns/islamic-gold2.png")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.05,
-          resizeMode: "repeat",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.patternOverlay}
       />
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.screen}>
         <View style={styles.container}>
           <View style={styles.header}>
             <Text
@@ -910,14 +905,26 @@ export default function QuranScreen() {
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  patternOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
+    resizeMode: "repeat",
+    width: "100%",
+    height: "100%",
+  },
   container: {
     flex: 1,
     backgroundColor: "transparent",
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    marginBottom: 12,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.sm + 2,
+    marginBottom: spacing.md,
   },
   headerTitle: {
     color: themeColors.white,
@@ -937,7 +944,7 @@ const styles = StyleSheet.create({
   },
   headerSurahEnglish: {
     color: themeColors.white,
-    fontSize: 18,
+    fontSize: typography.subtitle,
     fontWeight: "600",
   },
   headerSurahArabic: {
@@ -949,7 +956,7 @@ const styles = StyleSheet.create({
   },
   headerMeta: {
     color: themeColors.white,
-    fontSize: 14,
+    fontSize: typography.body,
     opacity: 0.75,
   },
   audioButton: {
@@ -971,26 +978,26 @@ const styles = StyleSheet.create({
   audioOfflineText: {
     color: themeColors.primaryDeep,
     fontWeight: "600",
-    fontSize: 12,
-    marginLeft: 6,
+    fontSize: typography.caption,
+    marginLeft: spacing.sm - 2,
   },
   jumpButton: {
     backgroundColor: themeColors.accent,
     borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    marginLeft: 12,
+    paddingHorizontal: spacing.lg + 2,
+    paddingVertical: spacing.sm,
+    marginLeft: spacing.md,
   },
   jumpButtonText: {
     color: themeColors.primaryDeep,
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: typography.body,
   },
   list: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
     paddingBottom: 56,
   },
   listPlaceholder: {

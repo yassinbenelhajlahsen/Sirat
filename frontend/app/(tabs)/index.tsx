@@ -1,5 +1,5 @@
 // app/(tabs)/index.tsx
-import { colors, withOpacity } from "@/constants/theme";
+import { colors, spacing, typography, withOpacity } from "@/constants/theme";
 import { requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,6 +17,7 @@ import {
   Platform,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -385,33 +386,23 @@ export default function Home() {
       colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+      style={styles.screen}
     >
       <Image
         source={require("@/assets/patterns/islamic-gold2.png")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.05,
-          resizeMode: "repeat",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.patternOverlay}
       />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={-60}
-        style={{ flex: 1 }}
+        style={styles.screen}
       >
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView style={styles.screen}>
           <ScrollView
             ref={scrollViewRef}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 20, paddingBottom: 80 }}
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
             onContentSizeChange={() => {
@@ -428,108 +419,39 @@ export default function Home() {
             }
           >
             {!!banner && (
-              <View
-                style={{
-                  backgroundColor: colors.primaryLift,
-                  borderColor: colors.accent,
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  marginBottom: 16,
-                }}
-              >
-                <Text
-                  style={{
-                    color: colors.accent,
-                    fontFamily: "SFProDisplay-Semibold",
-                    fontSize: 14,
-                  }}
-                >
+              <View style={styles.bannerCard}>
+                <Text style={styles.bannerText}>
                   {banner}
                 </Text>
               </View>
             )}
 
-            <Text
-              style={{
-                color: colors.white,
-                fontSize: 42,
-                fontFamily: "SFProDisplay-Bold",
-              }}
-            >
+            <Text style={styles.title}>
               Home
             </Text>
 
-            <View style={{ marginTop: 30, alignItems: "center" }}>
-              <Text
-                style={{
-                  color: colors.white,
-                  fontSize: 28,
-                  fontFamily: "SFProDisplay-Semibold",
-                }}
-              >
+            <View style={styles.centerSection}>
+              <Text style={styles.sectionTitle}>
                 Today&apos;s Prayer Times
               </Text>
 
               {locationLabel ? (
-                <Text
-                  style={{
-                    color: colors.accent,
-                    fontSize: 16,
-                    fontFamily: "SFProDisplay-Semibold",
-                    marginTop: 8,
-                    textAlign: "center",
-                  }}
-                >
+                <Text style={styles.locationLabel}>
                   {locationLabel}
                 </Text>
               ) : null}
 
-              <View style={{ marginTop: 30, alignItems: "center" }}>
-                <Text
-                  style={{
-                    color: colors.white,
-                    fontSize: 22,
-                    fontFamily: "SFProDisplay-Bold",
-                    textAlign: "center",
-                  }}
-                >
+              <View style={styles.dateSection}>
+                <Text style={styles.gregorianDate}>
                   {today.toDateString()}
                 </Text>
-                <Text
-                  style={{
-                    color: colors.accent,
-                    fontSize: 16,
-                    fontFamily: "SFProDisplay-Semibold",
-                    marginTop: 4,
-                    marginBottom: 20,
-                    textAlign: "center",
-                  }}
-                >
+                <Text style={styles.hijriDate}>
                   {islamicDate}
                 </Text>
               </View>
             </View>
 
-            <View
-              style={{
-                marginTop: 20,
-                backgroundColor: withOpacity(colors.black, 0.2),
-                borderRadius: 18,
-                padding: 20,
-                borderWidth: 1,
-                borderColor: withOpacity(colors.white, 0.08),
-                shadowColor: colors.primaryDark,
-                shadowOpacity: 0.25,
-                shadowRadius: 24,
-                shadowOffset: { width: 0, height: 16 },
-                elevation: 6,
-
-                minHeight: 360, // lock footprint
-                justifyContent: "center",
-              }}
-            >
+            <View style={styles.prayerListCard}>
               <PrayerTimesList
                 loading={loading}
                 prayerTimes={prayerTimes}
@@ -537,11 +459,9 @@ export default function Home() {
               />
             </View>
 
-            <View
-              style={{ marginTop: 10, marginBottom: 12, alignItems: "center" }}
-            >
+            <View style={styles.nextPrayerContainer}>
               {nextPrayer ? (
-                <Text style={{ color: colors.accent, fontSize: 16 }}>
+                <Text style={styles.nextPrayerText}>
                   Next: {nextPrayer.label} in {timeLeft}
                 </Text>
               ) : nextDayFajr ? (
@@ -573,27 +493,14 @@ export default function Home() {
                       elevation: 5,
                       alignItems: "center",
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel="View tomorrow prayer times"
                   >
-                    <Text
-                      style={{
-                        color: colors.accent,
-                        fontSize: 18,
-                        fontFamily: "SFProDisplay-Bold",
-                        textAlign: "center",
-                        marginBottom: 4,
-                      }}
-                    >
+                    <Text style={styles.finishedTitle}>
                       Finished all prayers!
                     </Text>
-                    <Text
-                      style={{
-                        color: colors.white,
-                        fontSize: 16,
-                        fontFamily: "SFProDisplay-Semibold",
-                        textAlign: "center",
-                      }}
-                    >
-                      Tap to see tomorrow's prayer times
+                    <Text style={styles.finishedSubtitle}>
+                      Tap to see tomorrow&apos;s prayer times
                     </Text>
                   </PressableScale>
                 </Animated.View>
@@ -618,3 +525,112 @@ export default function Home() {
     </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  patternOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
+    resizeMode: "repeat",
+    width: "100%",
+    height: "100%",
+  },
+  scrollContent: {
+    padding: spacing.xl,
+    paddingBottom: 80,
+  },
+  bannerCard: {
+    backgroundColor: colors.primaryLift,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg - 2,
+    marginBottom: spacing.lg,
+  },
+  bannerText: {
+    color: colors.accent,
+    fontFamily: "SFProDisplay-Semibold",
+    fontSize: typography.body,
+  },
+  title: {
+    color: colors.white,
+    fontSize: 42,
+    fontFamily: "SFProDisplay-Bold",
+  },
+  centerSection: {
+    marginTop: 30,
+    alignItems: "center",
+  },
+  sectionTitle: {
+    color: colors.white,
+    fontSize: 28,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  locationLabel: {
+    color: colors.accent,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Semibold",
+    marginTop: spacing.sm,
+    textAlign: "center",
+  },
+  dateSection: {
+    marginTop: 30,
+    alignItems: "center",
+  },
+  gregorianDate: {
+    color: colors.white,
+    fontSize: typography.title,
+    fontFamily: "SFProDisplay-Bold",
+    textAlign: "center",
+  },
+  hijriDate: {
+    color: colors.accent,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Semibold",
+    marginTop: spacing.xs,
+    marginBottom: spacing.xl,
+    textAlign: "center",
+  },
+  prayerListCard: {
+    marginTop: spacing.xl,
+    backgroundColor: withOpacity(colors.black, 0.2),
+    borderRadius: 18,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.08),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 6,
+    minHeight: 360,
+    justifyContent: "center",
+  },
+  nextPrayerContainer: {
+    marginTop: spacing.sm + 2,
+    marginBottom: spacing.md,
+    alignItems: "center",
+  },
+  nextPrayerText: {
+    color: colors.accent,
+    fontSize: typography.bodyLg,
+  },
+  finishedTitle: {
+    color: colors.accent,
+    fontSize: typography.subtitle,
+    fontFamily: "SFProDisplay-Bold",
+    textAlign: "center",
+    marginBottom: spacing.xs,
+  },
+  finishedSubtitle: {
+    color: colors.white,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Semibold",
+    textAlign: "center",
+  },
+});

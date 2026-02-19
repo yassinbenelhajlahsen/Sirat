@@ -1,4 +1,4 @@
-import { colors, withOpacity } from "@/constants/theme";
+import { colors, spacing, typography, withOpacity } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
@@ -11,6 +11,7 @@ import {
   Easing,
   Image,
   PanResponder,
+  StyleSheet,
   Text,
   useWindowDimensions,
   View,
@@ -367,47 +368,25 @@ export default function CalendarScreen() {
       colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+      style={styles.screen}
     >
       <Image
         source={require("@/assets/patterns/islamic-gold2.png")}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.05,
-          resizeMode: "repeat",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.patternOverlay}
       />
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.screen}>
         {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
-        <View style={{ padding: 16 }}>
-          <Text
-            style={{
-              color: colors.white,
-              fontFamily: "SFProDisplay-Bold",
-              fontSize: isSmall ? 34 : 40,
-              marginBottom: 20,
-            }}
-          >
+        <View style={styles.header}>
+          <Text style={[styles.title, isSmall ? styles.titleSmall : undefined]}>
             Calendar
           </Text>
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
+          <View style={styles.monthNav}>
             <PressableScale
               onPress={goToPreviousMonth}
               disabled={new Date(viewYear, viewMonth - 1) < minDate}
+              accessibilityRole="button"
+              accessibilityLabel="Previous month"
             >
               <Ionicons
                 name="chevron-back"
@@ -433,6 +412,8 @@ export default function CalendarScreen() {
             <PressableScale
               onPress={goToNextMonth}
               disabled={new Date(viewYear, viewMonth + 1) > maxDate}
+              accessibilityRole="button"
+              accessibilityLabel="Next month"
             >
               <Ionicons
                 name="chevron-forward"
@@ -448,24 +429,11 @@ export default function CalendarScreen() {
         </View>
 
         {/* Day of week header (static, not animated) */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            paddingHorizontal: 16,
-            marginTop: 12,
-          }}
-        >
+        <View style={styles.weekdayRow}>
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <Text
               key={`${d}-${i}`}
-              style={{
-                color: colors.accent,
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Regular",
-                width: 32,
-                textAlign: "center",
-              }}
+              style={styles.weekdayText}
             >
               {d}
             </Text>
@@ -477,7 +445,7 @@ export default function CalendarScreen() {
           {...panResponder.panHandlers}
           style={{
             flex: 1,
-            paddingHorizontal: 16,
+            paddingHorizontal: spacing.lg,
             opacity: fadeAnim,
             transform: [
               {
@@ -493,28 +461,15 @@ export default function CalendarScreen() {
           }}
         >
           {/* Calendar Grid */}
-          <View style={{ flex: 1, justifyContent: "flex-start" }}>
+          <View style={styles.gridContainer}>
             {loadingHolidays ? (
-              <View style={{ marginTop: 30, alignItems: "center" }}>
+              <View style={styles.loadingWrap}>
                 <ActivityIndicator size="small" color={colors.accent} />
               </View>
             ) : (
-              <View
-                style={{
-                  flexGrow: 1,
-                  justifyContent: "space-evenly",
-                  marginTop: 8,
-                }}
-              >
+              <View style={styles.gridBody}>
                 {matrix.map((week, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginVertical: 4,
-                    }}
-                  >
+                  <View key={i} style={styles.weekRow}>
                     {week.map((day, j) => {
                       const isToday =
                         day === today.getDate() &&
@@ -544,33 +499,30 @@ export default function CalendarScreen() {
                             }
                           }}
                           disabled={navigating}
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 16,
-                            backgroundColor: isToday
-                              ? colors.accent
+                          style={[
+                            styles.dayButton,
+                            isToday
+                              ? styles.dayButtonToday
                               : isHoliday
-                                ? colors.primaryBorder
-                                : "transparent",
-                            borderColor: isHoliday
-                              ? colors.accent
-                              : "transparent",
-                            borderWidth: isHoliday ? 2 : 0,
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
+                                ? styles.dayButtonHoliday
+                                : undefined,
+                          ]}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            day > 0
+                              ? `Open ${monthName} ${day}, ${viewYear}`
+                              : "Empty day"
+                          }
                         >
                           <Text
-                            style={{
-                              color: isToday
-                                ? colors.primaryDark
+                            style={[
+                              styles.dayText,
+                              isToday
+                                ? styles.dayTextToday
                                 : isHoliday
-                                  ? colors.accent
-                                  : colors.white,
-                              fontFamily: "SFProDisplay-Regular",
-                              fontSize: 16,
-                            }}
+                                  ? styles.dayTextHoliday
+                                  : undefined,
+                            ]}
                           >
                             {day > 0 ? day : ""}
                           </Text>
@@ -585,50 +537,16 @@ export default function CalendarScreen() {
         </Animated.View>
 
         {/* Ramadan Summary (static, not animated) */}
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingBottom: tabBarHeight + 8,
-          }}
-        >
+        <View style={[styles.footer, { paddingBottom: tabBarHeight + 8 }]}>
           {ramadanSummary && ramadanSummary.totalMissed > 0 && (
-            <View
-              style={{
-                backgroundColor: withOpacity(colors.black, 0.25),
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 14,
-                borderWidth: 1,
-                borderColor: withOpacity(colors.accent, 0.3),
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.accent,
-                  fontSize: 14,
-                  fontFamily: "SFProDisplay-Semibold",
-                  marginBottom: 6,
-                }}
-              >
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>
                 Ramadan Summary
               </Text>
-              <Text
-                style={{
-                  color: colors.white,
-                  fontSize: 13,
-                  fontFamily: "SFProDisplay-Regular",
-                }}
-              >
+              <Text style={styles.summaryText}>
                 Missed: {ramadanSummary.totalMissed}
               </Text>
-              <Text
-                style={{
-                  color: colors.white,
-                  fontSize: 13,
-                  fontFamily: "SFProDisplay-Regular",
-                  marginTop: 2,
-                }}
-              >
+              <Text style={styles.summaryTextSecondary}>
                 Days: {ramadanSummary.missedDays.join(", ")}
               </Text>
             </View>
@@ -647,23 +565,11 @@ export default function CalendarScreen() {
                 const dir = targetDate > currentDate ? 1 : -1;
                 animateSlideChange(dir, targetYear, targetMonth);
               }}
-              style={{
-                marginTop: 8,
-                marginBottom: 24,
-                alignSelf: "center",
-                backgroundColor: colors.accent,
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 20,
-              }}
+              style={styles.backToToday}
+              accessibilityRole="button"
+              accessibilityLabel="Back to current month"
             >
-              <Text
-                style={{
-                  color: colors.primaryDark,
-                  fontSize: 16,
-                  fontFamily: "SFProDisplay-Semibold",
-                }}
-              >
+              <Text style={styles.backToTodayText}>
                 Back to Today
               </Text>
             </PressableScale>
@@ -673,3 +579,121 @@ export default function CalendarScreen() {
     </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  patternOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
+    resizeMode: "repeat",
+    width: "100%",
+    height: "100%",
+  },
+  header: { padding: spacing.lg },
+  title: {
+    color: colors.white,
+    fontFamily: "SFProDisplay-Bold",
+    fontSize: 40,
+    marginBottom: spacing.xl,
+  },
+  titleSmall: { fontSize: 34 },
+  monthNav: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  weekdayRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.md,
+  },
+  weekdayText: {
+    color: colors.accent,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Regular",
+    width: 32,
+    textAlign: "center",
+  },
+  gridContainer: { flex: 1, justifyContent: "flex-start" },
+  loadingWrap: { marginTop: 30, alignItems: "center" },
+  gridBody: { flexGrow: 1, justifyContent: "space-evenly", marginTop: spacing.sm },
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: spacing.xs,
+  },
+  dayButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dayButtonToday: {
+    backgroundColor: colors.accent,
+  },
+  dayButtonHoliday: {
+    backgroundColor: colors.primaryBorder,
+    borderColor: colors.accent,
+    borderWidth: 2,
+  },
+  dayText: {
+    color: colors.white,
+    fontFamily: "SFProDisplay-Regular",
+    fontSize: typography.bodyLg,
+  },
+  dayTextToday: {
+    color: colors.primaryDark,
+  },
+  dayTextHoliday: {
+    color: colors.accent,
+  },
+  footer: {
+    paddingHorizontal: spacing.lg,
+  },
+  summaryCard: {
+    backgroundColor: withOpacity(colors.black, 0.25),
+    borderRadius: 10,
+    padding: spacing.md,
+    marginBottom: spacing.lg - 2,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.3),
+  },
+  summaryTitle: {
+    color: colors.accent,
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Semibold",
+    marginBottom: spacing.sm - 2,
+  },
+  summaryText: {
+    color: colors.white,
+    fontSize: 13,
+    fontFamily: "SFProDisplay-Regular",
+  },
+  summaryTextSecondary: {
+    color: colors.white,
+    fontSize: 13,
+    fontFamily: "SFProDisplay-Regular",
+    marginTop: 2,
+  },
+  backToToday: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.xxl,
+    alignSelf: "center",
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: 20,
+  },
+  backToTodayText: {
+    color: colors.primaryDark,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+});
