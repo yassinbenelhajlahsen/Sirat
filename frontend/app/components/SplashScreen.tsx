@@ -48,6 +48,8 @@ export default function SplashScreen({
   const scale = useRef(new Animated.Value(0.95)).current; // iOS-style scale-in
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
+  const introFinished = useRef(false);
+  const startedAtMs = useRef(Date.now());
 
   // Check if this is the first launch today
   useEffect(() => {
@@ -77,68 +79,91 @@ export default function SplashScreen({
     setHadith(today);
   }, []);
 
-  // Gentle entrance with iOS-style animations
+  // Entrance profile: richer on first launch, lighter on repeat launches
   useEffect(() => {
-    // Staggered animation sequence for modern iOS feel
-    Animated.sequence([
-      // First: Fade in logo with scale (faster)
-      Animated.parallel([
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1), // iOS easing
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]),
-      // Then: Lift content in (faster and with less delay)
-      Animated.parallel([
-        Animated.timing(contentOpacity, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 450,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const animation = isFirstLaunchToday
+      ? Animated.sequence([
+          Animated.parallel([
+            Animated.timing(logoOpacity, {
+              toValue: 1,
+              duration: 400,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              useNativeDriver: true,
+            }),
+            Animated.spring(scale, {
+              toValue: 1,
+              tension: 50,
+              friction: 7,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(contentOpacity, {
+              toValue: 1,
+              duration: 400,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              useNativeDriver: true,
+            }),
+            Animated.timing(translateY, {
+              toValue: 0,
+              duration: 450,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              useNativeDriver: true,
+            }),
+          ]),
+        ])
+      : Animated.parallel([
+          Animated.timing(logoOpacity, {
+            toValue: 1,
+            duration: 180,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 1,
+            duration: 180,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]);
 
-  // When parent marks ready, fade out with iOS-style animation
+    animation.start(() => {
+      introFinished.current = true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFirstLaunchToday]);
+
+  // Fade out once app is ready and intro has had enough time to read cleanly
   useEffect(() => {
     if (!ready) return;
-    // First launch of the day: longer display (1500ms), subsequent launches: shorter (200ms)
-    const displayDuration = isFirstLaunchToday ? 2000 : 200;
+    const minVisibleMs = isFirstLaunchToday ? 1600 : 550;
+    const elapsed = Date.now() - startedAtMs.current;
+    const waitForMinVisible = Math.max(0, minVisibleMs - elapsed);
+    const waitForIntro = introFinished.current
+      ? 0
+      : isFirstLaunchToday
+        ? 850
+        : 220;
+    const waitBeforeExit = Math.max(waitForMinVisible, waitForIntro);
 
     const timeout = setTimeout(() => {
       Animated.parallel([
         Animated.timing(opacity, {
           toValue: 0,
-          duration: 400,
+          duration: isFirstLaunchToday ? 360 : 220,
           easing: Easing.bezier(0.4, 0, 1, 1), // iOS fade-out easing
           useNativeDriver: true,
         }),
         Animated.timing(scale, {
-          toValue: 1.05,
-          duration: 400,
+          toValue: isFirstLaunchToday ? 1.02 : 1.01,
+          duration: isFirstLaunchToday ? 360 : 220,
           easing: Easing.bezier(0.4, 0, 1, 1),
           useNativeDriver: true,
         }),
       ]).start(({ finished }) => {
         if (finished && onFinished) onFinished();
       });
-    }, displayDuration); // Dynamic duration based on first launch
+    }, waitBeforeExit);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, isFirstLaunchToday]);
@@ -218,7 +243,7 @@ export default function SplashScreen({
           ]}
         >
           {/* Only render variable-length text when fonts are ready */}
-          {fontsReady ? (
+          {isFirstLaunchToday && fontsReady ? (
             hadith ? (
               <View style={styles.hadithContent}>
                 {/* Decorative top ornament */}
