@@ -218,20 +218,33 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      {showSplash ? (
-        <SplashScreen
-          ready={appReady}
-          fontsReady={fontsLoaded}
-          onReadyToHideNative={hideNativeSplash}
-          onFinished={() => setShowSplash(false)}
-        />
-      ) : (
-        <QuranAudioProvider>
-          <View style={{ flex: 1 }}>
-            <Slot />
-            <QuranMiniPlayerPortal />
-          </View>
-        </QuranAudioProvider>
+      {/* Always render app content so it mounts and loads data while splash is visible */}
+      <QuranAudioProvider>
+        <View style={{ flex: 1 }}>
+          <Slot />
+          <QuranMiniPlayerPortal />
+        </View>
+      </QuranAudioProvider>
+
+      {/* Overlay splash on top; it fades out to reveal the already-rendered app */}
+      {showSplash && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
+          pointerEvents={appReady ? "none" : "auto"}
+        >
+          <SplashScreen
+            ready={appReady}
+            fontsReady={fontsLoaded}
+            onReadyToHideNative={hideNativeSplash}
+            onFinished={() => setShowSplash(false)}
+          />
+        </View>
       )}
     </SafeAreaProvider>
   );

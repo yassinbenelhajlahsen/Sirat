@@ -213,14 +213,17 @@ export default function Home() {
   };
 
   // ---- Data load ----
-  const loadData = async () => {
+  const loadData = async (reset = false) => {
     try {
       setLoading(true);
-      setPrayerTimes([]);
-      setNextPrayer(null);
-      setNextDayFajr(null);
-      setTimeLeft("");
-      fadeAnim.setValue(0);
+      // Only clear visible state on explicit refresh to avoid flicker on initial load
+      if (reset) {
+        setPrayerTimes([]);
+        setNextPrayer(null);
+        setNextDayFajr(null);
+        setTimeLeft("");
+        fadeAnim.setValue(0);
+      }
       setBanner("");
 
       // 1) Read effective settings
@@ -270,7 +273,7 @@ export default function Home() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await loadData(true);
     setRefreshing(false);
   };
 

@@ -136,7 +136,7 @@ export default function SplashScreen({
   // Fade out once app is ready and intro has had enough time to read cleanly
   useEffect(() => {
     if (!ready) return;
-    const minVisibleMs = isFirstLaunchToday ? 1600 : 550;
+    const minVisibleMs = isFirstLaunchToday ? 1600 : 600;
     const elapsed = Date.now() - startedAtMs.current;
     const waitForMinVisible = Math.max(0, minVisibleMs - elapsed);
     const waitForIntro = introFinished.current
