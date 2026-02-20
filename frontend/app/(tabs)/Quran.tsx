@@ -347,8 +347,16 @@ export default function QuranScreen() {
 
   const flashListRef = useRef<FlashListRef<QuranListItem>>(null);
   const isProgrammaticScrollRef = useRef(false);
+  const topVisibleAyahIndexRef = useRef<number | null>(null);
   const hasAppliedInitialScrollRef = useRef(false);
   const hasRestoredInitialPositionRef = useRef(false);
+  const displayModeAnchorInteractionRef = useRef<{
+    cancel: () => void;
+  } | null>(null);
+  const displayModeAnchorRafRef = useRef<number | null>(null);
+  const displayModeAnchorResetRafRef = useRef<number | null>(null);
+  const displayModeSignatureRef = useRef<string | null>(null);
+  const displayModeAnchorSequenceRef = useRef(0);
   const animatedScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -670,6 +678,18 @@ export default function QuranScreen() {
   }, [listReady]);
 
   useEffect(() => {
+    if (displayModeAnchorInteractionRef.current) {
+      displayModeAnchorInteractionRef.current.cancel();
+      displayModeAnchorInteractionRef.current = null;
+    }
+    if (displayModeAnchorRafRef.current != null) {
+      cancelAnimationFrame(displayModeAnchorRafRef.current);
+      displayModeAnchorRafRef.current = null;
+    }
+    if (displayModeAnchorResetRafRef.current != null) {
+      cancelAnimationFrame(displayModeAnchorResetRafRef.current);
+      displayModeAnchorResetRafRef.current = null;
+    }
     return () => {
       if (animatedScrollTimeoutRef.current) {
         clearTimeout(animatedScrollTimeoutRef.current);
@@ -679,8 +699,84 @@ export default function QuranScreen() {
         clearTimeout(initialRestoreTimeoutRef.current);
         initialRestoreTimeoutRef.current = null;
       }
+      if (displayModeAnchorInteractionRef.current) {
+        displayModeAnchorInteractionRef.current.cancel();
+        displayModeAnchorInteractionRef.current = null;
+      }
+      if (displayModeAnchorRafRef.current != null) {
+        cancelAnimationFrame(displayModeAnchorRafRef.current);
+        displayModeAnchorRafRef.current = null;
+      }
+      if (displayModeAnchorResetRafRef.current != null) {
+        cancelAnimationFrame(displayModeAnchorResetRafRef.current);
+        displayModeAnchorResetRafRef.current = null;
+      }
     };
   }, []);
+
+  useEffect(() => {
+    const displayModeSignature = `${showArabic ? "1" : "0"}${showEnglish ? "1" : "0"}${showTransliteration ? "1" : "0"}`;
+    if (displayModeSignatureRef.current === null) {
+      displayModeSignatureRef.current = displayModeSignature;
+      return;
+    }
+    if (displayModeSignatureRef.current === displayModeSignature) {
+      return;
+    }
+    displayModeSignatureRef.current = displayModeSignature;
+
+    if (!listReady) return;
+    if (!hasAppliedInitialScrollRef.current) return;
+    if (pendingSurahFocusNumber != null) return;
+
+    const index = topVisibleAyahIndexRef.current;
+    if (index == null) return;
+
+    if (displayModeAnchorInteractionRef.current) {
+      displayModeAnchorInteractionRef.current.cancel();
+      displayModeAnchorInteractionRef.current = null;
+    }
+    if (displayModeAnchorRafRef.current != null) {
+      cancelAnimationFrame(displayModeAnchorRafRef.current);
+      displayModeAnchorRafRef.current = null;
+    }
+    if (displayModeAnchorResetRafRef.current != null) {
+      cancelAnimationFrame(displayModeAnchorResetRafRef.current);
+      displayModeAnchorResetRafRef.current = null;
+    }
+
+    const sequence = ++displayModeAnchorSequenceRef.current;
+    isProgrammaticScrollRef.current = true;
+
+    displayModeAnchorInteractionRef.current = InteractionManager.runAfterInteractions(
+      () => {
+        if (sequence !== displayModeAnchorSequenceRef.current) {
+          return;
+        }
+        displayModeAnchorRafRef.current = requestAnimationFrame(() => {
+          if (sequence !== displayModeAnchorSequenceRef.current) {
+            return;
+          }
+          scrollToAyahIndex(index, { animateFinal: false });
+          displayModeAnchorResetRafRef.current = requestAnimationFrame(() => {
+            if (sequence !== displayModeAnchorSequenceRef.current) {
+              return;
+            }
+            isProgrammaticScrollRef.current = false;
+            displayModeAnchorResetRafRef.current = null;
+          });
+          displayModeAnchorRafRef.current = null;
+        });
+      },
+    );
+  }, [
+    listReady,
+    pendingSurahFocusNumber,
+    scrollToAyahIndex,
+    showArabic,
+    showEnglish,
+    showTransliteration,
+  ]);
 
   const handleViewableItemsChanged = useCallback(
     ({ viewableItems }: ViewableItemsChanged) => {
@@ -705,6 +801,8 @@ export default function QuranScreen() {
       if (!topVisibleAyahItem) {
         return;
       }
+
+      topVisibleAyahIndexRef.current = topVisibleAyahItem.ayahGlobalIndex;
 
       const ayah = topVisibleAyahItem.ayah;
       setCurrentAyah(ayah);
