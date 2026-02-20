@@ -53,6 +53,20 @@ Validation notes:
 
 Returns API status, loaded dua count, and timestamp.
 
+### `GET /api/mosque/nearby`
+
+Query parameters:
+
+- `latitude` (required, -90 to 90)
+- `longitude` (required, -180 to 180)
+- `radius` (optional, default `3000`, min `1`, max `50000`)
+
+Returns nearby mosques from Google Places through backend proxying.
+
+### `GET /api/mosque/health`
+
+Returns mosque service status and timestamp.
+
 ## Run Locally
 
 ```bash
@@ -84,11 +98,13 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:8081
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4-turbo
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 Notes:
 
 - `OPENAI_API_KEY` is optional for runtime continuity; without it, the API uses fallback matching.
+- `GOOGLE_MAPS_API_KEY` is required for `/api/mosque/nearby`.
 - CORS allows `FRONTEND_URL` plus local Expo dev origins.
 
 ## Source Map

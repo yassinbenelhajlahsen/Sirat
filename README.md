@@ -18,7 +18,7 @@ Sirat is a mobile-first Islamic companion app with an Expo frontend and a Node/E
 - Prayer times using Aladhan API with auto-location or manual city fallback
 - Qibla direction screen using device sensors + location permissions
 - Quran reader with local text data, audio streaming, search, bookmarks, and resume progress
-- Nearby mosque map/list using Google Places Nearby Search
+- Nearby mosque map/list using backend-proxied Google Places Nearby Search
 - Prayer notifications with per-prayer toggles and optional Adhan sound
 - Islamic calendar with holiday mapping and Ramadan missed-fast tracking
 - Dua matching with local regex-first logic and backend AI fallback
@@ -48,12 +48,10 @@ npm start
 ### Frontend (`frontend/.env`)
 
 ```env
-GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 EXPO_PUBLIC_API_URL=http://localhost:3001
 ```
 
-- `GOOGLE_MAPS_API_KEY` is required for the Mosques screen.
-- `EXPO_PUBLIC_API_URL` is used for backend dua fallback; if omitted, frontend defaults to `http://localhost:3001`.
+- `EXPO_PUBLIC_API_URL` is used for backend APIs; if omitted, frontend defaults to `http://localhost:3001`.
 
 ### Backend (`backend/.env`)
 
@@ -63,9 +61,11 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:8081
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4-turbo
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 - If `OPENAI_API_KEY` is missing, backend still works and falls back to random dua selection.
+- `GOOGLE_MAPS_API_KEY` is required for mosque lookup.
 
 ## Docs
 

@@ -37,9 +37,10 @@ Run commands from the correct package directory:
 
 ### Backend
 - Entry: `backend/src/index.ts`
-- Routes: `backend/src/routes/dua.ts`
-- Controller: `backend/src/controllers/duaController.ts`
+- Routes: `backend/src/routes/dua.ts`, `backend/src/routes/mosque.ts`
+- Controller: `backend/src/controllers/duaController.ts`, `backend/src/controllers/mosqueController.ts`
 - OpenAI integration: `backend/src/services/openaiService.ts`
+- Google Maps integration: `backend/src/services/googleMapsService.ts`
 - Dua data source/caching: `backend/src/utils/duaDatabase.ts`
 - Error middleware: `backend/src/middleware/errorHandler.ts`
 - Canonical backend dua dataset: `backend/public/duas.json`
@@ -64,7 +65,7 @@ Important frontend flows:
 - Prayer times: Aladhan API + year/day caching in `frontend/services/prayerTimes.ts`
 - Notifications: rolling scheduling in `frontend/services/notificationService.ts`
 - Quran: preload/normalize local dataset in `frontend/services/quranData.ts`
-- Mosques: Google Places Nearby Search in `frontend/services/getNearbyMosques.ts`
+- Mosques: backend-proxied Google Places Nearby Search via `frontend/services/getNearbyMosques.ts` and `backend/src/routes/mosque.ts`
 - Calendar/Ramadan: holiday fetch + missed fast tracking (`holidayService.ts`, `ramadanTracker.ts`)
 
 ## Environment and Runtime Constraints
@@ -75,10 +76,10 @@ Important frontend flows:
 - `FRONTEND_URL` default: `http://localhost:8081`
 - `OPENAI_API_KEY` default: empty (AI disabled, fallback mode used)
 - `OPENAI_MODEL` default: `gpt-4-turbo`
+- `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
 
 ### Frontend env/config
-- `EXPO_PUBLIC_API_URL` used in `frontend/services/duaService.ts`, default `http://localhost:3001`
-- `GOOGLE_MAPS_API_KEY` pulled from `frontend/app.config.js` -> `expo.extra.GOOGLE_MAPS_API_KEY`
+- `EXPO_PUBLIC_API_URL` used in `frontend/services/duaService.ts` and `frontend/services/getNearbyMosques.ts`, default `http://localhost:3001`
 - `frontend/app.config.js` sets `newArchEnabled: true`, iOS bundle metadata, notifications plugin with `adhan.wav`
 
 ## Constraints and Gotchas

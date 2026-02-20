@@ -28,8 +28,11 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 
 - `backend/src/index.ts`: app setup, CORS, routes, middleware
 - `backend/src/routes/dua.ts`: dua endpoints
+- `backend/src/routes/mosque.ts`: mosque endpoints (`/api/mosque/nearby`, `/api/mosque/health`) with rate limiting
 - `backend/src/controllers/duaController.ts`: request validation and selection flow
+- `backend/src/controllers/mosqueController.ts`: coordinate/radius validation and mosque response shaping
 - `backend/src/services/openaiService.ts`: OpenAI API call
+- `backend/src/services/googleMapsService.ts`: Google Places Nearby Search integration
 - `backend/src/utils/duaDatabase.ts`: dua data loading/cache
 - `backend/public/duas.json`: canonical dua dataset
 
@@ -40,6 +43,12 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - Frontend first attempts local regex matching from `frontend/services/duaMatcher.ts`.
 - If no local match and network is available, frontend calls backend `POST /api/dua`.
 - Backend tries OpenAI selection and falls back to random dua.
+
+### Mosque Discovery
+
+- Frontend calls backend `GET /api/mosque/nearby` from `frontend/services/getNearbyMosques.ts`.
+- Backend uses `GOOGLE_MAPS_API_KEY` to query Google Places Nearby Search.
+- Requests are rate-limited in `backend/src/routes/mosque.ts`.
 
 ### Prayer Times and Caching
 
@@ -78,8 +87,7 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 
 ### Frontend
 
-- `GOOGLE_MAPS_API_KEY`
-- `EXPO_PUBLIC_API_URL` (defaults to `http://localhost:3001` in dua service)
+- `EXPO_PUBLIC_API_URL` (defaults to `http://localhost:3001` in frontend services)
 
 ### Backend
 
@@ -88,6 +96,7 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - `FRONTEND_URL`
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` (default `gpt-4-turbo`)
+- `GOOGLE_MAPS_API_KEY`
 
 ## Development Commands
 

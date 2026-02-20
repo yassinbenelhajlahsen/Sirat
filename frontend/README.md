@@ -32,14 +32,10 @@ npm run lint
 Create `frontend/.env`:
 
 ```env
-GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 EXPO_PUBLIC_API_URL=http://localhost:3001
 ```
 
-- `GOOGLE_MAPS_API_KEY` is required for mosque discovery.
-- `EXPO_PUBLIC_API_URL` points to backend dua API.
-
-`GOOGLE_MAPS_API_KEY` is injected via `app.config.js` (`expo.extra.GOOGLE_MAPS_API_KEY`).
+- `EXPO_PUBLIC_API_URL` points to the backend API (dua + mosque endpoints).
 
 ## Current Architecture
 
@@ -57,7 +53,7 @@ frontend/
 ## Data & Integrations
 
 - Aladhan API: prayer times + Hijri/holiday data
-- Google Places API: nearby mosques
+- Sirat backend (`/api/mosque/nearby`): proxied Google Places nearby mosques
 - Sirat backend (`/api/dua`): AI-assisted dua fallback
 - Quran text data: bundled local JSON assets
 - Quran audio: streamed per surah
