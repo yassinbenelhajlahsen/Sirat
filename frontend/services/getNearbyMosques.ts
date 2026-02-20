@@ -1,10 +1,7 @@
-import Constants from "expo-constants";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const GOOGLE_MAPS_API_KEY = (
-  Constants.expoConfig?.extra as { GOOGLE_MAPS_API_KEY?: string } | undefined
-)?.GOOGLE_MAPS_API_KEY;
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 
 export interface Mosque {
   id: string;
@@ -24,29 +21,22 @@ export async function getNearbyMosques(
   let latitude = lat;
   let longitude = lng;
 
-  if (!latitude || !longitude) {
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
     const loc = await Location.getCurrentPositionAsync({});
     latitude = loc.coords.latitude;
     longitude = loc.coords.longitude;
   }
 
-  if (!GOOGLE_MAPS_API_KEY) {
-    throw new Error("Missing GOOGLE_MAPS_API_KEY in Expo config");
+  const url = `${API_BASE_URL}/api/mosque/nearby?latitude=${latitude}&longitude=${longitude}&radius=3000`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Mosque API error: ${res.status}`);
   }
 
-  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=3000&type=mosque&key=${GOOGLE_MAPS_API_KEY}`;
-  const res = await fetch(url);
   const json = await res.json();
 
-  if (!json.results) return [];
-
-  return json.results.map((r: any) => ({
-    id: r.place_id,
-    name: r.name,
-    address: r.vicinity || r.formatted_address || "No address available",
-    lat: r.geometry.location.lat,
-    lng: r.geometry.location.lng,
-  }));
+  if (!json.success || !Array.isArray(json.data)) return [];
+  return json.data;
 }
 
 /**
@@ -64,7 +54,7 @@ export async function getCachedMosques(
     let latitude = lat;
     let longitude = lng;
 
-    if (!latitude || !longitude) {
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
       const loc = await Location.getCurrentPositionAsync({});
       latitude = loc.coords.latitude;
       longitude = loc.coords.longitude;
