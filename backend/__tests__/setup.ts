@@ -1,14 +1,23 @@
-// Test setup file
-// Load environment variables from .env file for testing
 import dotenv from "dotenv";
 import path from "path";
+import { beforeAll, afterAll, jest } from "@jest/globals";
 
 // Load .env file from backend directory
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-// Log if OpenAI API key is available (for debugging)
-if (process.env.OPENAI_API_KEY) {
-  console.log("✅ OpenAI API key loaded - running full integration tests");
-} else {
-  console.log("⚠️  No OpenAI API key - skipping OpenAI integration tests");
-}
+let logSpy: ReturnType<typeof jest.spyOn>;
+let warnSpy: ReturnType<typeof jest.spyOn>;
+let errorSpy: ReturnType<typeof jest.spyOn>;
+
+beforeAll(() => {
+  // Keep test output clean by suppressing expected runtime logging.
+  logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+  errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterAll(() => {
+  logSpy.mockRestore();
+  warnSpy.mockRestore();
+  errorSpy.mockRestore();
+});

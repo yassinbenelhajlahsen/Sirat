@@ -1,6 +1,6 @@
 import {
   afterEach,
-  beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -9,12 +9,21 @@ import {
 import express, { Express } from "express";
 import request from "supertest";
 import { errorHandler } from "../src/middleware/errorHandler.js";
-import duaRoutes from "../src/routes/dua.js";
 
 describe("Dua Routes Integration", () => {
+  const mockSelectDuaWithOpenAI: jest.Mock = jest.fn();
   let app: Express;
 
-  beforeAll(() => {
+  beforeEach(async () => {
+    jest.resetModules();
+    mockSelectDuaWithOpenAI.mockReset();
+    (mockSelectDuaWithOpenAI as any).mockResolvedValue({ duaId: 1 });
+
+    jest.unstable_mockModule("../src/services/openaiService.js", () => ({
+      selectDuaWithOpenAI: mockSelectDuaWithOpenAI,
+    }));
+
+    const duaRoutes = (await import("../src/routes/dua.js")).default;
     app = express();
     app.use(express.json());
     app.use("/api/dua", duaRoutes);
@@ -22,7 +31,7 @@ describe("Dua Routes Integration", () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   describe("POST /api/dua", () => {
@@ -70,6 +79,8 @@ describe("Dua Routes Integration", () => {
       expect(response.body.dua).toHaveProperty("category");
       expect(response.body.dua).toHaveProperty("arabic");
       expect(response.body.dua).toHaveProperty("english");
+      expect(response.body.matchSource).toBe("ai");
+      expect(mockSelectDuaWithOpenAI).toHaveBeenCalledTimes(1);
     });
 
     it("should return dua without extra fields", async () => {
@@ -256,6 +267,34 @@ describe("Dua Routes Integration", () => {
       expect(dua).toHaveProperty("transliteration");
       expect(dua).toHaveProperty("reference");
       expect(dua).toHaveProperty("source");
+    });
+
+    it("should fall back when OpenAI service throws", async () => {
+      (mockSelectDuaWithOpenAI as any).mockRejectedValue(
+        new Error("Failed to select dua with OpenAI"),
+      );
+
+      const response = await request(app)
+        .post("/api/dua")
+        .send({ userRequest: "help me with worry" })
+        .expect(200);
+
+      expect(response.body).toHaveProperty("dua");
+      expect(response.body.matchSource).toBe("fallback");
+      expect(mockSelectDuaWithOpenAI).toHaveBeenCalledTimes(1);
+    });
+
+    it("should fall back when OpenAI returns an unknown duaId", async () => {
+      (mockSelectDuaWithOpenAI as any).mockResolvedValue({ duaId: 999999 });
+
+      const response = await request(app)
+        .post("/api/dua")
+        .send({ userRequest: "give me any dua" })
+        .expect(200);
+
+      expect(response.body).toHaveProperty("dua");
+      expect(response.body.matchSource).toBe("fallback");
+      expect(mockSelectDuaWithOpenAI).toHaveBeenCalledTimes(1);
     });
   });
 });
