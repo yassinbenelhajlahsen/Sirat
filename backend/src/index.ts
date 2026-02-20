@@ -4,6 +4,7 @@ import express from "express";
 import { ENV } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import duaRoutes from "./routes/dua.js";
+import mosqueRoutes from "./routes/mosque.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(
 
 // Routes
 app.use("/api/dua", duaRoutes);
+app.use("/api/mosque", mosqueRoutes);
 
 // Root health check
 app.get("/", (req, res) => {
@@ -34,6 +36,8 @@ app.get("/", (req, res) => {
     endpoints: {
       "POST /api/dua": "Match user request to a dua",
       "GET /api/dua/health": "Health check",
+      "GET /api/mosque/nearby": "Get nearby mosques by lat/lng",
+      "GET /api/mosque/health": "Mosque service health check",
     },
   });
 });

@@ -24,6 +24,7 @@ describe("ENV configuration", () => {
     delete process.env.NODE_ENV;
     delete process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_MODEL;
+    delete process.env.GOOGLE_MAPS_API_KEY;
     delete process.env.FRONTEND_URL;
     delete process.env.LOG_LEVEL;
 
@@ -33,6 +34,7 @@ describe("ENV configuration", () => {
     expect(ENV.NODE_ENV).toBe("development");
     expect(ENV.OPENAI_API_KEY).toBe("");
     expect(ENV.OPENAI_MODEL).toBe("gpt-4-turbo");
+    expect(ENV.GOOGLE_MAPS_API_KEY).toBe("");
     expect(ENV.FRONTEND_URL).toBe("http://localhost:8081");
     expect(ENV.LOG_LEVEL).toBe("info");
   });
@@ -42,6 +44,7 @@ describe("ENV configuration", () => {
     process.env.NODE_ENV = "production";
     process.env.OPENAI_API_KEY = "custom-key";
     process.env.OPENAI_MODEL = "gpt-3.5-turbo";
+    process.env.GOOGLE_MAPS_API_KEY = "custom-google-key";
     process.env.FRONTEND_URL = "https://example.com";
     process.env.LOG_LEVEL = "debug";
 
@@ -51,6 +54,7 @@ describe("ENV configuration", () => {
     expect(ENV.NODE_ENV).toBe("production");
     expect(ENV.OPENAI_API_KEY).toBe("custom-key");
     expect(ENV.OPENAI_MODEL).toBe("gpt-3.5-turbo");
+    expect(ENV.GOOGLE_MAPS_API_KEY).toBe("custom-google-key");
     expect(ENV.FRONTEND_URL).toBe("https://example.com");
     expect(ENV.LOG_LEVEL).toBe("debug");
   });
