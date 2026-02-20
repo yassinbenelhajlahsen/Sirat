@@ -1,10 +1,8 @@
-import "dotenv/config";
-
 export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.0.9",
+    version: "1.0.10",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
@@ -19,7 +17,7 @@ export default {
       userInterfaceStyle: "dark",
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
-      buildNumber: "1.0.4",
+      buildNumber: "1.0.5",
       teamId: "5AN795CL7Z",
       infoPlist: {
         CFBundleDisplayName: "Sirat",
@@ -57,7 +55,6 @@ export default {
 
     extra: {
       fullName: "Sirat - The Path to Your Deen",
-      GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
       router: {},
       eas: {
         projectId: "cf8d4247-0a70-4fe4-bd59-43ea9efac019",
