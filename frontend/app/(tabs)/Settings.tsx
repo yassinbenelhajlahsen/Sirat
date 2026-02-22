@@ -275,19 +275,37 @@ export default function Settings() {
       />
       <SafeAreaView style={styles.screen}>
         <ScrollView
-          contentContainerStyle={{
-            paddingBottom: footerPadding,
-          }}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: footerPadding },
+          ]}
           showsVerticalScrollIndicator={false}
           style={styles.scrollView}
         >
           {/* Title */}
           <View style={styles.titleContainer}>
+            <Text style={styles.eyebrow}>
+              Preferences
+            </Text>
             <Text
               accessibilityRole="header"
               style={[styles.title, isSmall ? styles.titleSmall : undefined]}
             >
               Settings
+            </Text>
+            <Text style={styles.titleSubtitle}>
+              Manage prayer calculations, location behavior, and reminder
+              preferences.
+            </Text>
+          </View>
+
+          <View style={styles.sectionHeaderBlock}>
+            <Text style={styles.sectionGroupTitle}>
+              Prayer Times
+            </Text>
+            <Text style={styles.sectionGroupDescription}>
+              Configure how daily timings are calculated and whether your city
+              or device location is used.
             </Text>
           </View>
 
@@ -297,6 +315,9 @@ export default function Settings() {
           >
             <Text style={styles.sectionTitle}>
               Calculation Method
+            </Text>
+            <Text style={styles.sectionDescription}>
+              Select the authority used to compute prayer schedules.
             </Text>
             <Animated.View
               style={{
@@ -389,8 +410,8 @@ export default function Settings() {
                   numberOfLines={2}
                 >
                   {permissionStatus === "granted"
-                    ? "Location permission granted. Turn off to select a city manually."
-                    : "Tap to enable Location. Turn off to select a city manually."}
+                    ? "Using live location. Turn this off to choose a fixed city."
+                    : "Enable to use your current location. Turn off for manual city mode."}
                 </Text>
               </View>
 
@@ -418,7 +439,7 @@ export default function Settings() {
             style={[
               styles.section,
               {
-                marginTop: 18,
+                marginTop: useLocation ? 10 : 18,
                 opacity: locationAnim,
                 transform: [
                   {
@@ -430,7 +451,7 @@ export default function Settings() {
                 ],
                 maxHeight: locationAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, 120],
+                  outputRange: [0, 170],
                 }),
                 overflow: "hidden",
               },
@@ -438,6 +459,9 @@ export default function Settings() {
           >
             <Text style={styles.sectionTitle}>
               Manual City
+            </Text>
+            <Text style={styles.sectionDescription}>
+              Used when location is disabled for a stable prayer schedule.
             </Text>
 
             <Pressable
@@ -461,8 +485,31 @@ export default function Settings() {
             items={cityItems}
           />
 
+          <View
+            style={[
+              styles.sectionHeaderBlock,
+              useLocation ? styles.sectionHeaderBlockTight : undefined,
+            ]}
+          >
+            <Text style={styles.sectionGroupTitle}>
+              Notifications
+            </Text>
+            <Text style={styles.sectionGroupDescription}>
+              Reminder permissions are controlled by your device settings.
+            </Text>
+          </View>
+
           {/* Notifications section: the master toggle mirrors OS and opens Settings on press */}
           <NotificationSettings notifStatus={notifStatus} />
+
+          <View style={styles.sectionHeaderBlock}>
+            <Text style={styles.sectionGroupTitle}>
+              About
+            </Text>
+            <Text style={styles.sectionGroupDescription}>
+              Learn more about Sirat and access external resources.
+            </Text>
+          </View>
 
           {/* Visit site button */}
           <View
@@ -479,6 +526,7 @@ export default function Settings() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   scrollView: { zIndex: 0 },
+  scrollContent: { paddingTop: 2 },
   patternOverlay: {
     position: "absolute",
     top: 0,
@@ -491,12 +539,45 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
+  eyebrow: {
+    color: withOpacity(themeColors.accent, 0.9),
+    fontSize: 12,
+    fontFamily: "SFProDisplay-Semibold",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
   title: {
     color: themeColors.white,
     fontFamily: "SFProDisplay-Bold",
-    fontSize: 40,
+    fontSize: 38,
+    marginTop: 2,
   },
   titleSmall: { fontSize: 34 },
+  titleSubtitle: {
+    color: withOpacity(themeColors.white, 0.85),
+    fontSize: 14,
+    fontFamily: "SFProDisplay-Regular",
+    marginTop: 6,
+    lineHeight: 20,
+  },
+  sectionHeaderBlock: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  sectionGroupTitle: {
+    color: themeColors.accent,
+    fontSize: 13,
+    fontFamily: "SFProDisplay-Semibold",
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+  },
+  sectionGroupDescription: {
+    color: withOpacity(themeColors.white, 0.72),
+    fontSize: 12,
+    fontFamily: "SFProDisplay-Regular",
+    marginTop: 4,
+    lineHeight: 18,
+  },
   sectionTop: {
     paddingHorizontal: 20,
     paddingTop: 14,
@@ -505,11 +586,21 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 20,
   },
+  sectionHeaderBlockTight: {
+    marginTop: 10,
+  },
   sectionTitle: {
     color: themeColors.white,
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 4,
     fontFamily: "SFProDisplay-Semibold",
+  },
+  sectionDescription: {
+    color: withOpacity(themeColors.white, 0.74),
+    fontSize: 12,
+    marginBottom: 10,
+    fontFamily: "SFProDisplay-Regular",
+    lineHeight: 17,
   },
   rowBetween: {
     flexDirection: "row",
@@ -539,10 +630,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 14,
   },
-  cityButtonText: { color: themeColors.white, fontSize: 15 },
+  cityButtonText: {
+    color: themeColors.white,
+    fontSize: 15,
+    fontFamily: "SFProDisplay-Semibold",
+  },
   footer: {
     paddingHorizontal: 16,
-    marginTop: 24,
+    marginTop: 10,
     alignItems: "center",
   },
   visitSiteButton: {

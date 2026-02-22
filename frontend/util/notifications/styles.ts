@@ -5,16 +5,50 @@ import { colors as themeColors, withOpacity } from "@/constants/theme";
 export const notificationStyles = StyleSheet.create({
   sectionHeader: {
     paddingHorizontal: 20,
-    marginTop: 22,
+    marginTop: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    minHeight: 48,
+    minHeight: 56,
+  },
+  headerTextBlock: {
+    flexShrink: 1,
+    paddingRight: 12,
+  },
+  headerEyebrow: {
+    color: withOpacity(themeColors.accent, 0.9),
+    fontSize: 11,
+    fontFamily: "SFProDisplay-Semibold",
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontFamily: "SFProDisplay-Semibold",
+    marginTop: 1,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+    fontFamily: "SFProDisplay-Regular",
   },
   cardContainer: {
-    marginTop: 16,
+    marginTop: 14,
     marginHorizontal: 20,
     paddingBottom: 4,
+  },
+  prayerSectionHeader: {
+    marginBottom: 10,
+  },
+  prayerSectionTitle: {
+    fontSize: 14,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  prayerSectionDescription: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 3,
+    fontFamily: "SFProDisplay-Regular",
   },
   rowWrapper: {
     marginBottom: 12,
@@ -41,8 +75,7 @@ export const notificationStyles = StyleSheet.create({
   },
   rowLabel: {
     color: withOpacity(themeColors.white, 0.9),
-    borderColor:themeColors.accent, 
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "SFProDisplay-Semibold",
     letterSpacing: 0.2,
   },
@@ -68,7 +101,7 @@ export const notificationStyles = StyleSheet.create({
     color: withOpacity(themeColors.white, 0.85),
   },
   soundCard: {
-    marginTop: 8,
+    marginTop: 14,
     borderRadius: 12,
     borderWidth: 2,
     paddingVertical: 16,

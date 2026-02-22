@@ -175,26 +175,13 @@ export default function NotificationSettings({ notifStatus }: Props) {
       <Animated.View
         style={[styles.sectionHeader, { transform: [{ scale: headerScale }] }]}
       >
-        <View style={{ flexShrink: 1, paddingRight: 12 }}>
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: 16,
-              fontFamily: "SFProDisplay-Semibold",
-            }}
-          >
+        <View style={styles.headerTextBlock}>
+          <Text style={styles.headerEyebrow}>Reminders</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
             Notifications
           </Text>
-          <Text
-            style={{
-              color: colors.text,
-              opacity: 0.8,
-              fontSize: 13,
-              marginTop: 2,
-              fontFamily: "SFProDisplay-Regular",
-            }}
-          >
-            Alerts for prayers
+          <Text style={[styles.headerSubtitle, { color: withOpacity(colors.text, 0.78) }]}>
+            Controlled by your system settings.
           </Text>
         </View>
 
@@ -239,6 +226,14 @@ export default function NotificationSettings({ notifStatus }: Props) {
           },
         ]}
       >
+        <View style={styles.prayerSectionHeader}>
+          <Text style={[styles.prayerSectionTitle, { color: colors.text }]}>
+            Prayer Alerts
+          </Text>
+          <Text style={[styles.prayerSectionDescription, { color: withOpacity(colors.text, 0.72) }]}>
+            Tap a row to enable or disable reminders for each prayer.
+          </Text>
+        </View>
         {PRAYERS.map((p) => {
           const isOn = prefs[p];
           const anim = bellAnimRef.current[p];
