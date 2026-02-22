@@ -5,6 +5,7 @@ import { ENV } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import duaRoutes from "./routes/dua.js";
 import mosqueRoutes from "./routes/mosque.js";
+import prayerTimesRoutes from "./routes/prayerTimes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(
 // Routes
 app.use("/api/dua", duaRoutes);
 app.use("/api/mosque", mosqueRoutes);
+app.use("/api/prayer-times", prayerTimesRoutes);
 
 // Root health check
 app.get("/", (req, res) => {
@@ -38,6 +40,11 @@ app.get("/", (req, res) => {
       "GET /api/dua/health": "Health check",
       "GET /api/mosque/nearby": "Get nearby mosques by lat/lng",
       "GET /api/mosque/health": "Mosque service health check",
+      "GET /api/prayer-times/timings":
+        "Proxy current-day prayer timings by lat/lng/method",
+      "GET /api/prayer-times/calendar":
+        "Proxy prayer calendar month by lat/lng/method/month/year",
+      "GET /api/prayer-times/health": "Prayer times service health check",
     },
   });
 });

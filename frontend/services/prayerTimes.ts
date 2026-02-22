@@ -4,6 +4,8 @@ import * as Location from "expo-location";
 import { City } from "../util/cities";
 import { resolveAutoMethod } from "../util/methodResolver";
 
+const PRAYER_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+
 /* ============================
  * Types
  * ============================ */
@@ -17,6 +19,42 @@ export interface PrayerTime {
   label: "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha" | string;
   time: string; // "h:mm AM/PM"
 }
+
+type BackendErrorShape = {
+  error?:
+    | {
+        code?: string;
+        message?: string;
+      }
+    | string;
+};
+
+type BackendProxyResponse<T> = {
+  success?: boolean;
+  data?: T;
+} & BackendErrorShape;
+
+type RequiredTimingMap = {
+  Fajr: string;
+  Sunrise: string;
+  Dhuhr: string;
+  Asr: string;
+  Maghrib: string;
+  Isha: string;
+};
+
+type BackendTimingsPayload = {
+  timings?: RequiredTimingMap;
+};
+
+type BackendCalendarDay = {
+  date?: {
+    gregorian?: {
+      date?: string;
+    };
+  };
+  timings?: RequiredTimingMap;
+};
 
 /* ============================
  * Internal cache model
@@ -74,6 +112,47 @@ function makeCacheKey(
 
 function storageKeyFor(cacheKey: string) {
   return `prayerCalendar-${cacheKey}`;
+}
+
+function buildQueryString(params: Record<string, string | number>): string {
+  return Object.entries(params)
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+    )
+    .join("&");
+}
+
+function backendErrorMessage(status: number, body: BackendErrorShape | null): string {
+  if (typeof body?.error === "string") {
+    return body.error;
+  }
+
+  const fromBody = body?.error?.message;
+  if (typeof fromBody === "string" && fromBody.length > 0) {
+    return fromBody;
+  }
+  return `Prayer times API error (${status})`;
+}
+
+async function fetchPrayerProxy<T>(
+  path: string,
+  params: Record<string, string | number>
+): Promise<T> {
+  const query = buildQueryString(params);
+  const url = `${PRAYER_API_BASE}${path}?${query}`;
+  const res = await fetch(url);
+  const body = (await res.json().catch(() => null)) as BackendProxyResponse<T> | null;
+
+  if (!res.ok) {
+    throw new Error(backendErrorMessage(res.status, body));
+  }
+
+  if (!body?.success || body.data === undefined) {
+    throw new Error("Invalid response from prayer times API");
+  }
+
+  return body.data;
 }
 
 /* ============================
@@ -199,11 +278,15 @@ async function getPrayerTimesFastToday(
   let method = settings.method;
   if (method === -1) method = resolveAutoMethod(env.country);
 
-  const url = `https://api.aladhan.com/v1/timings?latitude=${env.latitude}&longitude=${env.longitude}&method=${method}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`Failed to fetch timings: ${r.status}`);
-  const j = await r.json();
-  const t = j?.data?.timings;
+  const data = await fetchPrayerProxy<BackendTimingsPayload>(
+    "/api/prayer-times/timings",
+    {
+      latitude: env.latitude,
+      longitude: env.longitude,
+      method,
+    }
+  );
+  const t = data?.timings;
   if (!t) throw new Error("Invalid response from API");
 
   return [
@@ -227,76 +310,54 @@ async function fetchYearCalendar(
   let method = settings.method;
   if (method === -1) method = resolveAutoMethod(env.country);
 
-  const MAX_RETRIES = 3;
-  const BACKOFF_BASE_MS = 2000;
-
   const allTimes: Record<string, PrayerTime[]> = {};
 
   for (let month = 1; month <= 12; month++) {
-    let attempt = 0;
-    let success = false;
-
-    while (attempt < MAX_RETRIES && !success) {
-      try {
-        const url = `https://api.aladhan.com/v1/calendar?latitude=${env.latitude}&longitude=${env.longitude}&method=${method}&month=${month}&year=${year}`;
-        const res = await fetch(url);
-
-        if (!res.ok) {
-          if (res.status === 429) {
-            await new Promise((r) =>
-              setTimeout(r, BACKOFF_BASE_MS * Math.pow(2, attempt))
-            );
-            attempt++;
-            continue;
-          }
-          throw new Error(`Failed to fetch prayer times: ${res.status}`);
+    try {
+      const days = await fetchPrayerProxy<BackendCalendarDay[]>(
+        "/api/prayer-times/calendar",
+        {
+          latitude: env.latitude,
+          longitude: env.longitude,
+          method,
+          month,
+          year,
         }
+      );
 
-        const data = await res.json();
-        if (!data?.data) throw new Error("Invalid response from API");
+      days.forEach((day) => {
+        // API gives "dd-mm-yyyy"
+        const greg = day?.date?.gregorian?.date;
+        if (!greg || !day.timings) return;
+        const [dd, mm, yy] = greg
+          .split("-")
+          .map((x: string) => parseInt(x, 10));
+        const key = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
 
-        data.data.forEach((day: any) => {
-          // API gives "dd-mm-yyyy"
-          const greg = day?.date?.gregorian?.date as string;
-          if (!greg) return;
-          const [dd, mm, yy] = greg
-            .split("-")
-            .map((x: string) => parseInt(x, 10));
-          const key = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
-
-          allTimes[key] = [
-            { label: "Fajr", time: formatTo12Hour(day.timings.Fajr) },
-            { label: "Sunrise", time: formatTo12Hour(day.timings.Sunrise) },
-            { label: "Dhuhr", time: formatTo12Hour(day.timings.Dhuhr) },
-            { label: "Asr", time: formatTo12Hour(day.timings.Asr) },
-            { label: "Maghrib", time: formatTo12Hour(day.timings.Maghrib) },
-            { label: "Isha", time: formatTo12Hour(day.timings.Isha) },
-          ];
-        });
-
-        success = true;
-      } catch (err: any) {
-        if (attempt >= MAX_RETRIES - 1) {
-          if (Object.keys(allTimes).length > 0) {
-            // Return partial cache (better than failing outright)
-            const settingsKey = settingsToKey(settings);
-            const cacheKey = makeCacheKey(year, settingsKey, env.bucket);
-            const partial: CalendarCache = {
-              cacheKey,
-              year,
-              data: allTimes,
-            };
-            memoryCalendars[cacheKey] = partial;
-            await saveToStorage(partial);
-            return partial;
-          }
-          throw new Error("Failed to fetch calendar after multiple attempts.");
-        }
-        await new Promise((r) =>
-          setTimeout(r, BACKOFF_BASE_MS * Math.pow(2, attempt))
-        );
-        attempt++;
+        allTimes[key] = [
+          { label: "Fajr", time: formatTo12Hour(day.timings.Fajr) },
+          { label: "Sunrise", time: formatTo12Hour(day.timings.Sunrise) },
+          { label: "Dhuhr", time: formatTo12Hour(day.timings.Dhuhr) },
+          { label: "Asr", time: formatTo12Hour(day.timings.Asr) },
+          { label: "Maghrib", time: formatTo12Hour(day.timings.Maghrib) },
+          { label: "Isha", time: formatTo12Hour(day.timings.Isha) },
+        ];
+      });
+    } catch {
+      if (Object.keys(allTimes).length > 0) {
+        // Return partial cache (better than failing outright)
+        const settingsKey = settingsToKey(settings);
+        const cacheKey = makeCacheKey(year, settingsKey, env.bucket);
+        const partial: CalendarCache = {
+          cacheKey,
+          year,
+          data: allTimes,
+        };
+        memoryCalendars[cacheKey] = partial;
+        await saveToStorage(partial);
+        return partial;
       }
+      throw new Error("Failed to fetch calendar from prayer times API.");
     }
   }
 
