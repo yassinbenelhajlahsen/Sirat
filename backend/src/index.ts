@@ -4,6 +4,7 @@ import express from "express";
 import { ENV } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import duaRoutes from "./routes/dua.js";
+import holidayRoutes from "./routes/holiday.js";
 import mosqueRoutes from "./routes/mosque.js";
 import prayerTimesRoutes from "./routes/prayerTimes.js";
 
@@ -28,6 +29,7 @@ app.use(
 app.use("/api/dua", duaRoutes);
 app.use("/api/mosque", mosqueRoutes);
 app.use("/api/prayer-times", prayerTimesRoutes);
+app.use("/api/holidays", holidayRoutes);
 
 // Root health check
 app.get("/", (req, res) => {
@@ -45,6 +47,8 @@ app.get("/", (req, res) => {
       "GET /api/prayer-times/calendar":
         "Proxy prayer calendar month by lat/lng/method/month/year",
       "GET /api/prayer-times/health": "Prayer times service health check",
+      "GET /api/holidays/year": "Proxy holiday list for a Gregorian year",
+      "GET /api/holidays/health": "Holiday service health check",
     },
   });
 });

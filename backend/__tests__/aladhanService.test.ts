@@ -17,6 +17,7 @@ describe("aladhanService", () => {
     Maghrib: "18:02",
     Isha: "19:18",
   };
+  const holidayYear = 2026;
 
   beforeEach(() => {
     jest.resetModules();
@@ -34,6 +35,13 @@ describe("aladhanService", () => {
     }));
 
     return import("../src/services/aladhanService.js");
+  }
+
+  function holidayMonthResponse(data: unknown) {
+    return {
+      status: 200,
+      data: { data },
+    };
   }
 
   it("returns sanitized timings payload", async () => {
@@ -166,5 +174,121 @@ describe("aladhanService", () => {
     expect(second.cacheStatus).toBe("stale");
     expect(second.data.timings).toEqual(validTimings);
     expect(mockAxiosGet).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns sanitized and deduplicated holidays by date", async () => {
+    (mockAxiosGet as any).mockImplementation((url: string) => {
+      const match = /gToHCalendar\/(\d+)\/2026$/.exec(url);
+      if (!match) {
+        return Promise.reject(new Error(`Unexpected URL: ${url}`));
+      }
+
+      const month = Number.parseInt(match[1], 10);
+      if (month === 1) {
+        return Promise.resolve(
+          holidayMonthResponse([
+            {
+              gregorian: { date: "01-01-2026" },
+              hijri: { holidays: ["Islamic New Year"] },
+            },
+            {
+              gregorian: { date: "31-02-2026" },
+              hijri: { holidays: ["Invalid Date"] },
+            },
+            {
+              gregorian: { date: "01-01-2026" },
+              hijri: { holidays: ["Duplicate Name"] },
+            },
+            {
+              gregorian: { date: "02-01-2026" },
+              hijri: { holidays: "not-array" },
+            },
+          ]),
+        );
+      }
+
+      if (month === 2) {
+        return Promise.resolve(
+          holidayMonthResponse([
+            {
+              gregorian: { date: "15-02-2026" },
+              hijri: { holidays: ["Mid-Sha'ban"] },
+            },
+          ]),
+        );
+      }
+
+      return Promise.resolve(holidayMonthResponse([]));
+    });
+
+    const { getHolidays } = await loadService();
+    const result = await getHolidays(holidayYear);
+
+    expect(result.stale).toBe(false);
+    expect(result.cacheStatus).toBe("miss");
+    expect(result.data.holidays).toEqual([
+      { date: "2026-01-01", name: "Islamic New Year" },
+      { date: "2026-02-15", name: "Mid-Sha'ban" },
+    ]);
+    expect(mockAxiosGet).toHaveBeenCalledTimes(12);
+  });
+
+  it("coalesces identical in-flight holiday requests", async () => {
+    (mockAxiosGet as any).mockImplementation(() =>
+      Promise.resolve(
+        holidayMonthResponse([
+          {
+            gregorian: { date: "01-01-2026" },
+            hijri: { holidays: ["Islamic New Year"] },
+          },
+        ]),
+      ),
+    );
+
+    const { getHolidays } = await loadService();
+    const requestA = getHolidays(holidayYear);
+    const requestB = getHolidays(holidayYear);
+
+    const [resultA, resultB] = await Promise.all([requestA, requestB]);
+
+    expect(resultA.data).toEqual(resultB.data);
+    expect(resultA.cacheStatus).toBe("miss");
+    expect(resultB.cacheStatus).toBe("miss");
+    expect(mockAxiosGet).toHaveBeenCalledTimes(12);
+  });
+
+  it("serves stale holiday cache when upstream fails after TTL expiry", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+
+    let callCount = 0;
+    (mockAxiosGet as any).mockImplementation(() => {
+      callCount += 1;
+      if (callCount <= 12) {
+        return Promise.resolve(
+          holidayMonthResponse([
+            {
+              gregorian: { date: "01-01-2026" },
+              hijri: { holidays: ["Islamic New Year"] },
+            },
+          ]),
+        );
+      }
+      return Promise.reject(new Error("network down"));
+    });
+
+    const { getHolidays } = await loadService();
+
+    const first = await getHolidays(holidayYear);
+    expect(first.stale).toBe(false);
+    expect(first.cacheStatus).toBe("miss");
+
+    jest.setSystemTime(new Date("2026-01-02T01:00:00.000Z"));
+    const second = await getHolidays(holidayYear);
+
+    expect(second.stale).toBe(true);
+    expect(second.cacheStatus).toBe("stale");
+    expect(second.data.holidays).toEqual(first.data.holidays);
+    expect(mockAxiosGet).toHaveBeenCalledTimes(24);
   });
 });

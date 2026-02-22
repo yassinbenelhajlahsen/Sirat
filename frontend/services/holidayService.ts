@@ -1,12 +1,67 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const HOLIDAY_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+const YYYY_MM_DD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
 export interface Holiday {
   date: string; // "YYYY-MM-DD" (LOCAL date, not UTC ISO)
   name: string; // e.g. "Eid al-Adha"
 }
 
+type BackendErrorShape = {
+  error?:
+    | {
+        code?: string;
+        message?: string;
+      }
+    | string;
+};
+
+type BackendHolidayPayload = {
+  holidays?: unknown;
+};
+
+type BackendProxyResponse<T> = {
+  success?: boolean;
+  data?: T;
+} & BackendErrorShape;
+
 // Use year:number as the key for in-memory cache
 let cachedHolidays: Record<number, Holiday[]> = {};
+
+function sanitizeHolidayList(input: unknown): Holiday[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  const byDate = new Map<string, string>();
+
+  input.forEach((item) => {
+    if (!item || typeof item !== "object") {
+      return;
+    }
+
+    const typed = item as { date?: unknown; name?: unknown };
+    if (
+      typeof typed.date !== "string" ||
+      typeof typed.name !== "string" ||
+      !YYYY_MM_DD_REGEX.test(typed.date)
+    ) {
+      return;
+    }
+
+    const name = typed.name.trim();
+    if (!name || byDate.has(typed.date)) {
+      return;
+    }
+
+    byDate.set(typed.date, name);
+  });
+
+  return Array.from(byDate.entries())
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+    .map(([date, name]) => ({ date, name }));
+}
 
 // Persist
 async function saveToStorage(year: number, holidays: Holiday[]) {
@@ -22,7 +77,7 @@ async function loadFromStorage(year: number): Promise<Holiday[] | null> {
   try {
     const val = await AsyncStorage.getItem(`holidays-${year}`);
     if (!val) return null;
-    return JSON.parse(val);
+    return sanitizeHolidayList(JSON.parse(val));
   } catch (e) {
     console.warn("Failed to load holidays:", e);
     return null;
@@ -39,8 +94,48 @@ export function dateKeyFromDate(d: Date): string {
   return formatDateKeyFromParts(d.getFullYear(), d.getMonth() + 1, d.getDate());
 }
 
+function buildQueryString(params: Record<string, string | number>): string {
+  return Object.entries(params)
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+    )
+    .join("&");
+}
+
+function backendErrorMessage(status: number, body: BackendErrorShape | null): string {
+  if (typeof body?.error === "string") {
+    return body.error;
+  }
+
+  const fromBody = body?.error?.message;
+  if (typeof fromBody === "string" && fromBody.length > 0) {
+    return fromBody;
+  }
+  return `Holiday API error (${status})`;
+}
+
+async function fetchHolidaysFromBackend(year: number): Promise<Holiday[]> {
+  const query = buildQueryString({ year });
+  const url = `${HOLIDAY_API_BASE}/api/holidays/year?${query}`;
+  const res = await fetch(url);
+  const body = (await res.json().catch(() => null)) as
+    | BackendProxyResponse<BackendHolidayPayload>
+    | null;
+
+  if (!res.ok) {
+    throw new Error(backendErrorMessage(res.status, body));
+  }
+
+  if (!body?.success || body.data === undefined) {
+    throw new Error("Invalid response from holiday API");
+  }
+
+  return sanitizeHolidayList(body.data.holidays);
+}
+
 /**
- * Fetch all Islamic holidays for a Gregorian year using Aladhan gToHCalendar
+ * Fetch all Islamic holidays for a Gregorian year from backend proxy
  * Returns local day keys "YYYY-MM-DD"
  */
 export async function getHolidaysForYear(year: number): Promise<Holiday[]> {
@@ -54,54 +149,12 @@ export async function getHolidaysForYear(year: number): Promise<Holiday[]> {
     return stored;
   }
 
-  // 3) fetch month by month
-  const collected: Holiday[] = [];
+  // 3) backend API fetch
+  const holidays = await fetchHolidaysFromBackend(year);
+  cachedHolidays[year] = holidays;
+  await saveToStorage(year, holidays);
 
-  for (let month = 1; month <= 12; month++) {
-    try {
-      const res = await fetch(`https://api.aladhan.com/v1/gToHCalendar/${month}/${year}`);
-      const data = await res.json();
-
-      if (!data?.data) continue;
-
-      data.data.forEach((day: any) => {
-        const g = day.gregorian;
-        const h = day.hijri;
-
-        if (h?.holidays && Array.isArray(h.holidays) && h.holidays.length > 0) {
-          const isoLocal = formatDateKeyFromParts(
-            parseInt(g.year, 10),
-            Number(g.month.number),
-            parseInt(g.day, 10)
-          );
-
-          h.holidays.forEach((name: string) => {
-            collected.push({ date: isoLocal, name });
-          });
-        }
-      });
-    } catch (e) {
-      console.warn(`Failed to fetch holidays for ${year}-${month}:`, e);
-    }
-  }
-
-  // Deduplicate by date; keep the first name or join if you prefer
-  const byDate = new Map<string, string[]>();
-  for (const h of collected) {
-    const arr = byDate.get(h.date) ?? [];
-    arr.push(h.name);
-    byDate.set(h.date, arr);
-  }
-
-  const deduped: Holiday[] = [];
-  byDate.forEach((names, date) => {
-    deduped.push({ date, name: names[0] }); // or names.join(", ")
-  });
-
-  cachedHolidays[year] = deduped;
-  await saveToStorage(year, deduped);
-
-  return deduped;
+  return holidays;
 }
 
 /**

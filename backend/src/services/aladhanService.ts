@@ -11,10 +11,13 @@ const REQUIRED_PRAYER_KEYS = [
   "Isha",
 ] as const;
 const HHMM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const GREGORIAN_DDMMYYYY_REGEX = /^([0-2]\d|3[01])-(0\d|1[0-2])-(\d{4})$/;
 const TIMINGS_CACHE_TTL_MS = 5 * 60 * 1000;
 const CALENDAR_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const HOLIDAYS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 300;
+const HOLIDAY_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
 type PrayerKey = (typeof REQUIRED_PRAYER_KEYS)[number];
 
@@ -33,6 +36,15 @@ type PrayerTimings = Record<PrayerKey, string>;
 
 type TimingsPayload = {
   timings: PrayerTimings;
+};
+
+export type Holiday = {
+  date: string;
+  name: string;
+};
+
+export type HolidaysPayload = {
+  holidays: Holiday[];
 };
 
 type CalendarEntry = {
@@ -80,8 +92,10 @@ export class AladhanServiceError extends Error {
 
 const timingsCache = new Map<string, CacheEntry<TimingsPayload>>();
 const calendarCache = new Map<string, CacheEntry<CalendarEntry[]>>();
+const holidaysCache = new Map<string, CacheEntry<HolidaysPayload>>();
 const timingsInFlight = new Map<string, Promise<ServiceResponse<TimingsPayload>>>();
 const calendarInFlight = new Map<string, Promise<ServiceResponse<CalendarEntry[]>>>();
+const holidaysInFlight = new Map<string, Promise<ServiceResponse<HolidaysPayload>>>();
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -110,6 +124,10 @@ function timingsCacheKey(params: PrayerTimesParams): string {
 
 function calendarCacheKey(params: CalendarParams): string {
   return `${coordinateBucket(params.latitude, params.longitude)}:${params.method}:${params.month}:${params.year}`;
+}
+
+function holidaysCacheKey(year: number): string {
+  return `${year}`;
 }
 
 function getFreshCache<T>(
@@ -243,28 +261,135 @@ function sanitizeCalendarPayload(rawData: unknown): CalendarEntry[] {
   });
 }
 
+function normalizeGregorianDate(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  const match = GREGORIAN_DDMMYYYY_REGEX.exec(trimmed);
+  if (!match) {
+    return null;
+  }
+
+  const day = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10);
+  const year = Number.parseInt(match[3], 10);
+
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  const isValidDate =
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day;
+
+  if (!isValidDate) {
+    return null;
+  }
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function sanitizeHolidayMonthPayload(rawData: unknown): Holiday[] {
+  if (!Array.isArray(rawData)) {
+    throw new AladhanServiceError(
+      "Aladhan holiday response is invalid.",
+      "INVALID_RESPONSE",
+      502,
+      false,
+    );
+  }
+
+  const collected: Holiday[] = [];
+
+  rawData.forEach((day) => {
+    if (!day || typeof day !== "object") {
+      return;
+    }
+
+    const typedDay = day as {
+      gregorian?: {
+        date?: unknown;
+      };
+      hijri?: {
+        holidays?: unknown;
+      };
+    };
+
+    const date = normalizeGregorianDate(typedDay.gregorian?.date);
+    if (!date) {
+      return;
+    }
+
+    const holidays = typedDay.hijri?.holidays;
+    if (!Array.isArray(holidays)) {
+      return;
+    }
+
+    holidays.forEach((name) => {
+      if (typeof name !== "string") {
+        return;
+      }
+      const trimmed = name.trim();
+      if (!trimmed) {
+        return;
+      }
+      collected.push({
+        date,
+        name: trimmed,
+      });
+    });
+  });
+
+  return collected;
+}
+
+function dedupeHolidaysByDate(holidays: Holiday[]): Holiday[] {
+  const byDate = new Map<string, string>();
+
+  holidays.forEach((holiday) => {
+    if (!byDate.has(holiday.date)) {
+      byDate.set(holiday.date, holiday.name);
+    }
+  });
+
+  return Array.from(byDate.entries())
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+    .map(([date, name]) => ({ date, name }));
+}
+
+type AladhanEndpoint = "timings" | "calendar" | "holidays";
+
+type RequestAladhanOptions = {
+  endpoint: AladhanEndpoint;
+  path: string;
+  params?: Record<string, string | number>;
+  logParams?: Record<string, string | number>;
+};
+
 async function requestAladhan<T>(
-  endpoint: "timings" | "calendar",
-  params: Record<string, string | number>,
+  options: RequestAladhanOptions,
 ): Promise<T> {
+  const requestParams = options.params;
+  const logParams = options.logParams ?? requestParams ?? {};
+
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     const start = Date.now();
     logEvent("aladhan_request", {
-      endpoint,
-      params,
+      endpoint: options.endpoint,
+      params: logParams,
     });
 
     try {
-      const response = await axios.get(`${ALADHAN_BASE_URL}/${endpoint}`, {
-        params,
+      const response = await axios.get(`${ALADHAN_BASE_URL}/${options.path}`, {
+        params: requestParams,
         timeout: 10000,
         validateStatus: () => true,
       });
       const responseTimeMs = Date.now() - start;
 
       logEvent("aladhan_response", {
-        endpoint,
-        params,
+        endpoint: options.endpoint,
+        params: logParams,
         status: response.status,
         responseTimeMs,
       });
@@ -289,8 +414,8 @@ async function requestAladhan<T>(
       if (isRetryableStatus && attempt < MAX_RETRY_ATTEMPTS) {
         const retryDelay = RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
         logEvent("aladhan_retry", {
-          endpoint,
-          params,
+          endpoint: options.endpoint,
+          params: logParams,
           attempt,
           retryDelayMs: retryDelay,
           reason: `HTTP_${response.status}`,
@@ -330,8 +455,8 @@ async function requestAladhan<T>(
 
       const responseTimeMs = Date.now() - start;
       logEvent("aladhan_response", {
-        endpoint,
-        params,
+        endpoint: options.endpoint,
+        params: logParams,
         status: "NETWORK_ERROR",
         responseTimeMs,
       });
@@ -355,13 +480,100 @@ async function requestAladhan<T>(
 }
 
 async function fetchFreshTimings(params: PrayerTimesParams): Promise<TimingsPayload> {
-  const upstreamData = await requestAladhan<unknown>("timings", params);
+  const upstreamData = await requestAladhan<unknown>({
+    endpoint: "timings",
+    path: "timings",
+    params,
+  });
   return sanitizeTimingsPayload(upstreamData);
 }
 
 async function fetchFreshCalendar(params: CalendarParams): Promise<CalendarEntry[]> {
-  const upstreamData = await requestAladhan<unknown>("calendar", params);
+  const upstreamData = await requestAladhan<unknown>({
+    endpoint: "calendar",
+    path: "calendar",
+    params,
+  });
   return sanitizeCalendarPayload(upstreamData);
+}
+
+async function fetchHolidayMonth(year: number, month: number): Promise<Holiday[]> {
+  const upstreamData = await requestAladhan<unknown>({
+    endpoint: "holidays",
+    path: `gToHCalendar/${month}/${year}`,
+    logParams: {
+      year,
+      month,
+    },
+  });
+
+  return sanitizeHolidayMonthPayload(upstreamData);
+}
+
+async function fetchFreshHolidays(year: number): Promise<HolidaysPayload> {
+  const monthResults = await Promise.all(
+    HOLIDAY_MONTHS.map(async (month) => {
+      try {
+        const holidays = await fetchHolidayMonth(year, month);
+        return {
+          month,
+          holidays,
+          success: true as const,
+        };
+      } catch (error: unknown) {
+        logEvent("aladhan_failure", {
+          endpoint: "holidays",
+          params: { year, month },
+          errorType:
+            error instanceof AladhanServiceError ? error.code : "UNKNOWN_ERROR",
+          staleServed: false,
+        });
+
+        return {
+          month,
+          holidays: [] as Holiday[],
+          success: false as const,
+          error,
+        };
+      }
+    }),
+  );
+
+  const fetchedMonths = monthResults.filter((result) => result.success).length;
+  if (fetchedMonths === 0) {
+    const firstFailure = monthResults.find((result) => !result.success);
+    throw (
+      firstFailure?.error ??
+      new AladhanServiceError(
+        "Failed to fetch holidays from Aladhan.",
+        "UPSTREAM_SERVER_ERROR",
+        502,
+        true,
+      )
+    );
+  }
+
+  if (fetchedMonths < HOLIDAY_MONTHS.length) {
+    logEvent("aladhan_failure", {
+      endpoint: "holidays",
+      params: { year },
+      errorType: "PARTIAL_MONTH_FAILURE",
+      fetchedMonths,
+      totalMonths: HOLIDAY_MONTHS.length,
+      failedMonths: monthResults
+        .filter((result) => !result.success)
+        .map((result) => result.month),
+      staleServed: false,
+    });
+  }
+
+  const deduped = dedupeHolidaysByDate(
+    monthResults.flatMap((result) => result.holidays),
+  );
+
+  return {
+    holidays: deduped,
+  };
 }
 
 export async function getTimings(
@@ -509,5 +721,79 @@ export async function getCalendar(
   })();
 
   calendarInFlight.set(key, requestPromise);
+  return requestPromise;
+}
+
+export async function getHolidays(
+  year: number,
+): Promise<ServiceResponse<HolidaysPayload>> {
+  const key = holidaysCacheKey(year);
+  const fresh = getFreshCache(holidaysCache, key);
+  if (fresh) {
+    logEvent("aladhan_cache_hit", {
+      endpoint: "holidays",
+      key,
+    });
+    return {
+      data: fresh.value,
+      stale: false,
+      cacheStatus: "hit",
+    };
+  }
+
+  logEvent("aladhan_cache_miss", {
+    endpoint: "holidays",
+    key,
+  });
+
+  const existingRequest = holidaysInFlight.get(key);
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const stale = getStaleCache(holidaysCache, key);
+
+  const requestPromise = (async (): Promise<ServiceResponse<HolidaysPayload>> => {
+    try {
+      const freshData = await fetchFreshHolidays(year);
+      holidaysCache.set(key, {
+        value: freshData,
+        expiresAt: Date.now() + HOLIDAYS_CACHE_TTL_MS,
+      });
+      return {
+        data: freshData,
+        stale: false,
+        cacheStatus: "miss",
+      };
+    } catch (error: unknown) {
+      if (stale) {
+        logEvent("aladhan_failure", {
+          endpoint: "holidays",
+          params: { year },
+          errorType:
+            error instanceof AladhanServiceError ? error.code : "UNKNOWN_ERROR",
+          staleServed: true,
+        });
+        return {
+          data: stale.value,
+          stale: true,
+          cacheStatus: "stale",
+        };
+      }
+
+      logEvent("aladhan_failure", {
+        endpoint: "holidays",
+        params: { year },
+        errorType:
+          error instanceof AladhanServiceError ? error.code : "UNKNOWN_ERROR",
+        staleServed: false,
+      });
+      throw error;
+    } finally {
+      holidaysInFlight.delete(key);
+    }
+  })();
+
+  holidaysInFlight.set(key, requestPromise);
   return requestPromise;
 }
