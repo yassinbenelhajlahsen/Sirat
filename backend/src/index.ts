@@ -11,7 +11,7 @@ import prayerTimesRoutes from "./routes/prayerTimes.js";
 const app = express();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: "16kb" }));
 app.use(
   cors({
     origin: [

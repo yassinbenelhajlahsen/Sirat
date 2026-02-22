@@ -40,6 +40,7 @@ describe("Dua Routes Integration", () => {
       [{ userRequest: "" }, "userRequest is required"],
       [{ userRequest: "  " }, "at least 3 characters"],
       [{ userRequest: "ab" }, "at least 3 characters"],
+      [{ userRequest: "a".repeat(501) }, "500 characters or fewer"],
       [{ userRequest: null }, "userRequest is required"],
       [{ userRequest: 123 }, "must be a string"],
       [{ userRequest: true }, "must be a string"],

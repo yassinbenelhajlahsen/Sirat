@@ -5,6 +5,60 @@ import {
   loadDuas,
 } from "../utils/duaDatabase.js";
 
+const MAX_USER_REQUEST_LENGTH = 500;
+
+function logDuaError(
+  req: Request,
+  event: string,
+  data: Record<string, unknown>,
+) {
+  console.error(
+    JSON.stringify({
+      event,
+      service: "dua",
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      path: req.originalUrl,
+      ip: req.ip,
+      userAgent: req.get("user-agent") ?? "unknown",
+      ...data,
+    }),
+  );
+}
+
+function validateDuaMatchPayload(body: unknown): { userRequest: string } | { error: string } {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { error: "Request body must be a JSON object" };
+  }
+
+  const typed = body as Record<string, unknown>;
+  if (!Object.prototype.hasOwnProperty.call(typed, "userRequest")) {
+    return { error: "userRequest is required and must be a string" };
+  }
+
+  const userRequest = typed.userRequest;
+  if (typeof userRequest !== "string") {
+    return { error: "userRequest is required and must be a string" };
+  }
+
+  if (userRequest.length === 0) {
+    return { error: "userRequest is required and must be a string" };
+  }
+
+  const normalizedRequest = userRequest.trim();
+  if (normalizedRequest.length < 3) {
+    return { error: "Request must be at least 3 characters" };
+  }
+
+  if (normalizedRequest.length > MAX_USER_REQUEST_LENGTH) {
+    return {
+      error: `Request must be ${MAX_USER_REQUEST_LENGTH} characters or fewer`,
+    };
+  }
+
+  return { userRequest: normalizedRequest };
+}
+
 /**
  * POST /api/dua
  *
@@ -29,20 +83,13 @@ import {
  */
 export async function matchDua(req: Request, res: Response) {
   try {
-    const { userRequest } = req.body;
-
-    // Validate input
-    if (!userRequest || typeof userRequest !== "string") {
+    const validatedPayload = validateDuaMatchPayload(req.body);
+    if ("error" in validatedPayload) {
       return res.status(400).json({
-        error: "userRequest is required and must be a string",
+        error: validatedPayload.error,
       });
     }
-
-    if (userRequest.trim().length < 3) {
-      return res.status(400).json({
-        error: "Request must be at least 3 characters",
-      });
-    }
+    const userRequest = validatedPayload.userRequest;
 
     // Load all duas from duas.json
     const duas = await loadDuas();
@@ -56,8 +103,6 @@ export async function matchDua(req: Request, res: Response) {
     let matchSource: "ai" | "fallback" = "fallback";
 
     try {
-      console.log(`⚙️  Trying AI for: "${userRequest}"`);
-
       const aiResponse = await selectDuaWithOpenAI(userRequest, duas);
 
       // Find the dua by ID
@@ -68,14 +113,12 @@ export async function matchDua(req: Request, res: Response) {
       }
 
       matchSource = "ai";
-      console.log(
-        `✅ AI match: "${userRequest}" → Dua ${selectedDua.id} (${selectedDua.category})`,
-      );
-    } catch (aiError: any) {
+    } catch (aiError: unknown) {
       // Step 2: Absolute fallback - random dua
-      console.warn(
-        `⚠️  AI failed: ${aiError.message}. Using random dua fallback.`,
-      );
+      logDuaError(req, "dua_ai_fallback", {
+        reason: aiError instanceof Error ? aiError.message : "Unknown AI error",
+        userRequestLength: userRequest.length,
+      });
 
       selectedDua = getRandomDua(duas);
       if (!selectedDua) {
@@ -85,9 +128,6 @@ export async function matchDua(req: Request, res: Response) {
       }
 
       matchSource = "fallback";
-      console.log(
-        `⚠️  Fallback used: "${userRequest}" → Random Dua ${selectedDua.id} (${selectedDua.category})`,
-      );
     }
 
     // Return the dua object with match source for logging/analytics
@@ -95,10 +135,22 @@ export async function matchDua(req: Request, res: Response) {
       dua: selectedDua,
       matchSource,
     });
-  } catch (err: any) {
-    console.error("❌ Error in matchDua:", err);
+  } catch (err: unknown) {
+    logDuaError(req, "dua_match_unexpected_error", {
+      error:
+        err instanceof Error
+          ? {
+              name: err.name,
+              message: err.message,
+              stack: err.stack ?? null,
+            }
+          : {
+              value: String(err),
+            },
+    });
+
     return res.status(500).json({
-      error: err.message || "Failed to match dua",
+      error: "Failed to match dua",
     });
   }
 }

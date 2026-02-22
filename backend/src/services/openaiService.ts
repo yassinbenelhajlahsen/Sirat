@@ -7,6 +7,8 @@ interface OpenAIResponse {
   duaId: number;
 }
 
+const OPENAI_TIMEOUT_MS = 10000;
+
 /**
  * Core principle: Send ONLY dua metadata (ID, category, tags) to OpenAI
  * NEVER send: Arabic, English, transliteration, or any full dua content
@@ -68,11 +70,11 @@ Select the BEST matching dua ID. Respond with ONLY JSON: { "duaId": number }`;
           Authorization: `Bearer ${ENV.OPENAI_API_KEY}`,
           "Content-Type": "application/json",
         },
+        timeout: OPENAI_TIMEOUT_MS,
       },
     );
 
     const content = response.data.choices[0]?.message?.content || "{}";
-    console.log(`📥 OpenAI response: ${content}`);
 
     // Extract JSON from response (sometimes OpenAI wraps it in markdown)
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -82,14 +84,27 @@ Select the BEST matching dua ID. Respond with ONLY JSON: { "duaId": number }`;
 
     const parsed = JSON.parse(jsonMatch[0]) as OpenAIResponse;
 
-    if (!parsed.duaId || typeof parsed.duaId !== "number") {
+    if (!Number.isInteger(parsed.duaId)) {
       throw new Error("Invalid duaId in response");
     }
 
-    console.log(`✅ Selected dua ID: ${parsed.duaId}`);
+    console.log(
+      JSON.stringify({
+        event: "dua_openai_selection_success",
+        timestamp: new Date().toISOString(),
+        duaId: parsed.duaId,
+      }),
+    );
     return parsed;
-  } catch (err: any) {
-    console.error("❌ OpenAI API error:", err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error(
+      JSON.stringify({
+        event: "dua_openai_selection_error",
+        timestamp: new Date().toISOString(),
+        message,
+      }),
+    );
     throw new Error("Failed to select dua with OpenAI");
   }
 }
