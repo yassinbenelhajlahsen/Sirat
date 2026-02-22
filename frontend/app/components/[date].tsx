@@ -44,6 +44,18 @@ type UIError =
   | { code: "PERMISSION"; message: string }
   | { code: "GENERIC"; message: string };
 
+function parseTimeToDate(timeStr: string, baseDate: Date): Date {
+  const [time, modifier] = timeStr.split(" ");
+  const [hoursStr, minutesStr] = time.split(":");
+  let hours = parseInt(hoursStr, 10);
+  const minutes = parseInt(minutesStr, 10);
+  if (modifier === "PM" && hours !== 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+  const dateObj = new Date(baseDate);
+  dateObj.setHours(hours, minutes, 0, 0);
+  return dateObj;
+}
+
 export default function CalendarDetail() {
   const {
     date,
@@ -523,30 +535,31 @@ export default function CalendarDetail() {
   }, [selectedDate, fetchNonce]);
 
   useEffect(() => {
-    if (!isToday || prayerTimes.length === 0) return;
-    const now = new Date();
-    for (let { label, time } of prayerTimes) {
-      const [hoursMinutes, ampm] = time.split(" ");
-      const [h, m] = hoursMinutes.split(":");
-      let hours = parseInt(h, 10);
-      const minutes = parseInt(m, 10);
-
-      if (ampm?.toLowerCase() === "pm" && hours !== 12) hours += 12;
-      if (ampm?.toLowerCase() === "am" && hours === 12) hours = 0;
-
-      const dateObj = new Date(today);
-      dateObj.setHours(hours, minutes, 0, 0);
-
-      if (dateObj > now) {
-        setNextPrayer({ label, time, dateObj });
-        break;
-      }
+    if (!isToday || prayerTimes.length === 0 || !selectedDate) {
+      setNextPrayer(null);
+      setTimeLeft("");
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isToday, prayerTimes]);
+
+    const now = new Date();
+    const upcoming =
+      prayerTimes
+        .map(({ label, time }) => ({
+          label,
+          time,
+          dateObj: parseTimeToDate(time, selectedDate),
+        }))
+        .find(({ dateObj }) => dateObj > now) ?? null;
+
+    setNextPrayer(upcoming);
+    if (!upcoming) setTimeLeft("");
+  }, [isToday, prayerTimes, selectedDate]);
 
   useEffect(() => {
-    if (!nextPrayer) return;
+    if (!nextPrayer) {
+      setTimeLeft("");
+      return;
+    }
     setTimeLeft(getTimeUntil(nextPrayer.dateObj));
     const interval = setInterval(() => {
       setTimeLeft(getTimeUntil(nextPrayer.dateObj));
@@ -1087,6 +1100,27 @@ export default function CalendarDetail() {
             Prayer Times
           </Text>
 
+          {isToday && nextPrayer && !error && (
+            <View style={styles.nextPrayerContainer}>
+              <View style={styles.nextPrayerCard}>
+                <Text style={styles.nextPrayerLabel}>
+                  Next Prayer
+                </Text>
+                <View style={styles.nextPrayerRow}>
+                  <Text style={styles.nextPrayerName}>
+                    {nextPrayer.label}
+                  </Text>
+                  <Text style={styles.nextPrayerTime}>
+                    {nextPrayer.time}
+                  </Text>
+                </View>
+                <Text style={styles.nextPrayerCountdown}>
+                  Starts in {timeLeft}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Error or Empty states (static) */}
           {error && <ErrorBox />}
 
@@ -1114,21 +1148,11 @@ export default function CalendarDetail() {
               <PrayerTimesList
                 loading={loading}
                 prayerTimes={prayerTimes}
-                nextPrayerLabel={nextPrayer?.label ?? null}
                 timeOpacity={timesOpacityAnim}
                 timeSlide={timesSlideAnim}
               />
             )}
           </View>
-
-          {/* Time until next prayer (static) */}
-          {isToday && nextPrayer && !error && (
-            <View style={styles.nextPrayerContainer}>
-              <Text style={styles.nextPrayerText}>
-                Next: {nextPrayer.label} in {timeLeft}
-              </Text>
-            </View>
-          )}
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -1222,11 +1246,50 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   nextPrayerContainer: {
-    marginTop: spacing.sm + 2,
+    marginBottom: spacing.md,
     alignItems: "center",
   },
-  nextPrayerText: {
+  nextPrayerCard: {
+    width: "100%",
+    backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.3),
+    borderRadius: 16,
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.35),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.22,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
+  },
+  nextPrayerLabel: {
+    color: withOpacity(colors.accent, 0.95),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+  },
+  nextPrayerRow: {
+    marginTop: spacing.xs,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  nextPrayerName: {
+    color: colors.white,
+    fontSize: typography.title,
+    fontFamily: "SFProDisplay-Bold",
+  },
+  nextPrayerTime: {
     color: colors.accent,
     fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Bold",
+  },
+  nextPrayerCountdown: {
+    marginTop: spacing.xs,
+    color: withOpacity(colors.white, 0.9),
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Semibold",
   },
 });

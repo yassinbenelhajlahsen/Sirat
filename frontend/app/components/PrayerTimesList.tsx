@@ -1,5 +1,4 @@
 import { colors as themeColors, withOpacity } from "@/constants/theme";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -191,13 +190,11 @@ function PrayerTimesSkeletonList({ rows = 6 }: { rows?: number }) {
 export default function PrayerTimesList({
   loading,
   prayerTimes,
-  nextPrayerLabel,
   timeOpacity,
   timeSlide,
 }: {
   loading: boolean;
   prayerTimes: PrayerTime[];
-  nextPrayerLabel?: string | null;
   timeOpacity?: Animated.Value;
   timeSlide?: Animated.Value;
 }) {
@@ -208,40 +205,6 @@ export default function PrayerTimesList({
   return (
     <View>
       {prayerTimes.map(({ label, time }) => {
-        const isNext = nextPrayerLabel === label;
-        if (isNext) {
-          return (
-            <LinearGradient
-              key={label}
-              colors={[
-                withOpacity(themeColors.accent, 0.9),
-                themeColors.primaryHighlight,
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[ROW_STYLES.containerBase, styles.nextRowCard]}
-            >
-              <Text style={[ROW_STYLES.labelText, styles.nextRowLabel]}>
-                {label}
-              </Text>
-              <Animated.Text
-                style={[
-                  ROW_STYLES.timeText,
-                  styles.nextRowTime,
-                  timeOpacity && timeSlide
-                    ? {
-                        opacity: timeOpacity,
-                        transform: [{ translateX: timeSlide }],
-                      }
-                    : {},
-                ]}
-              >
-                {time}
-              </Animated.Text>
-            </LinearGradient>
-          );
-        }
-
         return (
           <View
             key={label}
@@ -277,27 +240,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     elevation: 6,
     overflow: "hidden",
-  },
-  nextRowCard: {
-    borderColor: withOpacity(themeColors.accent, 0.8),
-    shadowColor: withOpacity(themeColors.accent, 0.8),
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 14 },
-    elevation: 7,
-    overflow: "hidden",
-  },
-  nextRowLabel: {
-    color: themeColors.white,
-    textShadowColor: withOpacity(themeColors.primaryDeep, 0.35),
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  nextRowTime: {
-    color: themeColors.white,
-    textShadowColor: withOpacity(themeColors.primaryDeep, 0.35),
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
   },
   skeletonBarBase: {
     backgroundColor: withOpacity(themeColors.white, 0.08),

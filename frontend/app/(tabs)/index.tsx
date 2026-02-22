@@ -509,7 +509,6 @@ export default function Home() {
               <PrayerTimesList
                 loading={loading}
                 prayerTimes={prayerTimes}
-                nextPrayerLabel={nextPrayer?.label ?? null}
               />
             </View>
             {/* Dua Section */}
