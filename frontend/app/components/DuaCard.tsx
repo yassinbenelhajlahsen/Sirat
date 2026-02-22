@@ -38,7 +38,7 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>
-        ✨ Ask for a Dua
+        Ask for a Dua
       </Text>
 
       <Text style={styles.description}>

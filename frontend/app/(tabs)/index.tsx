@@ -303,23 +303,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Smooth keyboard scroll - use keyboardWillShow on iOS for simultaneous animation
-  useEffect(() => {
-    const keyboardShowEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-
-    const showSubscription = Keyboard.addListener(keyboardShowEvent, () => {
-      // Scroll past the end to ensure DuaCard is well above keyboard
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 0);
-    });
-
-    return () => {
-      showSubscription.remove();
-    };
-  }, []);
-
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const scrollToBottom = useCallback((animated: boolean) => {
     // Do it after the current frame, when layout is more likely settled
@@ -374,6 +357,12 @@ export default function Home() {
   }, [fadeAnim, nextDayFajr, nextPrayer]);
 
   const today = new Date();
+  const gregorianDate = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(today);
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric",
     month: "long",
@@ -429,13 +418,12 @@ export default function Home() {
               </View>
             )}
 
-            <Text style={styles.title}>
-              Home
-            </Text>
-
-            <View style={styles.centerSection}>
+            <View style={styles.headerSection}>
+              <Text style={styles.eyebrow}>
+                Today
+              </Text>
               <Text style={styles.sectionTitle}>
-                Today&apos;s Prayer Times
+                Prayer Times
               </Text>
 
               {locationLabel ? (
@@ -446,7 +434,7 @@ export default function Home() {
 
               <View style={styles.dateSection}>
                 <Text style={styles.gregorianDate}>
-                  {today.toDateString()}
+                  {gregorianDate}
                 </Text>
                 <Text style={styles.hijriDate}>
                   {islamicDate}
@@ -454,60 +442,75 @@ export default function Home() {
               </View>
             </View>
 
+            {(nextPrayer || nextDayFajr) && (
+              <View style={styles.nextPrayerContainer}>
+                {nextPrayer ? (
+                  <View style={styles.nextPrayerCard}>
+                    <Text style={styles.nextPrayerLabel}>
+                      Next Prayer
+                    </Text>
+                    <View style={styles.nextPrayerRow}>
+                      <Text style={styles.nextPrayerName}>
+                        {nextPrayer.label}
+                      </Text>
+                      <Text style={styles.nextPrayerTime}>
+                        {nextPrayer.time}
+                      </Text>
+                    </View>
+                    <Text style={styles.nextPrayerCountdown}>
+                      Starts in {timeLeft}
+                    </Text>
+                  </View>
+                ) : (
+                  <Animated.View style={{ opacity: fadeAnim, width: "100%" }}>
+                    <PressableScale
+                      onPress={() =>
+                        router.push({
+                          pathname: "/components/[date]",
+                          params: {
+                            date: tomorrowParam,
+                            month: tomorrow.getMonth().toString(),
+                            year: tomorrow.getFullYear().toString(),
+                          },
+                        })
+                      }
+                      style={{
+                        backgroundColor: withOpacity(
+                          colors.primarySurfaceAlt,
+                          0.25,
+                        ),
+                        borderRadius: 12,
+                        paddingVertical: 18,
+                        paddingHorizontal: 24,
+                        borderWidth: 2,
+                        borderColor: withOpacity(colors.accent, 0.75),
+                        shadowColor: colors.accent,
+                        shadowOpacity: 0.6,
+                        shadowRadius: 8,
+                        elevation: 5,
+                        alignItems: "center",
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel="View tomorrow prayer times"
+                    >
+                      <Text style={styles.finishedTitle}>
+                        Finished all prayers!
+                      </Text>
+                      <Text style={styles.finishedSubtitle}>
+                        Tap to see tomorrow&apos;s prayer times
+                      </Text>
+                    </PressableScale>
+                  </Animated.View>
+                )}
+              </View>
+            )}
+
             <View style={styles.prayerListCard}>
               <PrayerTimesList
                 loading={loading}
                 prayerTimes={prayerTimes}
                 nextPrayerLabel={nextPrayer?.label ?? null}
               />
-            </View>
-
-            <View style={styles.nextPrayerContainer}>
-              {nextPrayer ? (
-                <Text style={styles.nextPrayerText}>
-                  Next: {nextPrayer.label} in {timeLeft}
-                </Text>
-              ) : nextDayFajr ? (
-                <Animated.View style={{ opacity: fadeAnim, width: "100%" }}>
-                  <PressableScale
-                    onPress={() =>
-                      router.push({
-                        pathname: "/components/[date]",
-                        params: {
-                          date: tomorrowParam,
-                          month: tomorrow.getMonth().toString(),
-                          year: tomorrow.getFullYear().toString(),
-                        },
-                      })
-                    }
-                    style={{
-                      backgroundColor: withOpacity(
-                        colors.primarySurfaceAlt,
-                        0.25,
-                      ),
-                      borderRadius: 12,
-                      paddingVertical: 18,
-                      paddingHorizontal: 24,
-                      borderWidth: 2,
-                      borderColor: withOpacity(colors.accent, 0.75),
-                      shadowColor: colors.accent,
-                      shadowOpacity: 0.6,
-                      shadowRadius: 8,
-                      elevation: 5,
-                      alignItems: "center",
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="View tomorrow prayer times"
-                  >
-                    <Text style={styles.finishedTitle}>
-                      Finished all prayers!
-                    </Text>
-                    <Text style={styles.finishedSubtitle}>
-                      Tap to see tomorrow&apos;s prayer times
-                    </Text>
-                  </PressableScale>
-                </Animated.View>
-              ) : null}
             </View>
             {/* Dua Section */}
             {selectedDua ? (
@@ -560,50 +563,53 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Semibold",
     fontSize: typography.body,
   },
-  title: {
-    color: colors.white,
-    fontSize: 42,
-    fontFamily: "SFProDisplay-Bold",
-  },
-  centerSection: {
-    marginTop: 30,
+  headerSection: {
+    marginTop: spacing.sm,
     alignItems: "center",
+  },
+  eyebrow: {
+    color: withOpacity(colors.accent, 0.9),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   sectionTitle: {
     color: colors.white,
-    fontSize: 28,
-    fontFamily: "SFProDisplay-Semibold",
+    fontSize: 34,
+    fontFamily: "SFProDisplay-Bold",
+    marginTop: spacing.xs,
   },
   locationLabel: {
     color: colors.accent,
     fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Semibold",
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
     textAlign: "center",
   },
   dateSection: {
-    marginTop: 30,
+    marginTop: spacing.md,
     alignItems: "center",
   },
   gregorianDate: {
     color: colors.white,
-    fontSize: typography.title,
+    fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Bold",
     textAlign: "center",
   },
   hijriDate: {
     color: colors.accent,
-    fontSize: typography.bodyLg,
+    fontSize: typography.body,
     fontFamily: "SFProDisplay-Semibold",
     marginTop: spacing.xs,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
     textAlign: "center",
   },
   prayerListCard: {
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
     backgroundColor: withOpacity(colors.black, 0.2),
     borderRadius: 18,
-    padding: spacing.xl,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: withOpacity(colors.white, 0.08),
     shadowColor: colors.primaryDark,
@@ -611,17 +617,55 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 16 },
     elevation: 6,
-    minHeight: 360,
+    minHeight: 320,
     justifyContent: "center",
   },
   nextPrayerContainer: {
-    marginTop: spacing.sm + 2,
     marginBottom: spacing.md,
     alignItems: "center",
   },
-  nextPrayerText: {
+  nextPrayerCard: {
+    width: "100%",
+    backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.3),
+    borderRadius: 16,
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.35),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.22,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
+  },
+  nextPrayerLabel: {
+    color: withOpacity(colors.accent, 0.95),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+  },
+  nextPrayerRow: {
+    marginTop: spacing.xs,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  nextPrayerName: {
+    color: colors.white,
+    fontSize: typography.title,
+    fontFamily: "SFProDisplay-Bold",
+  },
+  nextPrayerTime: {
     color: colors.accent,
     fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Bold",
+  },
+  nextPrayerCountdown: {
+    marginTop: spacing.xs,
+    color: withOpacity(colors.white, 0.9),
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Semibold",
   },
   finishedTitle: {
     color: colors.accent,
