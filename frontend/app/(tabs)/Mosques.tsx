@@ -18,6 +18,7 @@ import {
   Image,
   Linking,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -80,6 +81,33 @@ const SkeletonList = () => (
 );
 
 type Perm = "undetermined" | "denied" | "granted";
+
+function distanceKm(
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number
+) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = toRad(toLat - fromLat);
+  const dLng = toRad(toLng - fromLng);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(fromLat)) *
+      Math.cos(toRad(toLat)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
+function formatDistanceLabel(km: number) {
+  if (!Number.isFinite(km)) return "";
+  if (km < 1) return `${Math.round(km * 1000)} m away`;
+  if (km < 10) return `${km.toFixed(1)} km away`;
+  return `${Math.round(km)} km away`;
+}
 
 export default function MosqueScreen() {
   const router = useRouter();
@@ -252,7 +280,13 @@ export default function MosqueScreen() {
 
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
-            <Text style={styles.title}>Mosques</Text>
+            <View style={styles.headerSection}>
+              <Text style={styles.eyebrow}>Explore</Text>
+              <Text style={styles.title}>Nearby Mosques</Text>
+              <Text style={styles.subtitle}>
+                Enable location to discover masajid around you.
+              </Text>
+            </View>
             <View style={styles.gateContent}>
               {servicesOff ? (
                 <InfoBanner
@@ -273,9 +307,9 @@ export default function MosqueScreen() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.ctaSecondary}
-                        onPress={checkStatus}
+                        onPress={requestPermissionAndLoad}
                         accessibilityRole="button"
-                        accessibilityLabel="Check location services status"
+                        accessibilityLabel="Retry location setup"
                       >
                         <Text style={styles.ctaSecondaryText}>
                           I turned it on
@@ -336,35 +370,47 @@ export default function MosqueScreen() {
   }
 
   const renderItem = ({ item }: { item: Mosque }) => {
-    const scale = new Animated.Value(1);
-    const onPressIn = () =>
-      Animated.spring(scale, { toValue: 0.97, useNativeDriver: true }).start();
-    const onPressOut = () =>
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
+    const distanceLabel = location
+      ? formatDistanceLabel(
+          distanceKm(location.latitude, location.longitude, item.lat, item.lng)
+        )
+      : null;
 
     return (
-      <Animated.View style={[styles.animatedCard, { transform: [{ scale }] }]}>
-        <PressableScale
-          onPress={() => openDirections(item.lat, item.lng)}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          style={styles.card}
-          accessibilityRole="button"
-          accessibilityLabel={`Open directions to ${item.name}`}
-          accessibilityHint="Opens your maps app"
-        >
-          <View style={styles.cardHeader}>
-            <FontAwesome5 name="mosque" size={22} color={colors.accent} solid />
-            <Text style={styles.name}>{item.name}</Text>
-          </View>
-          <Text style={styles.address}>{item.address}</Text>
-        </PressableScale>
-      </Animated.View>
+      <PressableScale
+        onPress={() => openDirections(item.lat, item.lng)}
+        style={styles.card}
+        accessibilityRole="button"
+        accessibilityLabel={`Open directions to ${item.name}`}
+        accessibilityHint="Opens your maps app"
+      >
+        <View style={styles.cardHeader}>
+          <FontAwesome5 name="mosque" size={22} color={colors.accent} solid />
+          <Text style={styles.name}>{item.name}</Text>
+        </View>
+        <Text style={styles.address}>{item.address}</Text>
+        <View style={styles.cardMetaRow}>
+          {distanceLabel ? (
+            <View style={styles.distancePill}>
+              <Ionicons
+                name="walk-outline"
+                size={14}
+                color={withOpacity(colors.accent, 0.95)}
+              />
+              <Text style={styles.distancePillText}>{distanceLabel}</Text>
+            </View>
+          ) : (
+            <View />
+          )}
+          <Text style={styles.cardHint}>Tap for directions</Text>
+        </View>
+      </PressableScale>
     );
   };
 
   const emptyNearby =
     !fetchingFresh && (mosques == null || mosques.length === 0);
+  const topMosques = mosques.slice(0, 3);
 
   return (
     <LinearGradient
@@ -378,106 +424,121 @@ export default function MosqueScreen() {
         style={styles.patternOverlay}
       />
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Mosques</Text>
-
-          <Text style={styles.header}>Nearby</Text>
-          {loading && mosques.length === 0 ? (
-            <SkeletonList />
-          ) : emptyNearby ? (
-            <View style={styles.emptyCard}>
-              <View style={styles.emptyRow}>
-                <Ionicons name="search" size={18} color={colors.accent} />
-                <Text style={styles.emptyTextFill}>
-                  No mosques found near your current location.
-                </Text>
-              </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.container}>
+            <View style={styles.headerSection}>
+              <Text style={styles.eyebrow}>Explore</Text>
+              <Text style={styles.title}>Nearby Mosques</Text>
+              <Text style={styles.subtitle}>
+                Find a masjid near you and open directions in one tap.
+              </Text>
             </View>
-          ) : (
-            <FlatList
-              data={mosques.slice(0, 3)}
-              keyExtractor={(item) => item.id}
-              renderItem={renderItem}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false}
-              style={styles.list}
-              contentContainerStyle={styles.listContent}
-            />
-          )}
 
-          <Text style={styles.header}>Map</Text>
-          {!location ? (
-            <Animated.View
-              style={[
-                styles.mapContainer,
-                {
-                  backgroundColor: withOpacity(colors.accent, 0.1),
-                  opacity: 0.5,
-                },
-              ]}
-            />
-          ) : (
-          <PressableScale
-            style={styles.mapContainer}
-            onPress={() => router.push("/components/map")}
-            accessibilityRole="button"
-            accessibilityLabel="Open full mosque map"
-          >
-            <MapView
-              style={StyleSheet.absoluteFillObject}
-              initialRegion={{
-                latitude: location!.latitude,
-                longitude: location!.longitude,
-                latitudeDelta: 0.02,
-                longitudeDelta: 0.02,
-              }}
-              showsUserLocation
-              customMapStyle={customMapStyle}
-            >
-              {mosques.map((m) => (
-                <Marker
-                  key={m.id}
-                  coordinate={{ latitude: m.lat, longitude: m.lng }}
-                  tracksViewChanges={false}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.header}>Nearest</Text>
+            </View>
+            {loading && mosques.length === 0 ? (
+              <SkeletonList />
+            ) : emptyNearby ? (
+              <View style={styles.emptyCard}>
+                <View style={styles.emptyRow}>
+                  <Ionicons name="search" size={18} color={colors.accent} />
+                  <Text style={styles.emptyTextFill}>
+                    No mosques found near your current location.
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <FlatList
+                data={topMosques}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+                style={styles.list}
+                contentContainerStyle={styles.listContent}
+              />
+            )}
+
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.header}>Map Preview</Text>
+            </View>
+            {!location ? (
+              <Animated.View
+                style={[
+                  styles.mapContainer,
+                  {
+                    backgroundColor: withOpacity(colors.accent, 0.1),
+                    opacity: 0.5,
+                  },
+                ]}
+              />
+            ) : (
+              <PressableScale
+                style={styles.mapContainer}
+                onPress={() => router.push("/components/map")}
+                accessibilityRole="button"
+                accessibilityLabel="Open full mosque map"
+              >
+                <MapView
+                  style={StyleSheet.absoluteFillObject}
+                  initialRegion={{
+                    latitude: location!.latitude,
+                    longitude: location!.longitude,
+                    latitudeDelta: 0.02,
+                    longitudeDelta: 0.02,
+                  }}
+                  showsUserLocation
+                  customMapStyle={customMapStyle}
                 >
-                  <View style={styles.pinContainer}>
-                    <FontAwesome5
-                      name="mosque"
-                      size={18}
-                      color={colors.primary}
-                    />
-                  </View>
-
-                  <Callout tooltip>
-                    <View style={styles.callout}>
-                      <Text style={styles.calloutTitle}>{m.name}</Text>
-                      <Text style={styles.calloutAddress}>{m.address}</Text>
-                      <TouchableOpacity
-                        style={styles.directionButton}
-                        onPress={() => openDirections(m.lat, m.lng)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Directions to ${m.name}`}
-                      >
-                        <Ionicons
-                          name="navigate"
-                          size={14}
+                  {mosques.map((m) => (
+                    <Marker
+                      key={m.id}
+                      coordinate={{ latitude: m.lat, longitude: m.lng }}
+                      tracksViewChanges={false}
+                    >
+                      <View style={styles.pinContainer}>
+                        <FontAwesome5
+                          name="mosque"
+                          size={18}
                           color={colors.primary}
                         />
-                        <Text style={styles.directionText}>Directions</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </Callout>
-                </Marker>
-              ))}
-            </MapView>
-            {fetchingFresh && (
-              <View style={styles.mapSpinner}>
-                <ActivityIndicator size="small" color={colors.accent} />
-              </View>
+                      </View>
+
+                      <Callout tooltip>
+                        <View style={styles.callout}>
+                          <Text style={styles.calloutTitle}>{m.name}</Text>
+                          <Text style={styles.calloutAddress}>{m.address}</Text>
+                          <TouchableOpacity
+                            style={styles.directionButton}
+                            onPress={() => openDirections(m.lat, m.lng)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Directions to ${m.name}`}
+                          >
+                            <Ionicons
+                              name="navigate"
+                              size={14}
+                              color={colors.primary}
+                            />
+                            <Text style={styles.directionText}>Directions</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </Callout>
+                    </Marker>
+                  ))}
+                </MapView>
+                {fetchingFresh && (
+                  <View style={styles.mapSpinner}>
+                    <ActivityIndicator size="small" color={colors.accent} />
+                  </View>
+                )}
+              </PressableScale>
             )}
-          </PressableScale>
-          )}
-        </View>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -492,6 +553,9 @@ const customMapStyle = [
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
+  scrollContent: {
+    paddingBottom: spacing.xl + spacing.xl,
+  },
   container: { flex: 1, padding: spacing.xl },
   patternOverlay: {
     position: "absolute",
@@ -504,22 +568,38 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  headerSection: {
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  eyebrow: {
+    color: withOpacity(colors.accent, 0.9),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
   title: {
     color: colors.white,
     fontFamily: "SFProDisplay-Bold",
-    fontSize: typography.display,
-    marginBottom: spacing.sm,
+    fontSize: 34,
+    marginTop: spacing.xs,
     textShadowColor: withOpacity(colors.black, 0.4),
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 3,
   },
+  subtitle: {
+    marginTop: spacing.xs,
+    color: withOpacity(colors.white, 0.9),
+    fontSize: typography.body,
+    lineHeight: 20,
+    fontFamily: "SFProDisplay-Regular",
+  },
   header: {
     color: colors.accent,
-    fontSize: typography.title,
+    fontSize: typography.subtitle,
     fontFamily: "SFProDisplay-Bold",
-    marginBottom: spacing.lg,
-    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
     textShadowColor: withOpacity(colors.black, 0.3),
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
@@ -533,7 +613,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
   },
-  gateContent: { flex: 1, marginTop: spacing.xl },
+  gateContent: { flex: 1, marginTop: spacing.md },
   bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
   bannerTitle: {
     color: colors.accent,
@@ -570,6 +650,25 @@ const styles = StyleSheet.create({
   },
   ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
   animatedCard: { marginBottom: spacing.lg },
+  sectionHeaderRow: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  inlineAction: {
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.4),
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+  },
+  inlineActionText: {
+    color: colors.accent,
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+  },
   card: {
     backgroundColor: colors.primarySurfaceAlt,
     borderRadius: 18,
@@ -582,6 +681,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
+    marginBottom: spacing.lg,
   },
   cardHeader: {
     flexDirection: "row",
@@ -606,8 +706,35 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     alignItems: "center",
   },
+  cardMetaRow: {
+    marginTop: spacing.xs,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  distancePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    backgroundColor: withOpacity(colors.white, 0.08),
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.25),
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+  },
+  distancePillText: {
+    color: withOpacity(colors.accent, 0.95),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  cardHint: {
+    color: withOpacity(colors.white, 0.7),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Regular",
+  },
   mapContainer: {
-    height: 230,
+    height: 240,
     borderRadius: 16,
     overflow: "hidden",
     marginTop: spacing.sm - 2,
@@ -619,6 +746,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 8,
     position: "relative",
+  },
+  mapHint: {
+    position: "absolute",
+    bottom: spacing.sm + 2,
+    left: spacing.sm + 2,
+    right: spacing.sm + 2,
+    borderRadius: 10,
+    backgroundColor: withOpacity(colors.black, 0.35),
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.sm + 2,
+    alignItems: "center",
+  },
+  mapHintText: {
+    color: colors.white,
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
   },
   mapSpinner: {
     position: "absolute",
@@ -691,17 +834,14 @@ const styles = StyleSheet.create({
     borderColor: withOpacity(colors.accent, 0.25),
     padding: spacing.lg - 2,
     gap: 6,
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.md,
   },
   emptyRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 6,
   },
-  emptyText: { color: colors.white, fontSize: 15 },
   emptyTextFill: { color: colors.white, fontSize: 15, marginLeft: 10, flex: 1 },
-  emptySub: { color: colors.accent, fontSize: 13 },
-  link: { color: colors.accent, textDecorationLine: "underline" },
   list: {
     flexGrow: 0,
   },
