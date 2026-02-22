@@ -5,19 +5,18 @@ export async function getNearbyMosquesHandler(req: Request, res: Response) {
   try {
     const { latitude, longitude, radius } = req.query;
 
-    if (!latitude || !longitude) {
+    if (latitude === undefined || longitude === undefined) {
       return res.status(400).json({
         error: "Missing required parameters: latitude and longitude",
       });
     }
 
-    const lat = Number.parseFloat(String(latitude));
-    const lng = Number.parseFloat(String(longitude));
-    const rad = radius ? Number.parseInt(String(radius), 10) : 3000;
+    const lat = Number(String(latitude));
+    const lng = Number(String(longitude));
 
     if (
-      Number.isNaN(lat) ||
-      Number.isNaN(lng) ||
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
       lat < -90 ||
       lat > 90 ||
       lng < -180 ||
@@ -29,11 +28,13 @@ export async function getNearbyMosquesHandler(req: Request, res: Response) {
       });
     }
 
-    if (Number.isNaN(rad) || rad < 1 || rad > 50000) {
+    const parsedRadius = radius === undefined ? 3000 : Number(String(radius));
+    if (!Number.isFinite(parsedRadius)) {
       return res.status(400).json({
-        error: "Invalid radius (must be between 1 and 50000 meters)",
+        error: "Invalid radius (must be a finite number)",
       });
     }
+    const rad = Math.min(Math.max(parsedRadius, 100), 5000);
 
     const mosques = await getNearbyMosques({
       latitude: lat,
