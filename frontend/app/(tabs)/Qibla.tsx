@@ -171,9 +171,19 @@ export default function Qibla() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
+        <Image
+          source={require("@/assets/patterns/islamic-gold2.png")}
+          style={styles.patternOverlay}
+        />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
-            <Text style={styles.title}>Qibla</Text>
+            <View style={styles.headerSection}>
+              <Text style={styles.eyebrow}>Direction</Text>
+              <Text style={styles.title}>Qibla Compass</Text>
+              <Text style={styles.subtitle}>
+                Enable location to calculate the direction to the Kaaba.
+              </Text>
+            </View>
             <View style={styles.gateContent}>
               {servicesOff ? (
                 <InfoBanner
@@ -194,9 +204,9 @@ export default function Qibla() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.ctaSecondary}
-                        onPress={checkStatus}
+                        onPress={requestPermissionAndLoad}
                         accessibilityRole="button"
-                        accessibilityLabel="Check location services status"
+                        accessibilityLabel="Retry location setup"
                       >
                         <Text style={styles.ctaSecondaryText}>
                           I turned it on
@@ -250,10 +260,12 @@ export default function Qibla() {
                 />
               ) : null}
 
-              <Text style={styles.helper}>
-                Prayer Times still work without location. Pick a city in{" "}
-                <Text style={styles.link}>Settings</Text>.
-              </Text>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoText}>
+                  Prayer Times still work without location. You can use a manual
+                  city from the Settings tab.
+                </Text>
+              </View>
             </View>
           </View>
         </SafeAreaView>
@@ -274,40 +286,78 @@ export default function Qibla() {
         style={styles.patternOverlay}
       />
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Qibla</Text>
-          {!needLocationGate && accuracy != null && accuracy >= 0 ? (
-            <Text style={styles.subtle}>Accuracy ±{Math.round(accuracy)}°</Text>
-          ) : null}
-        </View>
+        <View style={styles.container}>
+          <View style={styles.headerSection}>
+            <Text style={styles.eyebrow}>Direction</Text>
+            <Text style={styles.title}>Qibla Compass</Text>
+            <Text style={styles.subtitle}>
+              Keep your phone flat and rotate until it aligns with Qibla.
+            </Text>
+          </View>
 
-        <View style={styles.center}>
-          {error ? (
-            <>
-              <Text style={styles.errorText}>{error}</Text>
-              <Text style={styles.helper}>
-                Move your phone in a figure eight to improve compass accuracy.
+          <View style={styles.statusRow}>
+            <View style={styles.statusPill}>
+              <Ionicons
+                name="compass-outline"
+                size={15}
+                color={withOpacity(colors.accent, 0.95)}
+              />
+              <Text style={styles.statusPillText}>
+                {accuracy != null && accuracy >= 0
+                  ? `Accuracy ±${Math.round(accuracy)}°`
+                  : "Calibrating compass..."}
               </Text>
-            </>
-          ) : rotation == null ? (
-            <Text style={styles.loadingText}>Finding direction…</Text>
-          ) : (
-            <>
-              {accuracy != null && accuracy > 20 ? (
-                <Text style={styles.noteText}>
-                  Move phone in a figure eight to improve accuracy.
-                </Text>
-              ) : null}
+            </View>
+            <View
+              style={[
+                styles.statusPill,
+                isAligned ? styles.statusPillAligned : null,
+              ]}
+            >
+              <Ionicons
+                name={isAligned ? "checkmark-circle" : "navigate-outline"}
+                size={15}
+                color={isAligned ? colors.white : withOpacity(colors.accent, 0.95)}
+              />
+              <Text
+                style={[
+                  styles.statusPillText,
+                  isAligned ? styles.statusPillTextAligned : null,
+                ]}
+              >
+                {isAligned ? "Aligned" : "Adjusting"}
+              </Text>
+            </View>
+          </View>
 
-              <View style={[styles.ring, isAligned && styles.ringAligned]}>
-                <Animated.Image
-                  source={arrowImg}
-                  style={[styles.arrow, animatedStyle]}
-                  resizeMode="contain"
+          <View style={styles.compassCard}>
+            {error ? (
+              <>
+                <Ionicons
+                  name="warning-outline"
+                  size={28}
+                  color={colors.danger}
+                  style={styles.errorIcon}
                 />
-              </View>
-            </>
-          )}
+                <Text style={styles.errorText}>{error}</Text>
+                <Text style={styles.helperText}>
+                  Move your phone in a figure eight to improve compass accuracy.
+                </Text>
+              </>
+            ) : rotation == null ? (
+              <Text style={styles.loadingText}>Finding direction...</Text>
+            ) : (
+              <>
+                <View style={[styles.ring, isAligned && styles.ringAligned]}>
+                  <Animated.Image
+                    source={arrowImg}
+                    style={[styles.arrow, animatedStyle]}
+                    resizeMode="contain"
+                  />
+                </View>
+              </>
+            )}
+          </View>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -318,9 +368,8 @@ const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
 
-  // Matches the Mosques layout so the banner sits at the top under the title
   container: { flex: 1, padding: spacing.xl },
-  gateContent: { flex: 1, marginTop: spacing.xl },
+  gateContent: { flex: 1, marginTop: spacing.md },
   patternOverlay: {
     position: "absolute",
     top: 0,
@@ -332,24 +381,34 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-
-  titleContainer: { paddingTop: spacing.sm + 2, paddingHorizontal: spacing.xl },
+  headerSection: {
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  eyebrow: {
+    color: withOpacity(colors.accent, 0.9),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
   title: {
     color: colors.white,
     fontFamily: "SFProDisplay-Bold",
-    fontSize: 40,
+    fontSize: 34,
+    marginTop: spacing.xs,
     letterSpacing: 0.2,
+    textShadowColor: withOpacity(colors.black, 0.35),
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  subtle: { marginTop: 2, color: colors.accentSoft, fontSize: typography.body - 1 },
-
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.xl,
+  subtitle: {
+    marginTop: spacing.xs,
+    color: withOpacity(colors.white, 0.9),
+    fontSize: typography.body,
+    lineHeight: 20,
+    fontFamily: "SFProDisplay-Regular",
   },
-
-  // Banner visuals kept identical to Mosques
   banner: {
     backgroundColor: withOpacity(colors.accent, 0.18),
     borderWidth: 1,
@@ -395,11 +454,52 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
-
+  statusRow: {
+    flexDirection: "row",
+    gap: spacing.sm + 2,
+    marginBottom: spacing.md,
+    flexWrap: "wrap",
+  },
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.25),
+    backgroundColor: withOpacity(colors.white, 0.06),
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+  },
+  statusPillAligned: {
+    backgroundColor: withOpacity(colors.primaryLift, 0.35),
+    borderColor: withOpacity(colors.accent, 0.6),
+  },
+  statusPillText: {
+    color: withOpacity(colors.white, 0.92),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  statusPillTextAligned: {
+    color: colors.white,
+  },
+  compassCard: {
+    flex: 1,
+    borderRadius: 20,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 6,
+  },
   ring: {
-    width: 320,
-    height: 320,
-    borderRadius: 160,
+    width: 292,
+    height: 292,
+    borderRadius: 146,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: withOpacity(colors.white, 0.04),
@@ -409,16 +509,56 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
   },
   ringAligned: { shadowOpacity: 0.8, shadowRadius: 20 },
-  arrow: { width: 280, height: 280 },
+  arrow: { width: 250, height: 250 },
 
-  loadingText: { color: colors.white, fontSize: typography.subtitle, textAlign: "center" },
-  errorText: { color: colors.danger, fontSize: typography.bodyLg, textAlign: "center" },
+  loadingText: {
+    color: colors.white,
+    fontSize: typography.subtitle,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  errorIcon: {
+    marginBottom: spacing.sm,
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: typography.bodyLg,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Semibold",
+  },
   noteText: {
     color: colors.accent,
     fontSize: typography.body,
     marginBottom: spacing.sm + 2,
     textAlign: "center",
+    fontFamily: "SFProDisplay-Semibold",
   },
-  helper: { color: colors.accentMuted, fontSize: typography.body, marginTop: spacing.md },
-  link: { color: colors.accent, textDecorationLine: "underline" },
+  noteTextGood: {
+    color: withOpacity(colors.white, 0.82),
+    fontSize: typography.body,
+    marginBottom: spacing.sm + 2,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Regular",
+  },
+  helperText: {
+    color: colors.accentMuted,
+    fontSize: typography.body,
+    marginTop: spacing.md,
+    textAlign: "center",
+  },
+  infoCard: {
+    marginTop: spacing.md,
+    borderRadius: 14,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.2),
+    backgroundColor: withOpacity(colors.white, 0.05),
+  },
+  infoText: {
+    color: withOpacity(colors.white, 0.9),
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Regular",
+    textAlign: "center",
+  },
 });
