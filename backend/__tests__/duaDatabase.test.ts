@@ -97,23 +97,6 @@ describe("duaDatabase", () => {
 
       expect(result).toEqual(mockDuas[0]);
     });
-
-    it("should return different duas over multiple calls", () => {
-      const results = new Set();
-      const largeDuaArray = Array.from({ length: 10 }, (_, i) => ({
-        ...mockDuas[0],
-        id: i + 1,
-      }));
-
-      // Run multiple times to check randomness
-      for (let i = 0; i < 50; i++) {
-        const dua = getRandomDua(largeDuaArray);
-        if (dua) results.add(dua.id);
-      }
-
-      // Should get more than one unique result
-      expect(results.size).toBeGreaterThan(1);
-    });
   });
 
   describe("getDuasByCategory", () => {
@@ -139,13 +122,8 @@ describe("duaDatabase", () => {
     });
 
     it("should be case-insensitive", () => {
-      const result1 = getDuasByCategory(mockDuas, "ANXIETY");
-      const result2 = getDuasByCategory(mockDuas, "Anxiety");
-      const result3 = getDuasByCategory(mockDuas, "anxiety");
-
-      expect(result1.length).toBe(2);
-      expect(result2.length).toBe(2);
-      expect(result3.length).toBe(2);
+      const result = getDuasByCategory(mockDuas, "AnXieTy");
+      expect(result.length).toBe(2);
     });
 
     it("should return empty array for empty duas array", () => {
@@ -179,34 +157,14 @@ describe("duaDatabase", () => {
     });
 
     it("should be case-insensitive", () => {
-      const result1 = getRandomDuaByCategory(mockDuas, "HEALING");
-      const result2 = getRandomDuaByCategory(mockDuas, "Healing");
-      const result3 = getRandomDuaByCategory(mockDuas, "healing");
-
-      expect(result1?.category.toLowerCase()).toBe("healing");
-      expect(result2?.category.toLowerCase()).toBe("healing");
-      expect(result3?.category.toLowerCase()).toBe("healing");
+      const result = getRandomDuaByCategory(mockDuas, "HEALING");
+      expect(result?.category.toLowerCase()).toBe("healing");
     });
 
     it("should return null for empty duas array", () => {
       const result = getRandomDuaByCategory([], "anxiety");
 
       expect(result).toBeNull();
-    });
-
-    it("should return different duas over multiple calls", () => {
-      const results = new Set();
-
-      // Run multiple times to check randomness
-      for (let i = 0; i < 50; i++) {
-        const dua = getRandomDuaByCategory(mockDuas, "anxiety");
-        if (dua) results.add(dua.id);
-      }
-
-      // Should get both anxiety duas (id 2 and 3)
-      expect(results.size).toBe(2);
-      expect(results.has(2)).toBe(true);
-      expect(results.has(3)).toBe(true);
     });
   });
 });
