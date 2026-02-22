@@ -46,12 +46,27 @@ export function QuranAudioProvider({ children }: PropsWithChildren) {
     null
   );
 
-  const surahMetaList = useMemo(() => {
-    try {
-      return getSurahMeta();
-    } catch (error) {
-      console.warn("Failed to load Quran surah metadata", error);
-      return [];
+  const [surahMetaList, setSurahMetaList] = useState<
+    readonly { surahNumber: number; englishName?: string; arabicName?: string }[]
+  >([]);
+
+  useEffect(() => {
+    // getSurahMeta() requires preloadQuranData() to have completed.
+    // On mount this may not be ready yet, so we retry after a short delay.
+    const tryLoad = () => {
+      try {
+        setSurahMetaList(getSurahMeta());
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    if (!tryLoad()) {
+      const id = setInterval(() => {
+        if (tryLoad()) clearInterval(id);
+      }, 200);
+      return () => clearInterval(id);
     }
   }, []);
 
