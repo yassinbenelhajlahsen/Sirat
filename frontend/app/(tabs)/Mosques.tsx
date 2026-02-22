@@ -141,7 +141,9 @@ export default function MosqueScreen() {
       setMosques(fresh);
     } catch (err) {
       console.error("Mosque fetch error:", err);
-      Alert.alert("Error", "Failed to load nearby mosques.");
+      if (mosques.length === 0) {
+        Alert.alert("Error", "Failed to load nearby mosques.");
+      }
     } finally {
       setFetchingFresh(false);
       setLoading(false);
