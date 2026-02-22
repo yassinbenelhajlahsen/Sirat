@@ -14,6 +14,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -66,6 +67,8 @@ export default function CalendarDetail() {
     ramadanEnd: ramadanEndParam,
   } = useLocalSearchParams();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isSmall = width < 360;
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [holiday, setHoliday] = useState<string | null>(null);
@@ -568,6 +571,12 @@ export default function CalendarDetail() {
   }, [nextPrayer]);
 
   if (!selectedDate) return null;
+  const displayDateLine = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(selectedDate);
 
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric",
@@ -773,36 +782,13 @@ export default function CalendarDetail() {
       />
       <SafeAreaView style={styles.screen}>
         {/* Top Navigation Bar - stays fixed */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 16,
-            paddingHorizontal: 20,
-            paddingTop: 8,
-          }}
-        >
+        <View style={styles.topBar}>
           <PressableScale
             onPress={animateBackToCalendar}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingVertical: 6,
-              paddingHorizontal: 10,
-              borderRadius: 10,
-              backgroundColor: "transparent",
-            }}
+            style={styles.backButton}
           >
             <Ionicons name="chevron-back" size={22} color={colors.accent} />
-            <Text
-              style={{
-                color: colors.accent,
-                fontSize: 16,
-                fontFamily: "SFProDisplay-Medium",
-                marginLeft: 2,
-              }}
-            >
+            <Text style={styles.backButtonText}>
               Calendar
             </Text>
           </PressableScale>
@@ -816,45 +802,21 @@ export default function CalendarDetail() {
           {...panResponderRef.current.panHandlers}
         >
           {/* Static Prev / Next Row (no animation) */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 24,
-              gap: 12,
-            }}
-          >
+          <View style={styles.dayNavRow}>
             {/* Prev */}
             <PressableScale
               onPress={() => !isPrevDisabled && animateDateChange("prev", -1)}
               disabled={isPrevDisabled}
-              style={{
-                flex: 1,
-                alignItems: "center",
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                borderRadius: 14,
-                shadowColor: colors.black,
-                shadowOpacity: isPrevDisabled ? 0 : 0.1,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: isPrevDisabled ? 0 : 2,
-              }}
+              style={[
+                styles.dayNavButton,
+                isPrevDisabled ? styles.dayNavButtonDisabled : null,
+              ]}
             >
               <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  backgroundColor: withOpacity(
-                    colors.accent,
-                    isPrevDisabled ? 0.05 : 0.12,
-                  ),
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 6,
-                }}
+                style={[
+                  styles.dayNavIconWrap,
+                  isPrevDisabled ? styles.dayNavIconWrapDisabled : null,
+                ]}
               >
                 <Ionicons
                   name="chevron-back"
@@ -867,68 +829,42 @@ export default function CalendarDetail() {
                 />
               </View>
               <Text
-                style={{
-                  color: isPrevDisabled
-                    ? withOpacity(colors.white, 0.3)
-                    : colors.white,
-                  fontSize: 13,
-                  fontFamily: "SFProDisplay-Medium",
-                  marginBottom: 2,
-                }}
+                style={[
+                  styles.dayNavLabel,
+                  isPrevDisabled ? styles.dayNavLabelDisabled : null,
+                ]}
               >
                 Prev
               </Text>
               {!isPrevDisabled && (
-                <Text
-                  style={{
-                    color: withOpacity(colors.white, 0.6),
-                    fontSize: 11,
-                    fontFamily: "SFProDisplay-Regular",
-                  }}
-                >
+                <Text style={styles.dayNavHint}>
                   {formatShort(prevDate)}
                 </Text>
               )}
             </PressableScale>
-            <View style={{ height: 78, justifyContent: "center" }}>
+            <View style={styles.dateHeroWrap}>
               {/* Animated Date Info (only this slides) */}
               <Animated.View
-                style={{
-                  flex: 2,
-                  alignItems: "center",
-                  paddingVertical: 16,
-                  paddingHorizontal: 16,
-                  borderRadius: 16,
-                  shadowColor: colors.accent,
-                  shadowOpacity: 0.15,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 4 },
-                  elevation: 3,
-                  opacity: fadeAnim,
-                  transform: [{ translateX: slideAnim }],
-                }}
+                style={[
+                  styles.dateHero,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ translateX: slideAnim }],
+                  },
+                ]}
               >
                 <Text
-                  style={{
-                    color: colors.white,
-                    fontSize: 18,
-                    textAlign: "center",
-                    fontFamily: "SFProDisplay-Bold",
-                    letterSpacing: 0.5,
-                    marginBottom: 6,
-                  }}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.72}
+                  style={[
+                    styles.dateHeroTitle,
+                    isSmall ? styles.dateHeroTitleSmall : null,
+                  ]}
                 >
-                  {selectedDate.toDateString()}
+                  {displayDateLine}
                 </Text>
-                <Text
-                  style={{
-                    color: colors.accent,
-                    fontSize: 14,
-                    textAlign: "center",
-                    fontFamily: "SFProDisplay-Medium",
-                    letterSpacing: 0.3,
-                  }}
-                >
+                <Text style={styles.dateHeroHijri}>
                   {islamicDate}
                 </Text>
               </Animated.View>
@@ -937,31 +873,16 @@ export default function CalendarDetail() {
             <PressableScale
               onPress={() => !isNextDisabled && animateDateChange("next", 1)}
               disabled={isNextDisabled}
-              style={{
-                flex: 1,
-                alignItems: "center",
-                paddingVertical: 12,
-                paddingHorizontal: 12,
-                shadowColor: colors.black,
-                shadowOpacity: isNextDisabled ? 0 : 0.1,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: isNextDisabled ? 0 : 2,
-              }}
+              style={[
+                styles.dayNavButton,
+                isNextDisabled ? styles.dayNavButtonDisabled : null,
+              ]}
             >
               <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  backgroundColor: withOpacity(
-                    colors.accent,
-                    isNextDisabled ? 0.05 : 0.12,
-                  ),
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 6,
-                }}
+                style={[
+                  styles.dayNavIconWrap,
+                  isNextDisabled ? styles.dayNavIconWrapDisabled : null,
+                ]}
               >
                 <Ionicons
                   name="chevron-forward"
@@ -974,25 +895,15 @@ export default function CalendarDetail() {
                 />
               </View>
               <Text
-                style={{
-                  color: isNextDisabled
-                    ? withOpacity(colors.white, 0.3)
-                    : colors.white,
-                  fontSize: 13,
-                  fontFamily: "SFProDisplay-Medium",
-                  marginBottom: 2,
-                }}
+                style={[
+                  styles.dayNavLabel,
+                  isNextDisabled ? styles.dayNavLabelDisabled : null,
+                ]}
               >
                 Next
               </Text>
               {!isNextDisabled && (
-                <Text
-                  style={{
-                    color: withOpacity(colors.white, 0.6),
-                    fontSize: 11,
-                    fontFamily: "SFProDisplay-Regular",
-                  }}
-                >
+                <Text style={styles.dayNavHint}>
                   {formatShort(nextDate)}
                 </Text>
               )}
@@ -1001,27 +912,11 @@ export default function CalendarDetail() {
 
           {/* Holiday Box (static) */}
           {holiday && (
-            <View
-              style={{
-                backgroundColor: colors.primarySurface,
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 20,
-                borderWidth: 2,
-                borderColor: colors.accent,
-                shadowColor: colors.accent,
-                shadowOpacity: 0.6,
-                shadowRadius: 8,
-                elevation: 4,
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.accent,
-                  fontSize: 18,
-                  textAlign: "center",
-                }}
-              >
+            <View style={styles.holidayCard}>
+              <Text style={styles.holidayTitle}>
+                Islamic Holiday
+              </Text>
+              <Text style={styles.holidayText}>
                 {holiday}
               </Text>
             </View>
@@ -1029,76 +924,44 @@ export default function CalendarDetail() {
 
           {/* Ramadan Tracker Card */}
           {isRamadan && !loadingRamadan && (
-            <View
-              style={{
-                backgroundColor: withOpacity(colors.black, 0.2),
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 20,
-                borderWidth: 1,
-                borderColor: withOpacity(colors.white, 0.08),
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.white,
-                  fontSize: 18,
-                  fontFamily: "SFProDisplay-Semibold",
-                  textAlign: "center",
-                  marginBottom: 14,
-                }}
-              >
-                Fasting Status
+            <View style={styles.ramadanCard}>
+              <Text style={styles.ramadanTitle}>
+                Ramadan Tracker
+              </Text>
+              <Text style={styles.ramadanStatusText}>
+                {isFastMissed
+                  ? "This date is marked as a missed fast."
+                  : "This date is not marked as missed."}
               </Text>
 
               <PressableScale
                 onPress={handleMissedFastToggle}
-                style={{
-                  backgroundColor: isFastMissed
-                    ? colors.accent
-                    : colors.primaryDark,
-                  paddingVertical: 14,
-                  paddingHorizontal: 24,
-                  borderRadius: 10,
-                  alignItems: "center",
-                  borderWidth: 2,
-                  borderColor: isFastMissed
-                    ? withOpacity(colors.accent, 0.8)
-                    : withOpacity(colors.white, 0.05),
-                  shadowColor: isFastMissed
-                    ? colors.accent
-                    : withOpacity(colors.black, 0.3),
-                  shadowOpacity: isFastMissed ? 0.5 : 0.2,
-                  shadowRadius: isFastMissed ? 12 : 8,
-                  shadowOffset: { width: 0, height: 6 },
-                  elevation: isFastMissed ? 8 : 4,
-                }}
+                style={[
+                  styles.ramadanToggleButton,
+                  isFastMissed ? styles.ramadanToggleButtonActive : null,
+                ]}
               >
                 <Text
-                  style={{
-                    color: isFastMissed ? colors.primaryDark : colors.white,
-                    fontSize: 16,
-                    fontFamily: "SFProDisplay-Semibold",
-                  }}
+                  style={[
+                    styles.ramadanToggleText,
+                    isFastMissed ? styles.ramadanToggleTextActive : null,
+                  ]}
                 >
-                  Missed Fast
+                  {isFastMissed ? "Clear Missed Fast" : "Mark Fast as Missed"}
                 </Text>
               </PressableScale>
             </View>
           )}
 
           {/* Section title (static) */}
-          <Text
-            style={{
-              color: colors.white,
-              fontSize: 20,
-              marginBottom: 10,
-              marginTop: 0,
-              textAlign: "center",
-            }}
-          >
-            Prayer Times
-          </Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionEyebrow}>
+              Schedule
+            </Text>
+            <Text style={styles.sectionTitle}>
+              Prayer Times
+            </Text>
+          </View>
 
           {isToday && nextPrayer && !error && (
             <View style={styles.nextPrayerContainer}>
@@ -1121,25 +984,8 @@ export default function CalendarDetail() {
             </View>
           )}
 
-          {/* Error or Empty states (static) */}
-          {error && <ErrorBox />}
-
           {/* Prayer times container – always mounted and height locked */}
-          <View
-            style={{
-              backgroundColor: withOpacity(colors.black, 0.2),
-              borderRadius: 18,
-              padding: 20,
-              borderWidth: 1,
-              borderColor: withOpacity(colors.white, 0.08),
-              shadowColor: colors.primaryDark,
-              shadowOpacity: 0.25,
-              shadowRadius: 24,
-              shadowOffset: { width: 0, height: 16 },
-              elevation: 6,
-              overflow: "hidden",
-            }}
-          >
+          <View style={styles.prayerListCard}>
             {error ? (
               <ErrorBox />
             ) : !loading && prayerTimes.length === 0 ? (
@@ -1172,7 +1018,215 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  scrollContent: { padding: spacing.xl },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.sm,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.sm + 2,
+    borderRadius: 10,
+  },
+  backButtonText: {
+    color: colors.accent,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Medium",
+    marginLeft: 2,
+  },
+  scrollContent: { padding: spacing.xl, paddingBottom: spacing.xxl + spacing.md },
+  dayNavRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.lg,
+    gap: spacing.sm + 2,
+  },
+  dayNavButton: {
+    flex: 0.85,
+    alignItems: "center",
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm + 2,
+  },
+  dayNavButtonDisabled: {
+    opacity: 0.7,
+  },
+  dayNavIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: withOpacity(colors.accent, 0.12),
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs + 2,
+  },
+  dayNavIconWrapDisabled: {
+    backgroundColor: withOpacity(colors.accent, 0.05),
+  },
+  dayNavLabel: {
+    color: colors.white,
+    fontSize: typography.body,
+    fontFamily: "SFProDisplay-Medium",
+    marginBottom: 2,
+  },
+  dayNavLabelDisabled: {
+    color: withOpacity(colors.white, 0.3),
+  },
+  dayNavHint: {
+    color: withOpacity(colors.white, 0.6),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Regular",
+  },
+  dateHeroWrap: {
+    flex: 2.3,
+    minWidth: 0,
+    justifyContent: "center",
+  },
+  dateHero: {
+    alignItems: "center",
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.md + 2,
+    borderRadius: 16,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  dateHeroTitle: {
+    color: colors.white,
+    fontSize: typography.subtitle,
+    lineHeight: 22,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Bold",
+    letterSpacing: 0.4,
+    marginBottom: spacing.xs + 2,
+    width: "100%",
+  },
+  dateHeroTitleSmall: {
+    fontSize: typography.bodyLg,
+  },
+  dateHeroHijri: {
+    color: colors.accent,
+    fontSize: typography.body,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Medium",
+    letterSpacing: 0.3,
+  },
+  holidayCard: {
+    backgroundColor: colors.primarySurface,
+    borderRadius: 12,
+    padding: spacing.lg - 2,
+    marginBottom: spacing.lg,
+    borderWidth: 2,
+    borderColor: colors.accent,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  holidayTitle: {
+    color: withOpacity(colors.white, 0.9),
+    fontSize: typography.caption,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    fontFamily: "SFProDisplay-Semibold",
+    marginBottom: spacing.xs,
+    textAlign: "center",
+  },
+  holidayText: {
+    color: colors.accent,
+    fontSize: typography.subtitle,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  ramadanCard: {
+    backgroundColor: withOpacity(colors.black, 0.2),
+    borderRadius: 12,
+    padding: spacing.lg - 2,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.08),
+  },
+  ramadanTitle: {
+    color: colors.white,
+    fontSize: typography.subtitle,
+    fontFamily: "SFProDisplay-Semibold",
+    textAlign: "center",
+  },
+  ramadanStatusText: {
+    color: withOpacity(colors.white, 0.82),
+    fontSize: typography.body,
+    textAlign: "center",
+    fontFamily: "SFProDisplay-Regular",
+    marginTop: spacing.xs + 2,
+    marginBottom: spacing.md,
+  },
+  ramadanToggleButton: {
+    backgroundColor: colors.primaryDark,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.08),
+    shadowColor: withOpacity(colors.black, 0.3),
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  ramadanToggleButtonActive: {
+    backgroundColor: colors.accent,
+    borderColor: withOpacity(colors.accent, 0.8),
+    shadowColor: colors.accent,
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  ramadanToggleText: {
+    color: colors.white,
+    fontSize: typography.bodyLg,
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  ramadanToggleTextActive: {
+    color: colors.primaryDark,
+  },
+  sectionHeader: {
+    alignItems: "center",
+    marginBottom: spacing.sm + 2,
+  },
+  sectionEyebrow: {
+    color: withOpacity(colors.accent, 0.92),
+    fontSize: typography.caption,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    fontFamily: "SFProDisplay-Semibold",
+  },
+  sectionTitle: {
+    color: colors.white,
+    fontSize: typography.title,
+    marginTop: spacing.xs,
+    fontFamily: "SFProDisplay-Bold",
+  },
+  prayerListCard: {
+    backgroundColor: withOpacity(colors.black, 0.2),
+    borderRadius: 18,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.08),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 6,
+    overflow: "hidden",
+  },
   errorCard: {
     backgroundColor: colors.primarySurface,
     borderRadius: 12,
