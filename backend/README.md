@@ -1,6 +1,6 @@
 # Sirat Backend
 
-Express + TypeScript API used by Sirat for dua selection.
+Express + TypeScript API used by Sirat for dua selection and proxy integrations.
 
 ## What It Does
 
@@ -8,6 +8,9 @@ Express + TypeScript API used by Sirat for dua selection.
 - Accepts natural-language user requests
 - Uses OpenAI to select the best matching dua ID (metadata-only context)
 - Falls back to a random dua if AI is unavailable/fails
+- Proxies prayer timings/calendar from Aladhan with validation, retry, and in-memory cache
+- Aggregates yearly holiday data from Aladhan behind a single backend endpoint
+- Proxies nearby mosque lookup through Google Places
 
 ## API Endpoints
 
@@ -67,6 +70,44 @@ Returns nearby mosques from Google Places through backend proxying.
 
 Returns mosque service status and timestamp.
 
+### `GET /api/prayer-times/timings`
+
+Query parameters:
+
+- `latitude` (required, -90 to 90)
+- `longitude` (required, -180 to 180)
+- `method` (required, supported Aladhan method id)
+
+Returns sanitized current-day prayer timings.
+
+### `GET /api/prayer-times/calendar`
+
+Query parameters:
+
+- `latitude` (required, -90 to 90)
+- `longitude` (required, -180 to 180)
+- `method` (required, supported Aladhan method id)
+- `month` (required, 1 to 12)
+- `year` (required, 1900 to 2100)
+
+Returns sanitized monthly prayer calendar data.
+
+### `GET /api/prayer-times/health`
+
+Returns prayer-times service status and timestamp.
+
+### `GET /api/holidays/year`
+
+Query parameters:
+
+- `year` (required, 1900 to 2100)
+
+Fetches all 12 months from Aladhan internally, deduplicates holidays by date, and returns a single yearly payload.
+
+### `GET /api/holidays/health`
+
+Returns holiday service status and timestamp.
+
 ## Run Locally
 
 ```bash
@@ -111,7 +152,15 @@ Notes:
 
 - `src/index.ts` - app setup, CORS, routing, health/404/error middleware
 - `src/routes/dua.ts` - dua routes
+- `src/routes/mosque.ts` - mosque routes
+- `src/routes/prayerTimes.ts` - prayer-times routes
+- `src/routes/holiday.ts` - holiday routes
 - `src/controllers/duaController.ts` - request validation + flow control
+- `src/controllers/mosqueController.ts` - mosque request validation + flow control
+- `src/controllers/prayerTimesController.ts` - prayer-times parameter validation + flow control
+- `src/controllers/holidayController.ts` - holiday year validation + flow control
+- `src/services/aladhanService.ts` - Aladhan proxy, retry, validation, caching
 - `src/services/openaiService.ts` - OpenAI chat completion call
+- `src/services/googleMapsService.ts` - Google Places proxy calls
 - `src/utils/duaDatabase.ts` - load/cache/query dua dataset
 - `src/config/env.ts` - env parsing/defaults

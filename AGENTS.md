@@ -1,7 +1,7 @@
 ## Scope
 This repository is a monorepo with:
 - `frontend/`: Expo Router + React Native mobile app
-- `backend/`: Express + TypeScript API for dua matching
+- `backend/`: Express + TypeScript API for dua matching and external API proxying
 - `docs/`: static website/privacy pages
 - `plans/`: planning documents (not runtime code)
 
@@ -37,10 +37,11 @@ Run commands from the correct package directory:
 
 ### Backend
 - Entry: `backend/src/index.ts`
-- Routes: `backend/src/routes/dua.ts`, `backend/src/routes/mosque.ts`
-- Controller: `backend/src/controllers/duaController.ts`, `backend/src/controllers/mosqueController.ts`
+- Routes: `backend/src/routes/dua.ts`, `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`
+- Controller: `backend/src/controllers/duaController.ts`, `backend/src/controllers/mosqueController.ts`, `backend/src/controllers/prayerTimesController.ts`, `backend/src/controllers/holidayController.ts`
 - OpenAI integration: `backend/src/services/openaiService.ts`
 - Google Maps integration: `backend/src/services/googleMapsService.ts`
+- Aladhan integration/proxy + cache/retry: `backend/src/services/aladhanService.ts`
 - Dua data source/caching: `backend/src/utils/duaDatabase.ts`
 - Error middleware: `backend/src/middleware/errorHandler.ts`
 - Canonical backend dua dataset: `backend/public/duas.json`
@@ -62,11 +63,11 @@ Dua API flow:
 
 Important frontend flows:
 - Dua: local regex match first (`frontend/services/duaMatcher.ts`), backend fallback via `frontend/services/duaService.ts`
-- Prayer times: Aladhan API + year/day caching in `frontend/services/prayerTimes.ts`
+- Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (`/api/prayer-times/timings` + `/api/prayer-times/calendar`)
 - Notifications: rolling scheduling in `frontend/services/notificationService.ts`
 - Quran: preload/normalize local dataset in `frontend/services/quranData.ts`
 - Mosques: backend-proxied Google Places Nearby Search via `frontend/services/getNearbyMosques.ts` and `backend/src/routes/mosque.ts`
-- Calendar/Ramadan: holiday fetch + missed fast tracking (`holidayService.ts`, `ramadanTracker.ts`)
+- Calendar/Ramadan: backend holiday year proxy + missed fast tracking (`holidayService.ts`, `ramadanTracker.ts`)
 
 ## Environment and Runtime Constraints
 
@@ -79,7 +80,7 @@ Important frontend flows:
 - `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
 
 ### Frontend env/config
-- `EXPO_PUBLIC_API_URL` used in `frontend/services/duaService.ts` and `frontend/services/getNearbyMosques.ts`, default `http://localhost:3001`
+- `EXPO_PUBLIC_API_URL` used in `frontend/services/duaService.ts`, `frontend/services/getNearbyMosques.ts`, `frontend/services/prayerTimes.ts`, and `frontend/services/holidayService.ts`, default `http://localhost:3001`
 - `frontend/app.config.js` sets `newArchEnabled: true`, iOS bundle metadata, notifications plugin with `adhan.wav`
 
 ## Constraints and Gotchas
@@ -91,7 +92,7 @@ Important frontend flows:
 - `quranData` accessors throw if preload has not occurred; preload is triggered in root layout.
 - Calendar month navigation is constrained to current year through next year.
 - CORS allowlist in backend is explicit; add origins in `backend/src/index.ts` if needed.
-- Backend coverage output is committed under `backend/coverage/`.
+- Backend coverage output is generated under `backend/coverage/` (not tracked in git).
 - `.env` files are gitignored at repo root (`.gitignore`).
 
 ## TypeScript / Lint

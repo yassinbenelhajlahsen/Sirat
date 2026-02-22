@@ -35,7 +35,7 @@ Create `frontend/.env`:
 EXPO_PUBLIC_API_URL=http://localhost:3001
 ```
 
-- `EXPO_PUBLIC_API_URL` points to the backend API (dua + mosque endpoints).
+- `EXPO_PUBLIC_API_URL` points to the backend API (dua, mosque, prayer-times, and holidays endpoints).
 
 ## Current Architecture
 
@@ -52,7 +52,8 @@ frontend/
 
 ## Data & Integrations
 
-- Aladhan API: prayer times + Hijri/holiday data
+- Sirat backend (`/api/prayer-times/timings`, `/api/prayer-times/calendar`): proxied Aladhan prayer data
+- Sirat backend (`/api/holidays/year`): proxied and aggregated Aladhan holiday data
 - Sirat backend (`/api/mosque/nearby`): proxied Google Places nearby mosques
 - Sirat backend (`/api/dua`): AI-assisted dua fallback
 - Quran text data: bundled local JSON assets
@@ -63,4 +64,5 @@ frontend/
 
 - App startup preloads Quran data/display modes and syncs location/notification permissions in `app/_layout.tsx`.
 - Notification scheduling is handled by `services/notificationService.ts`.
-- Prayer time caching and annual calendar fetch live in `services/prayerTimes.ts`.
+- Prayer-time caching and annual calendar fetch live in `services/prayerTimes.ts`.
+- Holiday year fetch and caching live in `services/holidayService.ts`.
