@@ -149,9 +149,9 @@
             <p class="mt-2 text-sm">
               Sirat uses location to calculate prayer times, determine Qibla,
               and show nearby mosques. Depending on the feature, coordinates may
-              be sent to third-party APIs (for example Aladhan and Google
-              Places) to return results. Sirat does not operate its own
-              long-term location database for users.
+              be sent to Sirat's backend, which may call third-party APIs (for
+              example Aladhan and Google Places) to return results. Sirat does
+              not operate its own long-term location database for users.
             </p>
           </div>
 
@@ -182,12 +182,11 @@
               4. Internet Access
             </h2>
             <p class="mt-2 text-sm">
-              Sirat fetches data from trusted APIs such as Aladhan and Google
-              Places, streams Quran audio from online sources, and can call
-              Sirat's dua backend for AI fallback matching. When AI fallback is
-              used, your entered dua request text may be processed by the backend
-              and OpenAI to select a matching dua. Local regex matching is used
-              first in-app when possible.
+              Sirat calls backend endpoints for dua matching, prayer times,
+              holiday data, and mosque lookup; backend services may call trusted
+              APIs such as Aladhan, Google Places, and OpenAI when needed. Sirat
+              also streams Quran audio from online sources. For dua matching,
+              local regex matching is used first in-app when possible.
             </p>
           </div>
 
@@ -210,9 +209,8 @@
             <p class="mt-2 text-sm">
               Sirat does not use analytics tools, advertising networks, tracking
               SDKs, or user profiling services. Third-party services used for app
-              functionality may include Google Maps/Places, Aladhan, Expo
-              services, and OpenAI (for dua AI fallback). Review their privacy
-              policies for details.
+              functionality may include Google Maps/Places, Aladhan, OpenAI, and
+              Expo services. Review their privacy policies for details.
             </p>
           </div>
 
