@@ -9,7 +9,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -31,6 +31,53 @@ import {
   Mosque,
 } from "../../services/getNearbyMosques";
 import PressableScale from "../components/PressableScale";
+
+const ShimmerCard = () => {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: true,
+      }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmerAnim]);
+
+  const opacity = shimmerAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.3, 0.6, 0.3],
+  });
+
+  return (
+    <View style={styles.animatedCard}>
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Animated.View
+            style={[styles.shimmerIcon, { opacity }]}
+          />
+          <Animated.View
+            style={[styles.shimmerTitle, { opacity }]}
+          />
+        </View>
+        <Animated.View
+          style={[styles.shimmerAddress, { opacity }]}
+        />
+      </View>
+    </View>
+  );
+};
+
+const SkeletonList = () => (
+  <View style={styles.list}>
+    {[0, 1, 2].map((i) => (
+      <ShimmerCard key={i} />
+    ))}
+  </View>
+);
 
 type Perm = "undetermined" | "denied" | "granted";
 
@@ -179,15 +226,7 @@ export default function MosqueScreen() {
     </View>
   );
 
-  if (loading && !location) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent} />
-      </View>
-    );
-  }
-
-  if (needLocationGate) {
+  if (needLocationGate && !loading) {
     const servicesOff = servicesOn === false;
     const denied = permissionStatus === "denied";
     const undetermined = permissionStatus === "undetermined";
@@ -336,7 +375,9 @@ export default function MosqueScreen() {
           <Text style={styles.title}>Mosques</Text>
 
           <Text style={styles.header}>Nearby</Text>
-          {emptyNearby ? (
+          {loading && mosques.length === 0 ? (
+            <SkeletonList />
+          ) : emptyNearby ? (
             <View style={styles.emptyCard}>
               <View style={styles.emptyRow}>
                 <Ionicons name="search" size={18} color={colors.accent} />
@@ -358,6 +399,17 @@ export default function MosqueScreen() {
           )}
 
           <Text style={styles.header}>Map</Text>
+          {!location ? (
+            <Animated.View
+              style={[
+                styles.mapContainer,
+                {
+                  backgroundColor: withOpacity(colors.accent, 0.1),
+                  opacity: 0.5,
+                },
+              ]}
+            />
+          ) : (
           <PressableScale
             style={styles.mapContainer}
             onPress={() => router.push("/components/map")}
@@ -417,6 +469,7 @@ export default function MosqueScreen() {
               </View>
             )}
           </PressableScale>
+          )}
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -647,5 +700,24 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 8,
+  },
+  shimmerIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: withOpacity(colors.accent, 0.25),
+  },
+  shimmerTitle: {
+    height: 18,
+    borderRadius: 8,
+    backgroundColor: withOpacity(colors.accent, 0.25),
+    flex: 1,
+  },
+  shimmerAddress: {
+    height: 14,
+    borderRadius: 6,
+    backgroundColor: withOpacity(colors.accent, 0.15),
+    width: "70%",
+    marginTop: 2,
   },
 });
