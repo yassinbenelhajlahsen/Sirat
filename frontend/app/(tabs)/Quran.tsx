@@ -91,6 +91,8 @@ type QuranJuzSearchResult = {
   juzNumber: number;
 };
 
+type NavigatorInitialTab = "goto" | "bookmarks";
+
 const ESTIMATED_ITEM_SIZE = 260;
 
 function normalizeArabicDigits(value: string): string {
@@ -365,6 +367,8 @@ export default function QuranScreen() {
   );
 
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [navigatorInitialTab, setNavigatorInitialTab] =
+    useState<NavigatorInitialTab>("goto");
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
   const [surahSearchQuery, setSurahSearchQuery] = useState("");
   const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
@@ -666,6 +670,11 @@ export default function QuranScreen() {
     },
     [juzFirstItemIndex, scrollToAyahIndex, scrollToItemIndex],
   );
+
+  const openNavigator = useCallback((tab: NavigatorInitialTab = "goto") => {
+    setNavigatorInitialTab(tab);
+    setNavigatorOpen(true);
+  }, []);
 
   const viewabilityConfigRef = useRef({
     itemVisiblePercentThreshold: 1,
@@ -1080,13 +1089,18 @@ export default function QuranScreen() {
   const handleAyahDoubleTap = useCallback(
     (ayah: NormalizedAyah, ayahGlobalIndex: number, ayahKey: string) => {
       const existing = bookmarkMap.get(ayahKey);
+      if (existing) {
+        setBookmarkModalContext(null);
+        openNavigator("bookmarks");
+        return;
+      }
       setBookmarkModalContext({
         ayah,
         ayahGlobalIndex,
         bookmark: existing,
       });
     },
-    [bookmarkMap],
+    [bookmarkMap, openNavigator],
   );
 
   const renderItem = useCallback<ListRenderItem<QuranListItem>>(
@@ -1226,18 +1240,24 @@ export default function QuranScreen() {
       <SafeAreaView style={styles.screen}>
         <View style={styles.container}>
           <View style={styles.header}>
+            <Text style={styles.headerEyebrow}>Recitation</Text>
             <Text
               style={[
                 styles.headerTitle,
                 {
-                  fontSize: isSmall ? 34 : 40,
+                  fontSize: isSmall ? 32 : 38,
                   fontFamily: "SFProDisplay-Bold",
                 },
               ]}
             >
               Quran
             </Text>
-            <View style={styles.headerSubsection}>
+            <View
+              style={[
+                styles.headerSubsection,
+                isSmall ? styles.headerSubsectionCompact : null,
+              ]}
+            >
               <View style={styles.headerDetails}>
                 <Text style={styles.headerSurahEnglish}>
                   {currentSurahMeta?.englishName ?? ""}
@@ -1249,7 +1269,12 @@ export default function QuranScreen() {
                   Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
                 </Text>
               </View>
-              <View style={styles.headerActions}>
+              <View
+                style={[
+                  styles.headerActions,
+                  isSmall ? styles.headerActionsCompact : null,
+                ]}
+              >
                 <View style={styles.capsuleBar}>
                   {!offlinePillVisible ? (
                     <PressableScale
@@ -1290,7 +1315,7 @@ export default function QuranScreen() {
                   )}
                   <PressableScale
                     style={[styles.capsulePrimary, styles.capsuleGap]}
-                    onPress={() => setNavigatorOpen(true)}
+                    onPress={() => openNavigator("goto")}
                     accessibilityRole="button"
                   >
                     <Text style={styles.jumpButtonText}>Navigate</Text>
@@ -1335,6 +1360,7 @@ export default function QuranScreen() {
 
           <NavigatorModal
             visible={navigatorOpen}
+            initialTab={navigatorInitialTab}
             surahs={surahs}
             filteredSurahs={filteredSurahs}
             ayahSearchResults={filteredAyahResults}
@@ -1395,18 +1421,33 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   header: {
+    marginTop: spacing.xs,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm + 2,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm + 2,
     marginBottom: spacing.md,
+  },
+  headerEyebrow: {
+    color: withOpacity(themeColors.accent, 0.9),
+    fontSize: typography.caption,
+    fontFamily: "SFProDisplay-Semibold",
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   headerTitle: {
     color: themeColors.white,
-    marginBottom: 6,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
   },
   headerSubsection: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+  },
+  headerSubsectionCompact: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: spacing.sm,
   },
   headerDetails: {
     flexShrink: 1,
@@ -1416,7 +1457,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: spacing.sm,
   },
+  headerActionsCompact: {
+    marginLeft: 0,
+  },
   capsuleBar: {
+    marginTop: 15,
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 999,
@@ -1466,8 +1511,10 @@ const styles = StyleSheet.create({
   },
   headerMeta: {
     color: themeColors.white,
-    fontSize: typography.body,
-    opacity: 0.75,
+    fontSize: typography.caption,
+    opacity: 0.88,
+    fontFamily: "SFProDisplay-Semibold",
+    marginTop: spacing.xs,
   },
   audioButton: {
     backgroundColor: themeColors.accent,
@@ -1517,7 +1564,8 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: 56,
+    paddingTop: spacing.xs,
+    paddingBottom: 72,
   },
   listPlaceholder: {
     flex: 1,

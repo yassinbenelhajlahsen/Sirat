@@ -85,6 +85,7 @@ function QuranAyahCard({
       <Pressable
         style={[
           styles.ayahCard,
+          isBookmarked ? styles.ayahCardBookmarked : null,
           isDoubleTapFeedbackVisible && onDoubleTap ? styles.ayahCardPressed : null,
         ]}
         onPress={handlePress}
@@ -136,7 +137,7 @@ export default memo(QuranAyahCard);
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: 22,
   },
 
   /* SURAH DIVIDER */
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   surahDividerLine: {
     flex: 1,
@@ -152,15 +153,15 @@ const styles = StyleSheet.create({
     backgroundColor: withOpacity(themeColors.accent, 0.18),
   },
   surahDividerLabel: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: withOpacity(themeColors.accent, 0.28),
     backgroundColor: withOpacity(themeColors.primarySurface, 0.85),
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 150,
+    minWidth: 144,
   },
   surahDividerArabic: {
     color: themeColors.accent,
@@ -179,10 +180,10 @@ const styles = StyleSheet.create({
 
   /* AYAH CARD */
   ayahCard: {
-    backgroundColor: themeColors.primarySurface,
+    backgroundColor: withOpacity(themeColors.primarySurface, 0.92),
     borderRadius: 18,
-    paddingVertical: 20,
-    paddingHorizontal: 18,
+    paddingVertical: 22,
+    paddingHorizontal: 20,
 
     borderWidth: 1,
     borderColor: withOpacity(themeColors.white, 0.06),
@@ -192,6 +193,10 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
     elevation: 4,
+  },
+  ayahCardBookmarked: {
+    borderColor: withOpacity(themeColors.accent, 0.32),
+    backgroundColor: withOpacity(themeColors.primarySurface, 0.96),
   },
 
   ayahCardPressed: {
@@ -203,10 +208,10 @@ const styles = StyleSheet.create({
   surahTag: {
     alignSelf: "flex-end",
     color: themeColors.accent,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     letterSpacing: 0.8,
-    marginBottom: 8,
+    marginBottom: 10,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 999,
@@ -216,8 +221,8 @@ const styles = StyleSheet.create({
   /* BOOKMARK BADGE */
   bookmarkBadge: {
     position: "absolute",
-    top: 12,
-    left: 12,
+    top: 13,
+    left: 13,
     backgroundColor: withOpacity(themeColors.black, 0.35),
     borderRadius: 999,
     padding: 6,
@@ -227,34 +232,34 @@ const styles = StyleSheet.create({
 
   /* ARABIC */
   arabic: {
-    fontSize: 30,
+    fontSize: 31,
     textAlign: "right",
     writingDirection: "rtl",
     color: themeColors.white,
-    lineHeight: 46,
+    lineHeight: 48,
     letterSpacing: 0.2,
   },
 
   textBlockSpacing: {
-    marginBottom: 14,
+    marginBottom: 13,
   },
 
   /* TRANSLITERATION */
   transliteration: {
-    fontSize: 15,
+    fontSize: 14,
     color: themeColors.white,
     opacity: 0.75,
-    lineHeight: 23,
+    lineHeight: 22,
     textAlign: "center",
     fontStyle: "italic",
   },
 
   /* TRANSLATION */
   translation: {
-    fontSize: 16,
+    fontSize: 15,
     color: themeColors.white,
-    opacity: 0.88,
-    lineHeight: 24,
+    opacity: 0.9,
+    lineHeight: 23,
     textAlign: "left",
   },
 });

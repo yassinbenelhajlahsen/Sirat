@@ -16,6 +16,7 @@ import SurahTab, {
 
 type QuranNavigatorModalProps = {
   visible: boolean;
+  initialTab?: NavigatorTabKey;
   surahs: readonly NormalizedSurahMeta[];
   filteredSurahs: readonly NormalizedSurahMeta[];
   ayahSearchResults: readonly QuranAyahSearchResult[];
@@ -36,6 +37,7 @@ type QuranNavigatorModalProps = {
 
 function NavigatorModal({
   visible,
+  initialTab = "goto",
   surahs,
   filteredSurahs,
   ayahSearchResults,
@@ -119,10 +121,10 @@ function NavigatorModal({
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
-      setSelectedTab("goto");
+      setSelectedTab(initialTab);
     }
     previousVisibleRef.current = visible;
-  }, [visible]);
+  }, [initialTab, visible]);
 
   const handleSelectTab = useCallback((tab: NavigatorTabKey) => {
     setSelectedTab(tab);
