@@ -419,9 +419,6 @@ export default function Home() {
             )}
 
             <View style={styles.headerSection}>
-              <Text style={styles.eyebrow}>
-                Today
-              </Text>
               <Text style={styles.sectionTitle}>
                 Prayer Times
               </Text>
