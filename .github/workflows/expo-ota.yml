@@ -29,6 +29,6 @@ jobs:
 
       - name: Publish OTA update
         working-directory: frontend
-        run: eas update  --platform ios  --branch production --auto --non-interactive
+        run: eas update  --platform ios  --branch production --auto
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
