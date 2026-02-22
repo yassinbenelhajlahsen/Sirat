@@ -137,13 +137,18 @@ export default function MosqueScreen() {
 
       // Fresh network fetch
       setFetchingFresh(true);
-      const fresh = await getNearbyMosques(latitude, longitude);
-      setMosques(fresh);
-    } catch (err) {
-      console.error("Mosque fetch error:", err);
-      if (mosques.length === 0) {
-        Alert.alert("Error", "Failed to load nearby mosques.");
+      try {
+        const fresh = await getNearbyMosques(latitude, longitude);
+        setMosques(fresh);
+      } catch (fetchErr) {
+        console.error("Mosque fetch error:", fetchErr);
+        if (cached.length === 0) {
+          Alert.alert("Error", "Failed to load nearby mosques.");
+        }
       }
+    } catch (err) {
+      console.error("Mosque load error:", err);
+      Alert.alert("Error", "Failed to load nearby mosques.");
     } finally {
       setFetchingFresh(false);
       setLoading(false);
