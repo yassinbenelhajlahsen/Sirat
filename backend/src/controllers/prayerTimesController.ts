@@ -69,7 +69,32 @@ function parseRequiredInteger(
   return parsed;
 }
 
-function sendValidationError(res: Response, message: string) {
+function logPrayerTimesError(
+  req: Request,
+  event: string,
+  data: Record<string, unknown>,
+) {
+  console.error(
+    JSON.stringify({
+      event,
+      service: "prayer-times",
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      path: req.originalUrl,
+      ip: req.ip,
+      userAgent: req.get("user-agent") ?? "unknown",
+      ...data,
+    }),
+  );
+}
+
+function sendValidationError(req: Request, res: Response, message: string) {
+  logPrayerTimesError(req, "prayer_times_validation_error", {
+    message,
+    retriable: false,
+    query: req.query,
+  });
+
   return res.status(400).json({
     error: {
       code: "VALIDATION_ERROR",
@@ -79,8 +104,16 @@ function sendValidationError(res: Response, message: string) {
   });
 }
 
-function sendServiceError(res: Response, error: unknown) {
+function sendServiceError(req: Request, res: Response, error: unknown) {
   if (error instanceof AladhanServiceError) {
+    logPrayerTimesError(req, "prayer_times_service_error", {
+      code: error.code,
+      message: error.message,
+      status: error.status,
+      retriable: error.retriable,
+      query: req.query,
+    });
+
     return res.status(error.status).json({
       error: {
         code: error.code,
@@ -90,6 +123,22 @@ function sendServiceError(res: Response, error: unknown) {
       stale: false,
     });
   }
+
+  const unknownError =
+    error instanceof Error
+      ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack ?? null,
+        }
+      : {
+          value: String(error),
+        };
+
+  logPrayerTimesError(req, "prayer_times_unexpected_error", {
+    error: unknownError,
+    query: req.query,
+  });
 
   return res.status(500).json({
     error: {
@@ -107,23 +156,27 @@ export async function getTimingsHandler(req: Request, res: Response) {
   const method = parseRequiredInteger(req, "method");
 
   if (typeof latitude !== "number") {
-    return sendValidationError(res, latitude.error);
+    return sendValidationError(req, res, latitude.error);
   }
   if (typeof longitude !== "number") {
-    return sendValidationError(res, longitude.error);
+    return sendValidationError(req, res, longitude.error);
   }
   if (typeof method !== "number") {
-    return sendValidationError(res, method.error);
+    return sendValidationError(req, res, method.error);
   }
 
   if (latitude < -90 || latitude > 90) {
-    return sendValidationError(res, "latitude must be between -90 and 90");
+    return sendValidationError(req, res, "latitude must be between -90 and 90");
   }
   if (longitude < -180 || longitude > 180) {
-    return sendValidationError(res, "longitude must be between -180 and 180");
+    return sendValidationError(req, res, "longitude must be between -180 and 180");
   }
   if (!ALLOWED_METHODS.has(method)) {
-    return sendValidationError(res, "method must be a supported Aladhan method id");
+    return sendValidationError(
+      req,
+      res,
+      "method must be a supported Aladhan method id",
+    );
   }
 
   try {
@@ -140,7 +193,7 @@ export async function getTimingsHandler(req: Request, res: Response) {
       data: result.data,
     });
   } catch (error: unknown) {
-    return sendServiceError(res, error);
+    return sendServiceError(req, res, error);
   }
 }
 
@@ -152,35 +205,39 @@ export async function getCalendarHandler(req: Request, res: Response) {
   const year = parseRequiredInteger(req, "year");
 
   if (typeof latitude !== "number") {
-    return sendValidationError(res, latitude.error);
+    return sendValidationError(req, res, latitude.error);
   }
   if (typeof longitude !== "number") {
-    return sendValidationError(res, longitude.error);
+    return sendValidationError(req, res, longitude.error);
   }
   if (typeof method !== "number") {
-    return sendValidationError(res, method.error);
+    return sendValidationError(req, res, method.error);
   }
   if (typeof month !== "number") {
-    return sendValidationError(res, month.error);
+    return sendValidationError(req, res, month.error);
   }
   if (typeof year !== "number") {
-    return sendValidationError(res, year.error);
+    return sendValidationError(req, res, year.error);
   }
 
   if (latitude < -90 || latitude > 90) {
-    return sendValidationError(res, "latitude must be between -90 and 90");
+    return sendValidationError(req, res, "latitude must be between -90 and 90");
   }
   if (longitude < -180 || longitude > 180) {
-    return sendValidationError(res, "longitude must be between -180 and 180");
+    return sendValidationError(req, res, "longitude must be between -180 and 180");
   }
   if (!ALLOWED_METHODS.has(method)) {
-    return sendValidationError(res, "method must be a supported Aladhan method id");
+    return sendValidationError(
+      req,
+      res,
+      "method must be a supported Aladhan method id",
+    );
   }
   if (month < 1 || month > 12) {
-    return sendValidationError(res, "month must be between 1 and 12");
+    return sendValidationError(req, res, "month must be between 1 and 12");
   }
   if (year < 1900 || year > 2100) {
-    return sendValidationError(res, "year must be between 1900 and 2100");
+    return sendValidationError(req, res, "year must be between 1900 and 2100");
   }
 
   try {
@@ -199,6 +256,6 @@ export async function getCalendarHandler(req: Request, res: Response) {
       data: result.data,
     });
   } catch (error: unknown) {
-    return sendServiceError(res, error);
+    return sendServiceError(req, res, error);
   }
 }

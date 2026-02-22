@@ -19,7 +19,28 @@ function parseRequiredInteger(
   return parsed;
 }
 
-function sendValidationError(res: Response, message: string) {
+function logHolidayError(req: Request, event: string, data: Record<string, unknown>) {
+  console.error(
+    JSON.stringify({
+      event,
+      service: "holidays",
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      path: req.originalUrl,
+      ip: req.ip,
+      userAgent: req.get("user-agent") ?? "unknown",
+      ...data,
+    }),
+  );
+}
+
+function sendValidationError(req: Request, res: Response, message: string) {
+  logHolidayError(req, "holidays_validation_error", {
+    message,
+    retriable: false,
+    query: req.query,
+  });
+
   return res.status(400).json({
     error: {
       code: "VALIDATION_ERROR",
@@ -29,8 +50,16 @@ function sendValidationError(res: Response, message: string) {
   });
 }
 
-function sendServiceError(res: Response, error: unknown) {
+function sendServiceError(req: Request, res: Response, error: unknown) {
   if (error instanceof AladhanServiceError) {
+    logHolidayError(req, "holidays_service_error", {
+      code: error.code,
+      message: error.message,
+      status: error.status,
+      retriable: error.retriable,
+      query: req.query,
+    });
+
     return res.status(error.status).json({
       error: {
         code: error.code,
@@ -40,6 +69,22 @@ function sendServiceError(res: Response, error: unknown) {
       stale: false,
     });
   }
+
+  const unknownError =
+    error instanceof Error
+      ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack ?? null,
+        }
+      : {
+          value: String(error),
+        };
+
+  logHolidayError(req, "holidays_unexpected_error", {
+    error: unknownError,
+    query: req.query,
+  });
 
   return res.status(500).json({
     error: {
@@ -55,11 +100,11 @@ export async function getHolidaysByYearHandler(req: Request, res: Response) {
   const year = parseRequiredInteger(req, "year");
 
   if (typeof year !== "number") {
-    return sendValidationError(res, year.error);
+    return sendValidationError(req, res, year.error);
   }
 
   if (year < 1900 || year > 2100) {
-    return sendValidationError(res, "year must be between 1900 and 2100");
+    return sendValidationError(req, res, "year must be between 1900 and 2100");
   }
 
   try {
@@ -72,6 +117,6 @@ export async function getHolidaysByYearHandler(req: Request, res: Response) {
       data: result.data,
     });
   } catch (error: unknown) {
-    return sendServiceError(res, error);
+    return sendServiceError(req, res, error);
   }
 }
