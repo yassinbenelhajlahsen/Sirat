@@ -64,6 +64,8 @@ export default function CalendarScreen() {
     typeof month === "string" ? parseInt(month, 10) : today.getMonth();
   const initialYear =
     typeof year === "string" ? parseInt(year, 10) : today.getFullYear();
+  const initialIsViewingToday =
+    initialMonth === today.getMonth() && initialYear === today.getFullYear();
 
   const minDate = new Date(today.getFullYear(), 0);
   const maxDate = new Date(today.getFullYear() + 1, 11);
@@ -84,6 +86,10 @@ export default function CalendarScreen() {
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
+  const ramadanSummaryAnim = useRef(new Animated.Value(0)).current;
+  const backToTodayAnim = useRef(
+    new Animated.Value(initialIsViewingToday ? 0 : 1),
+  ).current;
   const { width: screenWidth } = useWindowDimensions();
   const tabBarHeight = useBottomTabBarHeight();
 
@@ -157,6 +163,47 @@ export default function CalendarScreen() {
     if (!ramadanSummary || ramadanSummary.missedDays.length === 0) return "";
     return ramadanSummary.missedDays.join(", ");
   }, [ramadanSummary]);
+  const showRamadanSummary =
+    !!ramadanSummary &&
+    ramadanSummary.totalMissed > 0 &&
+    !!firstMissedFastDate;
+  const [renderRamadanSummary, setRenderRamadanSummary] = useState(
+    showRamadanSummary,
+  );
+
+  useEffect(() => {
+    if (showRamadanSummary) {
+      setRenderRamadanSummary(true);
+      ramadanSummaryAnim.setValue(0);
+      Animated.timing(ramadanSummaryAnim, {
+        toValue: 1,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start();
+      return;
+    }
+
+    if (!renderRamadanSummary) return;
+
+    Animated.timing(ramadanSummaryAnim, {
+      toValue: 0,
+      duration: 180,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) setRenderRamadanSummary(false);
+    });
+  }, [renderRamadanSummary, ramadanSummaryAnim, showRamadanSummary]);
+
+  useEffect(() => {
+    Animated.timing(backToTodayAnim, {
+      toValue: isViewingToday ? 0 : 1,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [backToTodayAnim, isViewingToday]);
 
   // Load holidays for the visible year
   useEffect(() => {
@@ -604,42 +651,93 @@ export default function CalendarScreen() {
           </View>
         </Animated.View>
 
-        {/* Ramadan Summary (static, not animated) */}
+        {/* Ramadan Summary */}
         <View style={[styles.footer, { paddingBottom: tabBarHeight + 8 }]}>
-          {ramadanSummary &&
-            ramadanSummary.totalMissed > 0 &&
-            firstMissedFastDate && (
-            <PressableScale
-              onPress={handleRamadanSummaryPress}
-              style={styles.summaryCard}
-              accessibilityRole="button"
-              accessibilityLabel="Open first missed Ramadan fast date"
+          {renderRamadanSummary && (
+            <Animated.View
+              pointerEvents={showRamadanSummary ? "auto" : "none"}
+              style={{
+                opacity: ramadanSummaryAnim,
+                marginBottom: ramadanSummaryAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, spacing.lg],
+                }),
+                maxHeight: ramadanSummaryAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 180],
+                }),
+                transform: [
+                  {
+                    scale: ramadanSummaryAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.94, 1],
+                    }),
+                  },
+                ],
+                overflow: "hidden",
+              }}
             >
-              <View style={styles.summaryTopRow}>
-                <Text style={styles.summaryTitle}>
-                  Ramadan Summary
+              <PressableScale
+                onPress={handleRamadanSummaryPress}
+                style={styles.summaryCard}
+                accessibilityRole="button"
+                accessibilityLabel="Open first missed Ramadan fast date"
+              >
+                <View style={styles.summaryTopRow}>
+                  <Text style={styles.summaryTitle}>
+                    Ramadan Summary
+                  </Text>
+                  <Ionicons
+                    name="arrow-forward-circle-outline"
+                    size={20}
+                    color={withOpacity(colors.accent, 0.95)}
+                  />
+                </View>
+                <Text style={styles.summaryText}>
+                  Missed fasts: {ramadanSummary?.totalMissed ?? 0}
                 </Text>
-                <Ionicons
-                  name="arrow-forward-circle-outline"
-                  size={20}
-                  color={withOpacity(colors.accent, 0.95)}
-                />
-              </View>
-              <Text style={styles.summaryText}>
-                Missed fasts: {ramadanSummary.totalMissed}
-              </Text>
-              <Text style={styles.summaryTextSecondary}>
-                Missed days: {missedDaysLabel}
-              </Text>
-              <Text style={styles.summaryHint}>
-                Tap to review and update
-              </Text>
-            </PressableScale>
+                <Text style={styles.summaryTextSecondary}>
+                  Missed days: {missedDaysLabel}
+                </Text>
+                <Text style={styles.summaryHint}>
+                  Tap to review and update
+                </Text>
+              </PressableScale>
+            </Animated.View>
           )}
 
-          {/* Back to Today (static, not animated) */}
-          {!isViewingToday && (
+          {/* Back to Today */}
+          <Animated.View
+            pointerEvents={isViewingToday ? "none" : "auto"}
+            style={[
+              styles.backToTodayWrap,
+              {
+                height: backToTodayAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 56],
+                }),
+                marginTop: backToTodayAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, spacing.sm],
+                }),
+                marginBottom: backToTodayAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, spacing.xxl],
+                }),
+                opacity: backToTodayAnim,
+                transform: [
+                  {
+                    translateY: backToTodayAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-8, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
             <PressableScale
+              disabled={isViewingToday}
               onPress={() => {
                 const targetYear = today.getFullYear();
                 const targetMonth = today.getMonth();
@@ -658,7 +756,7 @@ export default function CalendarScreen() {
                 Back to Today
               </Text>
             </PressableScale>
-          )}
+          </Animated.View>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -814,9 +912,10 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Semibold",
     marginTop: spacing.sm,
   },
+  backToTodayWrap: {
+    overflow: "hidden",
+  },
   backToToday: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.xxl,
     alignSelf: "center",
     backgroundColor: colors.accent,
     paddingHorizontal: spacing.xl,
