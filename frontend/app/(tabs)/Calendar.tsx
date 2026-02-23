@@ -142,14 +142,10 @@ export default function CalendarScreen() {
 
     return earliestDateKey ? parseDateKey(earliestDateKey) : null;
   }, [missedFastsMap, ramadanMonthActive, ramadanStart, ramadanEnd]);
-  const firstMissedFastLabel = useMemo(() => {
-    if (!firstMissedFastDate) return null;
-    return firstMissedFastDate.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  }, [firstMissedFastDate]);
+  const missedDaysLabel = useMemo(() => {
+    if (!ramadanSummary || ramadanSummary.missedDays.length === 0) return "";
+    return ramadanSummary.missedDays.join(", ");
+  }, [ramadanSummary]);
 
   // Load holidays for the visible year
   useEffect(() => {
@@ -622,10 +618,10 @@ export default function CalendarScreen() {
                 Missed fasts: {ramadanSummary.totalMissed}
               </Text>
               <Text style={styles.summaryTextSecondary}>
-                First missed: {firstMissedFastLabel}
+                Missed days: {missedDaysLabel}
               </Text>
               <Text style={styles.summaryHint}>
-                Tap to review and update
+                Tap to review and update from the first missed day
               </Text>
             </PressableScale>
           )}
