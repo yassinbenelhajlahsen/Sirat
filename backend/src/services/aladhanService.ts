@@ -104,7 +104,11 @@ function sleep(ms: number): Promise<void> {
 }
 
 function logEvent(event: string, data: Record<string, unknown>) {
-  console.log(
+  if (event !== "aladhan_failure") {
+    return;
+  }
+
+  console.error(
     JSON.stringify({
       event,
       timestamp: new Date().toISOString(),

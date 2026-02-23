@@ -15,27 +15,13 @@ const RATE_LIMIT_RESPONSE = {
   },
 };
 
-function logPrayerTimesRateLimit(req: express.Request) {
-  console.warn(
-    JSON.stringify({
-      event: "prayer_times_rate_limited",
-      service: "prayer-times",
-      timestamp: new Date().toISOString(),
-      method: req.method,
-      path: req.originalUrl,
-      ip: req.ip,
-    }),
-  );
-}
-
 const prayerTimesLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: RATE_LIMIT_RESPONSE,
-  handler: (req, res, _next, options) => {
-    logPrayerTimesRateLimit(req);
+  handler: (_req, res, _next, options) => {
     res.status(options.statusCode).json(RATE_LIMIT_RESPONSE);
   },
 });

@@ -88,13 +88,7 @@ function logPrayerTimesError(
   );
 }
 
-function sendValidationError(req: Request, res: Response, message: string) {
-  logPrayerTimesError(req, "prayer_times_validation_error", {
-    message,
-    retriable: false,
-    query: req.query,
-  });
-
+function sendValidationError(_req: Request, res: Response, message: string) {
   return res.status(400).json({
     error: {
       code: "VALIDATION_ERROR",

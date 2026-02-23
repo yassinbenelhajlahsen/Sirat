@@ -34,13 +34,7 @@ function logHolidayError(req: Request, event: string, data: Record<string, unkno
   );
 }
 
-function sendValidationError(req: Request, res: Response, message: string) {
-  logHolidayError(req, "holidays_validation_error", {
-    message,
-    retriable: false,
-    query: req.query,
-  });
-
+function sendValidationError(_req: Request, res: Response, message: string) {
   return res.status(400).json({
     error: {
       code: "VALIDATION_ERROR",
