@@ -104,4 +104,27 @@ describe("Holiday Routes Integration", () => {
     expect(res.body.service).toBe("holidays");
     expect(typeof res.body.timestamp).toBe("string");
   });
+
+  it("returns structured rate-limit response after exceeding request cap", async () => {
+    (mockGetHolidays as any).mockResolvedValue({
+      data: { holidays: [] },
+      stale: false,
+      cacheStatus: "hit",
+    });
+
+    for (let i = 0; i < 180; i++) {
+      const okRes = await request(app).get("/api/holidays/year").query({ year: 2026 });
+      expect(okRes.status).toBe(200);
+    }
+
+    const limitedRes = await request(app).get("/api/holidays/year").query({ year: 2026 });
+    expect(limitedRes.status).toBe(429);
+    expect(limitedRes.body).toEqual({
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many requests from this IP, please try again later.",
+        retriable: true,
+      },
+    });
+  }, 20000);
 });
