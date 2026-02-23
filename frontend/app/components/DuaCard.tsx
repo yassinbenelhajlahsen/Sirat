@@ -1,4 +1,5 @@
 import { colors, spacing, typography, withOpacity } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
@@ -19,6 +20,7 @@ interface DuaCardProps {
 
 function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
   const [userInput, setUserInput] = React.useState("");
+  const charactersLeft = 150 - userInput.length;
 
   const handleSubmit = async () => {
     if (!userInput.trim()) {
@@ -37,6 +39,15 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
 
   return (
     <View style={styles.card}>
+      <View style={styles.badgeRow}>
+        <View style={styles.badge}>
+          <Ionicons name="sparkles-outline" size={12} color={colors.accent} />
+          <Text style={styles.badgeText}>
+            Personalized
+          </Text>
+        </View>
+      </View>
+
       <Text style={styles.title}>
         Ask for a Dua
       </Text>
@@ -46,25 +57,37 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
         you.
       </Text>
 
-      <TextInput
-        placeholder="e.g., I'm anxious about an exam"
-        placeholderTextColor={colors.grayMuted}
-        value={userInput}
-        onChangeText={setUserInput}
-        multiline
-        returnKeyType="done"
-        blurOnSubmit={true}
-        onSubmitEditing={handleSubmit}
-        maxLength={150}
-        editable={!loading}
-        onFocus={() => {
-          // Let focus happen first, then scroll
-          requestAnimationFrame(() => onInputFocus?.());
-        }}
-        accessibilityLabel="Dua request input"
-        accessibilityHint="Describe what you need help with"
-        style={styles.input}
-      />
+      <View style={styles.inputShell}>
+        <TextInput
+          placeholder="e.g., I'm anxious about an exam"
+          placeholderTextColor={colors.grayMuted}
+          value={userInput}
+          onChangeText={setUserInput}
+          multiline
+          returnKeyType="done"
+          blurOnSubmit={true}
+          onSubmitEditing={handleSubmit}
+          maxLength={150}
+          editable={!loading}
+          onFocus={() => {
+            requestAnimationFrame(() => onInputFocus?.());
+          }}
+          accessibilityLabel="Dua request input"
+          accessibilityHint="Describe what you need help with"
+          style={styles.input}
+        />
+
+        <View style={styles.metaRow}>
+          <Text
+            style={[
+              styles.characterCount,
+              charactersLeft <= 15 ? styles.characterCountWarning : undefined,
+            ]}
+          >
+            {charactersLeft}
+          </Text>
+        </View>
+      </View>
 
       <PressableScale
         disabled={loading || !userInput.trim()}
@@ -84,9 +107,12 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
             </Text>
           </>
         ) : (
-          <Text style={styles.submitText}>
-            Find Dua
-          </Text>
+          <>
+            <Text style={styles.submitText}>
+              Find Dua
+            </Text>
+            <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+          </>
         )}
       </PressableScale>
     </View>
@@ -96,43 +122,90 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
 const styles = StyleSheet.create({
   card: {
     marginTop: spacing.xl,
-    backgroundColor: withOpacity(colors.black, 0.2),
+    backgroundColor: withOpacity(colors.black, 0.22),
     borderRadius: 18,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.08),
+    borderColor: withOpacity(colors.white, 0.1),
     shadowColor: colors.primaryDark,
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 16 },
-    elevation: 6,
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4,
     position: "relative",
     zIndex: 1,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    marginBottom: spacing.sm,
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: withOpacity(colors.accent, 0.1),
+    borderColor: withOpacity(colors.accent, 0.32),
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 9,
+  },
+  badgeText: {
+    marginLeft: 5,
+    color: withOpacity(colors.accent, 0.92),
+    fontSize: 11,
+    fontFamily: "SFProDisplay-Semibold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
   },
   title: {
     color: colors.accent,
     fontSize: typography.subtitle,
     fontFamily: "SFProDisplay-Semibold",
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   description: {
-    color: colors.grayMuted,
+    color: withOpacity(colors.white, 0.78),
     fontSize: typography.body,
     fontFamily: "SFProDisplay-Regular",
-    marginBottom: spacing.sm + 2,
+    marginBottom: spacing.md,
+  },
+  inputShell: {
+    backgroundColor: withOpacity(colors.black, 0.3),
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.14),
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   input: {
-    backgroundColor: withOpacity(colors.black, 0.3),
-    borderRadius: 10,
     color: colors.white,
-    padding: spacing.md,
+    padding: 0,
     fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Regular",
-    marginBottom: spacing.md,
-    minHeight: 60,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.15),
+    marginBottom: spacing.sm,
+    minHeight: 64,
     textAlignVertical: "top",
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  inputHint: {
+    color: withOpacity(colors.white, 0.62),
+    fontSize: 12,
+    fontFamily: "SFProDisplay-Regular",
+  },
+  characterCount: {
+    color: withOpacity(colors.white, 0.65),
+    fontSize: 12,
+    fontFamily: "SFProDisplay-Semibold",
+    minWidth: 28,
+    textAlign: "right",
+  },
+  characterCountWarning: {
+    color: withOpacity(colors.accent, 0.95),
   },
   submitButton: {
     backgroundColor: colors.accent,
@@ -141,7 +214,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
     shadowColor: withOpacity(colors.accent, 0.4),
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -155,6 +228,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: typography.subtitle,
     fontFamily: "SFProDisplay-Bold",
+    marginRight: 6,
   },
   submitTextLoading: {
     color: colors.primary,

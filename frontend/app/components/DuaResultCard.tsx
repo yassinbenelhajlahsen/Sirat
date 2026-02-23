@@ -2,14 +2,7 @@ import { colors, spacing, typography, withOpacity } from "@/constants/theme";
 import type { Dua } from "@/services/duaService";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
 interface DuaResultCardProps {
   dua: Dua;
@@ -47,9 +40,8 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
   return (
     <View style={styles.card}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header with close button */}
         <View style={styles.headerRow}>
-          <View>
+          <View style={styles.categoryBadge}>
             <Text style={styles.category}>
               {dua.category.charAt(0).toUpperCase() + dua.category.slice(1)}
             </Text>
@@ -60,23 +52,18 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Close dua details"
+            style={styles.closeButton}
           >
-            <Ionicons
-              name="close-circle-outline"
-              size={24}
-              color={colors.white}
-            />
+            <Ionicons name="close" size={18} color={colors.white} />
           </Pressable>
         </View>
 
-        {/* Arabic Text - Main Display */}
         <View style={styles.arabicContainer}>
           <Text style={styles.arabicText}>
             {dua.arabic}
           </Text>
         </View>
 
-        {/* Transliteration */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionLabel}>
             Transliteration
@@ -86,7 +73,6 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
           </Text>
         </View>
 
-        {/* English Translation */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionLabel}>
             English Translation
@@ -96,9 +82,8 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
           </Text>
         </View>
 
-        {/* Reference & Source */}
         <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
+          <View style={styles.metaCardLeft}>
             <Text style={styles.metaLabel}>
               Reference
             </Text>
@@ -106,58 +91,34 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
               {dua.reference}
             </Text>
           </View>
-
-          <View style={styles.metaItemRight}>
-            <Text style={styles.metaLabel}>
-              Source
-            </Text>
-            <Text style={styles.metaValue}>
-              {dua.source}
-            </Text>
-          </View>
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.actionRow}>
-          {/* Share Button */}
           <Pressable
             onPress={handleShare}
             accessibilityRole="button"
             accessibilityLabel="Share dua"
             style={styles.actionButton}
           >
-            <Ionicons
-              name="share-social-outline"
-              size={16}
-              color={colors.accent}
-            />
+            <Ionicons name="share-social-outline" size={16} color={colors.primaryDeep} />
             <Text style={styles.actionButtonText}>
               Share
             </Text>
           </Pressable>
 
-          {/* Bookmark Button */}
           {onSaveBookmark && (
             <Pressable
               onPress={handleBookmark}
               disabled={bookmarkLoading}
               accessibilityRole="button"
               accessibilityLabel="Save dua"
-              style={styles.actionButton}
+              style={[styles.actionButton, styles.actionButtonSpaced]}
             >
-              {bookmarkLoading ? (
-                <Ionicons
-                  name="bookmark-outline"
-                  size={16}
-                  color={colors.grayMuted}
-                />
-              ) : (
-                <Ionicons
-                  name="bookmark-outline"
-                  size={16}
-                  color={colors.accent}
-                />
-              )}
+              <Ionicons
+                name="bookmark-outline"
+                size={16}
+                color={bookmarkLoading ? withOpacity(colors.primaryDeep, 0.45) : colors.primaryDeep}
+              />
               <Text
                 style={[
                   styles.actionButtonText,
@@ -177,16 +138,16 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
 const styles = StyleSheet.create({
   card: {
     marginTop: spacing.lg,
-    backgroundColor: withOpacity(colors.black, 0.2),
+    backgroundColor: withOpacity(colors.black, 0.22),
     borderRadius: 18,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.08),
+    borderColor: withOpacity(colors.white, 0.1),
     shadowColor: colors.primaryDark,
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 16 },
-    elevation: 6,
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 4,
     position: "relative",
     zIndex: 1,
   },
@@ -196,103 +157,129 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing.lg,
   },
+  categoryBadge: {
+    backgroundColor: withOpacity(colors.accent, 0.12),
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.35),
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
   category: {
-    color: colors.accent,
+    color: withOpacity(colors.accent, 0.96),
     fontSize: typography.caption,
-    fontFamily: "SFProDisplay-Regular",
+    fontFamily: "SFProDisplay-Semibold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: withOpacity(colors.white, 0.1),
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.2),
   },
   arabicContainer: {
     marginBottom: spacing.lg,
     alignItems: "center",
+    backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.24),
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.accent, 0.22),
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.md,
   },
   arabicText: {
     color: colors.accent,
-    fontSize: 26,
+    fontSize: 28,
     fontFamily: "SFProDisplay-Bold",
     textAlign: "right",
-    lineHeight: 42,
-    marginBottom: spacing.sm,
+    lineHeight: 44,
   },
   sectionCard: {
     marginBottom: spacing.md,
-    backgroundColor: withOpacity(colors.black, 0.25),
-    padding: spacing.md,
-    borderRadius: spacing.sm,
+    backgroundColor: withOpacity(colors.black, 0.26),
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.15),
+    borderColor: withOpacity(colors.white, 0.14),
   },
   sectionLabel: {
-    color: colors.grayMedium,
+    color: withOpacity(colors.white, 0.65),
     fontSize: 11,
-    fontFamily: "SFProDisplay-Regular",
+    fontFamily: "SFProDisplay-Semibold",
     textTransform: "uppercase",
-    letterSpacing: 0.3,
+    letterSpacing: 0.35,
   },
   sectionValue: {
     color: colors.white,
-    fontSize: 13,
+    fontSize: typography.body,
     fontFamily: "SFProDisplay-Regular",
     marginTop: 6,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   metaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: spacing.lg,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: withOpacity(colors.white, 0.1),
   },
-  metaItem: {
-    flex: 1,
-  },
-  metaItemRight: {
-    flex: 1,
-    alignItems: "flex-end",
+  metaCardLeft: {
+    width: "100%",
+    backgroundColor: withOpacity(colors.black, 0.2),
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: withOpacity(colors.white, 0.12),
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.sm + 2,
   },
   metaLabel: {
-    color: colors.grayMuted,
+    color: withOpacity(colors.white, 0.62),
     fontSize: 10,
     fontFamily: "SFProDisplay-Regular",
     textTransform: "uppercase",
-    letterSpacing: 0.3,
+    letterSpacing: 0.35,
   },
   metaValue: {
     color: colors.accent,
-    fontSize: 13,
+    fontSize: typography.body,
     fontFamily: "SFProDisplay-Semibold",
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   actionRow: {
     flexDirection: "row",
-    gap: spacing.sm,
+    alignItems: "center",
   },
   actionButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: withOpacity(colors.black, 0.25),
-    borderRadius: spacing.sm,
-    paddingVertical: spacing.sm + 2,
+    backgroundColor: withOpacity(colors.accent, 0.92),
+    borderRadius: 11,
+    paddingVertical: spacing.sm + 3,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.15),
-    shadowColor: withOpacity(colors.black, 0.15),
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    borderColor: withOpacity(colors.accent, 0.4),
+    shadowColor: withOpacity(colors.accent, 0.35),
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
+  },
+  actionButtonSpaced: {
+    marginLeft: spacing.sm,
   },
   actionButtonText: {
-    color: colors.accent,
+    color: colors.primaryDeep,
     fontSize: 13,
-    fontFamily: "SFProDisplay-Semibold",
+    fontFamily: "SFProDisplay-Bold",
     marginLeft: 6,
   },
   actionButtonTextMuted: {
-    color: colors.grayMuted,
+    color: withOpacity(colors.primaryDeep, 0.45),
   },
 });
 
