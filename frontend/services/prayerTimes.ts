@@ -2,7 +2,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { City } from "../util/cities";
-import { resolveAutoMethod } from "../util/methodResolver";
 
 const PRAYER_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -11,7 +10,7 @@ const PRAYER_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:300
  * ============================ */
 export interface PrayerSettings {
   useLocation: boolean; // true = use device location if available
-  method: number; // Aladhan calculation method (-1 = Auto)
+  method: number; // Aladhan calculation method (-1 = Auto resolved by backend)
   city?: City; // manual city fallback or explicit city when useLocation=false
 }
 
@@ -55,6 +54,8 @@ type BackendCalendarDay = {
   };
   timings?: RequiredTimingMap;
 };
+
+type PrayerMethodParam = number | "auto";
 
 /* ============================
  * Internal cache model
@@ -275,16 +276,19 @@ async function getPrayerTimesFastToday(
   settings: PrayerSettings,
   env: ResolvedEnv
 ): Promise<PrayerTime[]> {
-  let method = settings.method;
-  if (method === -1) method = resolveAutoMethod(env.country);
+  const method: PrayerMethodParam = settings.method === -1 ? "auto" : settings.method;
+  const params: Record<string, string | number> = {
+    latitude: env.latitude,
+    longitude: env.longitude,
+    method,
+  };
+  if (method === "auto" && env.country) {
+    params.country = env.country;
+  }
 
   const data = await fetchPrayerProxy<BackendTimingsPayload>(
     "/api/prayer-times/timings",
-    {
-      latitude: env.latitude,
-      longitude: env.longitude,
-      method,
-    }
+    params
   );
   const t = data?.timings;
   if (!t) throw new Error("Invalid response from API");
@@ -307,22 +311,26 @@ async function fetchYearCalendar(
   settings: PrayerSettings,
   env: ResolvedEnv
 ): Promise<CalendarCache> {
-  let method = settings.method;
-  if (method === -1) method = resolveAutoMethod(env.country);
+  const method: PrayerMethodParam = settings.method === -1 ? "auto" : settings.method;
 
   const allTimes: Record<string, PrayerTime[]> = {};
 
   for (let month = 1; month <= 12; month++) {
     try {
+      const params: Record<string, string | number> = {
+        latitude: env.latitude,
+        longitude: env.longitude,
+        method,
+        month,
+        year,
+      };
+      if (method === "auto" && env.country) {
+        params.country = env.country;
+      }
+
       const days = await fetchPrayerProxy<BackendCalendarDay[]>(
         "/api/prayer-times/calendar",
-        {
-          latitude: env.latitude,
-          longitude: env.longitude,
-          method,
-          month,
-          year,
-        }
+        params
       );
 
       days.forEach((day) => {

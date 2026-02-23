@@ -55,9 +55,9 @@ app.get("/", (req, res) => {
       "GET /api/mosque/nearby": "Get nearby mosques by lat/lng",
       "GET /api/mosque/health": "Mosque service health check",
       "GET /api/prayer-times/timings":
-        "Proxy current-day prayer timings by lat/lng/method",
+        "Proxy current-day prayer timings by lat/lng/method (method supports integer or 'auto'; country optional)",
       "GET /api/prayer-times/calendar":
-        "Proxy prayer calendar month by lat/lng/method/month/year",
+        "Proxy prayer calendar month by lat/lng/method/month/year (method supports integer or 'auto'; country optional)",
       "GET /api/prayer-times/health": "Prayer times service health check",
       "GET /api/holidays/year": "Proxy holiday list for a Gregorian year",
       "GET /api/holidays/health": "Holiday service health check",

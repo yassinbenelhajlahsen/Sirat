@@ -4,6 +4,7 @@ import {
   getCalendar,
   getTimings,
 } from "../services/aladhanService.js";
+import { resolveAutoMethod } from "../utils/prayerMethodResolver.js";
 
 const ALLOWED_METHODS = new Set([
   0,
@@ -67,6 +68,54 @@ function parseRequiredInteger(
   const parsed = Number.parseInt(raw, 10);
 
   return parsed;
+}
+
+type ParsedMethod = {
+  method: number;
+  resolutionSource: "explicit" | "auto-country" | "auto-fallback";
+};
+
+function parseMethod(req: Request): ParsedMethod | { error: string } {
+  const value = req.query.method;
+  if (value === undefined) {
+    return { error: "Missing required parameter: method" };
+  }
+
+  const raw = String(value).trim().toLowerCase();
+  if (!raw) {
+    return { error: "Invalid method: expected an integer or 'auto'" };
+  }
+
+  if (raw === "auto" || raw === "-1") {
+    const countryValue = req.query.country;
+    const country =
+      typeof countryValue === "string"
+        ? countryValue
+        : Array.isArray(countryValue)
+          ? String(countryValue[0] ?? "")
+          : "";
+    const resolved = resolveAutoMethod(country);
+    return {
+      method: resolved.method,
+      resolutionSource: resolved.source,
+    };
+  }
+
+  if (!/^-?\d+$/.test(raw)) {
+    return { error: "Invalid method: expected an integer or 'auto'" };
+  }
+
+  const method = Number.parseInt(raw, 10);
+  if (!ALLOWED_METHODS.has(method)) {
+    return {
+      error: "method must be a supported Aladhan method id, or 'auto'",
+    };
+  }
+
+  return {
+    method,
+    resolutionSource: "explicit",
+  };
 }
 
 function logPrayerTimesError(
@@ -147,7 +196,7 @@ function sendServiceError(req: Request, res: Response, error: unknown) {
 export async function getTimingsHandler(req: Request, res: Response) {
   const latitude = parseRequiredNumber(req, "latitude");
   const longitude = parseRequiredNumber(req, "longitude");
-  const method = parseRequiredInteger(req, "method");
+  const parsedMethod = parseMethod(req);
 
   if (typeof latitude !== "number") {
     return sendValidationError(req, res, latitude.error);
@@ -155,8 +204,8 @@ export async function getTimingsHandler(req: Request, res: Response) {
   if (typeof longitude !== "number") {
     return sendValidationError(req, res, longitude.error);
   }
-  if (typeof method !== "number") {
-    return sendValidationError(req, res, method.error);
+  if (!("method" in parsedMethod)) {
+    return sendValidationError(req, res, parsedMethod.error);
   }
 
   if (latitude < -90 || latitude > 90) {
@@ -165,25 +214,19 @@ export async function getTimingsHandler(req: Request, res: Response) {
   if (longitude < -180 || longitude > 180) {
     return sendValidationError(req, res, "longitude must be between -180 and 180");
   }
-  if (!ALLOWED_METHODS.has(method)) {
-    return sendValidationError(
-      req,
-      res,
-      "method must be a supported Aladhan method id",
-    );
-  }
-
   try {
     const result = await getTimings({
       latitude,
       longitude,
-      method,
+      method: parsedMethod.method,
     });
 
     return res.json({
       success: true,
       stale: result.stale,
       cache: result.cacheStatus,
+      resolvedMethod: parsedMethod.method,
+      resolutionSource: parsedMethod.resolutionSource,
       data: result.data,
     });
   } catch (error: unknown) {
@@ -194,7 +237,7 @@ export async function getTimingsHandler(req: Request, res: Response) {
 export async function getCalendarHandler(req: Request, res: Response) {
   const latitude = parseRequiredNumber(req, "latitude");
   const longitude = parseRequiredNumber(req, "longitude");
-  const method = parseRequiredInteger(req, "method");
+  const parsedMethod = parseMethod(req);
   const month = parseRequiredInteger(req, "month");
   const year = parseRequiredInteger(req, "year");
 
@@ -204,8 +247,8 @@ export async function getCalendarHandler(req: Request, res: Response) {
   if (typeof longitude !== "number") {
     return sendValidationError(req, res, longitude.error);
   }
-  if (typeof method !== "number") {
-    return sendValidationError(req, res, method.error);
+  if (!("method" in parsedMethod)) {
+    return sendValidationError(req, res, parsedMethod.error);
   }
   if (typeof month !== "number") {
     return sendValidationError(req, res, month.error);
@@ -220,13 +263,6 @@ export async function getCalendarHandler(req: Request, res: Response) {
   if (longitude < -180 || longitude > 180) {
     return sendValidationError(req, res, "longitude must be between -180 and 180");
   }
-  if (!ALLOWED_METHODS.has(method)) {
-    return sendValidationError(
-      req,
-      res,
-      "method must be a supported Aladhan method id",
-    );
-  }
   if (month < 1 || month > 12) {
     return sendValidationError(req, res, "month must be between 1 and 12");
   }
@@ -238,7 +274,7 @@ export async function getCalendarHandler(req: Request, res: Response) {
     const result = await getCalendar({
       latitude,
       longitude,
-      method,
+      method: parsedMethod.method,
       month,
       year,
     });
@@ -247,6 +283,8 @@ export async function getCalendarHandler(req: Request, res: Response) {
       success: true,
       stale: result.stale,
       cache: result.cacheStatus,
+      resolvedMethod: parsedMethod.method,
+      resolutionSource: parsedMethod.resolutionSource,
       data: result.data,
     });
   } catch (error: unknown) {
