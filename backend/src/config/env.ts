@@ -1,6 +1,7 @@
 export const ENV = {
   PORT: process.env.PORT || 3001,
   NODE_ENV: process.env.NODE_ENV || "development",
+  TRUST_PROXY: process.env.TRUST_PROXY || "",
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
   OPENAI_MODEL: process.env.OPENAI_MODEL || "gpt-4-turbo",
   GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || "",

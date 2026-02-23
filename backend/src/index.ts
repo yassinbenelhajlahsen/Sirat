@@ -10,6 +10,18 @@ import prayerTimesRoutes from "./routes/prayerTimes.js";
 
 const app = express();
 
+const resolveTrustProxy = (): boolean | number | string => {
+  if (ENV.TRUST_PROXY) {
+    if (ENV.TRUST_PROXY === "true") return true;
+    if (ENV.TRUST_PROXY === "false") return false;
+    const parsed = Number(ENV.TRUST_PROXY);
+    return Number.isNaN(parsed) ? ENV.TRUST_PROXY : parsed;
+  }
+  return ENV.NODE_ENV === "production" ? 1 : false;
+};
+
+app.set("trust proxy", resolveTrustProxy());
+
 // Middleware
 app.use(express.json({ limit: "16kb" }));
 app.use(
