@@ -59,6 +59,8 @@ EXPO_PUBLIC_API_URL=http://localhost:3001
 PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:8081
+TRUST_PROXY=
+LOG_LEVEL=info
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4-turbo
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
@@ -66,10 +68,16 @@ GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 
 - If `OPENAI_API_KEY` is missing, backend still works and falls back to random dua selection.
 - `GOOGLE_MAPS_API_KEY` is required for mosque lookup.
+- `TRUST_PROXY` is optional; if omitted, backend uses production-aware defaults.
 
 ## Docs
 
 - Backend details: `backend/README.md`
 - Frontend details: `frontend/README.md`
-- Agent/onboarding guidance: `.github/copilot-instructions.md`
+- Agent/onboarding guidance: `AGENTS.md` and `.github/copilot-instructions.md`
 - Site + privacy pages: `docs/`
+
+## Automation
+
+- `.github/workflows/expo-ota.yml`: publishes iOS OTA updates on `main` pushes that touch `frontend/**` (requires `EXPO_TOKEN`).
+- `.github/workflows/pages.yml`: deploys `docs/` to GitHub Pages on `main` pushes that touch `docs/**` (or manual dispatch).

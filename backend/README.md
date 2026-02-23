@@ -8,7 +8,7 @@ Express + TypeScript API used by Sirat for dua selection and proxy integrations.
 - Accepts natural-language user requests
 - Uses OpenAI to select the best matching dua ID (metadata-only context)
 - Falls back to a random dua if AI is unavailable/fails
-- Proxies prayer timings/calendar from Aladhan with validation, retry, and in-memory cache
+- Proxies prayer timings plus monthly/yearly calendars from Aladhan with validation, retry, and in-memory cache
 - Aggregates yearly holiday data from Aladhan behind a single backend endpoint
 - Proxies nearby mosque lookup through Google Places
 
@@ -62,7 +62,7 @@ Query parameters:
 
 - `latitude` (required, -90 to 90)
 - `longitude` (required, -180 to 180)
-- `radius` (optional, default `3000`, min `1`, max `50000`)
+- `radius` (optional, default `3000`; accepted as finite number and clamped to `100..5000`)
 
 Returns nearby mosques from Google Places through backend proxying.
 
@@ -76,9 +76,11 @@ Query parameters:
 
 - `latitude` (required, -90 to 90)
 - `longitude` (required, -180 to 180)
-- `method` (required, supported Aladhan method id)
+- `method` (required; supported Aladhan method id, or `auto` / `-1`)
+- `country` (optional; improves backend auto-method resolution)
 
-Returns sanitized current-day prayer timings.
+Returns sanitized current-day prayer timings in a response envelope:
+`{ success, stale, cache, resolvedMethod, resolutionSource, data }`.
 
 ### `GET /api/prayer-times/calendar`
 
@@ -86,11 +88,26 @@ Query parameters:
 
 - `latitude` (required, -90 to 90)
 - `longitude` (required, -180 to 180)
-- `method` (required, supported Aladhan method id)
+- `method` (required; supported Aladhan method id, or `auto` / `-1`)
+- `country` (optional; improves backend auto-method resolution)
 - `month` (required, 1 to 12)
 - `year` (required, 1900 to 2100)
 
-Returns sanitized monthly prayer calendar data.
+Returns sanitized monthly prayer calendar data in a response envelope:
+`{ success, stale, cache, resolvedMethod, resolutionSource, data }`.
+
+### `GET /api/prayer-times/calendar/year`
+
+Query parameters:
+
+- `latitude` (required, -90 to 90)
+- `longitude` (required, -180 to 180)
+- `method` (required; supported Aladhan method id, or `auto` / `-1`)
+- `country` (optional; improves backend auto-method resolution)
+- `year` (required, 1900 to 2100)
+
+Returns sanitized yearly prayer calendar data in a response envelope:
+`{ success, stale, cache, resolvedMethod, resolutionSource, partial, data }`.
 
 ### `GET /api/prayer-times/health`
 
@@ -137,6 +154,8 @@ Create `backend/.env`:
 PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:8081
+TRUST_PROXY=
+LOG_LEVEL=info
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4-turbo
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
@@ -146,6 +165,8 @@ Notes:
 
 - `OPENAI_API_KEY` is optional for runtime continuity; without it, the API uses fallback matching.
 - `GOOGLE_MAPS_API_KEY` is required for `/api/mosque/nearby`.
+- `TRUST_PROXY` is optional; if omitted, proxy trust is inferred (`1` in production, `false` otherwise).
+- `LOG_LEVEL` currently defaults to `info`.
 - CORS allows `FRONTEND_URL` plus local Expo dev origins.
 
 ## Source Map

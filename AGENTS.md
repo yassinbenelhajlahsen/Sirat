@@ -63,7 +63,7 @@ Dua API flow:
 
 Important frontend flows:
 - Dua: local regex match first (`frontend/services/duaMatcher.ts`), backend fallback via `frontend/services/duaService.ts`
-- Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (`/api/prayer-times/timings` + `/api/prayer-times/calendar`)
+- Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (`/api/prayer-times/timings` + `/api/prayer-times/calendar/year`, with monthly `/api/prayer-times/calendar` fallback)
 - Notifications: rolling scheduling in `frontend/services/notificationService.ts`
 - Quran: preload/normalize local dataset in `frontend/services/quranData.ts`
 - Mosques: backend-proxied Google Places Nearby Search via `frontend/services/getNearbyMosques.ts` and `backend/src/routes/mosque.ts`
@@ -75,6 +75,8 @@ Important frontend flows:
 - `PORT` default: `3001`
 - `NODE_ENV` default: `development`
 - `FRONTEND_URL` default: `http://localhost:8081`
+- `TRUST_PROXY` default: empty (backend resolves trust proxy from environment/runtime)
+- `LOG_LEVEL` default: `info`
 - `OPENAI_API_KEY` default: empty (AI disabled, fallback mode used)
 - `OPENAI_MODEL` default: `gpt-4-turbo`
 - `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
@@ -86,6 +88,7 @@ Important frontend flows:
 ## Constraints and Gotchas
 - Backend `loadDuas()` resolves file via `process.cwd()/public/duas.json`; run backend from `backend/` or data load fails.
 - `frontend/package.json` includes `reset-project` script, but `frontend/scripts/reset-project.js` does not exist.
+- Backend mosque `radius` is clamped to `100..5000` in `backend/src/controllers/mosqueController.ts` (default `3000`).
 - Notification master toggle in UI opens OS settings; it does not directly toggle permission state in-app.
 - Notification enable flag is stored as string `"1"`/`"0"` (`notif_enabled_v1`), not JSON boolean.
 - Cross-screen sync relies on exact `DeviceEventEmitter` event names (`settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`).
@@ -102,7 +105,9 @@ Important frontend flows:
 - Backend lint command expects ESLint setup present in backend dependencies/scripts
 
 ## PR / CI Rules Detected
-- No GitHub Actions workflows are present.
+- GitHub Actions workflows:
+  - `.github/workflows/expo-ota.yml` publishes iOS OTA updates on `main` pushes touching `frontend/**` (requires `EXPO_TOKEN` secret).
+  - `.github/workflows/pages.yml` deploys `docs/` to GitHub Pages on `main` pushes touching `docs/**` (or manual dispatch).
 - No PR template or CONTRIBUTING file is present.
 - No repository-level PR checks/rules are detectable from tracked files.
 

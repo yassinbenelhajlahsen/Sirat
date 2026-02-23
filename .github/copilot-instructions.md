@@ -5,7 +5,7 @@
 Sirat is a monorepo with:
 
 - `frontend/`: Expo Router + React Native app
-- `backend/`: Express + TypeScript dua API
+- `backend/`: Express + TypeScript API for dua matching and service proxy endpoints
 - `docs/`: public site and privacy policy
 
 The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, calendar/Ramadan tracking, notifications, and dua matching.
@@ -29,10 +29,15 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - `backend/src/index.ts`: app setup, CORS, routes, middleware
 - `backend/src/routes/dua.ts`: dua endpoints
 - `backend/src/routes/mosque.ts`: mosque endpoints (`/api/mosque/nearby`, `/api/mosque/health`) with rate limiting
+- `backend/src/routes/prayerTimes.ts`: prayer-time proxy endpoints (`/api/prayer-times/timings`, `/api/prayer-times/calendar`, `/api/prayer-times/calendar/year`, `/api/prayer-times/health`)
+- `backend/src/routes/holiday.ts`: holiday proxy endpoints (`/api/holidays/year`, `/api/holidays/health`)
 - `backend/src/controllers/duaController.ts`: request validation and selection flow
 - `backend/src/controllers/mosqueController.ts`: coordinate/radius validation and mosque response shaping
+- `backend/src/controllers/prayerTimesController.ts`: lat/lng/method validation (`method` supports integer or `auto`) and proxy responses
+- `backend/src/controllers/holidayController.ts`: year validation and holiday proxy responses
 - `backend/src/services/openaiService.ts`: OpenAI API call
 - `backend/src/services/googleMapsService.ts`: Google Places Nearby Search integration
+- `backend/src/services/aladhanService.ts`: Aladhan proxy + retries + cache + stale fallback
 - `backend/src/utils/duaDatabase.ts`: dua data loading/cache
 - `backend/public/duas.json`: canonical dua dataset
 
@@ -49,13 +54,15 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - Frontend calls backend `GET /api/mosque/nearby` from `frontend/services/getNearbyMosques.ts`.
 - Backend uses `GOOGLE_MAPS_API_KEY` to query Google Places Nearby Search.
 - Requests are rate-limited in `backend/src/routes/mosque.ts`.
+- Backend clamps `radius` to `100..5000` (default `3000`).
 
 ### Prayer Times and Caching
 
 - Core logic: `frontend/services/prayerTimes.ts`
-- Uses Aladhan timings/calendar endpoints
+- Uses backend prayer endpoints (`/timings`, `/calendar/year`, fallback `/calendar`)
 - Caches by year + settings + location bucket in AsyncStorage
 - Supports location mode and manual city mode
+- Frontend setting `method: -1` maps to backend `method=auto` with optional country-based resolution
 
 ### Notifications
 
@@ -79,6 +86,7 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 ## Permissions and Sync
 
 - Initial permission sync runs in `frontend/app/_layout.tsx`.
+- Root layout also initializes notifications, preloads Quran assets, and checks OTA updates when not running in Expo Go.
 - Location permission affects prayer location mode.
 - Notification OS permission is mirrored into app toggle state.
 - Cross-screen updates use `DeviceEventEmitter` (e.g. `settingsChanged`, `NOTIF_PREFS_UPDATED`).
@@ -94,6 +102,8 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - `PORT` (default `3001`)
 - `NODE_ENV`
 - `FRONTEND_URL`
+- `TRUST_PROXY` (optional; resolved automatically if unset)
+- `LOG_LEVEL` (default `info`)
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` (default `gpt-4-turbo`)
 - `GOOGLE_MAPS_API_KEY`

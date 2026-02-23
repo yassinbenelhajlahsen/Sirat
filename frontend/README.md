@@ -52,7 +52,7 @@ frontend/
 
 ## Data & Integrations
 
-- Sirat backend (`/api/prayer-times/timings`, `/api/prayer-times/calendar`): proxied Aladhan prayer data
+- Sirat backend (`/api/prayer-times/timings`, `/api/prayer-times/calendar`, `/api/prayer-times/calendar/year`): proxied Aladhan prayer data
 - Sirat backend (`/api/holidays/year`): proxied and aggregated Aladhan holiday data
 - Sirat backend (`/api/mosque/nearby`): proxied Google Places nearby mosques
 - Sirat backend (`/api/dua`): AI-assisted dua fallback
@@ -63,7 +63,10 @@ frontend/
 ## Notes For Development
 
 - App startup preloads Quran data/display modes and syncs location/notification permissions in `app/_layout.tsx`.
+- Root layout also checks and applies OTA updates outside Expo Go in `app/_layout.tsx`.
 - Notification scheduling is handled by `services/notificationService.ts`.
 - Notification master flag (`notif_enabled_v1`) is persisted as string `"1"`/`"0"` in AsyncStorage.
-- Prayer-time caching and annual calendar fetch live in `services/prayerTimes.ts`.
+- Prayer-time caching and annual calendar fetch live in `services/prayerTimes.ts` (uses `/calendar/year` first, with monthly fallback).
+- Prayer method `-1` in settings maps to backend `method=auto` with optional country-based resolution.
 - Holiday year fetch and caching live in `services/holidayService.ts`.
+- `npm run reset-project` currently points to a missing `frontend/scripts/reset-project.js` file.
