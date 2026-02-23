@@ -410,10 +410,8 @@ async function scheduleForHorizon(
 
       const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: `${PRAYER_EMOJI[label] || "🕌"} ${label} • ${
-            p.time
-          } • ${cityDisplay}`,
-          body: "",
+          title: `${PRAYER_EMOJI[label] || "🕌"} ${label} time`,
+          body: `${p.time} in ${cityDisplay}.`,
           sound: triggerSound,
           priority: Notifications.AndroidNotificationPriority.HIGH,
           data: {
