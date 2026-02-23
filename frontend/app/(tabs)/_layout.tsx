@@ -169,6 +169,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minWidth: 36,
+    transform: [{ translateY: 2.5 }],
   },
   iconBubble: {
     width: 34,
