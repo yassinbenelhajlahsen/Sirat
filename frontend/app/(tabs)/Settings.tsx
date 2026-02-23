@@ -491,12 +491,6 @@ export default function Settings() {
               useLocation ? styles.sectionHeaderBlockTight : undefined,
             ]}
           >
-            <Text style={styles.sectionGroupTitle}>
-              Notifications
-            </Text>
-            <Text style={styles.sectionGroupDescription}>
-              Reminder permissions are controlled by your device settings.
-            </Text>
           </View>
 
           {/* Notifications section: the master toggle mirrors OS and opens Settings on press */}
