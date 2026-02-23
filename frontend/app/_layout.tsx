@@ -96,13 +96,14 @@ async function syncNotificationPermissionToToggle() {
 
   // 3) Mirror OS into your stored toggle so Settings UI stays truthful
   const rawEnabled = await AsyncStorage.getItem(NOTIF_ENABLED_KEY);
-  const currentEnabled = parseJSON<boolean>(rawEnabled, false);
+  const currentEnabled =
+    rawEnabled === "1" ? true : rawEnabled === "0" ? false : parseJSON<boolean>(rawEnabled, false);
 
   let nextEnabled = currentEnabled;
   if (osGranted && !currentEnabled) nextEnabled = true;
   if (!osGranted && currentEnabled) nextEnabled = false;
 
-  await AsyncStorage.setItem(NOTIF_ENABLED_KEY, JSON.stringify(nextEnabled));
+  await AsyncStorage.setItem(NOTIF_ENABLED_KEY, nextEnabled ? "1" : "0");
   await AsyncStorage.setItem(NOTIF_OS_STATUS_KEY, JSON.stringify(status));
 
   // 4) Notify the app so any schedulers/UI update
