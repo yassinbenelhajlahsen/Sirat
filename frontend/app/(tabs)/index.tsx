@@ -477,6 +477,8 @@ export default function Home() {
                           0.25,
                         ),
                         borderRadius: 12,
+                        marginTop: 8,
+                        marginBottom: -12,
                         paddingVertical: 18,
                         paddingHorizontal: 24,
                         borderWidth: 2,
@@ -572,7 +574,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.white,
-    fontSize: 34,
+    fontSize: 32,
     fontFamily: "SFProDisplay-Bold",
     marginTop: spacing.xs,
   },
