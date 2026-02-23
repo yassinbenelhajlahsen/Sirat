@@ -73,6 +73,9 @@ export default function CalendarDetail() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [holiday, setHoliday] = useState<string | null>(null);
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
+  const [prayerTimesDateKey, setPrayerTimesDateKey] = useState<string | null>(
+    null,
+  );
   const [nextPrayer, setNextPrayer] = useState<null | {
     label: string;
     time: string;
@@ -476,6 +479,10 @@ export default function CalendarDetail() {
     let mounted = true;
 
     (async () => {
+      const requestedDateKey = dateKeyFromDate(selectedDate);
+      // Invalidate any previously loaded times when the target date changes.
+      setPrayerTimesDateKey(null);
+
       // Don't show loading state immediately - keep old data visible during transition
       // Only set loading if we don't have any prayer times yet
       if (prayerTimes.length === 0) {
@@ -490,6 +497,7 @@ export default function CalendarDetail() {
 
         resetRetry();
         setPrayerTimes(times);
+        setPrayerTimesDateKey(requestedDateKey);
         setLoading(false);
       } catch (err) {
         if (!mounted) return;
@@ -504,6 +512,7 @@ export default function CalendarDetail() {
           });
           // Only clear prayer times if we have an error
           setPrayerTimes([]);
+          setPrayerTimesDateKey(null);
           setLoading(false);
           return;
         }
@@ -525,6 +534,7 @@ export default function CalendarDetail() {
         });
         // Only clear prayer times if we have an error
         setPrayerTimes([]);
+        setPrayerTimesDateKey(null);
         setLoading(false);
       }
     })();
@@ -538,7 +548,14 @@ export default function CalendarDetail() {
   }, [selectedDate, fetchNonce]);
 
   useEffect(() => {
-    if (!isToday || prayerTimes.length === 0 || !selectedDate) {
+    if (!selectedDate || !isToday || prayerTimes.length === 0) {
+      setNextPrayer(null);
+      setTimeLeft("");
+      return;
+    }
+
+    const selectedDateKey = dateKeyFromDate(selectedDate);
+    if (prayerTimesDateKey !== selectedDateKey) {
       setNextPrayer(null);
       setTimeLeft("");
       return;
@@ -556,7 +573,7 @@ export default function CalendarDetail() {
 
     setNextPrayer(upcoming);
     if (!upcoming) setTimeLeft("");
-  }, [isToday, prayerTimes, selectedDate]);
+  }, [isToday, prayerTimes, prayerTimesDateKey, selectedDate]);
 
   useEffect(() => {
     if (!nextPrayer) {
