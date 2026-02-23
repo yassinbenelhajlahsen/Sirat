@@ -619,8 +619,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   nextPrayerContainer: {
-    marginBottom: spacing.md,
     alignItems: "center",
+    marginTop: 8
   },
   nextPrayerCard: {
     width: "100%",
