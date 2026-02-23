@@ -420,7 +420,7 @@ export default function Home() {
 
             <View style={styles.headerSection}>
               <Text style={styles.sectionTitle}>
-                Prayer Times - test
+                Prayer Times
               </Text>
 
               {locationLabel ? (

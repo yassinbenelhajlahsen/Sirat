@@ -124,6 +124,7 @@ export default function RootLayout() {
   const [initialSynced, setInitialSynced] = useState(false);
   const [otaChecked, setOtaChecked] = useState(false);
   const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [showReloadCover, setShowReloadCover] = useState(false);
   const appStateRef = useRef(AppState.currentState);
   const otaCheckInFlightRef = useRef(false);
   const mountedRef = useRef(true);
@@ -146,24 +147,33 @@ export default function RootLayout() {
         if (AppState.currentState !== "active") return;
 
         if (mountedRef.current) {
+          setShowReloadCover(true);
           setShowSplash(true);
           setIsApplyingUpdate(true);
         }
 
-        // Give React one frame to mount splash before JS is torn down.
+        // Give React time to paint the emergency cover before JS is torn down.
         await new Promise<void>((resolve) => {
-          requestAnimationFrame(() => resolve());
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => resolve());
+          });
         });
 
         if (AppState.currentState !== "active") {
-          if (mountedRef.current) setIsApplyingUpdate(false);
+          if (mountedRef.current) {
+            setIsApplyingUpdate(false);
+            setShowReloadCover(false);
+          }
           return;
         }
 
         await Updates.reloadAsync();
       } catch (error) {
         console.error("OTA update check failed", error);
-        if (mountedRef.current) setIsApplyingUpdate(false);
+        if (mountedRef.current) {
+          setIsApplyingUpdate(false);
+          setShowReloadCover(false);
+        }
       } finally {
         otaCheckInFlightRef.current = false;
         if (markStartupComplete && mountedRef.current) {
@@ -256,7 +266,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       {/* Always render app content so it mounts and loads data while splash is visible */}
       <QuranAudioProvider>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: "#134b0a" }}>
           <Slot />
           <QuranMiniPlayerPortal />
         </View>
@@ -282,6 +292,20 @@ export default function RootLayout() {
           />
         </View>
       )}
+
+      {/* Opaque fallback used right before runtime OTA reload to prevent white-frame flashes */}
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "#134b0a",
+          opacity: showReloadCover ? 1 : 0,
+        }}
+        pointerEvents={showReloadCover ? "auto" : "none"}
+      />
     </SafeAreaProvider>
   );
 }
