@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   AladhanServiceError,
   getCalendar,
+  getCalendarYear,
   getTimings,
 } from "../services/aladhanService.js";
 import { resolveAutoMethod } from "../utils/prayerMethodResolver.js";
@@ -285,6 +286,57 @@ export async function getCalendarHandler(req: Request, res: Response) {
       cache: result.cacheStatus,
       resolvedMethod: parsedMethod.method,
       resolutionSource: parsedMethod.resolutionSource,
+      data: result.data,
+    });
+  } catch (error: unknown) {
+    return sendServiceError(req, res, error);
+  }
+}
+
+export async function getCalendarYearHandler(req: Request, res: Response) {
+  const latitude = parseRequiredNumber(req, "latitude");
+  const longitude = parseRequiredNumber(req, "longitude");
+  const parsedMethod = parseMethod(req);
+  const year = parseRequiredInteger(req, "year");
+
+  if (typeof latitude !== "number") {
+    return sendValidationError(req, res, latitude.error);
+  }
+  if (typeof longitude !== "number") {
+    return sendValidationError(req, res, longitude.error);
+  }
+  if (!("method" in parsedMethod)) {
+    return sendValidationError(req, res, parsedMethod.error);
+  }
+  if (typeof year !== "number") {
+    return sendValidationError(req, res, year.error);
+  }
+
+  if (latitude < -90 || latitude > 90) {
+    return sendValidationError(req, res, "latitude must be between -90 and 90");
+  }
+  if (longitude < -180 || longitude > 180) {
+    return sendValidationError(req, res, "longitude must be between -180 and 180");
+  }
+  if (year < 1900 || year > 2100) {
+    return sendValidationError(req, res, "year must be between 1900 and 2100");
+  }
+
+  try {
+    const result = await getCalendarYear({
+      latitude,
+      longitude,
+      method: parsedMethod.method,
+      year,
+    });
+
+    return res.json({
+      success: true,
+      stale: result.stale,
+      cache: result.cacheStatus,
+      resolvedMethod: parsedMethod.method,
+      resolutionSource: parsedMethod.resolutionSource,
+      partial: result.data.partial,
       data: result.data,
     });
   } catch (error: unknown) {

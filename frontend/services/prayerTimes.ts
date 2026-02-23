@@ -55,6 +55,10 @@ type BackendCalendarDay = {
   timings?: RequiredTimingMap;
 };
 
+type BackendCalendarYearPayload = {
+  days?: BackendCalendarDay[];
+};
+
 type PrayerMethodParam = number | "auto";
 
 /* ============================
@@ -154,6 +158,65 @@ async function fetchPrayerProxy<T>(
   }
 
   return body.data;
+}
+
+function mergeCalendarDayIntoStore(
+  allTimes: Record<string, PrayerTime[]>,
+  day: BackendCalendarDay
+) {
+  const greg = day?.date?.gregorian?.date;
+  if (!greg || !day.timings) return;
+
+  const [dd, mm, yy] = greg.split("-").map((x: string) => parseInt(x, 10));
+  const key = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+
+  allTimes[key] = [
+    { label: "Fajr", time: formatTo12Hour(day.timings.Fajr) },
+    { label: "Sunrise", time: formatTo12Hour(day.timings.Sunrise) },
+    { label: "Dhuhr", time: formatTo12Hour(day.timings.Dhuhr) },
+    { label: "Asr", time: formatTo12Hour(day.timings.Asr) },
+    { label: "Maghrib", time: formatTo12Hour(day.timings.Maghrib) },
+    { label: "Isha", time: formatTo12Hour(day.timings.Isha) },
+  ];
+}
+
+async function fetchYearCalendarLegacy(
+  year: number,
+  method: PrayerMethodParam,
+  env: ResolvedEnv
+): Promise<Record<string, PrayerTime[]>> {
+  const allTimes: Record<string, PrayerTime[]> = {};
+
+  for (let month = 1; month <= 12; month++) {
+    const params: Record<string, string | number> = {
+      latitude: env.latitude,
+      longitude: env.longitude,
+      method,
+      month,
+      year,
+    };
+    if (method === "auto" && env.country) {
+      params.country = env.country;
+    }
+
+    try {
+      const days = await fetchPrayerProxy<BackendCalendarDay[]>(
+        "/api/prayer-times/calendar",
+        params
+      );
+
+      days.forEach((day) => {
+        mergeCalendarDayIntoStore(allTimes, day);
+      });
+    } catch {
+      if (Object.keys(allTimes).length > 0) {
+        return allTimes;
+      }
+      throw new Error("Failed to fetch calendar from prayer times API.");
+    }
+  }
+
+  return allTimes;
 }
 
 /* ============================
@@ -313,60 +376,34 @@ async function fetchYearCalendar(
 ): Promise<CalendarCache> {
   const method: PrayerMethodParam = settings.method === -1 ? "auto" : settings.method;
 
-  const allTimes: Record<string, PrayerTime[]> = {};
+  let allTimes: Record<string, PrayerTime[]> = {};
 
-  for (let month = 1; month <= 12; month++) {
-    try {
-      const params: Record<string, string | number> = {
-        latitude: env.latitude,
-        longitude: env.longitude,
-        method,
-        month,
-        year,
-      };
-      if (method === "auto" && env.country) {
-        params.country = env.country;
-      }
-
-      const days = await fetchPrayerProxy<BackendCalendarDay[]>(
-        "/api/prayer-times/calendar",
-        params
-      );
-
-      days.forEach((day) => {
-        // API gives "dd-mm-yyyy"
-        const greg = day?.date?.gregorian?.date;
-        if (!greg || !day.timings) return;
-        const [dd, mm, yy] = greg
-          .split("-")
-          .map((x: string) => parseInt(x, 10));
-        const key = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
-
-        allTimes[key] = [
-          { label: "Fajr", time: formatTo12Hour(day.timings.Fajr) },
-          { label: "Sunrise", time: formatTo12Hour(day.timings.Sunrise) },
-          { label: "Dhuhr", time: formatTo12Hour(day.timings.Dhuhr) },
-          { label: "Asr", time: formatTo12Hour(day.timings.Asr) },
-          { label: "Maghrib", time: formatTo12Hour(day.timings.Maghrib) },
-          { label: "Isha", time: formatTo12Hour(day.timings.Isha) },
-        ];
-      });
-    } catch {
-      if (Object.keys(allTimes).length > 0) {
-        // Return partial cache (better than failing outright)
-        const settingsKey = settingsToKey(settings);
-        const cacheKey = makeCacheKey(year, settingsKey, env.bucket);
-        const partial: CalendarCache = {
-          cacheKey,
-          year,
-          data: allTimes,
-        };
-        memoryCalendars[cacheKey] = partial;
-        await saveToStorage(partial);
-        return partial;
-      }
-      throw new Error("Failed to fetch calendar from prayer times API.");
+  try {
+    const params: Record<string, string | number> = {
+      latitude: env.latitude,
+      longitude: env.longitude,
+      method,
+      year,
+    };
+    if (method === "auto" && env.country) {
+      params.country = env.country;
     }
+
+    const yearPayload = await fetchPrayerProxy<BackendCalendarYearPayload>(
+      "/api/prayer-times/calendar/year",
+      params
+    );
+    const days = Array.isArray(yearPayload?.days) ? yearPayload.days : [];
+    days.forEach((day) => {
+      mergeCalendarDayIntoStore(allTimes, day);
+    });
+
+    if (Object.keys(allTimes).length === 0) {
+      throw new Error("Invalid yearly calendar payload");
+    }
+  } catch {
+    // Rollout compatibility for older backend versions.
+    allTimes = await fetchYearCalendarLegacy(year, method, env);
   }
 
   const settingsKey = settingsToKey(settings);

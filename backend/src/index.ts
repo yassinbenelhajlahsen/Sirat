@@ -58,6 +58,8 @@ app.get("/", (req, res) => {
         "Proxy current-day prayer timings by lat/lng/method (method supports integer or 'auto'; country optional)",
       "GET /api/prayer-times/calendar":
         "Proxy prayer calendar month by lat/lng/method/month/year (method supports integer or 'auto'; country optional)",
+      "GET /api/prayer-times/calendar/year":
+        "Proxy prayer calendar year by lat/lng/method/year (method supports integer or 'auto'; country optional)",
       "GET /api/prayer-times/health": "Prayer times service health check",
       "GET /api/holidays/year": "Proxy holiday list for a Gregorian year",
       "GET /api/holidays/health": "Holiday service health check",

@@ -2,6 +2,7 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import {
   getCalendarHandler,
+  getCalendarYearHandler,
   getTimingsHandler,
 } from "../controllers/prayerTimesController.js";
 
@@ -27,6 +28,7 @@ const prayerTimesLimiter = rateLimit({
 });
 
 router.get("/timings", prayerTimesLimiter, getTimingsHandler);
+router.get("/calendar/year", prayerTimesLimiter, getCalendarYearHandler);
 router.get("/calendar", prayerTimesLimiter, getCalendarHandler);
 
 router.get("/health", (_req, res) => {

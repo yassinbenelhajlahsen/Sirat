@@ -18,6 +18,7 @@ const HOLIDAYS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 300;
 const HOLIDAY_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+const CALENDAR_YEAR_CONCURRENCY = 3;
 
 type PrayerKey = (typeof REQUIRED_PRAYER_KEYS)[number];
 
@@ -29,6 +30,10 @@ type PrayerTimesParams = {
 
 type CalendarParams = PrayerTimesParams & {
   month: number;
+  year: number;
+};
+
+type CalendarYearParams = PrayerTimesParams & {
   year: number;
 };
 
@@ -54,6 +59,15 @@ type CalendarEntry = {
     };
   };
   timings: PrayerTimings;
+};
+
+export type CalendarYearPayload = {
+  days: CalendarEntry[];
+  partial: boolean;
+  fetchedMonths: number[];
+  failedMonths: number[];
+  staleMonths: number[];
+  cacheByMonth: Record<string, CacheStatus>;
 };
 
 type CacheEntry<T> = {
@@ -92,9 +106,14 @@ export class AladhanServiceError extends Error {
 
 const timingsCache = new Map<string, CacheEntry<TimingsPayload>>();
 const calendarCache = new Map<string, CacheEntry<CalendarEntry[]>>();
+const calendarYearCache = new Map<string, CacheEntry<CalendarYearPayload>>();
 const holidaysCache = new Map<string, CacheEntry<HolidaysPayload>>();
 const timingsInFlight = new Map<string, Promise<ServiceResponse<TimingsPayload>>>();
 const calendarInFlight = new Map<string, Promise<ServiceResponse<CalendarEntry[]>>>();
+const calendarYearInFlight = new Map<
+  string,
+  Promise<ServiceResponse<CalendarYearPayload>>
+>();
 const holidaysInFlight = new Map<string, Promise<ServiceResponse<HolidaysPayload>>>();
 
 function sleep(ms: number): Promise<void> {
@@ -128,6 +147,10 @@ function timingsCacheKey(params: PrayerTimesParams): string {
 
 function calendarCacheKey(params: CalendarParams): string {
   return `${coordinateBucket(params.latitude, params.longitude)}:${params.method}:${params.month}:${params.year}`;
+}
+
+function calendarYearCacheKey(params: CalendarYearParams): string {
+  return `${coordinateBucket(params.latitude, params.longitude)}:${params.method}:${params.year}`;
 }
 
 function holidaysCacheKey(year: number): string {
@@ -501,6 +524,128 @@ async function fetchFreshCalendar(params: CalendarParams): Promise<CalendarEntry
   return sanitizeCalendarPayload(upstreamData);
 }
 
+function aggregateMonthCacheStatus(statuses: CacheStatus[]): CacheStatus {
+  if (statuses.length === 0) {
+    return "miss";
+  }
+  if (statuses.every((status) => status === "hit")) {
+    return "hit";
+  }
+  if (statuses.some((status) => status === "stale")) {
+    return "stale";
+  }
+  return "miss";
+}
+
+async function fetchFreshCalendarYear(
+  params: CalendarYearParams,
+): Promise<{
+  payload: CalendarYearPayload;
+  stale: boolean;
+  cacheStatus: CacheStatus;
+}> {
+  const monthResults: Array<
+    | {
+        month: number;
+        success: true;
+        response: ServiceResponse<CalendarEntry[]>;
+      }
+    | {
+        month: number;
+        success: false;
+        error: unknown;
+      }
+  > = [];
+
+  for (let i = 0; i < HOLIDAY_MONTHS.length; i += CALENDAR_YEAR_CONCURRENCY) {
+    const monthBatch = HOLIDAY_MONTHS.slice(i, i + CALENDAR_YEAR_CONCURRENCY);
+    const batchResults = await Promise.all(
+      monthBatch.map(async (month) => {
+        try {
+          const response = await getCalendar({
+            latitude: params.latitude,
+            longitude: params.longitude,
+            method: params.method,
+            month,
+            year: params.year,
+          });
+          return {
+            month,
+            success: true as const,
+            response,
+          };
+        } catch (error: unknown) {
+          return {
+            month,
+            success: false as const,
+            error,
+          };
+        }
+      }),
+    );
+
+    monthResults.push(...batchResults);
+  }
+
+  const successful = monthResults.filter((result) => result.success);
+  if (successful.length === 0) {
+    const firstFailure = monthResults.find((result) => !result.success);
+    throw (
+      firstFailure?.error ??
+      new AladhanServiceError(
+        "Failed to fetch prayer calendar year from Aladhan.",
+        "UPSTREAM_SERVER_ERROR",
+        502,
+        true,
+      )
+    );
+  }
+
+  const failedMonths = monthResults
+    .filter((result) => !result.success)
+    .map((result) => result.month);
+  const fetchedMonths = successful.map((result) => result.month);
+  const staleMonths = successful
+    .filter((result) => result.response.stale)
+    .map((result) => result.month);
+  const cacheByMonth = successful.reduce<Record<string, CacheStatus>>(
+    (acc, result) => {
+      acc[String(result.month)] = result.response.cacheStatus;
+      return acc;
+    },
+    {},
+  );
+
+  if (failedMonths.length > 0) {
+    logEvent("aladhan_failure", {
+      endpoint: "calendar-year",
+      params: {
+        year: params.year,
+        latitude: params.latitude,
+        longitude: params.longitude,
+        method: params.method,
+      },
+      errorType: "PARTIAL_MONTH_FAILURE",
+      fetchedMonths,
+      failedMonths,
+      staleServed: staleMonths.length > 0,
+    });
+  }
+
+  return {
+    payload: {
+      days: successful.flatMap((result) => result.response.data),
+      partial: failedMonths.length > 0,
+      fetchedMonths,
+      failedMonths,
+      staleMonths,
+      cacheByMonth,
+    },
+    stale: staleMonths.length > 0,
+    cacheStatus: aggregateMonthCacheStatus(Object.values(cacheByMonth)),
+  };
+}
+
 async function fetchHolidayMonth(year: number, month: number): Promise<Holiday[]> {
   const upstreamData = await requestAladhan<unknown>({
     endpoint: "holidays",
@@ -725,6 +870,71 @@ export async function getCalendar(
   })();
 
   calendarInFlight.set(key, requestPromise);
+  return requestPromise;
+}
+
+export async function getCalendarYear(
+  params: CalendarYearParams,
+): Promise<ServiceResponse<CalendarYearPayload>> {
+  const key = calendarYearCacheKey(params);
+  const fresh = getFreshCache(calendarYearCache, key);
+  if (fresh) {
+    return {
+      data: fresh.value,
+      stale: false,
+      cacheStatus: "hit",
+    };
+  }
+
+  const existingRequest = calendarYearInFlight.get(key);
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const stale = getStaleCache(calendarYearCache, key);
+
+  const requestPromise = (async (): Promise<ServiceResponse<CalendarYearPayload>> => {
+    try {
+      const freshResult = await fetchFreshCalendarYear(params);
+      calendarYearCache.set(key, {
+        value: freshResult.payload,
+        expiresAt: Date.now() + CALENDAR_CACHE_TTL_MS,
+      });
+      return {
+        data: freshResult.payload,
+        stale: freshResult.stale,
+        cacheStatus: freshResult.cacheStatus,
+      };
+    } catch (error: unknown) {
+      if (stale) {
+        logEvent("aladhan_failure", {
+          endpoint: "calendar-year",
+          params,
+          errorType:
+            error instanceof AladhanServiceError ? error.code : "UNKNOWN_ERROR",
+          staleServed: true,
+        });
+        return {
+          data: stale.value,
+          stale: true,
+          cacheStatus: "stale",
+        };
+      }
+
+      logEvent("aladhan_failure", {
+        endpoint: "calendar-year",
+        params,
+        errorType:
+          error instanceof AladhanServiceError ? error.code : "UNKNOWN_ERROR",
+        staleServed: false,
+      });
+      throw error;
+    } finally {
+      calendarYearInFlight.delete(key);
+    }
+  })();
+
+  calendarYearInFlight.set(key, requestPromise);
   return requestPromise;
 }
 

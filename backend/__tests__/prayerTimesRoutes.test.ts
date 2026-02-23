@@ -5,6 +5,7 @@ import request from "supertest";
 describe("Prayer Times Routes Integration", () => {
   const mockGetTimings: jest.Mock = jest.fn();
   const mockGetCalendar: jest.Mock = jest.fn();
+  const mockGetCalendarYear: jest.Mock = jest.fn();
   let app: Express;
 
   class MockAladhanServiceError extends Error {
@@ -24,11 +25,13 @@ describe("Prayer Times Routes Integration", () => {
     jest.resetModules();
     mockGetTimings.mockReset();
     mockGetCalendar.mockReset();
+    mockGetCalendarYear.mockReset();
 
     jest.unstable_mockModule("../src/services/aladhanService.js", () => ({
       AladhanServiceError: MockAladhanServiceError,
       getTimings: mockGetTimings,
       getCalendar: mockGetCalendar,
+      getCalendarYear: mockGetCalendarYear,
     }));
 
     const prayerTimesRoutes = (await import("../src/routes/prayerTimes.js")).default;
@@ -49,6 +52,36 @@ describe("Prayer Times Routes Integration", () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
     expect(res.body.error.message).toContain("latitude");
+  });
+
+  it("returns 400 for non-numeric timings longitude", async () => {
+    const res = await request(app)
+      .get("/api/prayer-times/timings")
+      .query({ latitude: 40.7128, longitude: "bad", method: 2 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("longitude");
+  });
+
+  it("returns 400 when timings method is missing", async () => {
+    const res = await request(app)
+      .get("/api/prayer-times/timings")
+      .query({ latitude: 40.7128, longitude: -74.006 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("method");
+  });
+
+  it("returns 400 when timings method is blank", async () => {
+    const res = await request(app)
+      .get("/api/prayer-times/timings")
+      .query({ latitude: 40.7128, longitude: -74.006, method: "   " });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("integer or 'auto'");
   });
 
   it("returns 400 for unsupported method", async () => {
@@ -187,6 +220,37 @@ describe("Prayer Times Routes Integration", () => {
     expect(res.body.stale).toBe(false);
   });
 
+  it("returns 500 internal error shape for unexpected timings errors", async () => {
+    (mockGetTimings as any).mockRejectedValue(new Error("boom"));
+
+    const res = await request(app)
+      .get("/api/prayer-times/timings")
+      .query({ latitude: 40.7128, longitude: -74.006, method: 2 });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toEqual({
+      code: "INTERNAL_ERROR",
+      message: "Failed to fetch prayer times",
+      retriable: false,
+    });
+  });
+
+  it("returns 400 for out-of-range timings coordinates", async () => {
+    const latitudeRes = await request(app)
+      .get("/api/prayer-times/timings")
+      .query({ latitude: 100, longitude: -74.006, method: 2 });
+
+    expect(latitudeRes.status).toBe(400);
+    expect(latitudeRes.body.error.message).toContain("latitude");
+
+    const longitudeRes = await request(app)
+      .get("/api/prayer-times/timings")
+      .query({ latitude: 40.7128, longitude: -181, method: 2 });
+
+    expect(longitudeRes.status).toBe(400);
+    expect(longitudeRes.body.error.message).toContain("longitude");
+  });
+
   it("returns 400 for invalid calendar month", async () => {
     const res = await request(app).get("/api/prayer-times/calendar").query({
       latitude: 40.7128,
@@ -199,6 +263,143 @@ describe("Prayer Times Routes Integration", () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
     expect(res.body.error.message).toContain("month");
+  });
+
+  it("returns 400 when calendar month is missing", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      year: 2026,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("month");
+  });
+
+  it("returns 400 for non-integer calendar month", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      month: "2.5",
+      year: 2026,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("month");
+  });
+
+  it("returns 400 for out-of-range calendar year", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      month: 2,
+      year: 2200,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("year");
+  });
+
+  it("returns 400 for non-integer calendar year", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      month: 2,
+      year: "2026.5",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("year");
+  });
+
+  it("returns 400 for non-numeric calendar coordinates", async () => {
+    const latitudeRes = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: "bad",
+      longitude: -74.006,
+      method: 2,
+      month: 2,
+      year: 2026,
+    });
+
+    expect(latitudeRes.status).toBe(400);
+    expect(latitudeRes.body.error.code).toBe("VALIDATION_ERROR");
+    expect(latitudeRes.body.error.message).toContain("latitude");
+
+    const longitudeRes = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 40.7128,
+      longitude: "bad",
+      method: 2,
+      month: 2,
+      year: 2026,
+    });
+
+    expect(longitudeRes.status).toBe(400);
+    expect(longitudeRes.body.error.code).toBe("VALIDATION_ERROR");
+    expect(longitudeRes.body.error.message).toContain("longitude");
+  });
+
+  it("returns 400 for out-of-range calendar coordinates", async () => {
+    const latitudeRes = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 91,
+      longitude: -74.006,
+      method: 2,
+      month: 2,
+      year: 2026,
+    });
+
+    expect(latitudeRes.status).toBe(400);
+    expect(latitudeRes.body.error.message).toContain("latitude");
+
+    const longitudeRes = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 40.7128,
+      longitude: -181,
+      method: 2,
+      month: 2,
+      year: 2026,
+    });
+
+    expect(longitudeRes.status).toBe(400);
+    expect(longitudeRes.body.error.message).toContain("longitude");
+  });
+
+  it("returns 500 internal error shape for unexpected calendar errors", async () => {
+    (mockGetCalendar as any).mockRejectedValue(new Error("boom"));
+
+    const res = await request(app).get("/api/prayer-times/calendar").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      month: 2,
+      year: 2026,
+    });
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toEqual({
+      code: "INTERNAL_ERROR",
+      message: "Failed to fetch prayer times",
+      retriable: false,
+    });
+  });
+
+  it("returns 400 for invalid calendar-year year", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      year: 2200,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("year");
   });
 
   it("returns 200 with calendar data for valid request", async () => {
@@ -241,6 +442,85 @@ describe("Prayer Times Routes Integration", () => {
     });
     expect(res.body.resolvedMethod).toBe(2);
     expect(res.body.resolutionSource).toBe("explicit");
+  });
+
+  it("returns 200 with calendar year data for valid request", async () => {
+    (mockGetCalendarYear as any).mockResolvedValue({
+      data: {
+        days: [
+          {
+            date: { gregorian: { date: "01-02-2026" } },
+            timings: {
+              Fajr: "05:12",
+              Sunrise: "06:34",
+              Dhuhr: "12:20",
+              Asr: "15:40",
+              Maghrib: "18:02",
+              Isha: "19:18",
+            },
+          },
+        ],
+        partial: false,
+        fetchedMonths: [1, 2],
+        failedMonths: [],
+        staleMonths: [],
+        cacheByMonth: { "1": "hit", "2": "miss" },
+      },
+      stale: false,
+      cacheStatus: "miss",
+    });
+
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      year: 2026,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.cache).toBe("miss");
+    expect(res.body.partial).toBe(false);
+    expect(res.body.data.days).toHaveLength(1);
+    expect(mockGetCalendarYear).toHaveBeenCalledWith({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      year: 2026,
+    });
+  });
+
+  it("resolves method=auto for calendar year requests", async () => {
+    (mockGetCalendarYear as any).mockResolvedValue({
+      data: {
+        days: [],
+        partial: false,
+        fetchedMonths: [],
+        failedMonths: [],
+        staleMonths: [],
+        cacheByMonth: {},
+      },
+      stale: false,
+      cacheStatus: "hit",
+    });
+
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 41.0082,
+      longitude: 28.9784,
+      method: "auto",
+      country: "Turkey",
+      year: 2026,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.resolvedMethod).toBe(13);
+    expect(res.body.resolutionSource).toBe("auto-country");
+    expect(mockGetCalendarYear).toHaveBeenCalledWith({
+      latitude: 41.0082,
+      longitude: 28.9784,
+      method: 13,
+      year: 2026,
+    });
   });
 
   it("resolves method=auto for calendar requests", async () => {
@@ -297,6 +577,106 @@ describe("Prayer Times Routes Integration", () => {
     expect(res.body.error.message).toContain("integer or 'auto'");
   });
 
+  it("returns 400 when calendar-year latitude is invalid", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: "bad",
+      longitude: -74.006,
+      method: 2,
+      year: 2026,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("latitude");
+  });
+
+  it("returns 400 for non-numeric calendar-year longitude", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 40.7128,
+      longitude: "bad",
+      method: 2,
+      year: 2026,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("longitude");
+  });
+
+  it("returns 400 for out-of-range calendar-year coordinates", async () => {
+    const latitudeRes = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 91,
+      longitude: -74.006,
+      method: 2,
+      year: 2026,
+    });
+
+    expect(latitudeRes.status).toBe(400);
+    expect(latitudeRes.body.error.message).toContain("latitude");
+
+    const longitudeRes = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 40.7128,
+      longitude: -181,
+      method: 2,
+      year: 2026,
+    });
+
+    expect(longitudeRes.status).toBe(400);
+    expect(longitudeRes.body.error.message).toContain("longitude");
+  });
+
+  it("returns 400 when calendar-year year is not an integer", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      year: "2026.5",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("year");
+  });
+
+  it("returns 400 when calendar-year method is invalid", async () => {
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: "nope",
+      year: 2026,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    expect(res.body.error.message).toContain("integer or 'auto'");
+  });
+
+  it("maps service errors for calendar-year endpoint", async () => {
+    (mockGetCalendarYear as any).mockRejectedValue(
+      new MockAladhanServiceError(
+        "Upstream unavailable",
+        "UPSTREAM_SERVER_ERROR",
+        502,
+        true,
+      ),
+    );
+
+    const res = await request(app).get("/api/prayer-times/calendar/year").query({
+      latitude: 40.7128,
+      longitude: -74.006,
+      method: 2,
+      year: 2026,
+    });
+
+    expect(res.status).toBe(502);
+    expect(res.body.error).toEqual({
+      code: "UPSTREAM_SERVER_ERROR",
+      message: "Upstream unavailable",
+      retriable: true,
+    });
+    expect(res.body.stale).toBe(false);
+  });
+
   it("returns prayer-times health response", async () => {
     const res = await request(app).get("/api/prayer-times/health");
 
@@ -305,4 +685,40 @@ describe("Prayer Times Routes Integration", () => {
     expect(res.body.service).toBe("prayer-times");
     expect(typeof res.body.timestamp).toBe("string");
   });
+
+  it("returns structured rate-limit response after exceeding request cap", async () => {
+    (mockGetTimings as any).mockResolvedValue({
+      data: {
+        timings: {
+          Fajr: "05:12",
+          Sunrise: "06:34",
+          Dhuhr: "12:20",
+          Asr: "15:40",
+          Maghrib: "18:02",
+          Isha: "19:18",
+        },
+      },
+      stale: false,
+      cacheStatus: "hit",
+    });
+
+    for (let i = 0; i < 300; i++) {
+      const okRes = await request(app)
+        .get("/api/prayer-times/timings")
+        .query({ latitude: 40.7128, longitude: -74.006, method: 2 });
+      expect(okRes.status).toBe(200);
+    }
+
+    const limitedRes = await request(app)
+      .get("/api/prayer-times/timings")
+      .query({ latitude: 40.7128, longitude: -74.006, method: 2 });
+    expect(limitedRes.status).toBe(429);
+    expect(limitedRes.body).toEqual({
+      error: {
+        code: "RATE_LIMITED",
+        message: "Too many requests from this IP, please try again later.",
+        retriable: true,
+      },
+    });
+  }, 30000);
 });
