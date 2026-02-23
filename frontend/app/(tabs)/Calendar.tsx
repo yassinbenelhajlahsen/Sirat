@@ -105,6 +105,17 @@ export default function CalendarScreen() {
     () => getMonthMatrix(viewYear, viewMonth),
     [viewYear, viewMonth],
   );
+  const visibleMatrix = useMemo(() => {
+    let lastWeekWithDates = matrix.length - 1;
+    while (
+      lastWeekWithDates >= 0 &&
+      matrix[lastWeekWithDates].every((day) => day === 0)
+    ) {
+      lastWeekWithDates -= 1;
+    }
+
+    return matrix.slice(0, Math.max(lastWeekWithDates + 1, 1));
+  }, [matrix]);
   const monthName = useMemo(
     () =>
       new Date(viewYear, viewMonth).toLocaleString("default", {
@@ -519,7 +530,7 @@ export default function CalendarScreen() {
               </View>
             ) : (
               <View style={styles.gridBody}>
-                {matrix.map((week, i) => (
+                {visibleMatrix.map((week, i) => (
                   <View key={i} style={styles.weekRow}>
                     {week.map((day, j) => {
                       const isToday =
