@@ -1,12 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import type { ReactNode } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { colors, withOpacity } from "../../constants/theme";
-
-const ICON_SIZE = 22;
 
 type TabGlyphProps = {
   focused: boolean;
@@ -46,7 +44,7 @@ export default function TabLayout() {
               <TabGlyph focused={focused}>
                 <Ionicons
                   name={focused ? "home" : "home-outline"}
-                  size={ICON_SIZE}
+                  size={22}
                   color={focused ? colors.primaryDeep : color}
                 />
               </TabGlyph>
@@ -62,7 +60,7 @@ export default function TabLayout() {
               <TabGlyph focused={focused}>
                 <Ionicons
                   name={focused ? "location" : "location-outline"}
-                  size={ICON_SIZE}
+                  size={22}
                   color={focused ? colors.primaryDeep : color}
                 />
               </TabGlyph>
@@ -76,13 +74,10 @@ export default function TabLayout() {
             title: "Qibla",
             tabBarIcon: ({ color, focused }) => (
               <TabGlyph focused={focused}>
-                <Image
-                  source={require("../../assets/images/qibla-compass-svgrepo-com.png")}
-                  style={[
-                    styles.qiblaIcon,
-                    { tintColor: focused ? colors.primaryDeep : color },
-                  ]}
-                  resizeMode="contain"
+                <Ionicons
+                  name={focused ? "compass" : "compass-outline"}
+                  size={25}
+                  color={focused ? colors.primaryDeep : color}
                 />
               </TabGlyph>
             ),
@@ -97,7 +92,7 @@ export default function TabLayout() {
               <TabGlyph focused={focused}>
                 <Ionicons
                   name={focused ? "book" : "book-outline"}
-                  size={ICON_SIZE}
+                  size={22}
                   color={focused ? colors.primaryDeep : color}
                 />
               </TabGlyph>
@@ -113,7 +108,7 @@ export default function TabLayout() {
               <TabGlyph focused={focused}>
                 <Ionicons
                   name={focused ? "today" : "today-outline"}
-                  size={ICON_SIZE}
+                  size={22}
                   color={focused ? colors.primaryDeep : color}
                 />
               </TabGlyph>
@@ -129,7 +124,7 @@ export default function TabLayout() {
               <TabGlyph focused={focused}>
                 <Ionicons
                   name={focused ? "settings" : "settings-outline"}
-                  size={ICON_SIZE}
+                  size={22}
                   color={focused ? colors.primaryDeep : color}
                 />
               </TabGlyph>
@@ -182,8 +177,4 @@ const styles = StyleSheet.create({
     backgroundColor: withOpacity(colors.accent, 0.95),
   },
 
-  qiblaIcon: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-  },
 });
