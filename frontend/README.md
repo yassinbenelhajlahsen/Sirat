@@ -64,5 +64,6 @@ frontend/
 
 - App startup preloads Quran data/display modes and syncs location/notification permissions in `app/_layout.tsx`.
 - Notification scheduling is handled by `services/notificationService.ts`.
+- Notification master flag (`notif_enabled_v1`) is persisted as string `"1"`/`"0"` in AsyncStorage.
 - Prayer-time caching and annual calendar fetch live in `services/prayerTimes.ts`.
 - Holiday year fetch and caching live in `services/holidayService.ts`.
