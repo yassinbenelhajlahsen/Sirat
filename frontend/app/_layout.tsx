@@ -4,6 +4,7 @@ import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
+import * as SystemUI from "expo-system-ui";
 import * as Updates from "expo-updates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, DeviceEventEmitter, View } from "react-native";
@@ -29,6 +30,7 @@ const NOTIF_ENABLED_KEY = "notif_enabled_v1";
 const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
 const SETTINGS_CHANGED_EVENT = "settingsChanged";
 const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
+const APP_BACKGROUND_COLOR = "#134b0a";
 
 async function preloadImages() {
   await Asset.loadAsync([
@@ -188,6 +190,12 @@ export default function RootLayout() {
     NotificationService.init();
   }, []);
 
+  // Keep native root/system background aligned with app color to avoid white frames
+  // during bridge restarts (for example, immediate OTA reloads).
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(APP_BACKGROUND_COLOR).catch(() => {});
+  }, []);
+
   // Clear old Adhan notifications when the app opens so the tray stays clean.
   useEffect(() => {
     Notifications.dismissAllNotificationsAsync().catch(() => {});
@@ -266,7 +274,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       {/* Always render app content so it mounts and loads data while splash is visible */}
       <QuranAudioProvider>
-        <View style={{ flex: 1, backgroundColor: "#134b0a" }}>
+        <View style={{ flex: 1, backgroundColor: APP_BACKGROUND_COLOR }}>
           <Slot />
           <QuranMiniPlayerPortal />
         </View>
@@ -301,7 +309,7 @@ export default function RootLayout() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "#134b0a",
+          backgroundColor: APP_BACKGROUND_COLOR,
           opacity: showReloadCover ? 1 : 0,
         }}
         pointerEvents={showReloadCover ? "auto" : "none"}
