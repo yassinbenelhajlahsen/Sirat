@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors as themeColors, withOpacity } from "@/constants/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -18,24 +19,33 @@ const ROW_STYLES = {
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
     alignItems: "center" as const,
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: 14,
+    paddingVertical: 11,
     paddingHorizontal: 12,
-    marginBottom: 12,
-    borderWidth: 2,
+    marginBottom: 10,
+    borderWidth: 1,
   },
   labelText: {
     color: withOpacity(themeColors.white, 0.9),
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: "SFProDisplay-Semibold",
     letterSpacing: 0.2,
   },
   timeText: {
     color: themeColors.accent,
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: "SFProDisplay-Bold",
     letterSpacing: 0.2,
   },
+};
+
+const PRAYER_ICONS: Record<string, string> = {
+  Fajr: "moon-waning-crescent",
+  Sunrise: "weather-sunset-up",
+  Dhuhr: "white-balance-sunny",
+  Asr: "clock-outline",
+  Maghrib: "weather-sunset-down",
+  Isha: "weather-night",
 };
 
 /* ---------- Pure JS shimmer bar (no gradient libs) ---------- */
@@ -152,10 +162,11 @@ function PrayerRowSkeleton({ progress }: { progress?: Animated.Value }) {
         },
       ]}
     >
-      {/* label placeholder */}
-      <SkeletonBar style={{ width: 96 }} height={20} progress={progress} />
-      {/* time placeholder */}
-      <SkeletonBar style={{ width: 72 }} height={20} progress={progress} />
+      <View style={styles.leftCluster}>
+        <SkeletonBar style={styles.skeletonIcon} height={22} progress={progress} />
+        <SkeletonBar style={{ width: 96 }} height={18} progress={progress} />
+      </View>
+      <SkeletonBar style={styles.skeletonTime} height={18} progress={progress} />
     </View>
   );
 }
@@ -205,12 +216,24 @@ export default function PrayerTimesList({
   return (
     <View>
       {prayerTimes.map(({ label, time }) => {
+        const iconName = PRAYER_ICONS[label] ?? "time-outline";
+
         return (
           <View
             key={label}
             style={[ROW_STYLES.containerBase, styles.rowSurface]}
           >
-            <Text style={ROW_STYLES.labelText}>{label}</Text>
+            <View style={styles.leftCluster}>
+              <View style={styles.rowIconWrap}>
+                <MaterialCommunityIcons
+                  name={iconName as any}
+                  size={14}
+                  color={withOpacity(themeColors.accent, 0.92)}
+                />
+              </View>
+              <Text style={[ROW_STYLES.labelText, styles.labelSpacing]}>{label}</Text>
+            </View>
+
             <Animated.Text
               style={[
                 ROW_STYLES.timeText,
@@ -233,13 +256,38 @@ export default function PrayerTimesList({
 const styles = StyleSheet.create({
   rowSurface: {
     backgroundColor: withOpacity(themeColors.white, 0.05),
-    borderColor: withOpacity(themeColors.white, 0.05),
+    borderColor: withOpacity(themeColors.white, 0.1),
     shadowColor: withOpacity(themeColors.black, 0.05),
-    shadowOpacity: 0.25,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
     overflow: "hidden",
+  },
+  leftCluster: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  labelSpacing: {
+    marginLeft: 10,
+  },
+  rowIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: withOpacity(themeColors.accent, 0.12),
+    borderWidth: 1,
+    borderColor: withOpacity(themeColors.accent, 0.28),
+  },
+  skeletonIcon: {
+    width: 22,
+    borderRadius: 999,
+  },
+  skeletonTime: {
+    width: 88,
+    borderRadius: 999,
   },
   skeletonBarBase: {
     backgroundColor: withOpacity(themeColors.white, 0.08),
