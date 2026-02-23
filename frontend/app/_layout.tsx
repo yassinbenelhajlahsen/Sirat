@@ -123,7 +123,56 @@ export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
   const [initialSynced, setInitialSynced] = useState(false);
   const [otaChecked, setOtaChecked] = useState(false);
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
   const appStateRef = useRef(AppState.currentState);
+  const otaCheckInFlightRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  const checkAndApplyOtaUpdate = useCallback(
+    async ({ markStartupComplete = false }: { markStartupComplete?: boolean } = {}) => {
+      if (otaCheckInFlightRef.current) return;
+      otaCheckInFlightRef.current = true;
+
+      try {
+        // Skip OTA checks entirely in Expo Go.
+        if (Constants.appOwnership === "expo") return;
+
+        const update = await Updates.checkForUpdateAsync();
+        if (!update.isAvailable) return;
+
+        await Updates.fetchUpdateAsync();
+
+        // Re-validate foreground state before attempting reload.
+        if (AppState.currentState !== "active") return;
+
+        if (mountedRef.current) {
+          setShowSplash(true);
+          setIsApplyingUpdate(true);
+        }
+
+        // Give React one frame to mount splash before JS is torn down.
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+
+        if (AppState.currentState !== "active") {
+          if (mountedRef.current) setIsApplyingUpdate(false);
+          return;
+        }
+
+        await Updates.reloadAsync();
+      } catch (error) {
+        console.error("OTA update check failed", error);
+        if (mountedRef.current) setIsApplyingUpdate(false);
+      } finally {
+        otaCheckInFlightRef.current = false;
+        if (markStartupComplete && mountedRef.current) {
+          setOtaChecked(true);
+        }
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     NotificationService.init();
@@ -134,37 +183,18 @@ export default function RootLayout() {
     Notifications.dismissAllNotificationsAsync().catch(() => {});
   }, []);
 
-  // OTA update check - runs early and blocks splash screen
+  // Track mount state for safe state updates from async flows.
   useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      try {
-        // Skip OTA check in Expo Go development
-        if (Constants.appOwnership === "expo") {
-          if (mounted) setOtaChecked(true);
-          return;
-        }
-
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          // Only reload if app is in foreground
-          if (AppState.currentState === "active") {
-            await Updates.reloadAsync();
-          }
-        }
-      } catch (error) {
-        console.error("OTA update check failed", error);
-      } finally {
-        if (mounted) setOtaChecked(true);
-      }
-    })();
-
+    mountedRef.current = true;
     return () => {
-      mounted = false;
+      mountedRef.current = false;
     };
   }, []);
+
+  // OTA update check - runs early and blocks splash screen
+  useEffect(() => {
+    checkAndApplyOtaUpdate({ markStartupComplete: true });
+  }, [checkAndApplyOtaUpdate]);
 
   // Do the initial permission syncs on launch, and re-sync on foreground
   useEffect(() => {
@@ -191,10 +221,15 @@ export default function RootLayout() {
         appStateRef.current.match(/inactive|background/) && state === "active";
       appStateRef.current = state;
       if (wasBgToActive) {
-        await Promise.all([
-          syncLocationPermissionToSettings(),
-          syncNotificationPermissionToToggle(),
-        ]);
+        try {
+          await Promise.all([
+            syncLocationPermissionToSettings(),
+            syncNotificationPermissionToToggle(),
+          ]);
+        } catch (error) {
+          console.error("Failed to re-sync permissions on foreground", error);
+        }
+        await checkAndApplyOtaUpdate();
       }
     });
 
@@ -202,7 +237,7 @@ export default function RootLayout() {
       mounted = false;
       sub.remove();
     };
-  }, []);
+  }, [checkAndApplyOtaUpdate]);
 
   // Native splash control
   const hasHiddenNative = useRef(false);
@@ -215,6 +250,7 @@ export default function RootLayout() {
   }, []);
 
   const appReady = fontsLoaded && initialSynced && otaChecked;
+  const splashReady = appReady && !isApplyingUpdate;
 
   return (
     <SafeAreaProvider>
@@ -236,10 +272,10 @@ export default function RootLayout() {
             right: 0,
             bottom: 0,
           }}
-          pointerEvents={appReady ? "none" : "auto"}
+          pointerEvents={splashReady ? "none" : "auto"}
         >
           <SplashScreen
-            ready={appReady}
+            ready={splashReady}
             fontsReady={fontsLoaded}
             onReadyToHideNative={hideNativeSplash}
             onFinished={() => setShowSplash(false)}
