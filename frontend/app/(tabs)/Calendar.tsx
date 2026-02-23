@@ -621,7 +621,7 @@ export default function CalendarScreen() {
                 Missed days: {missedDaysLabel}
               </Text>
               <Text style={styles.summaryHint}>
-                Tap to review and update from the first missed day
+                Tap to review and update
               </Text>
             </PressableScale>
           )}
