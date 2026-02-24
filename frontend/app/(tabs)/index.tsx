@@ -1,11 +1,12 @@
 // app/(tabs)/index.tsx
-import { colors, spacing, typography, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -48,6 +49,10 @@ function parseTimeToDate(timeStr: string): Date {
 }
 
 export default function Home() {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const router = useRouter();
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [nextPrayer, setNextPrayer] = useState<null | {
@@ -514,7 +519,11 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => {
+  const { colors, spacing, typography } = theme;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
   screen: { flex: 1 },
   patternOverlay: {
     position: "absolute",
@@ -589,16 +598,20 @@ const styles = StyleSheet.create({
   },
   prayerListCard: {
     marginTop: spacing.md,
-    backgroundColor: withOpacity(colors.black, 0.2),
+    backgroundColor: isLight
+      ? withOpacity(colors.primarySurfaceAlt, 0.3)
+      : withOpacity(colors.black, 0.2),
     borderRadius: 18,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.08),
+    borderColor: isLight
+      ? withOpacity(colors.accent, 0.35)
+      : withOpacity(colors.white, 0.08),
     shadowColor: colors.primaryDark,
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 16 },
-    elevation: 6,
+    shadowOpacity: isLight ? 0.22 : 0.25,
+    shadowRadius: isLight ? 20 : 24,
+    shadowOffset: { width: 0, height: isLight ? 10 : 16 },
+    elevation: isLight ? 4 : 6,
     minHeight: 320,
     justifyContent: "center",
   },
@@ -662,4 +675,5 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Semibold",
     textAlign: "center",
   },
-});
+  });
+};

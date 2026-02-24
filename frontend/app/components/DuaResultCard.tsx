@@ -1,4 +1,5 @@
-import { colors, spacing, typography, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import type { Dua } from "@/services/duaService";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
@@ -11,6 +12,10 @@ interface DuaResultCardProps {
 }
 
 function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
+
   const [bookmarkLoading, setBookmarkLoading] = React.useState(false);
 
   const handleShare = async () => {
@@ -100,7 +105,7 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
             accessibilityLabel="Share dua"
             style={styles.actionButton}
           >
-            <Ionicons name="share-social-outline" size={16} color={colors.primaryDeep} />
+            <Ionicons name="share-social-outline" size={16} color={colors.onAccent} />
             <Text style={styles.actionButtonText}>
               Share
             </Text>
@@ -117,7 +122,7 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
               <Ionicons
                 name="bookmark-outline"
                 size={16}
-                color={bookmarkLoading ? withOpacity(colors.primaryDeep, 0.45) : colors.primaryDeep}
+                color={bookmarkLoading ? withOpacity(colors.onAccent, 0.45) : colors.onAccent}
               />
               <Text
                 style={[
@@ -135,152 +140,169 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    marginTop: spacing.lg,
-    backgroundColor: withOpacity(colors.black, 0.22),
-    borderRadius: 18,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.1),
-    shadowColor: colors.primaryDark,
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 4,
-    position: "relative",
-    zIndex: 1,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  categoryBadge: {
-    backgroundColor: withOpacity(colors.accent, 0.12),
-    borderWidth: 1,
-    borderColor: withOpacity(colors.accent, 0.35),
-    borderRadius: 999,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-  },
-  category: {
-    color: withOpacity(colors.accent, 0.96),
-    fontSize: typography.caption,
-    fontFamily: "SFProDisplay-Semibold",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  closeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: withOpacity(colors.white, 0.1),
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.2),
-  },
-  arabicContainer: {
-    marginBottom: spacing.lg,
-    alignItems: "center",
-    backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.24),
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.accent, 0.22),
-    paddingVertical: spacing.md + 2,
-    paddingHorizontal: spacing.md,
-  },
-  arabicText: {
-    color: colors.accent,
-    fontSize: 28,
-    fontFamily: "SFProDisplay-Bold",
-    textAlign: "right",
-    lineHeight: 44,
-  },
-  sectionCard: {
-    marginBottom: spacing.md,
-    backgroundColor: withOpacity(colors.black, 0.26),
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.14),
-  },
-  sectionLabel: {
-    color: withOpacity(colors.white, 0.65),
-    fontSize: 11,
-    fontFamily: "SFProDisplay-Semibold",
-    textTransform: "uppercase",
-    letterSpacing: 0.35,
-  },
-  sectionValue: {
-    color: colors.white,
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Regular",
-    marginTop: 6,
-    lineHeight: 20,
-  },
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: spacing.lg,
-  },
-  metaCardLeft: {
-    width: "100%",
-    backgroundColor: withOpacity(colors.black, 0.2),
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.12),
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.sm + 2,
-  },
-  metaLabel: {
-    color: withOpacity(colors.white, 0.62),
-    fontSize: 10,
-    fontFamily: "SFProDisplay-Regular",
-    textTransform: "uppercase",
-    letterSpacing: 0.35,
-  },
-  metaValue: {
-    color: colors.accent,
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Semibold",
-    marginTop: 4,
-  },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: withOpacity(colors.accent, 0.92),
-    borderRadius: 11,
-    paddingVertical: spacing.sm + 3,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.accent, 0.4),
-    shadowColor: withOpacity(colors.accent, 0.35),
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 3,
-  },
-  actionButtonSpaced: {
-    marginLeft: spacing.sm,
-  },
-  actionButtonText: {
-    color: colors.primaryDeep,
-    fontSize: 13,
-    fontFamily: "SFProDisplay-Bold",
-    marginLeft: 6,
-  },
-  actionButtonTextMuted: {
-    color: withOpacity(colors.primaryDeep, 0.45),
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const { colors, spacing, typography } = theme;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
+    card: {
+      marginTop: spacing.lg,
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.3)
+        : withOpacity(colors.black, 0.22),
+      borderRadius: 18,
+      padding: spacing.xl,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.35)
+        : withOpacity(colors.white, 0.1),
+      shadowColor: colors.primaryDark,
+      shadowOpacity: isLight ? 0.22 : 0.28,
+      shadowRadius: 20,
+      shadowOffset: { width: 0, height: isLight ? 10 : 12 },
+      elevation: 4,
+      position: "relative",
+      zIndex: 1,
+    },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: spacing.lg,
+    },
+    categoryBadge: {
+      backgroundColor: withOpacity(colors.accent, 0.12),
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accent, 0.35),
+      borderRadius: 999,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+    },
+    category: {
+      color: withOpacity(colors.accent, 0.96),
+      fontSize: typography.caption,
+      fontFamily: "SFProDisplay-Semibold",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    closeButton: {
+      width: 30,
+      height: 30,
+      borderRadius: 999,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(colors.white, 0.1),
+      borderWidth: 1,
+      borderColor: withOpacity(colors.white, 0.2),
+    },
+    arabicContainer: {
+      marginBottom: spacing.lg,
+      alignItems: "center",
+      backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.24),
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accent, 0.22),
+      paddingVertical: spacing.md + 2,
+      paddingHorizontal: spacing.md,
+    },
+    arabicText: {
+      color: colors.accent,
+      fontSize: 28,
+      fontFamily: "SFProDisplay-Bold",
+      textAlign: "right",
+      lineHeight: 44,
+    },
+    sectionCard: {
+      marginBottom: spacing.md,
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.24)
+        : withOpacity(colors.black, 0.26),
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.2)
+        : withOpacity(colors.white, 0.14),
+    },
+    sectionLabel: {
+      color: withOpacity(colors.white, 0.65),
+      fontSize: 11,
+      fontFamily: "SFProDisplay-Semibold",
+      textTransform: "uppercase",
+      letterSpacing: 0.35,
+    },
+    sectionValue: {
+      color: colors.white,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Regular",
+      marginTop: 6,
+      lineHeight: 20,
+    },
+    metaRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: spacing.lg,
+    },
+    metaCardLeft: {
+      width: "100%",
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.24)
+        : withOpacity(colors.black, 0.2),
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.2)
+        : withOpacity(colors.white, 0.12),
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.sm + 2,
+    },
+    metaLabel: {
+      color: withOpacity(colors.white, 0.62),
+      fontSize: 10,
+      fontFamily: "SFProDisplay-Regular",
+      textTransform: "uppercase",
+      letterSpacing: 0.35,
+    },
+    metaValue: {
+      color: colors.accent,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Semibold",
+      marginTop: 4,
+    },
+    actionRow: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    actionButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(colors.accent, 0.92),
+      borderRadius: 11,
+      paddingVertical: spacing.sm + 3,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accent, 0.4),
+      shadowColor: withOpacity(colors.accent, 0.35),
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 5 },
+      elevation: 3,
+    },
+    actionButtonSpaced: {
+      marginLeft: spacing.sm,
+    },
+    actionButtonText: {
+      color: colors.onAccent,
+      fontSize: 13,
+      fontFamily: "SFProDisplay-Bold",
+      marginLeft: 6,
+    },
+    actionButtonTextMuted: {
+      color: withOpacity(colors.onAccent, 0.45),
+    },
+  });
+};
 
 export default DuaResultCard;
