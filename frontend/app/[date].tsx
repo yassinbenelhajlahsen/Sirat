@@ -21,42 +21,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrayerTimesList from "../components/PrayerTimesList";
 import PressableScale from "../components/PressableScale";
+import { useNextPrayer } from "../hooks/useNextPrayer";
+import { usePrayerTimes } from "../hooks/usePrayerTimes";
+import { useRamadanTracker } from "../hooks/useRamadanTracker";
 import {
   dateKeyFromDate,
   getHolidayMapForYear,
-  getHolidaysForYear,
 } from "../services/holidayService";
-import {
-  getPrayerTimesForDate,
-  PrayerSettings,
-  PrayerTime,
-} from "../services/prayerTimes";
-import {
-  clearMissedFast,
-  computeRamadanEnd,
-  findRamadanStart,
-  isInRamadanWindow,
-  markFastAsMissed,
-  wasFastMissed,
-} from "../services/ramadanTracker";
-import getTimeUntil from "../utils/getTimeUntil";
 const screenWidth = Dimensions.get("window").width;
-
-type UIError =
-  | { code: "PERMISSION"; message: string }
-  | { code: "GENERIC"; message: string };
-
-function parseTimeToDate(timeStr: string, baseDate: Date): Date {
-  const [time, modifier] = timeStr.split(" ");
-  const [hoursStr, minutesStr] = time.split(":");
-  let hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
-  if (modifier === "PM" && hours !== 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
-  const dateObj = new Date(baseDate);
-  dateObj.setHours(hours, minutes, 0, 0);
-  return dateObj;
-}
 
 export default function CalendarDetail() {
   const { theme } = useTheme();
@@ -77,37 +49,20 @@ export default function CalendarDetail() {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [holiday, setHoliday] = useState<string | null>(null);
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
-  const [prayerTimesDateKey, setPrayerTimesDateKey] = useState<string | null>(
-    null,
-  );
-  const [nextPrayer, setNextPrayer] = useState<null | {
-    label: string;
-    time: string;
-    dateObj: Date;
-  }>(null);
-  const [timeLeft, setTimeLeft] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<UIError | null>(null);
-  const [fetchNonce, setFetchNonce] = useState(0);
-
-  // Ramadan tracking state
-  const [isFastMissed, setIsFastMissed] = useState(false);
-  const [isRamadan, setIsRamadan] = useState(false);
-  const [loadingRamadan, setLoadingRamadan] = useState(false);
 
   const holidayValue = typeof holidayParam === "string" ? holidayParam : null;
   const hasHolidayParam =
     holidayValue != null && holidayValue.trim().length > 0;
 
-  // retry control for silent spinner mode
-  const retryRef = useRef<{
-    attempt: number;
-    t: ReturnType<typeof setTimeout> | null;
-  }>({
-    attempt: 0,
-    t: null,
-  });
+  const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
+    usePrayerTimes(selectedDate);
+  const { nextPrayer, timeLeft } = useNextPrayer(
+    selectedDate,
+    prayerTimes,
+    prayerTimesDateKey,
+  );
+  const { isRamadan, isFastMissed, loadingRamadan, toggleMissedFast } =
+    useRamadanTracker(selectedDate, ramadanStartParam, ramadanEndParam);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -190,7 +145,6 @@ export default function CalendarDetail() {
 
               // Update state instead of navigating
               setSelectedDate(nextDate);
-              setFetchNonce((n) => n + 1);
 
               // Animate in the new content
               Animated.parallel([
@@ -256,7 +210,6 @@ export default function CalendarDetail() {
 
               // Update state instead of navigating
               setSelectedDate(prevDate);
-              setFetchNonce((n) => n + 1);
 
               // Animate in the new content
               Animated.parallel([
@@ -370,227 +323,8 @@ export default function CalendarDetail() {
     };
   }, [selectedDate]);
 
-  // Load Ramadan status and check if date is in Ramadan window
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!selectedDate) return;
-      setLoadingRamadan(true);
-      try {
-        // Load missed fast status for this date
-        const missed = await wasFastMissed(selectedDate);
-
-        // Check if we have preloaded Ramadan dates from Calendar screen
-        const hasPreloadedDates =
-          typeof ramadanStartParam === "string" &&
-          ramadanStartParam.length > 0 &&
-          typeof ramadanEndParam === "string" &&
-          ramadanEndParam.length > 0;
-
-        let ramadanStart: Date | null = null;
-        let ramadanEnd: Date | null = null;
-
-        if (hasPreloadedDates) {
-          // Use preloaded dates from navigation params
-          ramadanStart = new Date(ramadanStartParam as string);
-          ramadanEnd = new Date(ramadanEndParam as string);
-        } else {
-          // Fetch holidays if not preloaded
-          const holidays = await getHolidaysForYear(selectedDate.getFullYear());
-          ramadanStart = findRamadanStart(holidays);
-          if (ramadanStart) {
-            ramadanEnd = computeRamadanEnd(ramadanStart);
-          }
-        }
-
-        if (ramadanStart && ramadanEnd) {
-          const inWindow = isInRamadanWindow(
-            selectedDate,
-            ramadanStart,
-            ramadanEnd,
-          );
-          if (mounted) {
-            setIsRamadan(inWindow);
-            setIsFastMissed(missed);
-          }
-        } else {
-          if (mounted) {
-            setIsRamadan(false);
-            setIsFastMissed(false);
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to load Ramadan status:", e);
-        if (mounted) {
-          setIsRamadan(false);
-          setIsFastMissed(false);
-        }
-      } finally {
-        if (mounted) setLoadingRamadan(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedDate, ramadanStartParam, ramadanEndParam]);
-
   const today = new Date();
   const isToday = selectedDate?.toDateString() === today.toDateString();
-
-  // Helpers
-  const clearRetry = () => {
-    if (retryRef.current.t) clearTimeout(retryRef.current.t);
-    retryRef.current.t = null;
-  };
-  const resetRetry = () => {
-    clearRetry();
-    retryRef.current.attempt = 0;
-  };
-  const scheduleRetry = () => {
-    const base = 2000; // 2s
-    const delay = Math.min(30000, base * Math.pow(2, retryRef.current.attempt)); // cap at 30s
-    const jitter = Math.floor(Math.random() * 500); // small jitter
-    clearRetry();
-    retryRef.current.t = setTimeout(() => {
-      setFetchNonce((n) => n + 1);
-    }, delay + jitter);
-    retryRef.current.attempt += 1;
-  };
-
-  const isPermissionError = (e: unknown) => {
-    const msg =
-      e && typeof e === "object" && "message" in e
-        ? String((e as any).message)
-        : String(e ?? "");
-    return /Location permission not granted/i.test(msg);
-  };
-
-  // Treat these as transient and keep spinner up
-  const isTransient = (e: unknown) => {
-    const msg =
-      e && typeof e === "object" && "message" in e
-        ? String((e as any).message)
-        : String(e ?? "");
-    // do not mention exact cause in UI
-    return (
-      /Too many requests/i.test(msg) || // service throttling
-      /Failed to fetch|Network request failed|NetworkError/i.test(msg)
-    );
-  };
-
-  // Fetch times for the selected date
-  useEffect(() => {
-    if (!selectedDate) return;
-    let mounted = true;
-
-    (async () => {
-      const requestedDateKey = dateKeyFromDate(selectedDate);
-      // Invalidate any previously loaded times when the target date changes.
-      setPrayerTimesDateKey(null);
-
-      // Don't show loading state immediately - keep old data visible during transition
-      // Only set loading if we don't have any prayer times yet
-      if (prayerTimes.length === 0) {
-        setLoading(true);
-      }
-      setError(null);
-
-      try {
-        const settings: PrayerSettings = { useLocation: true, method: 2 };
-        const times = await getPrayerTimesForDate(settings, selectedDate);
-        if (!mounted) return;
-
-        resetRetry();
-        setPrayerTimes(times);
-        setPrayerTimesDateKey(requestedDateKey);
-        setLoading(false);
-      } catch (err) {
-        if (!mounted) return;
-        console.warn("Prayer times fetch error:", err);
-
-        if (isPermissionError(err)) {
-          resetRetry();
-          setError({
-            code: "PERMISSION",
-            message:
-              "Location is off. Turn it on in Settings or choose a saved city, then try again.",
-          });
-          // Only clear prayer times if we have an error
-          setPrayerTimes([]);
-          setPrayerTimesDateKey(null);
-          setLoading(false);
-          return;
-        }
-
-        if (isTransient(err)) {
-          // stay in spinner mode and silently retry until it works
-          setError(null);
-          // Don't clear prayer times on transient errors
-          setLoading(prayerTimes.length === 0);
-          scheduleRetry();
-          return;
-        }
-
-        // generic visible error
-        resetRetry();
-        setError({
-          code: "GENERIC",
-          message: "Could not load prayer times. Please try again later.",
-        });
-        // Only clear prayer times if we have an error
-        setPrayerTimes([]);
-        setPrayerTimesDateKey(null);
-        setLoading(false);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-      clearRetry();
-    };
-    // include nonce so manual retrys happen
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, fetchNonce]);
-
-  useEffect(() => {
-    if (!selectedDate || !isToday || prayerTimes.length === 0) {
-      setNextPrayer(null);
-      setTimeLeft("");
-      return;
-    }
-
-    const selectedDateKey = dateKeyFromDate(selectedDate);
-    if (prayerTimesDateKey !== selectedDateKey) {
-      setNextPrayer(null);
-      setTimeLeft("");
-      return;
-    }
-
-    const now = new Date();
-    const upcoming =
-      prayerTimes
-        .map(({ label, time }) => ({
-          label,
-          time,
-          dateObj: parseTimeToDate(time, selectedDate),
-        }))
-        .find(({ dateObj }) => dateObj > now) ?? null;
-
-    setNextPrayer(upcoming);
-    if (!upcoming) setTimeLeft("");
-  }, [isToday, prayerTimes, prayerTimesDateKey, selectedDate]);
-
-  useEffect(() => {
-    if (!nextPrayer) {
-      setTimeLeft("");
-      return;
-    }
-    setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-    const interval = setInterval(() => {
-      setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [nextPrayer]);
 
   if (!selectedDate) return null;
   const displayDateLine = new Intl.DateTimeFormat("en-US", {
@@ -658,7 +392,6 @@ export default function CalendarDetail() {
 
       // Update state instead of navigating
       setSelectedDate(newDate);
-      setFetchNonce((n) => n + 1);
 
       // Animate in the new content
       Animated.parallel([
@@ -700,10 +433,7 @@ export default function CalendarDetail() {
   const formatShort = (d: Date) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-  const handleRetry = () => {
-    resetRetry();
-    setFetchNonce((n) => n + 1);
-  };
+  const handleRetry = retry;
 
   const openSettings = async () => {
     try {
@@ -713,23 +443,6 @@ export default function CalendarDetail() {
         await Linking.openSettings();
       }
     } catch {}
-  };
-
-  // Handle Ramadan missed fast toggle
-  const handleMissedFastToggle = async () => {
-    if (!selectedDate) return;
-    try {
-      // Toggle the missed fast status
-      if (isFastMissed) {
-        await clearMissedFast(selectedDate);
-        setIsFastMissed(false);
-      } else {
-        await markFastAsMissed(selectedDate);
-        setIsFastMissed(true);
-      }
-    } catch (e) {
-      console.error("Failed to update missed fast status:", e);
-    }
   };
 
   const ErrorBox = () =>
@@ -933,7 +646,7 @@ export default function CalendarDetail() {
               </Text>
 
               <PressableScale
-                onPress={handleMissedFastToggle}
+                onPress={toggleMissedFast}
                 style={[
                   styles.ramadanToggleButton,
                   isFastMissed ? styles.ramadanToggleButtonActive : null,
