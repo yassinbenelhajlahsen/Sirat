@@ -22,6 +22,7 @@ Sirat is a mobile-first Islamic companion app with an Expo frontend and a Node/E
 - Prayer notifications with per-prayer toggles and optional Adhan sound
 - Islamic calendar with backend holiday proxying and Ramadan missed-fast tracking
 - Dua matching with local regex-first logic and backend AI fallback
+- App-wide appearance themes (Default, Dark, Light) with persisted user selection
 
 ## Quick Start
 

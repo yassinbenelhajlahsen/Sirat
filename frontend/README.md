@@ -9,7 +9,7 @@ Expo Router + React Native app for daily Islamic utilities.
 - Qibla: compass-based direction to Kaaba
 - Quran: read/listen/search/bookmark ayat
 - Calendar: holidays + Ramadan missed-fast tracker
-- Settings: location/method/city preferences + notification controls
+- Settings: appearance (theme), location/method/city preferences + notification controls
 
 ## Run Locally
 
@@ -44,9 +44,9 @@ frontend/
 ├── app/         # Expo Router routes, tabs, and UI components
 ├── services/    # API/data/caching/business logic
 ├── hooks/       # reusable behavior hooks
-├── context/     # app-level providers (Quran audio)
+├── context/     # app-level providers (Quran audio, app theme)
 ├── assets/      # local data, images, fonts, sounds
-├── constants/   # theme tokens
+├── constants/   # theme tokens and helpers
 └── util/        # calculation helpers and shared utilities
 ```
 
@@ -58,11 +58,13 @@ frontend/
 - Sirat backend (`/api/dua`): AI-assisted dua fallback
 - Quran text data: bundled local JSON assets
 - Quran audio: streamed per surah
-- Persistence: AsyncStorage (settings, caches, bookmarks, history)
+- Persistence: AsyncStorage (settings, theme, caches, bookmarks, history)
 
 ## Notes For Development
 
 - App startup preloads Quran data/display modes and syncs location/notification permissions in `app/_layout.tsx`.
+- Theme state is provided by `context/ThemeContext.tsx` and persisted under `app_theme_v1`.
+- Root layout waits for theme hydration before marking the app as ready to avoid startup flicker.
 - Root layout also checks and applies OTA updates outside Expo Go in `app/_layout.tsx`.
 - Notification scheduling is handled by `services/notificationService.ts`.
 - Notification master flag (`notif_enabled_v1`) is persisted as string `"1"`/`"0"` in AsyncStorage.

@@ -58,13 +58,14 @@ Dua API flow:
 - Tabs: `frontend/app/(tabs)/`
 - Core logic in `frontend/services/`
 - Reusable hooks in `frontend/hooks/`
-- Quran audio/provider context in `frontend/context/`
+- App providers in `frontend/context/` (`QuranAudioProvider`, `ThemeContext`)
 - App data assets in `frontend/assets/data/`
 
 Important frontend flows:
 - Dua: local regex match first (`frontend/services/duaMatcher.ts`), backend fallback via `frontend/services/duaService.ts`
 - Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (`/api/prayer-times/timings` + `/api/prayer-times/calendar/year`, with monthly `/api/prayer-times/calendar` fallback)
 - Notifications: rolling scheduling in `frontend/services/notificationService.ts`
+- Themes: app-wide theme state in `frontend/context/ThemeContext.tsx` with settings picker in `frontend/app/(tabs)/Settings.tsx`
 - Quran: preload/normalize local dataset in `frontend/services/quranData.ts`
 - Mosques: backend-proxied Google Places Nearby Search via `frontend/services/getNearbyMosques.ts` and `backend/src/routes/mosque.ts`
 - Calendar/Ramadan: backend holiday year proxy + missed fast tracking (`holidayService.ts`, `ramadanTracker.ts`)
@@ -89,6 +90,8 @@ Important frontend flows:
 - Backend `loadDuas()` resolves file via `process.cwd()/public/duas.json`; run backend from `backend/` or data load fails.
 - `frontend/package.json` includes `reset-project` script, but `frontend/scripts/reset-project.js` does not exist.
 - Backend mosque `radius` is clamped to `100..5000` in `backend/src/controllers/mosqueController.ts` (default `3000`).
+- Theme selection is stored as string key `app_theme_v1` (`default` | `dark` | `light`).
+- Root app readiness depends on theme hydration in `frontend/app/_layout.tsx` to avoid first-frame flash.
 - Notification master toggle in UI opens OS settings; it does not directly toggle permission state in-app.
 - Notification enable flag is stored as string `"1"`/`"0"` (`notif_enabled_v1`), not JSON boolean.
 - Cross-screen sync relies on exact `DeviceEventEmitter` event names (`settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`).
@@ -114,5 +117,6 @@ Important frontend flows:
 ## Agent Operating Notes
 - Prefer editing service logic in `frontend/services/` and `backend/src/services|utils|controllers` rather than bloating UI files.
 - Preserve AsyncStorage keys/events unless migration is deliberate and updated everywhere.
+- Keep theme-aware UI changes on `useTheme()` + theme-driven style factories (`createStyles`) instead of static color constants.
 - When changing prayer/notification behavior, verify both `Settings` and `NotificationService` integration paths.
 - When changing dua schema/category behavior, keep frontend and backend dua data/logic aligned.

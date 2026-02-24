@@ -19,8 +19,8 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - `frontend/app/components/`: shared UI (including Quran navigator/modals)
 - `frontend/services/`: data integrations, caching, notifications, domain logic
 - `frontend/hooks/`: reusable hooks
-- `frontend/context/`: providers (`QuranAudioProvider`)
-- `frontend/constants/`: theme tokens
+- `frontend/context/`: providers (`QuranAudioProvider`, `ThemeContext`)
+- `frontend/constants/`: theme tokens, theme map, and helpers
 - `frontend/util/`: calculation and resolver helpers
 - `frontend/assets/data/`: local datasets (`duas.json`, `quran/`, `cities.json`, `hadiths.json`)
 
@@ -71,6 +71,14 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - Rolling horizon scheduling (platform-dependent)
 - Refreshes on app lifecycle and settings/prefs events
 
+### Theming and Appearance
+
+- Theme state is managed by `frontend/context/ThemeContext.tsx`.
+- Supported themes: `default`, `dark`, `light`.
+- Selection is persisted in AsyncStorage key `app_theme_v1`.
+- Root startup waits for theme hydration in `frontend/app/_layout.tsx` before app-ready.
+- Settings theme picker lives in `frontend/app/(tabs)/Settings.tsx`.
+
 ### Quran
 
 - Data normalization/preload: `frontend/services/quranData.ts`
@@ -87,6 +95,7 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 
 - Initial permission sync runs in `frontend/app/_layout.tsx`.
 - Root layout also initializes notifications, preloads Quran assets, and checks OTA updates when not running in Expo Go.
+- Root layout also updates native background color from active theme to avoid restart/OTA white flashes.
 - Location permission affects prayer location mode.
 - Notification OS permission is mirrored into app toggle state.
 - Cross-screen updates use `DeviceEventEmitter` (e.g. `settingsChanged`, `NOTIF_PREFS_UPDATED`).
@@ -138,5 +147,5 @@ npm test
 
 - Use `@/` import alias for frontend source-root imports.
 - Keep business logic in `services/`; keep screens thin where possible.
-- Reuse theme tokens from `frontend/constants/theme.ts`; avoid ad-hoc palette drift.
+- Use `useTheme()` and theme-driven style factories for UI; avoid static color constants in themed components.
 - Use versioned AsyncStorage keys when introducing new persisted shapes.
