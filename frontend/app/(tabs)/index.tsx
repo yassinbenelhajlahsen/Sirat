@@ -412,30 +412,20 @@ export default function Home() {
           >
             {!!banner && (
               <View style={styles.bannerCard}>
-                <Text style={styles.bannerText}>
-                  {banner}
-                </Text>
+                <Text style={styles.bannerText}>{banner}</Text>
               </View>
             )}
 
             <View style={styles.headerSection}>
-              <Text style={styles.sectionTitle}>
-                Prayer Times
-              </Text>
+              <Text style={styles.sectionTitle}>Prayer Times</Text>
 
               {locationLabel ? (
-                <Text style={styles.locationLabel}>
-                  {locationLabel}
-                </Text>
+                <Text style={styles.locationLabel}>{locationLabel}</Text>
               ) : null}
 
               <View style={styles.dateSection}>
-                <Text style={styles.gregorianDate}>
-                  {gregorianDate}
-                </Text>
-                <Text style={styles.hijriDate}>
-                  {islamicDate}
-                </Text>
+                <Text style={styles.gregorianDate}>{gregorianDate}</Text>
+                <Text style={styles.hijriDate}>{islamicDate}</Text>
               </View>
             </View>
 
@@ -443,9 +433,7 @@ export default function Home() {
               <View style={styles.nextPrayerContainer}>
                 {nextPrayer ? (
                   <View style={styles.nextPrayerCard}>
-                    <Text style={styles.nextPrayerLabel}>
-                      Next Prayer
-                    </Text>
+                    <Text style={styles.nextPrayerLabel}>Next Prayer</Text>
                     <View style={styles.nextPrayerRow}>
                       <Text style={styles.nextPrayerName}>
                         {nextPrayer.label}
@@ -478,7 +466,6 @@ export default function Home() {
                         ),
                         borderRadius: 12,
                         marginTop: 8,
-                        marginBottom: -12,
                         paddingVertical: 18,
                         paddingHorizontal: 24,
                         borderWidth: 2,
@@ -505,10 +492,7 @@ export default function Home() {
             )}
 
             <View style={styles.prayerListCard}>
-              <PrayerTimesList
-                loading={loading}
-                prayerTimes={prayerTimes}
-              />
+              <PrayerTimesList loading={loading} prayerTimes={prayerTimes} />
             </View>
             {/* Dua Section */}
             {selectedDua ? (
@@ -620,7 +604,7 @@ const styles = StyleSheet.create({
   },
   nextPrayerContainer: {
     alignItems: "center",
-    marginTop: 8
+    marginBottom: -2,
   },
   nextPrayerCard: {
     width: "100%",
