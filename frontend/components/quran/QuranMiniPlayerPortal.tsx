@@ -4,7 +4,8 @@ import { StyleSheet, View } from "react-native";
 
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 
-import { MINI_PLAYER_ANIMATION_MS, QuranMiniPlayer } from "./QuranMiniPlayer";
+import useModalTransition from "@/hooks/useModalTransition";
+import { QuranMiniPlayer } from "./QuranMiniPlayer";
 
 export function QuranMiniPlayerPortal() {
   const {
@@ -23,9 +24,14 @@ export function QuranMiniPlayerPortal() {
   const pathname = usePathname();
   const hideOnMap = pathname?.startsWith("/MosqueMap");
 
-  const [shouldRender, setShouldRender] = useState(miniPlayerVisible);
+  const { shouldRender, cardAnimatedStyle } = useModalTransition(
+    Boolean(miniPlayerVisible && !hideOnMap),
+  );
+
+  const isTabRoute = pathname?.startsWith("/(tabs)");
   const [displaySurahMeta, setDisplaySurahMeta] = useState(currentSurahMeta);
 
+  // Maintain displayed surah meta while we are rendering during exit animation
   useEffect(() => {
     if (currentSurahMeta) {
       setDisplaySurahMeta(currentSurahMeta);
@@ -34,23 +40,10 @@ export function QuranMiniPlayerPortal() {
     }
   }, [currentSurahMeta, miniPlayerVisible, shouldRender]);
 
-  useEffect(() => {
-    if (miniPlayerVisible) {
-      setShouldRender(true);
-      return;
-    }
-    const timeout = setTimeout(
-      () => setShouldRender(false),
-      MINI_PLAYER_ANIMATION_MS
-    );
-    return () => clearTimeout(timeout);
-  }, [miniPlayerVisible]);
-
-  if (hideOnMap || (!miniPlayerVisible && !shouldRender)) {
+  if (hideOnMap || !shouldRender) {
     return null;
   }
 
-  const isTabRoute = pathname?.startsWith("/(tabs)");
   const surahName =
     displaySurahMeta?.englishName ?? displaySurahMeta?.arabicName ?? "Surah";
 
@@ -67,7 +60,11 @@ export function QuranMiniPlayerPortal() {
         onPause={pauseAudio}
         onStop={stopPlaybackSession}
         onNavigateToSurah={requestCurrentSurahFocus}
-        style={isTabRoute ? styles.tabPosition : undefined}
+        style={
+          isTabRoute
+            ? [styles.tabPosition, cardAnimatedStyle]
+            : cardAnimatedStyle
+        }
       />
     </View>
   );

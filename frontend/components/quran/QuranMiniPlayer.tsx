@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { AudioPlayer } from "expo-audio";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Animated,
   Pressable,
@@ -9,7 +9,6 @@ import {
   Text,
   View,
   type GestureResponderEvent,
-  type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -31,7 +30,8 @@ export type QuranMiniPlayerProps = {
   onPause: () => void;
   onStop: () => void | Promise<void>;
   onNavigateToSurah?: () => void;
-  style?: ViewStyle;
+  // Accept Animated style objects from parent (useModalTransition) so allow any here
+  style?: any;
 };
 
 export const MINI_PLAYER_ANIMATION_MS = 180;
@@ -55,18 +55,9 @@ export function QuranMiniPlayer({
 
   const insets = useSafeAreaInsets();
   const TAB_BAR_GAP = 64;
-  const animatedValue = useRef(new Animated.Value(0)).current;
   const [duration, setDuration] = useState(playbackDuration);
   const [position, setPosition] = useState(playbackPosition);
   const router = useRouter();
-
-  useEffect(() => {
-    Animated.timing(animatedValue, {
-      toValue: visible ? 1 : 0,
-      duration: MINI_PLAYER_ANIMATION_MS,
-      useNativeDriver: true,
-    }).start();
-  }, [animatedValue, visible]);
 
   useEffect(() => {
     setDuration(playbackDuration);
@@ -143,7 +134,7 @@ export function QuranMiniPlayer({
       Number.isFinite(position) &&
       duration > 0 &&
       duration - position <= RESTART_THRESHOLD_SECONDS,
-    [duration, position, isPlaying]
+    [duration, position, isPlaying],
   );
 
   const restartFromBeginning = useCallback(() => {
@@ -179,7 +170,7 @@ export function QuranMiniPlayer({
       event?.stopPropagation();
       onStop?.();
     },
-    [onStop]
+    [onStop],
   );
 
   const onPressControl = (event?: GestureResponderEvent) => {
@@ -197,73 +188,67 @@ export function QuranMiniPlayer({
   };
 
   return (
-    <PressableScale
+    <Animated.View
       pointerEvents={visible ? "auto" : "none"}
-      onPress={handleNavigateToQuran}
-      accessibilityRole="button"
-      accessibilityLabel="Open Quran screen"
-      accessibilityHint="Navigates back to the Quran tab"
       style={[
         styles.wrapper,
         style,
         {
-          opacity: animatedValue,
-          transform: [
-            {
-              translateY: animatedValue.interpolate({
-                inputRange: [0, 1],
-                outputRange: [30, 0],
-              }),
-            },
-          ],
           marginBottom: (insets.bottom > 0 ? insets.bottom : 12) + TAB_BAR_GAP,
         },
       ]}
     >
-      <View style={styles.innerContainer}>
-        <View style={styles.textSection}>
-          <Text
-            style={styles.surahName}
-            numberOfLines={1}
-            accessibilityRole="header"
-          >
-            {surahName ?? ""}
-          </Text>
-          <Text style={styles.remainingLabel}>
-            Time remaining · {formattedRemaining}
-          </Text>
+      <PressableScale
+        onPress={handleNavigateToQuran}
+        accessibilityRole="button"
+        accessibilityLabel="Open Quran screen"
+        accessibilityHint="Navigates back to the Quran tab"
+      >
+        <View style={styles.innerContainer}>
+          <View style={styles.textSection}>
+            <Text
+              style={styles.surahName}
+              numberOfLines={1}
+              accessibilityRole="header"
+            >
+              {surahName ?? ""}
+            </Text>
+            <Text style={styles.remainingLabel}>
+              Time remaining · {formattedRemaining}
+            </Text>
+          </View>
+          <View style={styles.controls}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Stop audio"
+              accessibilityHint="Stops playback and closes the mini player"
+              onPress={handleStop}
+              style={[styles.controlButton, styles.stopButton]}
+            >
+              <Ionicons name="stop" size={18} color={themeColors.white} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
+              accessibilityHint="Controls the current surah audio playback"
+              onPress={onPressControl}
+              style={[styles.controlButton, styles.playButton]}
+            >
+              <Ionicons
+                name={isPlaying ? "pause" : "play"}
+                size={22}
+                color={themeColors.onAccent}
+              />
+            </Pressable>
+          </View>
         </View>
-        <View style={styles.controls}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Stop audio"
-            accessibilityHint="Stops playback and closes the mini player"
-            onPress={handleStop}
-            style={[styles.controlButton, styles.stopButton]}
-          >
-            <Ionicons name="stop" size={18} color={themeColors.white} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
-            accessibilityHint="Controls the current surah audio playback"
-            onPress={onPressControl}
-            style={[styles.controlButton, styles.playButton]}
-          >
-            <Ionicons
-              name={isPlaying ? "pause" : "play"}
-              size={22}
-              color={themeColors.onAccent}
-            />
-          </Pressable>
-        </View>
-      </View>
+      </PressableScale>
       <View style={styles.progressTrack}>
         <Animated.View
           style={[styles.progressFill, { width: `${progress * 100}%` }]}
         />
       </View>
-    </PressableScale>
+    </Animated.View>
   );
 }
 
