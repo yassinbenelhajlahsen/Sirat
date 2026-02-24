@@ -1,5 +1,5 @@
 // app/components/SplashScreen.tsx
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import { darkTheme, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -36,9 +36,10 @@ export default function SplashScreen({
   onFinished,
   fontsReady = true,
 }: Props) {
-  const { theme } = useTheme();
-  const themeColors = theme.colors;
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { theme, isHydrated } = useTheme();
+  const splashTheme = isHydrated ? theme : darkTheme;
+  const themeColors = splashTheme.colors;
+  const styles = useMemo(() => createStyles(splashTheme), [splashTheme]);
 
   const [hadith, setHadith] = useState<{
     arabic: string;

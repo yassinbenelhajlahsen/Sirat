@@ -20,12 +20,14 @@ import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { PortalProvider } from "@gorhom/portal";
 import { NotificationService } from "../services/notificationService";
-import SplashScreen from "./../components/SplashScreen";
-import UpdateModal from "./../components/UpdateModal";
-import { QuranMiniPlayerPortal } from "./../components/quran/QuranMiniPlayerPortal";
+import SplashScreen from "@/components/SplashScreen";
+import UpdateModal from "@/components/UpdateModal";
+import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
 
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
+const LAUNCH_BACKGROUND_COLOR = "#0E1117";
+SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
 
 // Storage keys and events used elsewhere in your app
 const PRAYER_SETTINGS_KEY = "prayerSettings";
@@ -131,7 +133,9 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
   const { theme, isHydrated } = useTheme();
-  const backgroundColor = theme.colors.primaryDark;
+  const backgroundColor = isHydrated
+    ? theme.colors.primaryDark
+    : LAUNCH_BACKGROUND_COLOR;
 
   const [fontsLoaded] = useFonts({
     "SFProDisplay-Bold": require("../assets/fonts/SF-Pro-Display-Bold.otf"),
@@ -176,6 +180,7 @@ function RootLayoutContent() {
   const handleRestartForUpdate = useCallback(async () => {
     if (isRestartingUpdate) return;
 
+    SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
     setIsRestartingUpdate(true);
     setShowUpdateModal(false);
     setShowReloadCover(true);
@@ -335,7 +340,7 @@ function RootLayoutContent() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor,
+            backgroundColor: LAUNCH_BACKGROUND_COLOR,
             opacity: showReloadCover ? 1 : 0,
           }}
           pointerEvents={showReloadCover ? "auto" : "none"}

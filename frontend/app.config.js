@@ -6,11 +6,11 @@ export default {
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
-      backgroundColor: "#134b0a",
+      backgroundColor: "#0E1117",
     },
     scheme: "sirat",
     userInterfaceStyle: "automatic",
-    backgroundColor: "#0c3605",
+    backgroundColor: "#0E1117",
     newArchEnabled: true,
     platforms: ["ios", "android"],
     ios: {
