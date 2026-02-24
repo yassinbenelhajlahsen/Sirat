@@ -202,7 +202,12 @@ function RootLayoutContent() {
         }
       }
 
-      await Updates.reloadAsync();
+      await Updates.reloadAsync({
+        reloadScreenOptions: {
+          backgroundColor: LAUNCH_BACKGROUND_COLOR,
+          fade: true,
+        },
+      });
     } catch (error) {
       console.error("Failed to reload for OTA update", error);
       if (mountedRef.current) {
