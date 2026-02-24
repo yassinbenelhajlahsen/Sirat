@@ -1,6 +1,7 @@
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -21,7 +22,7 @@ import {
   type PrayerKey,
   type SoundMode,
 } from "../../util/notifications/constants";
-import { notificationStyles as styles } from "../../util/notifications/styles";
+import { getNotificationStyles } from "../../util/notifications/styles";
 
 export { NOTIF_PREFS_UPDATED_EVENT } from "../../util/notifications/constants";
 
@@ -31,18 +32,20 @@ type Props = {
 };
 
 export default function NotificationSettings({ notifStatus }: Props) {
-  const colors = {
-    text: themeColors.white,
-    accent: themeColors.accent,
-    divider: withOpacity(themeColors.white, 0.08),
-    pillOffBg: withOpacity(themeColors.white, 0.04),
-    rowOnBg: withOpacity(themeColors.accent, 0.18),
-    rowOnBorder: withOpacity(themeColors.accent, 0.75),
-    rowOffBg: withOpacity(themeColors.white, 0.03),
-    rowOffBorder: withOpacity(themeColors.white, 0.12),
-    rowOffText: withOpacity(themeColors.white, 0.65),
-    rowDisabledText: withOpacity(themeColors.white, 0.4),
-  } as const;
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const styles = useMemo(() => getNotificationStyles(theme), [theme]);
+
+  const textColor = themeColors.white;
+  const accentColor = themeColors.accent;
+  const dividerColor = withOpacity(themeColors.white, 0.08);
+  const pillOffBgColor = withOpacity(themeColors.white, 0.04);
+  const rowOnBgColor = withOpacity(themeColors.accent, 0.18);
+  const rowOnBorderColor = withOpacity(themeColors.accent, 0.75);
+  const rowOffBgColor = withOpacity(themeColors.white, 0.03);
+  const rowOffBorderColor = withOpacity(themeColors.white, 0.12);
+  const rowOffTextColor = withOpacity(themeColors.white, 0.65);
+  const rowDisabledTextColor = withOpacity(themeColors.white, 0.4);
 
   const {
     loaded,
@@ -62,7 +65,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
   const headerScale = useRef(new Animated.Value(1)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
   const soundIndicator = useRef(
-    new Animated.Value(soundMode === "adhan" ? 1 : 0)
+    new Animated.Value(soundMode === "adhan" ? 1 : 0),
   ).current;
 
   const bellAnimRef = useRef<Record<PrayerKey, Animated.Value>>({
@@ -131,7 +134,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
       pulse(k);
       void setPrayerPreference(k, !prefs[k]);
     },
-    [prefs, setPrayerPreference]
+    [prefs, setPrayerPreference],
   );
 
   const handleSoundModeChange = useCallback(
@@ -140,7 +143,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
       await stopPreview();
       await updateSoundMode(nextMode);
     },
-    [soundMode, stopPreview, updateSoundMode]
+    [soundMode, stopPreview, updateSoundMode],
   );
 
   useEffect(() => {
@@ -177,16 +180,21 @@ export default function NotificationSettings({ notifStatus }: Props) {
       >
         <View style={styles.headerTextBlock}>
           <Text style={styles.headerEyebrow}>Reminders</Text>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
+          <Text style={[styles.headerTitle, { color: textColor }]}>
             Notifications
           </Text>
-          <Text style={[styles.headerSubtitle, { color: withOpacity(colors.text, 0.78) }]}>
+          <Text
+            style={[
+              styles.headerSubtitle,
+              { color: withOpacity(textColor, 0.78) },
+            ]}
+          >
             Controlled by your system settings.
           </Text>
         </View>
 
         {!loaded ? (
-          <ActivityIndicator size="small" color={colors.accent} />
+          <ActivityIndicator size="small" color={accentColor} />
         ) : (
           <Switch
             value={enabled}
@@ -200,11 +208,11 @@ export default function NotificationSettings({ notifStatus }: Props) {
               }
             }}
             trackColor={{
-              false: colors.divider,
-              true: colors.accent,
+              false: themeColors.grayDark,
+              true: theme.name === "light" ? "#DABA69" : themeColors.accent,
             }}
-            thumbColor={enabled ? colors.text : themeColors.offWhite}
-            ios_backgroundColor={colors.divider}
+            thumbColor={enabled ? "#FFFFFF" : themeColors.grayMuted}
+            ios_backgroundColor={dividerColor}
             accessibilityLabel="Open system settings to change notifications"
           />
         )}
@@ -227,10 +235,15 @@ export default function NotificationSettings({ notifStatus }: Props) {
         ]}
       >
         <View style={styles.prayerSectionHeader}>
-          <Text style={[styles.prayerSectionTitle, { color: colors.text }]}>
+          <Text style={[styles.prayerSectionTitle, { color: textColor }]}>
             Prayer Alerts
           </Text>
-          <Text style={[styles.prayerSectionDescription, { color: withOpacity(colors.text, 0.72) }]}>
+          <Text
+            style={[
+              styles.prayerSectionDescription,
+              { color: withOpacity(textColor, 0.72) },
+            ]}
+          >
             Tap a row to enable or disable reminders for each prayer.
           </Text>
         </View>
@@ -238,25 +251,25 @@ export default function NotificationSettings({ notifStatus }: Props) {
           const isOn = prefs[p];
           const anim = bellAnimRef.current[p];
           const labelColor = !enabled
-            ? colors.rowDisabledText
+            ? rowDisabledTextColor
             : isOn
-            ? colors.text
-            : colors.rowOffText;
+              ? textColor
+              : rowOffTextColor;
           const indicatorColor = !enabled
-            ? withOpacity(colors.text, 0.35)
+            ? withOpacity(textColor, 0.35)
             : isOn
-            ? colors.accent
-            : colors.rowOffText;
+              ? accentColor
+              : rowOffTextColor;
           const cardBg = !enabled
-            ? colors.pillOffBg
+            ? pillOffBgColor
             : isOn
-            ? colors.rowOnBg
-            : colors.rowOffBg;
+              ? rowOnBgColor
+              : rowOffBgColor;
           const cardBorder = !enabled
-            ? colors.divider
+            ? dividerColor
             : isOn
-            ? colors.rowOnBorder
-            : colors.rowOffBorder;
+              ? rowOnBorderColor
+              : rowOffBorderColor;
 
           return (
             <Animated.View
@@ -323,7 +336,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
           ]}
         >
           <Text
-            style={[styles.soundSectionTitle, { color: colors.text }]}
+            style={[styles.soundSectionTitle, { color: textColor }]}
             accessibilityRole="header"
           >
             Adhan sound
@@ -331,7 +344,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
           <Text
             style={[
               styles.soundSectionSubtitle,
-              { color: withOpacity(colors.text, 0.75) },
+              { color: withOpacity(textColor, 0.75) },
             ]}
           >
             Choose the alert sound for prayer reminders.
@@ -370,8 +383,8 @@ export default function NotificationSettings({ notifStatus }: Props) {
                         }),
                       },
                     ],
-                    backgroundColor: colors.accent,
-                    borderColor: colors.accent,
+                    backgroundColor: accentColor,
+                    borderColor: accentColor,
                   },
                 ]}
               />
@@ -395,8 +408,8 @@ export default function NotificationSettings({ notifStatus }: Props) {
                           : SOUND_SEGMENT_GAP,
                       backgroundColor: selected
                         ? "transparent"
-                        : colors.pillOffBg,
-                      borderColor: selected ? "transparent" : colors.divider,
+                        : pillOffBgColor,
+                      borderColor: selected ? "transparent" : dividerColor,
                       opacity: pressed ? 0.9 : 1,
                     },
                   ]}
@@ -405,7 +418,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                     style={[
                       styles.soundSegmentLabel,
                       {
-                        color: selected ? themeColors.primaryDark : colors.text,
+                        color: selected ? themeColors.onAccent : textColor,
                       },
                     ]}
                   >
@@ -420,15 +433,15 @@ export default function NotificationSettings({ notifStatus }: Props) {
               style={[
                 styles.soundDescriptionBox,
                 {
-                  borderColor: colors.divider,
-                  backgroundColor: withOpacity(colors.text, 0.05),
+                  borderColor: dividerColor,
+                  backgroundColor: withOpacity(textColor, 0.05),
                 },
               ]}
             >
               <Text
                 style={[
                   styles.soundDescriptionText,
-                  { color: withOpacity(colors.text, 0.85) },
+                  { color: withOpacity(textColor, 0.85) },
                 ]}
               >
                 {selectedSoundOption.description}
@@ -445,9 +458,9 @@ export default function NotificationSettings({ notifStatus }: Props) {
                     styles.soundPreviewButton,
                     {
                       backgroundColor: pressed
-                        ? withOpacity(colors.accent, 0.2)
-                        : withOpacity(colors.accent, 0.12),
-                      borderColor: colors.accent,
+                        ? withOpacity(accentColor, 0.2)
+                        : withOpacity(accentColor, 0.12),
+                      borderColor: accentColor,
                       opacity: pressed ? 0.95 : 1,
                     },
                   ]}
@@ -455,10 +468,10 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   <Ionicons
                     name={previewing === "adhan" ? "pause" : "play"}
                     size={16}
-                    color={colors.accent}
+                    color={accentColor}
                   />
                   <Text
-                    style={[styles.soundPreviewText, { color: colors.accent }]}
+                    style={[styles.soundPreviewText, { color: accentColor }]}
                   >
                     {previewing === "adhan" ? "Stop preview" : "Play preview"}
                   </Text>
