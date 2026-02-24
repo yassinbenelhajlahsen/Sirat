@@ -194,6 +194,14 @@ function RootLayoutContent() {
     });
 
     try {
+      // Right before reloading, re-check and fetch to avoid restarting into a stale OTA.
+      if (Constants.appOwnership !== "expo") {
+        const latestUpdate = await Updates.checkForUpdateAsync();
+        if (latestUpdate.isAvailable) {
+          await Updates.fetchUpdateAsync();
+        }
+      }
+
       await Updates.reloadAsync();
     } catch (error) {
       console.error("Failed to reload for OTA update", error);
