@@ -1,6 +1,8 @@
-import { withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { Modal, Pressable, Text, View } from "react-native";
+import useModalTransition from "@/hooks/useModalTransition";
+import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo } from "react";
 
 type UpdateModalProps = {
   visible: boolean;
@@ -16,105 +18,117 @@ export default function UpdateModal({
   onRestart,
 }: UpdateModalProps) {
   const { theme } = useTheme();
-  const isLightTheme = theme.name === "light";
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { shouldRender, overlayAnimatedStyle, cardAnimatedStyle } =
+    useModalTransition(visible);
+
+  if (!shouldRender) {
+    return null;
+  }
 
   return (
     <Modal
-      animationType="fade"
+      animationType="none"
       transparent
-      visible={visible}
+      visible={shouldRender}
       onRequestClose={onLater}
       statusBarTranslucent
     >
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          paddingHorizontal: 22,
-          backgroundColor: withOpacity(theme.colors.black, isLightTheme ? 0.24 : 0.58),
-        }}
-      >
-        <View
-          style={{
-            borderRadius: 18,
-            borderWidth: 1,
-            borderColor: withOpacity(theme.colors.accent, 0.45),
-            backgroundColor: isLightTheme ? theme.colors.primaryLift : theme.colors.primaryDeep,
-            paddingHorizontal: 18,
-            paddingVertical: 18,
-          }}
-        >
-          <Text
-            style={{
-              color: theme.colors.white,
-              fontFamily: "SFProDisplay-Bold",
-              fontSize: 20,
-            }}
-          >
-            Update Ready
-          </Text>
-
-          <Text
-            style={{
-              marginTop: 10,
-              color: withOpacity(theme.colors.white, 0.78),
-              fontFamily: "SFProDisplay-Regular",
-              fontSize: 15,
-              lineHeight: 21,
-            }}
-          >
+      <Animated.View style={[styles.overlay, overlayAnimatedStyle]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onLater} />
+        <Animated.View style={[styles.card, cardAnimatedStyle]}>
+          <Text style={styles.title}>Update Ready</Text>
+          <Text style={styles.description}>
             A new version has finished downloading. Restart now to apply it.
           </Text>
-
-          <View style={{ flexDirection: "row", marginTop: 18, gap: 10 }}>
-            <Pressable
-              onPress={onLater}
-              style={{
-                flex: 1,
-                alignItems: "center",
-                borderRadius: 12,
-                paddingVertical: 12,
-                backgroundColor: isLightTheme
-                  ? theme.colors.primarySurfaceAlt
-                  : withOpacity(theme.colors.white, 0.08),
-              }}
-            >
-              <Text
-                style={{
-                  color: theme.colors.white,
-                  fontFamily: "SFProDisplay-Semibold",
-                  fontSize: 15,
-                }}
-              >
-                Later
-              </Text>
+          <View style={styles.buttonRow}>
+            <Pressable style={styles.laterButton} onPress={onLater}>
+              <Text style={styles.laterLabel}>Later</Text>
             </Pressable>
-
             <Pressable
+              style={[styles.restartButton, isRestarting && styles.buttonDisabled]}
               onPress={onRestart}
-              style={{
-                flex: 1,
-                alignItems: "center",
-                borderRadius: 12,
-                paddingVertical: 12,
-                backgroundColor: theme.colors.accent,
-                opacity: isRestarting ? 0.7 : 1,
-              }}
               disabled={isRestarting}
             >
-              <Text
-                style={{
-                  color: theme.colors.onAccent,
-                  fontFamily: "SFProDisplay-Semibold",
-                  fontSize: 15,
-                }}
-              >
+              <Text style={styles.restartLabel}>
                 {isRestarting ? "Restarting..." : "Restart"}
               </Text>
             </Pressable>
           </View>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }
+
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+  const isLightTheme = theme.name === "light";
+
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 22,
+      backgroundColor: isLightTheme
+        ? withOpacity(themeColors.black, 0.24)
+        : withOpacity(themeColors.black, 0.58),
+    },
+    card: {
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.45),
+      backgroundColor: isLightTheme
+        ? themeColors.primaryLift
+        : themeColors.primaryDeep,
+      paddingHorizontal: 18,
+      paddingVertical: 18,
+    },
+    title: {
+      color: themeColors.white,
+      fontFamily: "SFProDisplay-Bold",
+      fontSize: 20,
+    },
+    description: {
+      marginTop: 10,
+      color: withOpacity(themeColors.white, 0.78),
+      fontFamily: "SFProDisplay-Regular",
+      fontSize: 15,
+      lineHeight: 21,
+    },
+    buttonRow: {
+      flexDirection: "row",
+      marginTop: 18,
+      gap: 10,
+    },
+    laterButton: {
+      flex: 1,
+      alignItems: "center",
+      borderRadius: 12,
+      paddingVertical: 12,
+      backgroundColor: isLightTheme
+        ? themeColors.primarySurfaceAlt
+        : withOpacity(themeColors.white, 0.08),
+    },
+    laterLabel: {
+      color: themeColors.white,
+      fontFamily: "SFProDisplay-Semibold",
+      fontSize: 15,
+    },
+    restartButton: {
+      flex: 1,
+      alignItems: "center",
+      borderRadius: 12,
+      paddingVertical: 12,
+      backgroundColor: themeColors.accent,
+    },
+    restartLabel: {
+      color: themeColors.onAccent,
+      fontFamily: "SFProDisplay-Semibold",
+      fontSize: 15,
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+    },
+  });
+};
