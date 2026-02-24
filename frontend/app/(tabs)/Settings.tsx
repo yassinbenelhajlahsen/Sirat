@@ -1,16 +1,9 @@
 import { withOpacity, type AppTheme, type ThemeName } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Location from "expo-location";
-import * as Notifications from "expo-notifications";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import {
-  Alert,
   Animated,
-  AppState,
-  DeviceEventEmitter,
-  Easing,
   Image,
   ImageStyle,
   Linking,
@@ -29,9 +22,9 @@ import {
 } from "react-native-safe-area-context";
 import CitySearchModal from "../../components/CitySearchModal";
 import NotificationSettings from "../../components/NotificationSettings";
-import { clearPrayerCache } from "../../services/prayerTimes";
-import CALCULATION_METHODS from "../../utils/calculationMethods";
-import CITIES, { City, cityKey } from "../../utils/cities";
+import { usePrayerSettingsState } from "../../hooks/usePrayerSettingsState";
+import { useSettingsDropdowns } from "../../hooks/useSettingsDropdowns";
+import { useSettingsPermissions } from "../../hooks/useSettingsPermissions";
 
 export default function Settings() {
   const { theme, themeName, setTheme } = useTheme();
@@ -44,54 +37,36 @@ export default function Settings() {
 
   const footerPadding = insets.bottom + 24;
 
-  const [useLocation, setUseLocation] = useState(true);
-  const [permissionStatus, setPermissionStatus] = useState<string | null>(null); // granted | denied | undetermined | null
-  const [notifStatus, setNotifStatus] = useState<string | null>(null); // granted | denied | null
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
-
-  const [methodOpen, setMethodOpen] = useState(false);
-  const [method, setMethod] = useState(-1);
-  const [methodItems, setMethodItems] = useState(
-    CALCULATION_METHODS.map((m) => ({ label: m.name, value: m.id })),
-  );
-  const [themeOpen, setThemeOpen] = useState(false);
-  const [themeItems, setThemeItems] = useState([
-    { label: "Default", value: "default" as ThemeName },
-    { label: "Dark", value: "dark" as ThemeName },
-    { label: "Light", value: "light" as ThemeName },
-  ]);
-  const methodAnim = useRef(new Animated.Value(0)).current;
-  const themeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(methodAnim, {
-      toValue: methodOpen ? 1 : 0,
-      duration: 320,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [methodOpen, methodAnim]);
-
-  useEffect(() => {
-    Animated.timing(themeAnim, {
-      toValue: themeOpen ? 1 : 0,
-      duration: 320,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [themeOpen, themeAnim]);
-
-  const locationAnim = useRef(new Animated.Value(useLocation ? 0 : 1)).current;
-  const toggleScale = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.timing(locationAnim, {
-      toValue: useLocation ? 0 : 1,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-  }, [useLocation, locationAnim]);
+  const {
+    useLocation,
+    setUseLocation,
+    method,
+    setMethod,
+    city,
+    cityModalVisible,
+    setCityModalVisible,
+    cityItems,
+    selectCityByKey,
+  } = usePrayerSettingsState();
+  const { permissionStatus, notifStatus, handleLocationToggle } =
+    useSettingsPermissions({
+      useLocation,
+      setUseLocation,
+    });
+  const {
+    methodOpen,
+    setMethodOpen,
+    methodItems,
+    setMethodItems,
+    themeOpen,
+    setThemeOpen,
+    themeItems,
+    setThemeItems,
+    methodScaleStyle,
+    themeScaleStyle,
+    locationAnim,
+    toggleScale,
+  } = useSettingsDropdowns(useLocation);
 
   const handleToggle = async (val: boolean) => {
     Animated.sequence([
@@ -107,59 +82,9 @@ export default function Settings() {
       }),
     ]).start();
 
-    if (val) {
-      try {
-        const servicesEnabled = await Location.hasServicesEnabledAsync();
-        if (!servicesEnabled) {
-          Alert.alert(
-            "Location is off",
-            "Please enable Location Services on your device, then try again.",
-            [
-              { text: "Open Settings", onPress: () => Linking.openSettings() },
-              { text: "Cancel", style: "cancel" },
-            ],
-          );
-          setUseLocation(false);
-          return;
-        }
-        let perm = await Location.getForegroundPermissionsAsync();
-        if (perm.status !== "granted") {
-          perm = await Location.requestForegroundPermissionsAsync();
-        }
-        setPermissionStatus(perm.status);
-        if (perm.status === "granted") {
-          setUseLocation(true);
-        } else {
-          Alert.alert(
-            "Permission needed",
-            "Sirat needs Location permission for automatic prayer times.",
-            [
-              { text: "Open Settings", onPress: () => Linking.openSettings() },
-              { text: "Cancel", style: "cancel" },
-            ],
-          );
-          setUseLocation(false);
-        }
-      } catch (err) {
-        console.warn("handleToggle enable error:", err);
-        setUseLocation(false);
-      }
-    } else {
-      setUseLocation(false);
-    }
+    await handleLocationToggle(val);
   };
 
-  const [city, setCity] = useState<City>(CITIES[0]);
-  const [cityModalVisible, setCityModalVisible] = useState(false);
-
-  const cityItems = useMemo(
-    () =>
-      CITIES.map((c) => ({
-        label: `${c.name}, ${c.country}`,
-        value: cityKey(c),
-      })),
-    [],
-  );
   const cityModalColors = useMemo(
     () =>
       themeName === "light"
@@ -175,92 +100,6 @@ export default function Settings() {
         : undefined,
     [themeColors, themeName],
   );
-
-  // Initial load: read prayer settings and read current notification permission once
-  useEffect(() => {
-    (async () => {
-      const raw = await AsyncStorage.getItem("prayerSettings");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setUseLocation(parsed.useLocation ?? true);
-        setMethod(parsed.method ?? -1);
-        if (parsed.cityKey) {
-          const found = CITIES.find((c) => cityKey(c) === parsed.cityKey);
-          if (found) setCity(found);
-        } else if (parsed.city) {
-          setCity(parsed.city);
-        }
-      } else {
-        const legacy = await AsyncStorage.getItem("selectedCity");
-        if (legacy) {
-          const found = CITIES.find((c) => cityKey(c) === legacy);
-          if (found) setCity(found);
-        }
-      }
-
-      // Prime notifStatus to drive NotificationSettings master toggle
-      try {
-        const notifPerm = await Notifications.getPermissionsAsync();
-        setNotifStatus(notifPerm.granted ? "granted" : "denied");
-      } catch {
-        setNotifStatus("denied");
-      }
-
-      setSettingsLoaded(true);
-    })();
-  }, []);
-
-  // Re-sync with OS permissions when returning to foreground
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", async (state) => {
-      if (state === "active") {
-        try {
-          const servicesEnabled = await Location.hasServicesEnabledAsync();
-          const perm = await Location.getForegroundPermissionsAsync();
-          const notifPerm = await Notifications.getPermissionsAsync();
-
-          setPermissionStatus(perm.status);
-          setNotifStatus(notifPerm.granted ? "granted" : "denied");
-
-          if (useLocation && (!servicesEnabled || perm.status !== "granted")) {
-            setUseLocation(false);
-          }
-        } catch (e) {
-          console.warn("Recheck permissions failed:", e);
-          if (useLocation) setUseLocation(false);
-        }
-      }
-    });
-    return () => sub.remove();
-  }, [useLocation]);
-
-  // Persist + notify on changes
-  useEffect(() => {
-    const save = async () => {
-      const payload = {
-        useLocation,
-        method,
-        cityKey: cityKey(city),
-        city,
-      };
-      await AsyncStorage.setItem("prayerSettings", JSON.stringify(payload));
-      if (!useLocation) {
-        await AsyncStorage.setItem("selectedCity", cityKey(city));
-      }
-      clearPrayerCache();
-      try {
-        // @ts-ignore for web
-        DeviceEventEmitter?.emit?.("settingsChanged", payload);
-      } catch {}
-    };
-    if (settingsLoaded) void save();
-  }, [useLocation, method, city, settingsLoaded]);
-
-  const selectCityByKey = (value: string) => {
-    const selected = CITIES.find((c) => cityKey(c) === value) || CITIES[0];
-    setCity(selected);
-    setCityModalVisible(false);
-  };
 
   const VisitSiteButton = () => (
     <Pressable
@@ -342,16 +181,7 @@ export default function Settings() {
 
           <View style={[styles.sectionTop, styles.appearanceDropdownSection]}>
             <Animated.View
-              style={{
-                transform: [
-                  {
-                    scale: themeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 1.03],
-                    }),
-                  },
-                ],
-              }}
+              style={themeScaleStyle}
             >
               <DropDownPicker
                 open={themeOpen}
@@ -426,16 +256,7 @@ export default function Settings() {
               Select the authority used to compute prayer schedules.
             </Text>
             <Animated.View
-              style={{
-                transform: [
-                  {
-                    scale: methodAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 1.03],
-                    }),
-                  },
-                ],
-              }}
+              style={methodScaleStyle}
             >
               <DropDownPicker
                 open={methodOpen}
