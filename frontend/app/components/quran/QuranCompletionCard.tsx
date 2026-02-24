@@ -1,7 +1,8 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import PressableScale from "../PressableScale";
 
 type QuranCompletionCardProps = {
@@ -9,6 +10,9 @@ type QuranCompletionCardProps = {
 };
 
 function QuranCompletionCard({ onBackToTop }: QuranCompletionCardProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>You have reached the end of the Quran</Text>
@@ -28,40 +32,44 @@ function QuranCompletionCard({ onBackToTop }: QuranCompletionCardProps) {
 
 export default memo(QuranCompletionCard);
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 32,
-    marginBottom: 60,
-    padding: 24,
-    borderRadius: 20,
-    backgroundColor: withOpacity(themeColors.white, 0.04),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.25),
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: themeColors.white,
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  subtitle: {
-    color: themeColors.white,
-    opacity: 0.85,
-    fontSize: 15,
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  backToTopButton: {
-    backgroundColor: themeColors.accent,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  backToTopText: {
-    fontWeight: "600",
-    color: themeColors.primaryDeep,
-    fontSize: 15,
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+
+  return StyleSheet.create({
+    container: {
+      marginTop: 32,
+      marginBottom: 60,
+      padding: 24,
+      borderRadius: 20,
+      backgroundColor: withOpacity(themeColors.white, 0.04),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.25),
+      alignItems: "center",
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: themeColors.white,
+      textAlign: "center",
+      marginBottom: 12,
+    },
+    subtitle: {
+      color: themeColors.white,
+      opacity: 0.85,
+      fontSize: 15,
+      textAlign: "center",
+      marginBottom: 20,
+    },
+    backToTopButton: {
+      backgroundColor: themeColors.accent,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+    },
+    backToTopText: {
+      fontWeight: "600",
+      color: themeColors.onAccent,
+      fontSize: 15,
+    },
+  });
+};

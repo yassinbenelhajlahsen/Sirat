@@ -1,9 +1,8 @@
 import {
-  colors as themeColors,
-  spacing,
-  typography,
   withOpacity,
+  type AppTheme,
 } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import {
   QuranBookmark,
@@ -306,6 +305,10 @@ function computeBookmarkMatchScore(
 }
 
 export default function QuranScreen() {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const ayat = useMemo(() => Array.from(getAllAyat()), []);
   const surahs = useMemo(() => Array.from(getSurahMeta()), []);
   const { width } = useWindowDimensions();
@@ -1403,7 +1406,11 @@ export default function QuranScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+  const { spacing, typography } = theme;
+
+  return StyleSheet.create({
   screen: { flex: 1 },
   patternOverlay: {
     position: "absolute",
@@ -1580,4 +1587,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: "center",
   },
-});
+  });
+};

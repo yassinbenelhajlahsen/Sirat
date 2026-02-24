@@ -13,7 +13,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import PressableScale from "../PressableScale";
 
 const PROGRESS_POLL_INTERVAL_MS = 500;
@@ -48,6 +49,10 @@ export function QuranMiniPlayer({
   onNavigateToSurah,
   style,
 }: QuranMiniPlayerProps) {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const insets = useSafeAreaInsets();
   const TAB_BAR_GAP = 64;
   const animatedValue = useRef(new Animated.Value(0)).current;
@@ -248,7 +253,7 @@ export function QuranMiniPlayer({
             <Ionicons
               name={isPlaying ? "pause" : "play"}
               size={22}
-              color={themeColors.primaryDeep}
+              color={themeColors.onAccent}
             />
           </Pressable>
         </View>
@@ -264,78 +269,82 @@ export function QuranMiniPlayer({
 
 export default QuranMiniPlayer;
 
-const styles = StyleSheet.create({
-  wrapper: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 0,
-    shadowColor: "#000",
-    shadowOpacity: 0.24,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
-  },
-  innerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 14,
-    borderRadius: 20,
-    backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.16),
-    shadowColor: "#000",
-    shadowOpacity: 0.32,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 14,
-  },
-  textSection: {
-    flex: 1,
-    marginRight: 12,
-  },
-  surahName: {
-    color: themeColors.white,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  remainingLabel: {
-    color: withOpacity(themeColors.white, 0.8),
-    fontSize: 12,
-    marginTop: 2,
-  },
-  controls: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  controlButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: withOpacity(themeColors.white, 0.12),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.22),
-  },
-  stopButton: {
-    marginRight: 8,
-    backgroundColor: withOpacity(themeColors.white, 0.1),
-  },
-  playButton: {
-    backgroundColor: themeColors.accent,
-    borderColor: withOpacity(themeColors.accent, 0.85),
-  },
-  progressTrack: {
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: withOpacity(themeColors.white, 0.18),
-    marginTop: 8,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: themeColors.accent,
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+
+  return StyleSheet.create({
+    wrapper: {
+      position: "absolute",
+      left: 16,
+      right: 16,
+      bottom: -12,
+      shadowColor: themeColors.black,
+      shadowOpacity: 0.24,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 10,
+    },
+    innerContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: 14,
+      borderRadius: 20,
+      backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.white, 0.16),
+      shadowColor: themeColors.black,
+      shadowOpacity: 0.32,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 14,
+    },
+    textSection: {
+      flex: 1,
+      marginRight: 12,
+    },
+    surahName: {
+      color: themeColors.white,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    remainingLabel: {
+      color: withOpacity(themeColors.white, 0.8),
+      fontSize: 12,
+      marginTop: 2,
+    },
+    controls: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    controlButton: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.white, 0.12),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.white, 0.22),
+    },
+    stopButton: {
+      marginRight: 8,
+      backgroundColor: withOpacity(themeColors.white, 0.1),
+    },
+    playButton: {
+      backgroundColor: themeColors.accent,
+      borderColor: withOpacity(themeColors.accent, 0.85),
+    },
+    progressTrack: {
+      height: 4,
+      borderRadius: 999,
+      backgroundColor: withOpacity(themeColors.white, 0.18),
+      marginTop: 8,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      backgroundColor: themeColors.accent,
+    },
+  });
+};
