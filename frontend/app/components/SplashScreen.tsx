@@ -1,5 +1,6 @@
 // app/components/SplashScreen.tsx
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -35,6 +36,10 @@ export default function SplashScreen({
   onFinished,
   fontsReady = true,
 }: Props) {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const [hadith, setHadith] = useState<{
     arabic: string;
     english: string;
@@ -292,140 +297,144 @@ export default function SplashScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  patternOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.03, // More subtle
-    resizeMode: "repeat",
-    width: "100%",
-    height: "100%",
-  },
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-  },
-  logoContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 80,
-  },
-  glowContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  glowText: {
-    opacity: 0.3,
-    textShadowColor: themeColors.accent,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 30,
-  },
-  appName: {
-    color: themeColors.accent,
-    fontSize: 64,
-    fontFamily: "SFProDisplay-Bold",
-    marginBottom: 8,
-    letterSpacing: 1,
-    paddingHorizontal: 8,
-    lineHeight: 72,
-    textShadowColor: withOpacity(themeColors.black, 0.2),
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-    ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
-  },
-  tagline: {
-    color: themeColors.white,
-    opacity: 0.9,
-    fontSize: 17, // iOS standard body size
-    fontFamily: "SFProDisplay-Regular",
-    letterSpacing: 0.3,
-    textShadowColor: withOpacity(themeColors.black, 0.15),
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
-  },
-  hadithContainer: {
-    width: "88%",
-    maxWidth: 420,
-    alignItems: "center",
-  },
-  hadithContent: {
-    width: "100%",
-    alignItems: "center",
-    // Removed glass effect background
-    paddingVertical: 32,
-  },
-  ornament: {
-    width: 40,
-    height: 3,
-    backgroundColor: themeColors.accent,
-    borderRadius: 2,
-    opacity: 0.6,
-    marginVertical: 12,
-  },
-  arabic: {
-    color: themeColors.white,
-    fontSize: 28,
-    textAlign: "center",
-    lineHeight: 42,
-    marginVertical: 12,
-    writingDirection: "rtl",
-    letterSpacing: 0.5,
-    ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
-  },
-  divider: {
-    width: 50,
-    height: 2,
-    backgroundColor: themeColors.accent,
-    marginVertical: 20,
-    borderRadius: 2,
-    opacity: 0.5,
-  },
-  englishCard: {
-    width: "100%",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  english: {
-    color: themeColors.accent,
-    fontSize: 16,
-    textAlign: "center",
-    fontFamily: "SFProDisplay-Semibold",
-    lineHeight: 24,
-    letterSpacing: 0.2,
-  },
-  source: {
-    marginTop: 16,
-    color: withOpacity(themeColors.white, 0.7),
-    fontSize: 12,
-    textAlign: "center",
-    fontFamily: "SFProDisplay-Regular",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  loadingContainer: {
-    paddingVertical: 60,
-    alignItems: "center",
-  },
-  loadingText: {
-    color: withOpacity(themeColors.accent, 0.8),
-    fontSize: 15,
-    fontFamily: "SFProDisplay-Regular",
-    letterSpacing: 0.3,
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+
+  return StyleSheet.create({
+    gradient: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    patternOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.03, // More subtle
+      resizeMode: "repeat",
+      width: "100%",
+      height: "100%",
+    },
+    container: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+    },
+    logoContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 80,
+    },
+    glowContainer: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    glowText: {
+      opacity: 0.3,
+      textShadowColor: themeColors.accent,
+      textShadowOffset: { width: 0, height: 0 },
+      textShadowRadius: 30,
+    },
+    appName: {
+      color: themeColors.accent,
+      fontSize: 64,
+      fontFamily: "SFProDisplay-Bold",
+      marginBottom: 8,
+      letterSpacing: 1,
+      paddingHorizontal: 8,
+      lineHeight: 72,
+      textShadowColor: withOpacity(themeColors.black, 0.2),
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
+      ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
+    },
+    tagline: {
+      color: themeColors.white,
+      opacity: 0.9,
+      fontSize: 17, // iOS standard body size
+      fontFamily: "SFProDisplay-Regular",
+      letterSpacing: 0.3,
+      textShadowColor: withOpacity(themeColors.black, 0.15),
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+      ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
+    },
+    hadithContainer: {
+      width: "88%",
+      maxWidth: 420,
+      alignItems: "center",
+    },
+    hadithContent: {
+      width: "100%",
+      alignItems: "center",
+      // Removed glass effect background
+      paddingVertical: 32,
+    },
+    ornament: {
+      width: 40,
+      height: 3,
+      backgroundColor: themeColors.accent,
+      borderRadius: 2,
+      opacity: 0.6,
+      marginVertical: 12,
+    },
+    arabic: {
+      color: themeColors.white,
+      fontSize: 28,
+      textAlign: "center",
+      lineHeight: 42,
+      marginVertical: 12,
+      writingDirection: "rtl",
+      letterSpacing: 0.5,
+      ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
+    },
+    divider: {
+      width: 50,
+      height: 2,
+      backgroundColor: themeColors.accent,
+      marginVertical: 20,
+      borderRadius: 2,
+      opacity: 0.5,
+    },
+    englishCard: {
+      width: "100%",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    english: {
+      color: themeColors.accent,
+      fontSize: 16,
+      textAlign: "center",
+      fontFamily: "SFProDisplay-Semibold",
+      lineHeight: 24,
+      letterSpacing: 0.2,
+    },
+    source: {
+      marginTop: 16,
+      color: withOpacity(themeColors.white, 0.7),
+      fontSize: 12,
+      textAlign: "center",
+      fontFamily: "SFProDisplay-Regular",
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
+    },
+    loadingContainer: {
+      paddingVertical: 60,
+      alignItems: "center",
+    },
+    loadingText: {
+      color: withOpacity(themeColors.accent, 0.8),
+      fontSize: 15,
+      fontFamily: "SFProDisplay-Regular",
+      letterSpacing: 0.3,
+    },
+  });
+};

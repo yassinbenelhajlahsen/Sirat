@@ -1,4 +1,5 @@
-import { colors, spacing, typography, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
@@ -55,6 +56,10 @@ function parseDateKey(dateStr: string): Date | null {
 }
 
 export default function CalendarScreen() {
+  const { theme } = useTheme();
+  const { colors, spacing } = theme;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const router = useRouter();
   const today = new Date();
   const { month, year } = useLocalSearchParams();
@@ -722,7 +727,7 @@ export default function CalendarScreen() {
                 }),
                 marginBottom: backToTodayAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [0, spacing.xxl],
+                  outputRange: [0, spacing.sm],
                 }),
                 opacity: backToTodayAnim,
                 transform: [
@@ -763,7 +768,11 @@ export default function CalendarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => {
+  const { colors, spacing, typography } = theme;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
   screen: { flex: 1 },
   patternOverlay: {
     position: "absolute",
@@ -845,7 +854,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dayButtonToday: {
-    backgroundColor: colors.accent,
+    backgroundColor: theme.name === "light" ? "#DABA69" : colors.accent,
     shadowColor: colors.accent,
     shadowOpacity: 0.35,
     shadowRadius: 8,
@@ -853,8 +862,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dayButtonHoliday: {
-    backgroundColor: colors.primaryBorder,
-    borderColor: colors.accent,
+    backgroundColor: theme.name === "light" ? "#E2CEB1" : colors.primaryBorder, 
+    borderColor: theme.name === "light" ? "#DABA69" : colors.accent,
     borderWidth: 1.5,
   },
   dayText: {
@@ -866,7 +875,7 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
   },
   dayTextToday: {
-    color: colors.primaryDark,
+    color: colors.onAccent,
     fontFamily: "SFProDisplay-Semibold",
   },
   dayTextHoliday: {
@@ -877,12 +886,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   summaryCard: {
-    backgroundColor: withOpacity(colors.black, 0.25),
-    borderRadius: 12,
+    backgroundColor: isLight
+      ? withOpacity(colors.primarySurfaceAlt, 0.3)
+      : withOpacity(colors.black, 0.25),
+    borderRadius: isLight ? 16 : 12,
     padding: spacing.md + 2,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: withOpacity(colors.accent, 0.3),
+    borderColor: withOpacity(colors.accent, isLight ? 0.35 : 0.3),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: isLight ? 0.22 : 0,
+    shadowRadius: isLight ? 20 : 0,
+    shadowOffset: { width: 0, height: isLight ? 10 : 0 },
+    elevation: isLight ? 4 : 0,
   },
   summaryTopRow: {
     flexDirection: "row",
@@ -917,16 +933,26 @@ const styles = StyleSheet.create({
   },
   backToToday: {
     alignSelf: "center",
-    backgroundColor: colors.accent,
+    backgroundColor: isLight
+      ? withOpacity(colors.primarySurfaceAlt, 0.3)
+      : colors.accent,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.sm + 2,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.15),
+    borderColor: isLight
+      ? withOpacity(colors.accent, 0.35)
+      : withOpacity(colors.white, 0.15),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: isLight ? 0.22 : 0,
+    shadowRadius: isLight ? 20 : 0,
+    shadowOffset: { width: 0, height: isLight ? 10 : 0 },
+    elevation: isLight ? 4 : 0,
   },
   backToTodayText: {
-    color: colors.primaryDark,
+    color: isLight ? colors.accent : colors.onAccent,
     fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Semibold",
   },
-});
+  });
+};

@@ -1,8 +1,9 @@
-import { colors, spacing, typography, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -58,6 +59,10 @@ function parseTimeToDate(timeStr: string, baseDate: Date): Date {
 }
 
 export default function CalendarDetail() {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const {
     date,
     month,
@@ -1022,7 +1027,11 @@ export default function CalendarDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => {
+  const { colors, spacing, typography } = theme;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
   screen: { flex: 1 },
   patternOverlay: {
     position: "absolute",
@@ -1163,12 +1172,21 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Semibold",
   },
   ramadanCard: {
-    backgroundColor: withOpacity(colors.black, 0.2),
-    borderRadius: 12,
+    backgroundColor: isLight
+      ? withOpacity(colors.primarySurfaceAlt, 0.3)
+      : withOpacity(colors.black, 0.2),
+    borderRadius: isLight ? 16 : 12,
     padding: spacing.lg - 2,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.08),
+    borderColor: isLight
+      ? withOpacity(colors.accent, 0.35)
+      : withOpacity(colors.white, 0.08),
+    shadowColor: colors.primaryDark,
+    shadowOpacity: isLight ? 0.22 : 0,
+    shadowRadius: isLight ? 20 : 0,
+    shadowOffset: { width: 0, height: isLight ? 10 : 0 },
+    elevation: isLight ? 4 : 0,
   },
   ramadanTitle: {
     color: colors.white,
@@ -1185,17 +1203,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   ramadanToggleButton: {
-    backgroundColor: colors.primaryDark,
+    backgroundColor: isLight
+      ? withOpacity(colors.primarySurfaceAlt, 0.3)
+      : colors.primaryDark,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: 10,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.08),
-    shadowColor: withOpacity(colors.black, 0.3),
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 6 },
+    borderColor: isLight
+      ? withOpacity(colors.accent, 0.35)
+      : withOpacity(colors.white, 0.08),
+    shadowColor: isLight ? colors.primaryDark : withOpacity(colors.black, 0.3),
+    shadowOpacity: isLight ? 0.22 : 0.2,
+    shadowRadius: isLight ? 20 : 8,
+    shadowOffset: { width: 0, height: isLight ? 10 : 6 },
     elevation: 4,
   },
   ramadanToggleButtonActive: {
@@ -1207,12 +1229,12 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   ramadanToggleText: {
-    color: colors.white,
+    color: isLight ? colors.accent : colors.white,
     fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Semibold",
   },
   ramadanToggleTextActive: {
-    color: colors.primaryDark,
+    color: colors.onAccent,
   },
   sectionHeader: {
     alignItems: "center",
@@ -1232,16 +1254,20 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Bold",
   },
   prayerListCard: {
-    backgroundColor: withOpacity(colors.black, 0.2),
+    backgroundColor: isLight
+      ? withOpacity(colors.primarySurfaceAlt, 0.3)
+      : withOpacity(colors.black, 0.2),
     borderRadius: 18,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.08),
+    borderColor: isLight
+      ? withOpacity(colors.accent, 0.35)
+      : withOpacity(colors.white, 0.08),
     shadowColor: colors.primaryDark,
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 16 },
-    elevation: 6,
+    shadowOpacity: isLight ? 0.22 : 0.25,
+    shadowRadius: isLight ? 20 : 24,
+    shadowOffset: { width: 0, height: isLight ? 10 : 16 },
+    elevation: isLight ? 4 : 6,
     overflow: "hidden",
   },
   errorCard: {
@@ -1277,7 +1303,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm + 2,
   },
   retryButtonText: {
-    color: colors.primary,
+    color: colors.onAccent,
     fontSize: typography.body,
     fontFamily: "SFProDisplay-Semibold",
   },
@@ -1313,7 +1339,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   emptyRetryButtonText: {
-    color: colors.primary,
+    color: colors.onAccent,
     fontWeight: "600",
   },
   nextPrayerContainer: {
@@ -1363,4 +1389,5 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     fontFamily: "SFProDisplay-Semibold",
   },
-});
+  });
+};

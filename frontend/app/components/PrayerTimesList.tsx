@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -13,32 +14,6 @@ import {
 } from "react-native";
 import { PrayerTime } from "../../services/prayerTimes";
 
-/* ---------- Shared row styles (used by both skeleton and real rows) ---------- */
-const ROW_STYLES = {
-  containerBase: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
-    alignItems: "center" as const,
-    borderRadius: 14,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-  },
-  labelText: {
-    color: withOpacity(themeColors.white, 0.9),
-    fontSize: 17,
-    fontFamily: "SFProDisplay-Semibold",
-    letterSpacing: 0.2,
-  },
-  timeText: {
-    color: themeColors.accent,
-    fontSize: 17,
-    fontFamily: "SFProDisplay-Bold",
-    letterSpacing: 0.2,
-  },
-};
-
 const PRAYER_ICONS: Record<string, string> = {
   Fajr: "moon-waning-crescent",
   Sunrise: "weather-sunset-up",
@@ -48,16 +23,24 @@ const PRAYER_ICONS: Record<string, string> = {
   Isha: "weather-night",
 };
 
+type GeneratedStyles = ReturnType<typeof createStyles>;
+type GeneratedRowStyles = ReturnType<typeof createRowStyles>;
+type ThemeColors = AppTheme["colors"];
+
 /* ---------- Pure JS shimmer bar (no gradient libs) ---------- */
 /* Uses a moving highlight made of layered translucent views with skew and opacity */
 function SkeletonBar({
   style,
   height = 20,
   progress, // shared Animated.Value from parent (optional)
+  styles,
+  themeColors,
 }: {
   style?: StyleProp<ViewStyle>;
   height?: number;
   progress?: Animated.Value;
+  styles: GeneratedStyles;
+  themeColors: ThemeColors;
 }) {
   const [w, setW] = useState(0);
   const localProgress = useRef(new Animated.Value(0)).current;
@@ -81,14 +64,12 @@ function SkeletonBar({
     setW(e.nativeEvent.layout.width || 0);
   };
 
-  // Width of the moving highlight (soft “glow”). Scale with container width.
   const highlightW = Math.max(80, Math.floor(w * 0.35));
   const translateX = useMemo(() => {
     return driver.interpolate({
       inputRange: [0, 1],
-      outputRange: [-highlightW, w + highlightW], // start offscreen, end offscreen
+      outputRange: [-highlightW, w + highlightW],
     });
-    // re-compute if width changes
   }, [driver, w, highlightW]);
 
   return (
@@ -98,7 +79,6 @@ function SkeletonBar({
       accessibilityRole="progressbar"
       accessibilityState={{ busy: true }}
     >
-      {/* Moving highlight: composed of 3 layers to fake a gradient */}
       <Animated.View
         pointerEvents="none"
         style={{
@@ -109,7 +89,6 @@ function SkeletonBar({
           transform: [{ translateX }, { skewX: "15deg" }],
         }}
       >
-        {/* soft edges */}
         <View
           style={{
             position: "absolute",
@@ -121,7 +100,6 @@ function SkeletonBar({
             borderRadius: 6,
           }}
         />
-        {/* brighter center strip */}
         <View
           style={{
             position: "absolute",
@@ -133,7 +111,6 @@ function SkeletonBar({
             borderRadius: 6,
           }}
         />
-        {/* subtle trailing edge for depth */}
         <View
           style={{
             position: "absolute",
@@ -151,28 +128,66 @@ function SkeletonBar({
 }
 
 /* ---------- One skeleton row that matches real row footprint exactly ---------- */
-function PrayerRowSkeleton({ progress }: { progress?: Animated.Value }) {
+function PrayerRowSkeleton({
+  progress,
+  rowStyles,
+  styles,
+  themeColors,
+}: {
+  progress?: Animated.Value;
+  rowStyles: GeneratedRowStyles;
+  styles: GeneratedStyles;
+  themeColors: ThemeColors;
+}) {
   return (
     <View
       style={[
-        ROW_STYLES.containerBase,
+        rowStyles.containerBase,
         {
           backgroundColor: "transparent",
-          borderColor: "transparent", // width remains 2 to prevent jump
+          borderColor: "transparent",
         },
       ]}
     >
       <View style={styles.leftCluster}>
-        <SkeletonBar style={styles.skeletonIcon} height={22} progress={progress} />
-        <SkeletonBar style={{ width: 96 }} height={18} progress={progress} />
+        <SkeletonBar
+          style={styles.skeletonIcon}
+          height={22}
+          progress={progress}
+          styles={styles}
+          themeColors={themeColors}
+        />
+        <SkeletonBar
+          style={{ width: 96 }}
+          height={18}
+          progress={progress}
+          styles={styles}
+          themeColors={themeColors}
+        />
       </View>
-      <SkeletonBar style={styles.skeletonTime} height={18} progress={progress} />
+      <SkeletonBar
+        style={styles.skeletonTime}
+        height={18}
+        progress={progress}
+        styles={styles}
+        themeColors={themeColors}
+      />
     </View>
   );
 }
 
 /* ---------- Skeleton list with shared animation for smoothness and efficiency ---------- */
-function PrayerTimesSkeletonList({ rows = 6 }: { rows?: number }) {
+function PrayerTimesSkeletonList({
+  rows = 6,
+  rowStyles,
+  styles,
+  themeColors,
+}: {
+  rows?: number;
+  rowStyles: GeneratedRowStyles;
+  styles: GeneratedStyles;
+  themeColors: ThemeColors;
+}) {
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -191,7 +206,13 @@ function PrayerTimesSkeletonList({ rows = 6 }: { rows?: number }) {
   return (
     <View>
       {Array.from({ length: rows }).map((_, i) => (
-        <PrayerRowSkeleton key={i} progress={progress} />
+        <PrayerRowSkeleton
+          key={i}
+          progress={progress}
+          rowStyles={rowStyles}
+          styles={styles}
+          themeColors={themeColors}
+        />
       ))}
     </View>
   );
@@ -209,8 +230,20 @@ export default function PrayerTimesList({
   timeOpacity?: Animated.Value;
   timeSlide?: Animated.Value;
 }) {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const rowStyles = useMemo(() => createRowStyles(theme), [theme]);
+
   if (loading) {
-    return <PrayerTimesSkeletonList rows={6} />;
+    return (
+      <PrayerTimesSkeletonList
+        rows={6}
+        rowStyles={rowStyles}
+        styles={styles}
+        themeColors={themeColors}
+      />
+    );
   }
 
   return (
@@ -221,7 +254,7 @@ export default function PrayerTimesList({
         return (
           <View
             key={label}
-            style={[ROW_STYLES.containerBase, styles.rowSurface]}
+            style={[rowStyles.containerBase, styles.rowSurface]}
           >
             <View style={styles.leftCluster}>
               <View style={styles.rowIconWrap}>
@@ -231,12 +264,12 @@ export default function PrayerTimesList({
                   color={withOpacity(themeColors.accent, 0.92)}
                 />
               </View>
-              <Text style={[ROW_STYLES.labelText, styles.labelSpacing]}>{label}</Text>
+              <Text style={[rowStyles.labelText, styles.labelSpacing]}>{label}</Text>
             </View>
 
             <Animated.Text
               style={[
-                ROW_STYLES.timeText,
+                rowStyles.timeText,
                 timeOpacity && timeSlide
                   ? {
                       opacity: timeOpacity,
@@ -253,45 +286,84 @@ export default function PrayerTimesList({
     </View>
   );
 }
-const styles = StyleSheet.create({
-  rowSurface: {
-    backgroundColor: withOpacity(themeColors.white, 0.05),
-    borderColor: withOpacity(themeColors.white, 0.1),
-    shadowColor: withOpacity(themeColors.black, 0.05),
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
-    overflow: "hidden",
-  },
-  leftCluster: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  labelSpacing: {
-    marginLeft: 10,
-  },
-  rowIconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: withOpacity(themeColors.accent, 0.12),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.28),
-  },
-  skeletonIcon: {
-    width: 22,
-    borderRadius: 999,
-  },
-  skeletonTime: {
-    width: 88,
-    borderRadius: 999,
-  },
-  skeletonBarBase: {
-    backgroundColor: withOpacity(themeColors.white, 0.08),
-    borderRadius: 6,
-    overflow: "hidden",
-  },
-});
+
+const createRowStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+
+  return {
+    containerBase: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "center" as const,
+      borderRadius: 14,
+      paddingVertical: 11,
+      paddingHorizontal: 12,
+      marginBottom: 10,
+      borderWidth: 1,
+    },
+    labelText: {
+      color: withOpacity(themeColors.white, 0.9),
+      fontSize: 17,
+      fontFamily: "SFProDisplay-Semibold",
+      letterSpacing: 0.2,
+    },
+    timeText: {
+      color: themeColors.accent,
+      fontSize: 17,
+      fontFamily: "SFProDisplay-Bold",
+      letterSpacing: 0.2,
+    },
+  };
+};
+
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
+    rowSurface: {
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurfaceAlt, 0.3)
+        : withOpacity(themeColors.white, 0.05),
+      borderColor: isLight
+        ? withOpacity(themeColors.accent, 0.35)
+        : withOpacity(themeColors.white, 0.1),
+      shadowColor: themeColors.primaryDark,
+      shadowOpacity: isLight ? 0.22 : 0.2,
+      shadowRadius: isLight ? 20 : 18,
+      shadowOffset: { width: 0, height: isLight ? 10 : 8 },
+      elevation: 4,
+      overflow: "hidden",
+    },
+    leftCluster: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    labelSpacing: {
+      marginLeft: 10,
+    },
+    rowIconWrap: {
+      width: 24,
+      height: 24,
+      borderRadius: 999,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.accent, 0.12),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.28),
+    },
+    skeletonIcon: {
+      width: 22,
+      borderRadius: 999,
+    },
+    skeletonTime: {
+      width: 88,
+      borderRadius: 999,
+    },
+    skeletonBarBase: {
+      backgroundColor: withOpacity(themeColors.white, 0.08),
+      borderRadius: 6,
+      overflow: "hidden",
+    },
+  });
+};

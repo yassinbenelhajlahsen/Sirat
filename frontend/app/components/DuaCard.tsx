@@ -1,4 +1,5 @@
-import { colors, spacing, typography, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -19,6 +20,10 @@ interface DuaCardProps {
 }
 
 function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
+
   const [userInput, setUserInput] = React.useState("");
   const charactersLeft = 150 - userInput.length;
 
@@ -101,7 +106,7 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
       >
         {loading ? (
           <>
-            <ActivityIndicator color={colors.primary} size="small" />
+            <ActivityIndicator color={colors.onAccent} size="small" />
             <Text style={styles.submitTextLoading}>
               Finding...
             </Text>
@@ -111,7 +116,7 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
             <Text style={styles.submitText}>
               Find Dua
             </Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+            <Ionicons name="arrow-forward" size={16} color={colors.onAccent} />
           </>
         )}
       </PressableScale>
@@ -119,123 +124,136 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    marginTop: spacing.xl,
-    backgroundColor: withOpacity(colors.black, 0.22),
-    borderRadius: 18,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.1),
-    shadowColor: colors.primaryDark,
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 4,
-    position: "relative",
-    zIndex: 1,
-  },
-  badgeRow: {
-    flexDirection: "row",
-    marginBottom: spacing.sm,
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: withOpacity(colors.accent, 0.1),
-    borderColor: withOpacity(colors.accent, 0.32),
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 9,
-  },
-  badgeText: {
-    marginLeft: 5,
-    color: withOpacity(colors.accent, 0.92),
-    fontSize: 11,
-    fontFamily: "SFProDisplay-Semibold",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-  },
-  title: {
-    color: colors.accent,
-    fontSize: typography.subtitle,
-    fontFamily: "SFProDisplay-Semibold",
-    marginBottom: spacing.sm,
-  },
-  description: {
-    color: withOpacity(colors.white, 0.78),
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Regular",
-    marginBottom: spacing.md,
-  },
-  inputShell: {
-    backgroundColor: withOpacity(colors.black, 0.3),
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.14),
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  input: {
-    color: colors.white,
-    padding: 0,
-    fontSize: typography.bodyLg,
-    fontFamily: "SFProDisplay-Regular",
-    marginBottom: spacing.sm,
-    minHeight: 64,
-    textAlignVertical: "top",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  inputHint: {
-    color: withOpacity(colors.white, 0.62),
-    fontSize: 12,
-    fontFamily: "SFProDisplay-Regular",
-  },
-  characterCount: {
-    color: withOpacity(colors.white, 0.65),
-    fontSize: 12,
-    fontFamily: "SFProDisplay-Semibold",
-    minWidth: 28,
-    textAlign: "right",
-  },
-  characterCountWarning: {
-    color: withOpacity(colors.accent, 0.95),
-  },
-  submitButton: {
-    backgroundColor: colors.accent,
-    borderRadius: 10,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    marginTop: spacing.lg,
-    shadowColor: withOpacity(colors.accent, 0.4),
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
-  },
-  submitButtonDisabled: {
-    backgroundColor: withOpacity(colors.accent, 0.5),
-  },
-  submitText: {
-    color: colors.primary,
-    fontSize: typography.subtitle,
-    fontFamily: "SFProDisplay-Bold",
-    marginRight: 6,
-  },
-  submitTextLoading: {
-    color: colors.primary,
-    fontSize: typography.subtitle,
-    fontFamily: "SFProDisplay-Bold",
-    marginLeft: spacing.sm,
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const { colors, spacing, typography } = theme;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
+    card: {
+      marginTop: spacing.xl,
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.3)
+        : withOpacity(colors.black, 0.22),
+      borderRadius: 18,
+      padding: spacing.xl,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.35)
+        : withOpacity(colors.white, 0.1),
+      shadowColor: colors.primaryDark,
+      shadowOpacity: isLight ? 0.22 : 0.28,
+      shadowRadius: 20,
+      shadowOffset: { width: 0, height: isLight ? 10 : 12 },
+      elevation: 4,
+      position: "relative",
+      zIndex: 1,
+    },
+    badgeRow: {
+      flexDirection: "row",
+      marginBottom: spacing.sm,
+    },
+    badge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: withOpacity(colors.accent, 0.1),
+      borderColor: withOpacity(colors.accent, 0.32),
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingVertical: 4,
+      paddingHorizontal: 9,
+    },
+    badgeText: {
+      marginLeft: 5,
+      color: withOpacity(colors.accent, 0.92),
+      fontSize: 11,
+      fontFamily: "SFProDisplay-Semibold",
+      letterSpacing: 0.4,
+      textTransform: "uppercase",
+    },
+    title: {
+      color: colors.accent,
+      fontSize: typography.subtitle,
+      fontFamily: "SFProDisplay-Semibold",
+      marginBottom: spacing.sm,
+    },
+    description: {
+      color: withOpacity(colors.white, 0.78),
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Regular",
+      marginBottom: spacing.md,
+    },
+    inputShell: {
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurface, 0.65)
+        : withOpacity(colors.black, 0.3),
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.22)
+        : withOpacity(colors.white, 0.14),
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    input: {
+      color: colors.white,
+      padding: 0,
+      fontSize: typography.bodyLg,
+      fontFamily: "SFProDisplay-Regular",
+      marginBottom: spacing.sm,
+      minHeight: 64,
+      textAlignVertical: "top",
+    },
+    metaRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
+    },
+    inputHint: {
+      color: withOpacity(colors.white, 0.62),
+      fontSize: 12,
+      fontFamily: "SFProDisplay-Regular",
+    },
+    characterCount: {
+      color: withOpacity(colors.white, 0.65),
+      fontSize: 12,
+      fontFamily: "SFProDisplay-Semibold",
+      minWidth: 28,
+      textAlign: "right",
+    },
+    characterCountWarning: {
+      color: withOpacity(colors.accent, 0.95),
+    },
+    submitButton: {
+      backgroundColor: (theme.name === "light") ? "#DABA69" : colors.accent,
+      borderRadius: 10,
+      paddingVertical: spacing.md,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+      marginTop: spacing.lg,
+      shadowColor: withOpacity(colors.accent, 0.4),
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
+    },
+    submitButtonDisabled: {
+      backgroundColor: withOpacity(colors.accent, 0.5),
+    },
+    submitText: {
+      color: colors.onAccent,
+      fontSize: typography.subtitle,
+      fontFamily: "SFProDisplay-Bold",
+      marginRight: 6,
+    },
+    submitTextLoading: {
+      color: colors.onAccent,
+      fontSize: typography.subtitle,
+      fontFamily: "SFProDisplay-Bold",
+      marginLeft: spacing.sm,
+    },
+  });
+};
 
 export default DuaCard;
