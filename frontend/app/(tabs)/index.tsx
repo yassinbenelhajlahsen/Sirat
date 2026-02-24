@@ -1,20 +1,12 @@
 // app/(tabs)/index.tsx
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import {
-  Alert,
   Animated,
-  AppState,
-  DeviceEventEmitter,
-  Easing,
   Image,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
@@ -28,26 +20,10 @@ import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
 import PrayerTimesList from "../../components/PrayerTimesList";
 import PressableScale from "../../components/PressableScale";
-import {
-  getPrayerTimesToday,
-  PrayerSettings,
-  PrayerTime,
-} from "../../services/prayerTimes";
-import CITIES, { City, cityKey } from "../../utils/cities";
-import getTimeUntil from "../../utils/getTimeUntil";
-
-function parseTimeToDate(timeStr: string): Date {
-  const now = new Date();
-  const [time, modifier] = timeStr.split(" ");
-  const [hoursStr, minutesStr] = time.split(":");
-  let hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
-  if (modifier === "PM" && hours !== 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
-  const d = new Date(now);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
+import { useDuaInteraction } from "../../hooks/useDuaInteraction";
+import { useHomePrayerTimes } from "../../hooks/useHomePrayerTimes";
+import { useKeyboardAutoScroll } from "../../hooks/useKeyboardAutoScroll";
+import useModalTransition from "../../hooks/useModalTransition";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -55,334 +31,30 @@ export default function Home() {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const router = useRouter();
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
-  const [nextPrayer, setNextPrayer] = useState<null | {
-    label: string;
-    time: string;
-    dateObj: Date;
-  }>(null);
-  const [nextDayFajr, setNextDayFajr] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [banner, setBanner] = useState<string>("");
-
-  // Single source of truth label for where times came from
-  const [locationLabel, setLocationLabel] = useState<string>("");
-
-  // Dua component state
-  const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
-  const [duaLoading, setDuaLoading] = useState(false);
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const duaSwapAnim = useRef(new Animated.Value(1)).current;
-  const scrollViewRef = useRef<ScrollView>(null);
-
-  const DEFAULT_METHOD = 2;
-  const DEFAULT_CITY: City = CITIES[0];
-
-  // ---- Settings helpers ----
-  async function readSettings(): Promise<PrayerSettings> {
-    const raw = await AsyncStorage.getItem("prayerSettings");
-    if (!raw) {
-      return { useLocation: true, method: DEFAULT_METHOD, city: DEFAULT_CITY };
-    }
-    const base = JSON.parse(raw) as PrayerSettings & { cityKey?: string };
-    let city: City | undefined = base.city;
-    if (!city && base.cityKey) {
-      city = CITIES.find((c) => cityKey(c) === base.cityKey) ?? DEFAULT_CITY;
-    }
-    return {
-      useLocation: base.useLocation ?? true,
-      method: base.method ?? DEFAULT_METHOD,
-      city: city ?? DEFAULT_CITY,
-    };
-  }
-
-  async function writeSettings(s: PrayerSettings) {
-    const save = {
-      useLocation: s.useLocation,
-      method: s.method,
-      cityKey: s.city ? cityKey(s.city) : undefined,
-      city: s.city,
-    };
-    await AsyncStorage.setItem("prayerSettings", JSON.stringify(save));
-    if (!s.useLocation && s.city) {
-      await AsyncStorage.setItem("selectedCity", cityKey(s.city));
-    }
-    try {
-      // @ts-ignore web safety
-      DeviceEventEmitter?.emit?.("settingsChanged", save);
-    } catch {}
-  }
-
-  async function osAllowsLocation(): Promise<boolean> {
-    const servicesEnabled = await Location.hasServicesEnabledAsync();
-    const perm = await Location.getForegroundPermissionsAsync();
-    return servicesEnabled && perm.status === "granted";
-  }
-
-  /**
-   * Read settings, enforce sync with the OS, persist if adjusted, and return effective settings.
-   * If useLocation is true but OS blocks, flip to false and persist.
-   */
-  async function readSyncedSettings(): Promise<PrayerSettings> {
-    let s = await readSettings();
-    if (s.useLocation) {
-      const canUse = await osAllowsLocation();
-      if (!canUse) {
-        s = { ...s, useLocation: false, city: s.city ?? DEFAULT_CITY };
-        await writeSettings(s);
-      }
-    }
-    return s;
-  }
-
-  /**
-   * Resolve a fresh coordinate and a human label once, then reuse both.
-   * Never uses getLastKnownPositionAsync to avoid stale locations.
-   */
-  async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
-    coords?: { latitude: number; longitude: number };
-    country?: string;
-    label: string;
-  }> {
-    if (!effective.useLocation) {
-      return {
-        coords: undefined,
-        label: effective.city?.name ?? "Unknown",
-      };
-    }
-
-    // Permission check and prompt if needed
-    let perm = await Location.getForegroundPermissionsAsync();
-    if (perm.status !== "granted") {
-      const req = await Location.requestForegroundPermissionsAsync();
-      perm = req;
-    }
-    const services = await Location.hasServicesEnabledAsync();
-    if (!services || perm.status !== "granted") {
-      // Fall back to manual city label if present
-      return {
-        coords: undefined,
-        label: effective.city?.name ?? "Location off",
-      };
-    }
-
-    // Fresh reading only
-    const pos = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-      mayShowUserSettingsDialog: false,
-    });
-
-    let country: string | undefined;
-    let label = "";
-    try {
-      const places = await Location.reverseGeocodeAsync({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      });
-      const p = places?.[0];
-      const city =
-        p?.city || p?.district || p?.subregion || p?.region || "Your area";
-      const cc = p?.isoCountryCode || p?.country || "";
-      label = `${city}${cc ? ", " + cc : ""}`;
-      country = p?.country || p?.isoCountryCode || undefined;
-    } catch {
-      // If reverse geocode fails, still show a useful label
-      const lat = pos.coords.latitude.toFixed(3);
-      const lon = pos.coords.longitude.toFixed(3);
-      label = `Lat ${lat}, Lon ${lon}`;
-    }
-
-    return {
-      coords: {
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      },
-      country,
-      label,
-    };
-  }
-
-  const runDuaTransition = useCallback(
-    (nextDua: Dua | null) => {
-      Animated.timing(duaSwapAnim, {
-        toValue: 0,
-        duration: 170,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }).start(() => {
-        setSelectedDua(nextDua);
-        duaSwapAnim.setValue(0);
-        Animated.spring(duaSwapAnim, {
-          toValue: 1,
-          speed: 15,
-          bounciness: 10,
-          useNativeDriver: true,
-        }).start();
-      });
-    },
-    [duaSwapAnim],
-  );
-
-  // ---- Dua Handler ----
-  const handleDuaSubmit = async (userRequest: string) => {
-    try {
-      setDuaLoading(true);
-      const dua = await requestDua(userRequest);
-      runDuaTransition(dua);
-      await saveDuaToHistory(dua);
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to find a dua");
-    } finally {
-      setDuaLoading(false);
-    }
-  };
-
-  // ---- Data load ----
-  const loadData = async (reset = false) => {
-    try {
-      setLoading(true);
-      // Only clear visible state on explicit refresh to avoid flicker on initial load
-      if (reset) {
-        setPrayerTimes([]);
-        setNextPrayer(null);
-        setNextDayFajr(null);
-        setTimeLeft("");
-        fadeAnim.setValue(0);
-      }
-      setBanner("");
-
-      // 1) Read effective settings
-      const effective = await readSyncedSettings();
-
-      // 2) Resolve coordinates and label once
-      const { coords, country, label } = await resolveCoordsAndLabel(effective);
-      setLocationLabel(label);
-
-      // 3) Fetch times using the exact same coords
-      const times = await getPrayerTimesToday(effective, {
-        coords,
-        country,
-      });
-      setPrayerTimes(times);
-
-      // 4) Compute next prayer
-      const now = new Date();
-      let foundNext = false;
-      for (const pt of times) {
-        const timeObj = parseTimeToDate(pt.time);
-        if (timeObj > now) {
-          setNextPrayer({ ...pt, dateObj: timeObj });
-          foundNext = true;
-          break;
-        }
-      }
-
-      // 5) If day finished, show tomorrow's Fajr using same coords
-      if (!foundNext) {
-        const tomorrowTimes = await getPrayerTimesToday(effective, {
-          coords,
-          country,
-        });
-        const fajr = tomorrowTimes.find((p) => p.label === "Fajr");
-        if (fajr) setNextDayFajr(fajr.time);
-      }
-    } catch (err) {
-      console.error("Error fetching prayer times:", err);
-      setBanner(
-        "We could not load prayer times right now. Please try again later or set a manual city in Settings.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    prayerTimes,
+    nextPrayer,
+    nextDayFajr,
+    timeLeft,
+    loading,
+    refreshing,
+    banner,
+    locationLabel,
+    refresh,
+  } = useHomePrayerTimes();
+  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua } =
+    useDuaInteraction();
+  const { scrollViewRef, scrollToBottom, handleContentSizeChange } =
+    useKeyboardAutoScroll();
+  const hasPrayerSummary = !!(nextPrayer || nextDayFajr);
+  const {
+    shouldRender: shouldRenderPrayerSummary,
+    cardAnimatedStyle: prayerSummaryAnimatedStyle,
+  } = useModalTransition(hasPrayerSummary);
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData(true);
-    setRefreshing(false);
+    await refresh();
   };
-
-  // Re-sync on foreground since user may change iOS settings
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", async (s) => {
-      if (s === "active") {
-        await loadData();
-      }
-    });
-    return () => sub.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // React to in-app settings changes
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
-      await loadData();
-    });
-    return () => sub.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Initial launch
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const scrollToBottom = useCallback((animated: boolean) => {
-    // Do it after the current frame, when layout is more likely settled
-    requestAnimationFrame(() => {
-      scrollViewRef.current?.scrollToEnd({ animated });
-    });
-  }, []);
-
-  useEffect(() => {
-    const willShowSub =
-      Platform.OS === "ios"
-        ? Keyboard.addListener("keyboardWillShow", () => {
-            setKeyboardOpen(true);
-            // Scroll immediately, same frame as keyboard animation
-            requestAnimationFrame(() => scrollToBottom(true));
-          })
-        : null;
-
-    const didShowSub = Keyboard.addListener("keyboardDidShow", () => {
-      setKeyboardOpen(true);
-      requestAnimationFrame(() => scrollToBottom(false));
-    });
-
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardOpen(false);
-    });
-
-    return () => {
-      willShowSub?.remove();
-      didShowSub.remove();
-      hideSub.remove();
-    };
-  }, [scrollToBottom]);
-
-  useEffect(() => {
-    if (!nextPrayer) return;
-    setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-    const id = setInterval(() => {
-      setTimeLeft(getTimeUntil(nextPrayer.dateObj));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [nextPrayer]);
-
-  useEffect(() => {
-    if (nextDayFajr || nextPrayer) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [fadeAnim, nextDayFajr, nextPrayer]);
 
   const today = new Date();
   const gregorianDate = new Intl.DateTimeFormat("en-US", {
@@ -442,9 +114,7 @@ export default function Home() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
-            onContentSizeChange={() => {
-              if (keyboardOpen) scrollToBottom(false);
-            }}
+            onContentSizeChange={handleContentSizeChange}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -474,65 +144,58 @@ export default function Home() {
               </View>
             </View>
 
-            {(nextPrayer || nextDayFajr) && (
+            {(loading || shouldRenderPrayerSummary || hasPrayerSummary) && (
               <View style={styles.nextPrayerContainer}>
-                {nextPrayer ? (
-                  <View style={styles.nextPrayerCard}>
-                    <Text style={styles.nextPrayerLabel}>Next Prayer</Text>
-                    <View style={styles.nextPrayerRow}>
-                      <Text style={styles.nextPrayerName}>
-                        {nextPrayer.label}
-                      </Text>
-                      <Text style={styles.nextPrayerTime}>
-                        {nextPrayer.time}
-                      </Text>
-                    </View>
-                    <Text style={styles.nextPrayerCountdown}>
-                      Starts in {timeLeft}
-                    </Text>
-                  </View>
-                ) : (
-                  <Animated.View style={{ opacity: fadeAnim, width: "100%" }}>
-                    <PressableScale
-                      onPress={() =>
-                        router.push({
-                          pathname: "../[date]",
-                          params: {
-                            date: tomorrowParam,
-                            month: tomorrow.getMonth().toString(),
-                            year: tomorrow.getFullYear().toString(),
-                          },
-                        })
-                      }
-                      style={{
-                        backgroundColor: withOpacity(
-                          colors.primarySurfaceAlt,
-                          0.25,
-                        ),
-                        borderRadius: 12,
-                        marginTop: 8,
-                        paddingVertical: 18,
-                        paddingHorizontal: 24,
-                        borderWidth: 2,
-                        borderColor: withOpacity(colors.accent, 0.75),
-                        shadowColor: colors.accent,
-                        shadowOpacity: 0.6,
-                        shadowRadius: 8,
-                        elevation: 5,
-                        alignItems: "center",
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel="View tomorrow prayer times"
+                <View style={styles.nextPrayerSlot}>
+                  {shouldRenderPrayerSummary ? (
+                    <Animated.View
+                      style={[
+                        styles.nextPrayerAnimatedWrap,
+                        prayerSummaryAnimatedStyle,
+                      ]}
                     >
-                      <Text style={styles.finishedTitle}>
-                        Finished all prayers!
-                      </Text>
-                      <Text style={styles.finishedSubtitle}>
-                        Tap to see tomorrow&apos;s prayer times
-                      </Text>
-                    </PressableScale>
-                  </Animated.View>
-                )}
+                      {nextPrayer ? (
+                        <View style={styles.nextPrayerCard}>
+                          <Text style={styles.nextPrayerLabel}>Next Prayer</Text>
+                          <View style={styles.nextPrayerRow}>
+                            <Text style={styles.nextPrayerName}>
+                              {nextPrayer.label}
+                            </Text>
+                            <Text style={styles.nextPrayerTime}>
+                              {nextPrayer.time}
+                            </Text>
+                          </View>
+                          <Text style={styles.nextPrayerCountdown}>
+                            Starts in {timeLeft}
+                          </Text>
+                        </View>
+                      ) : nextDayFajr ? (
+                        <PressableScale
+                          onPress={() =>
+                            router.push({
+                              pathname: "../[date]",
+                              params: {
+                                date: tomorrowParam,
+                                month: tomorrow.getMonth().toString(),
+                                year: tomorrow.getFullYear().toString(),
+                              },
+                            })
+                          }
+                          style={styles.tomorrowCardButton}
+                          accessibilityRole="button"
+                          accessibilityLabel="View tomorrow prayer times"
+                        >
+                          <Text style={styles.finishedTitle}>
+                            Finished all prayers!
+                          </Text>
+                          <Text style={styles.finishedSubtitle}>
+                            Tap to see tomorrow&apos;s prayer times
+                          </Text>
+                        </PressableScale>
+                      ) : null}
+                    </Animated.View>
+                  ) : null}
+                </View>
               </View>
             )}
 
@@ -543,13 +206,10 @@ export default function Home() {
             <View style={styles.duaSection}>
               <Animated.View style={duaCardAnimatedStyle}>
                 {selectedDua ? (
-                  <DuaResultCard
-                    dua={selectedDua}
-                    onClose={() => runDuaTransition(null)}
-                  />
+                  <DuaResultCard dua={selectedDua} onClose={closeDua} />
                 ) : (
                   <DuaCard
-                    onSubmit={handleDuaSubmit}
+                    onSubmit={submitDua}
                     loading={duaLoading}
                     onInputFocus={() => scrollToBottom(true)}
                   />
@@ -663,6 +323,12 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       marginBottom: -2,
     },
+    nextPrayerSlot: {
+      width: "100%",
+    },
+    nextPrayerAnimatedWrap: {
+      width: "100%",
+    },
     nextPrayerCard: {
       width: "100%",
       backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.3),
@@ -676,6 +342,21 @@ const createStyles = (theme: AppTheme) => {
       shadowRadius: 20,
       shadowOffset: { width: 0, height: 10 },
       elevation: 4,
+      justifyContent: "center",
+    },
+    tomorrowCardButton: {
+      backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.25),
+      borderRadius: 12,
+      paddingVertical: 18,
+      paddingHorizontal: 24,
+      borderWidth: 2,
+      borderColor: withOpacity(colors.accent, 0.75),
+      shadowColor: colors.accent,
+      shadowOpacity: 0.6,
+      shadowRadius: 4,
+      elevation: 5,
+      alignItems: "center",
+      justifyContent: "center",
     },
     nextPrayerLabel: {
       color: withOpacity(colors.accent, 0.95),
