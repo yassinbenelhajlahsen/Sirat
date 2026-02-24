@@ -1,9 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Modal, StyleSheet, Text, View } from "react-native";
+import { Animated, Modal, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import useModalTransition from "@/hooks/useModalTransition";
 import { QuranBookmark } from "@/services/quranBookmarks";
 import { NormalizedSurahMeta } from "@/services/quranData";
 
@@ -60,68 +61,10 @@ function NavigatorModal({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>("goto");
-
-  const [shouldRender, setShouldRender] = useState(visible);
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const cardTranslateY = useRef(new Animated.Value(28)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const { shouldRender, overlayAnimatedStyle, cardAnimatedStyle } =
+    useModalTransition(visible);
 
   const previousVisibleRef = useRef(visible);
-
-  useEffect(() => {
-    overlayOpacity.stopAnimation();
-    cardTranslateY.stopAnimation();
-    cardOpacity.stopAnimation();
-
-    if (visible) {
-      setShouldRender(true);
-      Animated.parallel([
-        Animated.timing(overlayOpacity, {
-          toValue: 1,
-          duration: 180,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardTranslateY, {
-          toValue: 0,
-          duration: 260,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardOpacity, {
-          toValue: 1,
-          duration: 200,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(overlayOpacity, {
-          toValue: 0,
-          duration: 160,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardTranslateY, {
-          toValue: 28,
-          duration: 220,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardOpacity, {
-          toValue: 0,
-          duration: 160,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
-        if (finished) {
-          setShouldRender(false);
-        }
-      });
-    }
-  }, [cardOpacity, cardTranslateY, overlayOpacity, visible]);
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
@@ -146,18 +89,8 @@ function NavigatorModal({
       onRequestClose={onClose}
     >
       <GestureHandlerRootView style={StyleSheet.absoluteFill}>
-        <Animated.View
-          style={[styles.modalOverlay, { opacity: overlayOpacity }]}
-        >
-          <Animated.View
-            style={[
-              styles.modalCard,
-              {
-                opacity: cardOpacity,
-                transform: [{ translateY: cardTranslateY }],
-              },
-            ]}
-          >
+        <Animated.View style={[styles.modalOverlay, overlayAnimatedStyle]}>
+          <Animated.View style={[styles.modalCard, cardAnimatedStyle]}>
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>Navigation</Text>

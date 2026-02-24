@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Animated,
-  Easing,
   Modal,
   Pressable,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import useModalTransition from "@/hooks/useModalTransition";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
 import { QuranDisplayMode } from "@/services/quranDisplayModes";
 
@@ -43,42 +43,15 @@ export default function QuranDisplaySettingsModal({
   const { displayModes, isModeEnabled, toggleDisplayMode } =
     useQuranDisplayModes();
   const selectedDisplayModeCount = displayModes.length;
-  const [shouldRender, setShouldRender] = useState(visible);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { shouldRender, overlayAnimatedStyle, cardAnimatedStyle } =
+    useModalTransition(visible);
 
   const handleDisplayModePress = useCallback(
     (mode: QuranDisplayMode) => {
       void toggleDisplayMode(mode);
     },
-    [toggleDisplayMode]
+    [toggleDisplayMode],
   );
-
-  useEffect(() => {
-    fadeAnim.stopAnimation();
-
-    if (visible) {
-      setShouldRender(true);
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 130,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }).start();
-      return;
-    }
-
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 90,
-      easing: Easing.in(Easing.quad),
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) {
-        setShouldRender(false);
-      }
-    });
-  }, [fadeAnim, visible]);
 
   if (!shouldRender) {
     return null;
@@ -91,9 +64,9 @@ export default function QuranDisplaySettingsModal({
       visible={shouldRender}
       onRequestClose={onClose}
     >
-      <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+      <Animated.View style={[styles.overlay, overlayAnimatedStyle]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, cardAnimatedStyle]}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Display Text</Text>
             <PressableScale
@@ -109,9 +82,7 @@ export default function QuranDisplaySettingsModal({
               />
             </PressableScale>
           </View>
-          <Text style={styles.subtitle}>
-            Select which text to show
-          </Text>
+          <Text style={styles.subtitle}>Select which text to show</Text>
           <View style={styles.displayModeList}>
             {DISPLAY_MODE_OPTIONS.map((option, index) => {
               const checked = isModeEnabled(option.mode);
@@ -131,7 +102,9 @@ export default function QuranDisplaySettingsModal({
                   style={({ pressed }) => [
                     styles.displayModeRow,
                     isLast ? styles.displayModeRowLast : null,
-                    pressed && !isDisabled ? styles.displayModeRowPressed : null,
+                    pressed && !isDisabled
+                      ? styles.displayModeRowPressed
+                      : null,
                     isDisabled ? styles.displayModeRowDisabled : null,
                   ]}
                 >
@@ -161,7 +134,7 @@ export default function QuranDisplaySettingsModal({
               );
             })}
           </View>
-        </View>
+        </Animated.View>
       </Animated.View>
     </Modal>
   );

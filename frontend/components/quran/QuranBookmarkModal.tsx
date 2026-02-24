@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -11,6 +12,7 @@ import {
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import useModalTransition from "@/hooks/useModalTransition";
 import { NormalizedAyah } from "@/services/quranData";
 import PressableScale from "../PressableScale";
 
@@ -41,6 +43,8 @@ function QuranBookmarkModal({
   const { theme } = useTheme();
   const themeColors = theme.colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { shouldRender, overlayAnimatedStyle, cardAnimatedStyle } =
+    useModalTransition(visible);
 
   const [title, setTitle] = useState(initialTitle ?? "");
   const [note, setNote] = useState(initialNote ?? "");
@@ -86,17 +90,17 @@ function QuranBookmarkModal({
 
   return (
     <Modal
-      animationType="fade"
-      visible={visible}
+      animationType="none"
+      visible={shouldRender}
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <Animated.View style={[styles.overlay, overlayAnimatedStyle]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.cardWrapper}
         >
-          <View style={styles.card}>
+          <Animated.View style={[styles.card, cardAnimatedStyle]}>
             <View style={styles.headerRow}>
               <View>
                 <Text style={styles.headerTitle}>New Bookmark</Text>
@@ -169,9 +173,9 @@ function QuranBookmarkModal({
                 {isSubmitting ? "Saving..." : "Done"}
               </Text>
             </PressableScale>
-          </View>
+          </Animated.View>
         </KeyboardAvoidingView>
-      </View>
+      </Animated.View>
     </Modal>
   );
 }
