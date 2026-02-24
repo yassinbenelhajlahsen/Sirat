@@ -1,11 +1,10 @@
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Easing,
   Linking,
   Pressable,
   Switch,
@@ -14,7 +13,9 @@ import {
 } from "react-native";
 
 import { useAdhanPreview } from "../hooks/useAdhanPreview";
+import { useNotificationPanelAnimation } from "../hooks/useNotificationPanelAnimation";
 import { useNotificationPreferences } from "../hooks/useNotificationPreferences";
+import { useNotificationSegmentLayout } from "../hooks/useNotificationSegmentLayout";
 import {
   PRAYERS,
   SOUND_OPTIONS,
@@ -59,82 +60,35 @@ export default function NotificationSettings({ notifStatus }: Props) {
   const { previewing, handlePreviewPress, stopPreview } =
     useAdhanPreview(enabled);
 
-  const [segmentWidth, setSegmentWidth] = useState<number | null>(null);
-
-  // Animations
-  const headerScale = useRef(new Animated.Value(1)).current;
-  const contentAnim = useRef(new Animated.Value(0)).current;
-  const soundIndicator = useRef(
-    new Animated.Value(soundMode === "adhan" ? 1 : 0),
-  ).current;
-
-  const bellAnimRef = useRef<Record<PrayerKey, Animated.Value>>({
-    Fajr: new Animated.Value(1),
-    Sunrise: new Animated.Value(1),
-    Dhuhr: new Animated.Value(1),
-    Asr: new Animated.Value(1),
-    Maghrib: new Animated.Value(1),
-    Isha: new Animated.Value(1),
+  const {
+    headerScale,
+    bellAnimations,
+    contentOpacity,
+    contentTranslateY,
+    contentMaxHeight,
+    contentScale,
+    soundIndicator,
+    pulseHeader,
+    pulsePrayer,
+  } = useNotificationPanelAnimation({
+    loaded,
+    enabled,
+    soundMode,
   });
 
-  const initialAnimSet = useRef(false);
-
-  // Drive open/close animation when enabled changes
-  useEffect(() => {
-    if (!loaded) return;
-    if (!initialAnimSet.current) {
-      contentAnim.setValue(enabled ? 1 : 0);
-      initialAnimSet.current = true;
-      return;
-    }
-    Animated.timing(contentAnim, {
-      toValue: enabled ? 1 : 0,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false, // maxHeight animation
-    }).start();
-  }, [enabled, loaded, contentAnim]);
-
-  const pulseHeader = () => {
-    Animated.sequence([
-      Animated.timing(headerScale, {
-        toValue: 0.96,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-      Animated.timing(headerScale, {
-        toValue: 1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const pulse = (k: PrayerKey) => {
-    const a = bellAnimRef.current[k];
-    a.setValue(1);
-    Animated.sequence([
-      Animated.timing(a, {
-        toValue: 0.9,
-        duration: 90,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(a, {
-        toValue: 1,
-        duration: 120,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
+  const { segmentWidth, indicatorTranslateX, onLayout } =
+    useNotificationSegmentLayout({
+      soundIndicator,
+      optionCount: SOUND_OPTIONS.length,
+      gap: SOUND_SEGMENT_GAP,
+    });
 
   const togglePrayer = useCallback(
     (k: PrayerKey) => {
-      pulse(k);
+      pulsePrayer(k);
       void setPrayerPreference(k, !prefs[k]);
     },
-    [prefs, setPrayerPreference],
+    [prefs, pulsePrayer, setPrayerPreference],
   );
 
   const handleSoundModeChange = useCallback(
@@ -145,30 +99,6 @@ export default function NotificationSettings({ notifStatus }: Props) {
     },
     [soundMode, stopPreview, updateSoundMode],
   );
-
-  useEffect(() => {
-    Animated.timing(soundIndicator, {
-      toValue: soundMode === "adhan" ? 1 : 0,
-      duration: 200,
-      easing: Easing.out(Easing.poly(4)),
-      useNativeDriver: true,
-    }).start();
-  }, [soundIndicator, soundMode]);
-
-  // Interpolations for content reveal
-  const contentOpacity = contentAnim;
-  const contentTranslateY = contentAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [6, 0],
-  });
-  const contentMaxHeight = contentAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 820],
-  });
-  const contentScale = contentAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.985, 1],
-  });
 
   const selectedSoundOption =
     SOUND_OPTIONS.find((option) => option.id === soundMode) ?? SOUND_OPTIONS[0];
@@ -249,7 +179,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
         </View>
         {PRAYERS.map((p) => {
           const isOn = prefs[p];
-          const anim = bellAnimRef.current[p];
+          const anim = bellAnimations[p];
           const labelColor = !enabled
             ? rowDisabledTextColor
             : isOn
@@ -352,23 +282,9 @@ export default function NotificationSettings({ notifStatus }: Props) {
 
           <View
             style={styles.soundSegmentRow}
-            onLayout={(event) => {
-              const width = event.nativeEvent.layout.width;
-              if (!width) return;
-              const calculated =
-                (width - SOUND_SEGMENT_GAP * (SOUND_OPTIONS.length - 1)) /
-                SOUND_OPTIONS.length;
-              if (!Number.isFinite(calculated) || calculated <= 0) return;
-              if (
-                segmentWidth != null &&
-                Math.abs(segmentWidth - calculated) < 0.5
-              ) {
-                return;
-              }
-              setSegmentWidth(calculated);
-            }}
+            onLayout={onLayout}
           >
-            {segmentWidth != null && (
+            {segmentWidth != null && indicatorTranslateX != null && (
               <Animated.View
                 pointerEvents="none"
                 style={[
@@ -377,10 +293,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                     width: segmentWidth,
                     transform: [
                       {
-                        translateX: soundIndicator.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, segmentWidth + SOUND_SEGMENT_GAP],
-                        }),
+                        translateX: indicatorTranslateX,
                       },
                     ],
                     backgroundColor: accentColor,
