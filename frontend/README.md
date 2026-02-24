@@ -41,13 +41,14 @@ EXPO_PUBLIC_API_URL=http://localhost:3001
 
 ```text
 frontend/
-├── app/         # Expo Router routes, tabs, and UI components
+├── app/         # Expo Router routes and screen entry points
+├── components/  # reusable UI components
 ├── services/    # API/data/caching/business logic
 ├── hooks/       # reusable behavior hooks
 ├── context/     # app-level providers (Quran audio, app theme)
 ├── assets/      # local data, images, fonts, sounds
 ├── constants/   # theme tokens and helpers
-└── util/        # calculation helpers and shared utilities
+└── utils/       # calculation helpers and shared utilities
 ```
 
 ## Data & Integrations
@@ -66,7 +67,7 @@ frontend/
 - Theme state is provided by `context/ThemeContext.tsx` and persisted under `app_theme_v1`.
 - Root layout waits for theme hydration before marking the app as ready to avoid startup flicker.
 - Root layout checks OTA updates outside Expo Go in `app/_layout.tsx` and downloads them in the background (no immediate forced reload).
-- A themed restart prompt (`app/components/UpdateModal.tsx`) is shown on the next foreground event when a downloaded update is ready.
+- A themed restart prompt (`components/UpdateModal.tsx`) is shown on the next foreground event when a downloaded update is ready.
 - Tapping `Restart` applies the OTA via runtime reload; tapping `Later` defers until a future foreground/cold launch.
 - Notification scheduling is handled by `services/notificationService.ts`.
 - Notification master flag (`notif_enabled_v1`) is persisted as string `"1"`/`"0"` in AsyncStorage.

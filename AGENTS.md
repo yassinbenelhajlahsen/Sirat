@@ -56,8 +56,10 @@ Dua API flow:
 ### Frontend
 - Router entry/layout: `frontend/app/_layout.tsx`
 - Tabs: `frontend/app/(tabs)/`
+- Shared UI components: `frontend/components/`
 - Core logic in `frontend/services/`
 - Reusable hooks in `frontend/hooks/`
+- Shared utilities: `frontend/utils/`
 - App providers in `frontend/context/` (`QuranAudioProvider`, `ThemeContext`)
 - App data assets in `frontend/assets/data/`
 
