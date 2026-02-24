@@ -496,7 +496,7 @@ export default function Home() {
                     <PressableScale
                       onPress={() =>
                         router.push({
-                          pathname: "../components/[date]",
+                          pathname: "../[date]",
                           params: {
                             date: tomorrowParam,
                             month: tomorrow.getMonth().toString(),
