@@ -1,15 +1,14 @@
 // app/(tabs)/qibla.tsx
 import {
-  colors,
-  spacing,
-  typography,
   withOpacity,
+  type AppTheme,
 } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -40,6 +39,10 @@ const arrowImg =
   require("../../assets/images/qibla-compass-svgrepo-com.png") as ImageSourcePropType;
 
 export default function Qibla() {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const { rotation, error, accuracy, isAligned } = useQibla();
 
   const [permissionStatus, setPermissionStatus] =
@@ -140,7 +143,7 @@ export default function Qibla() {
     title,
     message,
     actions,
-    iconColor = colors.primary,
+    iconColor = colors.white,
   }: {
     icon: keyof typeof Ionicons.glyphMap;
     title: string;
@@ -364,7 +367,10 @@ export default function Qibla() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => {
+  const { colors, spacing, typography } = theme;
+
+  return StyleSheet.create({
   gradient: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
 
@@ -444,7 +450,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignSelf: "flex-start",
   },
-  ctaPrimaryText: { color: colors.primary, fontWeight: "700" },
+  ctaPrimaryText: { color: colors.onAccent, fontWeight: "700" },
   ctaSecondary: {
     borderColor: colors.accent,
     borderWidth: 1,
@@ -472,7 +478,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs + 2,
   },
   statusPillAligned: {
-    backgroundColor: withOpacity(colors.primaryLift, 0.35),
+    backgroundColor: withOpacity(colors.white, 0.06),
     borderColor: withOpacity(colors.accent, 0.6),
   },
   statusPillText: {
@@ -503,7 +509,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: withOpacity(colors.white, 0.04),
-    shadowColor: colors.accentGlow,
+    shadowColor: theme.name === "dark" ? "#DABA69" : colors.accentGlow,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
     shadowRadius: 14,
@@ -561,4 +567,5 @@ const styles = StyleSheet.create({
     fontFamily: "SFProDisplay-Regular",
     textAlign: "center",
   },
-});
+  });
+};
