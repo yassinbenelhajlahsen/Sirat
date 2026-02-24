@@ -16,12 +16,14 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 
 - `frontend/app/`: routes and UI
 - `frontend/app/(tabs)/`: `index`, `Mosques`, `Qibla`, `Quran`, `Calendar`, `Settings`
-- `frontend/app/components/`: shared UI (including Quran navigator/modals)
+- `frontend/components/`: shared UI (including Quran navigator/modals)
 - `frontend/services/`: data integrations, caching, notifications, domain logic
+- `frontend/services/prayer-times/`: prayer-times API/cache/location/transform modules used by `services/prayerTimes.ts`
+- `frontend/services/notifications/`: notification storage/permissions/city/scheduler/lifecycle modules used by `services/notificationService.ts`
 - `frontend/hooks/`: reusable hooks
 - `frontend/context/`: providers (`QuranAudioProvider`, `ThemeContext`)
 - `frontend/constants/`: theme tokens, theme map, and helpers
-- `frontend/util/`: calculation and resolver helpers
+- `frontend/utils/`: calculation and resolver helpers
 - `frontend/assets/data/`: local datasets (`duas.json`, `quran/`, `cities.json`, `hadiths.json`)
 
 ### Backend
@@ -59,6 +61,7 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 ### Prayer Times and Caching
 
 - Core logic: `frontend/services/prayerTimes.ts`
+- Internal modules: `frontend/services/prayer-times/`
 - Uses backend prayer endpoints (`/timings`, `/calendar/year`, fallback `/calendar`)
 - Caches by year + settings + location bucket in AsyncStorage
 - Supports location mode and manual city mode
@@ -66,7 +69,8 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 
 ### Notifications
 
-- Scheduling logic: `frontend/services/notificationService.ts`
+- Scheduling coordinator: `frontend/services/notificationService.ts`
+- Internal modules: `frontend/services/notifications/`
 - Prayer-level toggles + master toggle + sound mode (`default` or `adhan`)
 - Rolling horizon scheduling (platform-dependent)
 - Refreshes on app lifecycle and settings/prefs events
@@ -95,7 +99,7 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 
 - Initial permission sync runs in `frontend/app/_layout.tsx`.
 - Root layout also initializes notifications, preloads Quran assets, and checks/fetches OTA updates in the background when not running in Expo Go.
-- Downloaded OTA updates are not applied immediately; a themed restart prompt (`frontend/app/components/UpdateModal.tsx`) is shown on the next foreground event.
+- Downloaded OTA updates are not applied immediately; a themed restart prompt (`frontend/components/UpdateModal.tsx`) is shown on the next foreground event.
 - Choosing `Restart` applies the update via runtime reload; choosing `Later` defers until a future foreground/cold launch.
 - Root layout also updates native background color from active theme to avoid restart/OTA white flashes.
 - Location permission affects prayer location mode.

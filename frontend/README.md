@@ -43,7 +43,9 @@ EXPO_PUBLIC_API_URL=http://localhost:3001
 frontend/
 ├── app/         # Expo Router routes and screen entry points
 ├── components/  # reusable UI components
-├── services/    # API/data/caching/business logic
+├── services/    # API/data/caching/business logic orchestrators
+│   ├── prayer-times/    # prayer API/cache/location/transform modules
+│   └── notifications/   # notification storage/permissions/scheduler modules
 ├── hooks/       # reusable behavior hooks
 ├── context/     # app-level providers (Quran audio, app theme)
 ├── assets/      # local data, images, fonts, sounds
@@ -69,9 +71,9 @@ frontend/
 - Root layout checks OTA updates outside Expo Go in `app/_layout.tsx` and downloads them in the background (no immediate forced reload).
 - A themed restart prompt (`components/UpdateModal.tsx`) is shown on the next foreground event when a downloaded update is ready.
 - Tapping `Restart` applies the OTA via runtime reload; tapping `Later` defers until a future foreground/cold launch.
-- Notification scheduling is handled by `services/notificationService.ts`.
+- Notification scheduling is coordinated by `services/notificationService.ts` with helper modules in `services/notifications/`.
 - Notification master flag (`notif_enabled_v1`) is persisted as string `"1"`/`"0"` in AsyncStorage.
-- Prayer-time caching and annual calendar fetch live in `services/prayerTimes.ts` (uses `/calendar/year` first, with monthly fallback).
+- Prayer-time orchestration lives in `services/prayerTimes.ts` with modular internals in `services/prayer-times/` (uses `/calendar/year` first, with monthly fallback).
 - Prayer method `-1` in settings maps to backend `method=auto` with optional country-based resolution.
 - Holiday year fetch and caching live in `services/holidayService.ts`.
 - `npm run reset-project` currently points to a missing `frontend/scripts/reset-project.js` file.

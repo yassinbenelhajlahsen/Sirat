@@ -65,8 +65,8 @@ Dua API flow:
 
 Important frontend flows:
 - Dua: local regex match first (`frontend/services/duaMatcher.ts`), backend fallback via `frontend/services/duaService.ts`
-- Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (`/api/prayer-times/timings` + `/api/prayer-times/calendar/year`, with monthly `/api/prayer-times/calendar` fallback)
-- Notifications: rolling scheduling in `frontend/services/notificationService.ts`
+- Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (modular internals in `frontend/services/prayer-times/`) using `/api/prayer-times/timings` + `/api/prayer-times/calendar/year`, with monthly `/api/prayer-times/calendar` fallback
+- Notifications: rolling scheduling coordinated in `frontend/services/notificationService.ts` with modular helpers in `frontend/services/notifications/`
 - Themes: app-wide theme state in `frontend/context/ThemeContext.tsx` with settings picker in `frontend/app/(tabs)/Settings.tsx`
 - Quran: preload/normalize local dataset in `frontend/services/quranData.ts`
 - Mosques: backend-proxied Google Places Nearby Search via `frontend/services/getNearbyMosques.ts` and `backend/src/routes/mosque.ts`
@@ -118,6 +118,7 @@ Important frontend flows:
 
 ## Agent Operating Notes
 - Prefer editing service logic in `frontend/services/` and `backend/src/services|utils|controllers` rather than bloating UI files.
+- Keep `frontend/services/prayer-times/` and `frontend/services/notifications/` modules aligned with their orchestrators (`prayerTimes.ts`, `notificationService.ts`) instead of re-expanding those files.
 - Preserve AsyncStorage keys/events unless migration is deliberate and updated everywhere.
 - Keep theme-aware UI changes on `useTheme()` + theme-driven style factories (`createStyles`) instead of static color constants.
 - When changing prayer/notification behavior, verify both `Settings` and `NotificationService` integration paths.
