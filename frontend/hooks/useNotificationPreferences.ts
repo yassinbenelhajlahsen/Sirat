@@ -11,7 +11,7 @@ import {
   STORAGE_ENABLED,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
-} from "../util/notifications/constants";
+} from "../utils/notifications/constants";
 
 const SAFE_DEFAULT_SOUND: SoundMode = "default";
 
@@ -83,14 +83,14 @@ export function useNotificationPreferences({
         }
 
         const rawEnabled = entries.find(
-          ([key]) => key === STORAGE_ENABLED
+          ([key]) => key === STORAGE_ENABLED,
         )?.[1];
         if (rawEnabled === "1" || rawEnabled === "0") {
           setEnabled(rawEnabled === "1");
         }
 
         const rawSound = entries.find(
-          ([key]) => key === STORAGE_SOUND_MODE
+          ([key]) => key === STORAGE_SOUND_MODE,
         )?.[1];
         const nextSound = parseSound(rawSound ?? null);
         soundModeRef.current = nextSound;
@@ -152,7 +152,7 @@ export function useNotificationPreferences({
         soundMode: soundModeRef.current,
       });
     },
-    [enabled]
+    [enabled],
   );
 
   const updateSoundMode = useCallback(
@@ -171,7 +171,7 @@ export function useNotificationPreferences({
         soundMode: nextMode,
       });
     },
-    [enabled]
+    [enabled],
   );
 
   return {

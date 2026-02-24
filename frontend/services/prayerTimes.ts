@@ -1,9 +1,10 @@
 // services/prayerTimes.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
-import { City } from "../util/cities";
+import { City } from "../utils/cities";
 
-const PRAYER_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+const PRAYER_API_BASE =
+  process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 
 /* ============================
  * Types
@@ -110,7 +111,7 @@ function coordBucket(lat: number, lng: number) {
 function makeCacheKey(
   year: number,
   settingsKey: string,
-  bucket: string | null
+  bucket: string | null,
 ): string {
   return `${year}::${settingsKey}${bucket ? `::${bucket}` : ""}`;
 }
@@ -123,12 +124,15 @@ function buildQueryString(params: Record<string, string | number>): string {
   return Object.entries(params)
     .map(
       ([key, value]) =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
     )
     .join("&");
 }
 
-function backendErrorMessage(status: number, body: BackendErrorShape | null): string {
+function backendErrorMessage(
+  status: number,
+  body: BackendErrorShape | null,
+): string {
   if (typeof body?.error === "string") {
     return body.error;
   }
@@ -142,12 +146,14 @@ function backendErrorMessage(status: number, body: BackendErrorShape | null): st
 
 async function fetchPrayerProxy<T>(
   path: string,
-  params: Record<string, string | number>
+  params: Record<string, string | number>,
 ): Promise<T> {
   const query = buildQueryString(params);
   const url = `${PRAYER_API_BASE}${path}?${query}`;
   const res = await fetch(url);
-  const body = (await res.json().catch(() => null)) as BackendProxyResponse<T> | null;
+  const body = (await res
+    .json()
+    .catch(() => null)) as BackendProxyResponse<T> | null;
 
   if (!res.ok) {
     throw new Error(backendErrorMessage(res.status, body));
@@ -162,7 +168,7 @@ async function fetchPrayerProxy<T>(
 
 function mergeCalendarDayIntoStore(
   allTimes: Record<string, PrayerTime[]>,
-  day: BackendCalendarDay
+  day: BackendCalendarDay,
 ) {
   const greg = day?.date?.gregorian?.date;
   if (!greg || !day.timings) return;
@@ -183,7 +189,7 @@ function mergeCalendarDayIntoStore(
 async function fetchYearCalendarLegacy(
   year: number,
   method: PrayerMethodParam,
-  env: ResolvedEnv
+  env: ResolvedEnv,
 ): Promise<Record<string, PrayerTime[]>> {
   const allTimes: Record<string, PrayerTime[]> = {};
 
@@ -202,7 +208,7 @@ async function fetchYearCalendarLegacy(
     try {
       const days = await fetchPrayerProxy<BackendCalendarDay[]>(
         "/api/prayer-times/calendar",
-        params
+        params,
       );
 
       days.forEach((day) => {
@@ -234,7 +240,7 @@ async function resolveCoordsAndCountry(
   override?: {
     coords?: { latitude: number; longitude: number };
     country?: string;
-  }
+  },
 ): Promise<ResolvedEnv> {
   // If override coords are provided (e.g., Home already resolved once), use them
   if (override?.coords) {
@@ -281,9 +287,7 @@ async function resolveCoordsAndCountry(
       const geo = await Location.reverseGeocodeAsync(loc.coords);
       if (geo.length > 0) {
         country =
-          (geo[0].country as string) ||
-          (geo[0].isoCountryCode as string) ||
-          "";
+          (geo[0].country as string) || (geo[0].isoCountryCode as string) || "";
       }
     } catch {}
     return {
@@ -306,7 +310,7 @@ async function resolveCoordsAndCountry(
   }
 
   throw new Error(
-    "Location unavailable. Enable Location Services or set a manual city in Settings."
+    "Location unavailable. Enable Location Services or set a manual city in Settings.",
   );
 }
 
@@ -315,13 +319,18 @@ async function resolveCoordsAndCountry(
  * ============================ */
 async function saveToStorage(cache: CalendarCache) {
   try {
-    await AsyncStorage.setItem(storageKeyFor(cache.cacheKey), JSON.stringify(cache));
+    await AsyncStorage.setItem(
+      storageKeyFor(cache.cacheKey),
+      JSON.stringify(cache),
+    );
   } catch (e) {
     console.warn("Failed to save prayer calendar:", e);
   }
 }
 
-async function loadFromStorage(cacheKey: string): Promise<CalendarCache | null> {
+async function loadFromStorage(
+  cacheKey: string,
+): Promise<CalendarCache | null> {
   try {
     const val = await AsyncStorage.getItem(storageKeyFor(cacheKey));
     if (!val) return null;
@@ -337,9 +346,10 @@ async function loadFromStorage(cacheKey: string): Promise<CalendarCache | null> 
  * ============================ */
 async function getPrayerTimesFastToday(
   settings: PrayerSettings,
-  env: ResolvedEnv
+  env: ResolvedEnv,
 ): Promise<PrayerTime[]> {
-  const method: PrayerMethodParam = settings.method === -1 ? "auto" : settings.method;
+  const method: PrayerMethodParam =
+    settings.method === -1 ? "auto" : settings.method;
   const params: Record<string, string | number> = {
     latitude: env.latitude,
     longitude: env.longitude,
@@ -351,7 +361,7 @@ async function getPrayerTimesFastToday(
 
   const data = await fetchPrayerProxy<BackendTimingsPayload>(
     "/api/prayer-times/timings",
-    params
+    params,
   );
   const t = data?.timings;
   if (!t) throw new Error("Invalid response from API");
@@ -372,9 +382,10 @@ async function getPrayerTimesFastToday(
 async function fetchYearCalendar(
   year: number,
   settings: PrayerSettings,
-  env: ResolvedEnv
+  env: ResolvedEnv,
 ): Promise<CalendarCache> {
-  const method: PrayerMethodParam = settings.method === -1 ? "auto" : settings.method;
+  const method: PrayerMethodParam =
+    settings.method === -1 ? "auto" : settings.method;
 
   let allTimes: Record<string, PrayerTime[]> = {};
 
@@ -391,7 +402,7 @@ async function fetchYearCalendar(
 
     const yearPayload = await fetchPrayerProxy<BackendCalendarYearPayload>(
       "/api/prayer-times/calendar/year",
-      params
+      params,
     );
     const days = Array.isArray(yearPayload?.days) ? yearPayload.days : [];
     days.forEach((day) => {
@@ -428,7 +439,7 @@ async function fetchYearCalendar(
  */
 export async function getPrayerTimesForDate(
   settings: PrayerSettings,
-  date: Date
+  date: Date,
 ): Promise<PrayerTime[]> {
   const year = date.getFullYear();
   const isoKey = dateKey(date);
@@ -454,8 +465,7 @@ export async function getPrayerTimesForDate(
   }
 
   // 3) No cache yet — fast path for *today only*
-  const isToday =
-    date.toDateString() === new Date().toDateString();
+  const isToday = date.toDateString() === new Date().toDateString();
 
   if (isToday) {
     try {
@@ -482,7 +492,7 @@ export async function getPrayerTimesToday(
   opts?: {
     coords?: { latitude: number; longitude: number };
     country?: string;
-  }
+  },
 ): Promise<PrayerTime[]> {
   const today = new Date();
   // If we were given coords, use them for the fast path & cache keys
@@ -523,7 +533,7 @@ export async function getPrayerTimesToday(
  */
 export async function getPrayerTimesOn(
   date: Date,
-  settings: PrayerSettings
+  settings: PrayerSettings,
 ): Promise<PrayerTime[]> {
   return getPrayerTimesForDate(settings, date);
 }

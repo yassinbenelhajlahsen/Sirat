@@ -15,7 +15,7 @@ import {
   Text,
   View,
 } from "react-native";
-import hadiths from "../../assets/data/hadiths.json";
+import hadiths from "../assets/data/hadiths.json";
 
 const LAST_SPLASH_KEY = "lastSplashDate";
 

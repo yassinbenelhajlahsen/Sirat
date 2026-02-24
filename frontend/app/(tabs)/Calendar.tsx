@@ -18,6 +18,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PressableScale from "../../components/PressableScale";
 import {
   dateKeyFromDate,
   getHolidayMapForYear,
@@ -30,7 +31,6 @@ import {
   getRamadanPeriodSummary,
   isInRamadanWindow,
 } from "../../services/ramadanTracker";
-import PressableScale from "../components/PressableScale";
 
 const getMonthMatrix = (year: number, month: number) => {
   const firstDay = new Date(year, month, 1).getDay();
@@ -169,12 +169,9 @@ export default function CalendarScreen() {
     return ramadanSummary.missedDays.join(", ");
   }, [ramadanSummary]);
   const showRamadanSummary =
-    !!ramadanSummary &&
-    ramadanSummary.totalMissed > 0 &&
-    !!firstMissedFastDate;
-  const [renderRamadanSummary, setRenderRamadanSummary] = useState(
-    showRamadanSummary,
-  );
+    !!ramadanSummary && ramadanSummary.totalMissed > 0 && !!firstMissedFastDate;
+  const [renderRamadanSummary, setRenderRamadanSummary] =
+    useState(showRamadanSummary);
 
   useEffect(() => {
     if (showRamadanSummary) {
@@ -446,7 +443,7 @@ export default function CalendarScreen() {
         // delay slightly to ensure animation finishes visually
         setTimeout(() => {
           router.push({
-            pathname: "/components/[date]",
+            pathname: "/[date]",
             params: {
               date: selectedDate.toISOString(),
               month: viewMonth.toString(),
@@ -465,7 +462,7 @@ export default function CalendarScreen() {
   const handleRamadanSummaryPress = useCallback(() => {
     if (!firstMissedFastDate || navigating) return;
     router.push({
-      pathname: "/components/[date]",
+      pathname: "/[date]",
       params: {
         date: firstMissedFastDate.toISOString(),
         month: firstMissedFastDate.getMonth().toString(),
@@ -491,9 +488,7 @@ export default function CalendarScreen() {
       <SafeAreaView style={styles.screen}>
         {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>
-            Planner
-          </Text>
+          <Text style={styles.eyebrow}>Planner</Text>
           <Text style={[styles.title, isSmall ? styles.titleSmall : undefined]}>
             Calendar
           </Text>
@@ -689,9 +684,7 @@ export default function CalendarScreen() {
                 accessibilityLabel="Open first missed Ramadan fast date"
               >
                 <View style={styles.summaryTopRow}>
-                  <Text style={styles.summaryTitle}>
-                    Ramadan Summary
-                  </Text>
+                  <Text style={styles.summaryTitle}>Ramadan Summary</Text>
                   <Ionicons
                     name="arrow-forward-circle-outline"
                     size={20}
@@ -704,9 +697,7 @@ export default function CalendarScreen() {
                 <Text style={styles.summaryTextSecondary}>
                   Missed days: {missedDaysLabel}
                 </Text>
-                <Text style={styles.summaryHint}>
-                  Tap to review and update
-                </Text>
+                <Text style={styles.summaryHint}>Tap to review and update</Text>
               </PressableScale>
             </Animated.View>
           )}
@@ -757,9 +748,7 @@ export default function CalendarScreen() {
               accessibilityRole="button"
               accessibilityLabel="Back to current month"
             >
-              <Text style={styles.backToTodayText}>
-                Back to Today
-              </Text>
+              <Text style={styles.backToTodayText}>Back to Today</Text>
             </PressableScale>
           </Animated.View>
         </View>
@@ -773,186 +762,187 @@ const createStyles = (theme: AppTheme) => {
   const isLight = theme.name === "light";
 
   return StyleSheet.create({
-  screen: { flex: 1 },
-  patternOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.05,
-    resizeMode: "repeat",
-    width: "100%",
-    height: "100%",
-  },
-  header: { padding: spacing.lg },
-  eyebrow: {
-    color: withOpacity(colors.accent, 0.92),
-    fontSize: typography.caption,
-    fontFamily: "SFProDisplay-Semibold",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  title: {
-    color: colors.white,
-    fontFamily: "SFProDisplay-Bold",
-    fontSize: 38,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  titleSmall: { fontSize: 34 },
-  subtitle: {
-    color: withOpacity(colors.white, 0.88),
-    fontFamily: "SFProDisplay-Regular",
-    fontSize: typography.body,
-    marginBottom: spacing.md,
-  },
-  monthNav: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  navIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  navIconButtonDisabled: {
-    opacity: 0.6,
-  },
-  monthLabel: {
-    color: colors.white,
-    fontSize: typography.title,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  weekdayRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  weekdayText: {
-    color: colors.accent,
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Regular",
-    textAlign: "center",
-  },
-  gridContainer: { flex: 1, justifyContent: "flex-start" },
-  loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
-  gridBody: { flexGrow: 1, justifyContent: "space-evenly" },
-  weekRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: spacing.xs,
-  },
-  dayButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dayButtonToday: {
-    backgroundColor: theme.name === "light" ? "#DABA69" : colors.accent,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  dayButtonHoliday: {
-    backgroundColor: theme.name === "light" ? "#E2CEB1" : colors.primaryBorder, 
-    borderColor: theme.name === "light" ? "#DABA69" : colors.accent,
-    borderWidth: 1.5,
-  },
-  dayText: {
-    color: colors.white,
-    fontFamily: "SFProDisplay-Regular",
-    fontSize: typography.bodyLg,
-  },
-  dayTextSmall: {
-    fontSize: typography.body,
-  },
-  dayTextToday: {
-    color: colors.onAccent,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  dayTextHoliday: {
-    color: colors.accent,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-  },
-  summaryCard: {
-    backgroundColor: isLight
-      ? withOpacity(colors.primarySurfaceAlt, 0.3)
-      : withOpacity(colors.black, 0.25),
-    borderRadius: isLight ? 16 : 12,
-    padding: spacing.md + 2,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.accent, isLight ? 0.35 : 0.3),
-    shadowColor: colors.primaryDark,
-    shadowOpacity: isLight ? 0.22 : 0,
-    shadowRadius: isLight ? 20 : 0,
-    shadowOffset: { width: 0, height: isLight ? 10 : 0 },
-    elevation: isLight ? 4 : 0,
-  },
-  summaryTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs + 2,
-  },
-  summaryTitle: {
-    color: colors.accent,
-    fontSize: typography.bodyLg,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  summaryText: {
-    color: colors.white,
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  summaryTextSecondary: {
-    color: withOpacity(colors.white, 0.88),
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Regular",
-    marginTop: spacing.xs,
-  },
-  summaryHint: {
-    color: withOpacity(colors.accent, 0.92),
-    fontSize: typography.caption,
-    fontFamily: "SFProDisplay-Semibold",
-    marginTop: spacing.sm,
-  },
-  backToTodayWrap: {
-    overflow: "hidden",
-  },
-  backToToday: {
-    alignSelf: "center",
-    backgroundColor: isLight
-      ? withOpacity(colors.primarySurfaceAlt, 0.3)
-      : colors.accent,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: isLight
-      ? withOpacity(colors.accent, 0.35)
-      : withOpacity(colors.white, 0.15),
-    shadowColor: colors.primaryDark,
-    shadowOpacity: isLight ? 0.22 : 0,
-    shadowRadius: isLight ? 20 : 0,
-    shadowOffset: { width: 0, height: isLight ? 10 : 0 },
-    elevation: isLight ? 4 : 0,
-  },
-  backToTodayText: {
-    color: isLight ? colors.accent : colors.onAccent,
-    fontSize: typography.bodyLg,
-    fontFamily: "SFProDisplay-Semibold",
-  },
+    screen: { flex: 1 },
+    patternOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.05,
+      resizeMode: "repeat",
+      width: "100%",
+      height: "100%",
+    },
+    header: { padding: spacing.lg },
+    eyebrow: {
+      color: withOpacity(colors.accent, 0.92),
+      fontSize: typography.caption,
+      fontFamily: "SFProDisplay-Semibold",
+      letterSpacing: 1,
+      textTransform: "uppercase",
+    },
+    title: {
+      color: colors.white,
+      fontFamily: "SFProDisplay-Bold",
+      fontSize: 38,
+      marginTop: spacing.xs,
+      marginBottom: spacing.xs,
+    },
+    titleSmall: { fontSize: 34 },
+    subtitle: {
+      color: withOpacity(colors.white, 0.88),
+      fontFamily: "SFProDisplay-Regular",
+      fontSize: typography.body,
+      marginBottom: spacing.md,
+    },
+    monthNav: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: spacing.sm,
+    },
+    navIconButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    navIconButtonDisabled: {
+      opacity: 0.6,
+    },
+    monthLabel: {
+      color: colors.white,
+      fontSize: typography.title,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    weekdayRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    weekdayText: {
+      color: colors.accent,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Regular",
+      textAlign: "center",
+    },
+    gridContainer: { flex: 1, justifyContent: "flex-start" },
+    loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
+    gridBody: { flexGrow: 1, justifyContent: "space-evenly" },
+    weekRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginVertical: spacing.xs,
+    },
+    dayButton: {
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    dayButtonToday: {
+      backgroundColor: theme.name === "light" ? "#DABA69" : colors.accent,
+      shadowColor: colors.accent,
+      shadowOpacity: 0.35,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 3,
+    },
+    dayButtonHoliday: {
+      backgroundColor:
+        theme.name === "light" ? "#E2CEB1" : colors.primaryBorder,
+      borderColor: theme.name === "light" ? "#DABA69" : colors.accent,
+      borderWidth: 1.5,
+    },
+    dayText: {
+      color: colors.white,
+      fontFamily: "SFProDisplay-Regular",
+      fontSize: typography.bodyLg,
+    },
+    dayTextSmall: {
+      fontSize: typography.body,
+    },
+    dayTextToday: {
+      color: colors.onAccent,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    dayTextHoliday: {
+      color: colors.accent,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    footer: {
+      paddingHorizontal: spacing.lg,
+    },
+    summaryCard: {
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.3)
+        : withOpacity(colors.black, 0.25),
+      borderRadius: isLight ? 16 : 12,
+      padding: spacing.md + 2,
+      marginBottom: spacing.lg,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accent, isLight ? 0.35 : 0.3),
+      shadowColor: colors.primaryDark,
+      shadowOpacity: isLight ? 0.22 : 0,
+      shadowRadius: isLight ? 20 : 0,
+      shadowOffset: { width: 0, height: isLight ? 10 : 0 },
+      elevation: isLight ? 4 : 0,
+    },
+    summaryTopRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.xs + 2,
+    },
+    summaryTitle: {
+      color: colors.accent,
+      fontSize: typography.bodyLg,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    summaryText: {
+      color: colors.white,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    summaryTextSecondary: {
+      color: withOpacity(colors.white, 0.88),
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Regular",
+      marginTop: spacing.xs,
+    },
+    summaryHint: {
+      color: withOpacity(colors.accent, 0.92),
+      fontSize: typography.caption,
+      fontFamily: "SFProDisplay-Semibold",
+      marginTop: spacing.sm,
+    },
+    backToTodayWrap: {
+      overflow: "hidden",
+    },
+    backToToday: {
+      alignSelf: "center",
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.3)
+        : colors.accent,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.35)
+        : withOpacity(colors.white, 0.15),
+      shadowColor: colors.primaryDark,
+      shadowOpacity: isLight ? 0.22 : 0,
+      shadowRadius: isLight ? 20 : 0,
+      shadowOffset: { width: 0, height: isLight ? 10 : 0 },
+      elevation: isLight ? 4 : 0,
+    },
+    backToTodayText: {
+      color: isLight ? colors.accent : colors.onAccent,
+      fontSize: typography.bodyLg,
+      fontFamily: "SFProDisplay-Semibold",
+    },
   });
 };

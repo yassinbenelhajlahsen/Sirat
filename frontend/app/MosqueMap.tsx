@@ -25,7 +25,7 @@ import {
   getCachedMosques,
   getNearbyMosques,
   Mosque,
-} from "../../services/getNearbyMosques";
+} from "../services/getNearbyMosques";
 
 type Perm = "undetermined" | "denied" | "granted";
 

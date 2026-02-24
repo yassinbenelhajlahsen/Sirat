@@ -1,7 +1,7 @@
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useCallback, useEffect, useState } from "react";
 
-import { SoundMode } from "../util/notifications/constants";
+import { SoundMode } from "../utils/notifications/constants";
 
 const ADHAN_SOURCE = require("../assets/sounds/adhan.wav");
 
@@ -63,7 +63,7 @@ export function useAdhanPreview(enabled: boolean) {
         setPreviewing(null);
       }
     },
-    [cleanupPreview, player]
+    [cleanupPreview, player],
   );
 
   const handlePreviewPress = useCallback(
@@ -74,7 +74,7 @@ export function useAdhanPreview(enabled: boolean) {
       }
       void playPreview(mode);
     },
-    [playPreview, previewing, stopPreview]
+    [playPreview, previewing, stopPreview],
   );
 
   useEffect(() => {

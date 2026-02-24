@@ -19,16 +19,18 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PrayerTimesList from "../components/PrayerTimesList";
+import PressableScale from "../components/PressableScale";
 import {
   dateKeyFromDate,
   getHolidayMapForYear,
   getHolidaysForYear,
-} from "../../services/holidayService";
+} from "../services/holidayService";
 import {
   getPrayerTimesForDate,
   PrayerSettings,
   PrayerTime,
-} from "../../services/prayerTimes";
+} from "../services/prayerTimes";
 import {
   clearMissedFast,
   computeRamadanEnd,
@@ -36,10 +38,8 @@ import {
   isInRamadanWindow,
   markFastAsMissed,
   wasFastMissed,
-} from "../../services/ramadanTracker";
-import getTimeUntil from "../../util/getTimeUntil";
-import PrayerTimesList from "../components/PrayerTimesList";
-import PressableScale from "../components/PressableScale";
+} from "../services/ramadanTracker";
+import getTimeUntil from "../utils/getTimeUntil";
 const screenWidth = Dimensions.get("window").width;
 
 type UIError =
@@ -737,13 +737,9 @@ export default function CalendarDetail() {
       <View style={styles.errorCard}>
         <View style={styles.errorHeader}>
           <Ionicons name="alert-circle" size={20} color={colors.accent} />
-          <Text style={styles.errorTitle}>
-            Problem loading prayer times
-          </Text>
+          <Text style={styles.errorTitle}>Problem loading prayer times</Text>
         </View>
-        <Text style={styles.errorMessage}>
-          {error.message}
-        </Text>
+        <Text style={styles.errorMessage}>{error.message}</Text>
 
         <View style={styles.errorActions}>
           <TouchableOpacity
@@ -752,9 +748,7 @@ export default function CalendarDetail() {
             accessibilityRole="button"
             accessibilityLabel="Retry loading prayer times"
           >
-            <Text style={styles.retryButtonText}>
-              Try again
-            </Text>
+            <Text style={styles.retryButtonText}>Try again</Text>
           </TouchableOpacity>
 
           {error.code === "PERMISSION" && (
@@ -764,9 +758,7 @@ export default function CalendarDetail() {
               accessibilityRole="button"
               accessibilityLabel="Open app settings"
             >
-              <Text style={styles.settingsButtonText}>
-                Open Settings
-              </Text>
+              <Text style={styles.settingsButtonText}>Open Settings</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -784,9 +776,7 @@ export default function CalendarDetail() {
         accessibilityRole="button"
         accessibilityLabel="Retry loading prayer times"
       >
-        <Text style={styles.emptyRetryButtonText}>
-          Try again
-        </Text>
+        <Text style={styles.emptyRetryButtonText}>Try again</Text>
       </TouchableOpacity>
     </View>
   );
@@ -810,9 +800,7 @@ export default function CalendarDetail() {
             style={styles.backButton}
           >
             <Ionicons name="chevron-back" size={22} color={colors.accent} />
-            <Text style={styles.backButtonText}>
-              Calendar
-            </Text>
+            <Text style={styles.backButtonText}>Calendar</Text>
           </PressableScale>
         </View>
 
@@ -859,9 +847,7 @@ export default function CalendarDetail() {
                 Prev
               </Text>
               {!isPrevDisabled && (
-                <Text style={styles.dayNavHint}>
-                  {formatShort(prevDate)}
-                </Text>
+                <Text style={styles.dayNavHint}>{formatShort(prevDate)}</Text>
               )}
             </PressableScale>
             <View style={styles.dateHeroWrap}>
@@ -886,9 +872,7 @@ export default function CalendarDetail() {
                 >
                   {displayDateLine}
                 </Text>
-                <Text style={styles.dateHeroHijri}>
-                  {islamicDate}
-                </Text>
+                <Text style={styles.dateHeroHijri}>{islamicDate}</Text>
               </Animated.View>
             </View>
             {/* Next */}
@@ -925,9 +909,7 @@ export default function CalendarDetail() {
                 Next
               </Text>
               {!isNextDisabled && (
-                <Text style={styles.dayNavHint}>
-                  {formatShort(nextDate)}
-                </Text>
+                <Text style={styles.dayNavHint}>{formatShort(nextDate)}</Text>
               )}
             </PressableScale>
           </View>
@@ -935,21 +917,15 @@ export default function CalendarDetail() {
           {/* Holiday Box (static) */}
           {holiday && (
             <View style={styles.holidayCard}>
-              <Text style={styles.holidayTitle}>
-                Islamic Holiday
-              </Text>
-              <Text style={styles.holidayText}>
-                {holiday}
-              </Text>
+              <Text style={styles.holidayTitle}>Islamic Holiday</Text>
+              <Text style={styles.holidayText}>{holiday}</Text>
             </View>
           )}
 
           {/* Ramadan Tracker Card */}
           {isRamadan && !loadingRamadan && (
             <View style={styles.ramadanCard}>
-              <Text style={styles.ramadanTitle}>
-                Ramadan Tracker
-              </Text>
+              <Text style={styles.ramadanTitle}>Ramadan Tracker</Text>
               <Text style={styles.ramadanStatusText}>
                 {isFastMissed
                   ? "This date is marked as a missed fast."
@@ -977,27 +953,17 @@ export default function CalendarDetail() {
 
           {/* Section title (static) */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionEyebrow}>
-              Schedule
-            </Text>
-            <Text style={styles.sectionTitle}>
-              Prayer Times
-            </Text>
+            <Text style={styles.sectionEyebrow}>Schedule</Text>
+            <Text style={styles.sectionTitle}>Prayer Times</Text>
           </View>
 
           {isToday && nextPrayer && !error && (
             <View style={styles.nextPrayerContainer}>
               <View style={styles.nextPrayerCard}>
-                <Text style={styles.nextPrayerLabel}>
-                  Next Prayer
-                </Text>
+                <Text style={styles.nextPrayerLabel}>Next Prayer</Text>
                 <View style={styles.nextPrayerRow}>
-                  <Text style={styles.nextPrayerName}>
-                    {nextPrayer.label}
-                  </Text>
-                  <Text style={styles.nextPrayerTime}>
-                    {nextPrayer.time}
-                  </Text>
+                  <Text style={styles.nextPrayerName}>{nextPrayer.label}</Text>
+                  <Text style={styles.nextPrayerTime}>{nextPrayer.time}</Text>
                 </View>
                 <Text style={styles.nextPrayerCountdown}>
                   Starts in {timeLeft}
@@ -1032,362 +998,367 @@ const createStyles = (theme: AppTheme) => {
   const isLight = theme.name === "light";
 
   return StyleSheet.create({
-  screen: { flex: 1 },
-  patternOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.05,
-    resizeMode: "repeat",
-    width: "100%",
-    height: "100%",
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.sm + 2,
-    borderRadius: 10,
-  },
-  backButtonText: {
-    color: colors.accent,
-    fontSize: typography.bodyLg,
-    fontFamily: "SFProDisplay-Medium",
-    marginLeft: 2,
-  },
-  scrollContent: { padding: spacing.xl, paddingBottom: spacing.xxl + spacing.md },
-  dayNavRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.lg,
-    gap: spacing.sm + 2,
-  },
-  dayNavButton: {
-    flex: 0.85,
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm + 2,
-  },
-  dayNavButtonDisabled: {
-    opacity: 0.7,
-  },
-  dayNavIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: withOpacity(colors.accent, 0.12),
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.xs + 2,
-  },
-  dayNavIconWrapDisabled: {
-    backgroundColor: withOpacity(colors.accent, 0.05),
-  },
-  dayNavLabel: {
-    color: colors.white,
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Medium",
-    marginBottom: 2,
-  },
-  dayNavLabelDisabled: {
-    color: withOpacity(colors.white, 0.3),
-  },
-  dayNavHint: {
-    color: withOpacity(colors.white, 0.6),
-    fontSize: typography.caption,
-    fontFamily: "SFProDisplay-Regular",
-  },
-  dateHeroWrap: {
-    flex: 2.3,
-    minWidth: 0,
-    justifyContent: "center",
-  },
-  dateHero: {
-    alignItems: "center",
-    paddingVertical: spacing.md + 2,
-    paddingHorizontal: spacing.md + 2,
-    borderRadius: 16,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  dateHeroTitle: {
-    color: colors.white,
-    fontSize: typography.subtitle,
-    lineHeight: 22,
-    textAlign: "center",
-    fontFamily: "SFProDisplay-Bold",
-    letterSpacing: 0.4,
-    marginBottom: spacing.xs + 2,
-    width: "100%",
-  },
-  dateHeroTitleSmall: {
-    fontSize: typography.bodyLg,
-  },
-  dateHeroHijri: {
-    color: colors.accent,
-    fontSize: typography.body,
-    textAlign: "center",
-    fontFamily: "SFProDisplay-Medium",
-    letterSpacing: 0.3,
-  },
-  holidayCard: {
-    backgroundColor: colors.primarySurface,
-    borderRadius: 12,
-    padding: spacing.lg - 2,
-    marginBottom: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  holidayTitle: {
-    color: withOpacity(colors.white, 0.9),
-    fontSize: typography.caption,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    fontFamily: "SFProDisplay-Semibold",
-    marginBottom: spacing.xs,
-    textAlign: "center",
-  },
-  holidayText: {
-    color: colors.accent,
-    fontSize: typography.subtitle,
-    textAlign: "center",
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  ramadanCard: {
-    backgroundColor: isLight
-      ? withOpacity(colors.primarySurfaceAlt, 0.3)
-      : withOpacity(colors.black, 0.2),
-    borderRadius: isLight ? 16 : 12,
-    padding: spacing.lg - 2,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: isLight
-      ? withOpacity(colors.accent, 0.35)
-      : withOpacity(colors.white, 0.08),
-    shadowColor: colors.primaryDark,
-    shadowOpacity: isLight ? 0.22 : 0,
-    shadowRadius: isLight ? 20 : 0,
-    shadowOffset: { width: 0, height: isLight ? 10 : 0 },
-    elevation: isLight ? 4 : 0,
-  },
-  ramadanTitle: {
-    color: colors.white,
-    fontSize: typography.subtitle,
-    fontFamily: "SFProDisplay-Semibold",
-    textAlign: "center",
-  },
-  ramadanStatusText: {
-    color: withOpacity(colors.white, 0.82),
-    fontSize: typography.body,
-    textAlign: "center",
-    fontFamily: "SFProDisplay-Regular",
-    marginTop: spacing.xs + 2,
-    marginBottom: spacing.md,
-  },
-  ramadanToggleButton: {
-    backgroundColor: isLight
-      ? withOpacity(colors.primarySurfaceAlt, 0.3)
-      : colors.primaryDark,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 10,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: isLight
-      ? withOpacity(colors.accent, 0.35)
-      : withOpacity(colors.white, 0.08),
-    shadowColor: isLight ? colors.primaryDark : withOpacity(colors.black, 0.3),
-    shadowOpacity: isLight ? 0.22 : 0.2,
-    shadowRadius: isLight ? 20 : 8,
-    shadowOffset: { width: 0, height: isLight ? 10 : 6 },
-    elevation: 4,
-  },
-  ramadanToggleButtonActive: {
-    backgroundColor: isLight? "#DABA69" : colors.accent,
-    borderColor: withOpacity(colors.accent, 0.8),
-    shadowColor: colors.accent,
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  ramadanToggleText: {
-    color: isLight ? colors.accent : colors.white,
-    fontSize: typography.bodyLg,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  ramadanToggleTextActive: {
-    color: colors.onAccent,
-  },
-  sectionHeader: {
-    alignItems: "center",
-    marginBottom: spacing.sm + 2,
-  },
-  sectionEyebrow: {
-    color: withOpacity(colors.accent, 0.92),
-    fontSize: typography.caption,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  sectionTitle: {
-    color: colors.white,
-    fontSize: typography.title,
-    marginTop: spacing.xs,
-    fontFamily: "SFProDisplay-Bold",
-  },
-  prayerListCard: {
-    backgroundColor: isLight
-      ? withOpacity(colors.primarySurfaceAlt, 0.3)
-      : withOpacity(colors.black, 0.2),
-    borderRadius: 18,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: isLight
-      ? withOpacity(colors.accent, 0.35)
-      : withOpacity(colors.white, 0.08),
-    shadowColor: colors.primaryDark,
-    shadowOpacity: isLight ? 0.22 : 0.25,
-    shadowRadius: isLight ? 20 : 24,
-    shadowOffset: { width: 0, height: isLight ? 10 : 16 },
-    elevation: isLight ? 4 : 6,
-    overflow: "hidden",
-  },
-  errorCard: {
-    backgroundColor: colors.primarySurface,
-    borderRadius: 12,
-    padding: spacing.lg - 2,
-    marginBottom: spacing.lg - 2,
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  errorHeader: { flexDirection: "row", alignItems: "center" },
-  errorTitle: {
-    color: colors.accent,
-    fontSize: typography.bodyLg,
-    marginLeft: spacing.sm,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  errorMessage: {
-    color: colors.white,
-    marginTop: spacing.sm,
-    lineHeight: 20,
-  },
-  errorActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.md,
-  },
-  retryButton: {
-    backgroundColor: colors.accent,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg - 2,
-    borderRadius: 8,
-    marginRight: spacing.sm + 2,
-  },
-  retryButtonText: {
-    color: colors.onAccent,
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  settingsButton: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg - 2,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  settingsButtonText: {
-    color: colors.accent,
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  emptyCard: {
-    backgroundColor: colors.primarySurface,
-    borderRadius: 12,
-    padding: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.primarySurface,
-  },
-  emptyText: {
-    color: colors.white,
-    textAlign: "center",
-  },
-  emptyRetryButton: {
-    alignSelf: "center",
-    marginTop: spacing.sm + 2,
-    backgroundColor: colors.accent,
-    paddingVertical: spacing.sm - 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: 8,
-  },
-  emptyRetryButtonText: {
-    color: colors.onAccent,
-    fontWeight: "600",
-  },
-  nextPrayerContainer: {
-    marginBottom: spacing.md,
-    alignItems: "center",
-  },
-  nextPrayerCard: {
-    width: "100%",
-    backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.3),
-    borderRadius: 16,
-    paddingVertical: spacing.md + 2,
-    paddingHorizontal: spacing.lg,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.accent, 0.35),
-    shadowColor: colors.primaryDark,
-    shadowOpacity: 0.22,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 4,
-  },
-  nextPrayerLabel: {
-    color: withOpacity(colors.accent, 0.95),
-    fontSize: typography.caption,
-    fontFamily: "SFProDisplay-Semibold",
-    letterSpacing: 0.7,
-    textTransform: "uppercase",
-  },
-  nextPrayerRow: {
-    marginTop: spacing.xs,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  nextPrayerName: {
-    color: colors.white,
-    fontSize: typography.title,
-    fontFamily: "SFProDisplay-Bold",
-  },
-  nextPrayerTime: {
-    color: colors.accent,
-    fontSize: typography.bodyLg,
-    fontFamily: "SFProDisplay-Bold",
-  },
-  nextPrayerCountdown: {
-    marginTop: spacing.xs,
-    color: withOpacity(colors.white, 0.9),
-    fontSize: typography.body,
-    fontFamily: "SFProDisplay-Semibold",
-  },
+    screen: { flex: 1 },
+    patternOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.05,
+      resizeMode: "repeat",
+      width: "100%",
+      height: "100%",
+    },
+    topBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.sm,
+    },
+    backButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.xs + 2,
+      paddingHorizontal: spacing.sm + 2,
+      borderRadius: 10,
+    },
+    backButtonText: {
+      color: colors.accent,
+      fontSize: typography.bodyLg,
+      fontFamily: "SFProDisplay-Medium",
+      marginLeft: 2,
+    },
+    scrollContent: {
+      padding: spacing.xl,
+      paddingBottom: spacing.xxl + spacing.md,
+    },
+    dayNavRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.lg,
+      gap: spacing.sm + 2,
+    },
+    dayNavButton: {
+      flex: 0.85,
+      alignItems: "center",
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm + 2,
+    },
+    dayNavButtonDisabled: {
+      opacity: 0.7,
+    },
+    dayNavIconWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      backgroundColor: withOpacity(colors.accent, 0.12),
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: spacing.xs + 2,
+    },
+    dayNavIconWrapDisabled: {
+      backgroundColor: withOpacity(colors.accent, 0.05),
+    },
+    dayNavLabel: {
+      color: colors.white,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Medium",
+      marginBottom: 2,
+    },
+    dayNavLabelDisabled: {
+      color: withOpacity(colors.white, 0.3),
+    },
+    dayNavHint: {
+      color: withOpacity(colors.white, 0.6),
+      fontSize: typography.caption,
+      fontFamily: "SFProDisplay-Regular",
+    },
+    dateHeroWrap: {
+      flex: 2.3,
+      minWidth: 0,
+      justifyContent: "center",
+    },
+    dateHero: {
+      alignItems: "center",
+      paddingVertical: spacing.md + 2,
+      paddingHorizontal: spacing.md + 2,
+      borderRadius: 16,
+      shadowColor: colors.accent,
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 3,
+    },
+    dateHeroTitle: {
+      color: colors.white,
+      fontSize: typography.subtitle,
+      lineHeight: 22,
+      textAlign: "center",
+      fontFamily: "SFProDisplay-Bold",
+      letterSpacing: 0.4,
+      marginBottom: spacing.xs + 2,
+      width: "100%",
+    },
+    dateHeroTitleSmall: {
+      fontSize: typography.bodyLg,
+    },
+    dateHeroHijri: {
+      color: colors.accent,
+      fontSize: typography.body,
+      textAlign: "center",
+      fontFamily: "SFProDisplay-Medium",
+      letterSpacing: 0.3,
+    },
+    holidayCard: {
+      backgroundColor: colors.primarySurface,
+      borderRadius: 12,
+      padding: spacing.lg - 2,
+      marginBottom: spacing.lg,
+      borderWidth: 2,
+      borderColor: colors.accent,
+      shadowColor: colors.accent,
+      shadowOpacity: 0.35,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    holidayTitle: {
+      color: withOpacity(colors.white, 0.9),
+      fontSize: typography.caption,
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      fontFamily: "SFProDisplay-Semibold",
+      marginBottom: spacing.xs,
+      textAlign: "center",
+    },
+    holidayText: {
+      color: colors.accent,
+      fontSize: typography.subtitle,
+      textAlign: "center",
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    ramadanCard: {
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.3)
+        : withOpacity(colors.black, 0.2),
+      borderRadius: isLight ? 16 : 12,
+      padding: spacing.lg - 2,
+      marginBottom: spacing.lg,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.35)
+        : withOpacity(colors.white, 0.08),
+      shadowColor: colors.primaryDark,
+      shadowOpacity: isLight ? 0.22 : 0,
+      shadowRadius: isLight ? 20 : 0,
+      shadowOffset: { width: 0, height: isLight ? 10 : 0 },
+      elevation: isLight ? 4 : 0,
+    },
+    ramadanTitle: {
+      color: colors.white,
+      fontSize: typography.subtitle,
+      fontFamily: "SFProDisplay-Semibold",
+      textAlign: "center",
+    },
+    ramadanStatusText: {
+      color: withOpacity(colors.white, 0.82),
+      fontSize: typography.body,
+      textAlign: "center",
+      fontFamily: "SFProDisplay-Regular",
+      marginTop: spacing.xs + 2,
+      marginBottom: spacing.md,
+    },
+    ramadanToggleButton: {
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.3)
+        : colors.primaryDark,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      borderRadius: 10,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.35)
+        : withOpacity(colors.white, 0.08),
+      shadowColor: isLight
+        ? colors.primaryDark
+        : withOpacity(colors.black, 0.3),
+      shadowOpacity: isLight ? 0.22 : 0.2,
+      shadowRadius: isLight ? 20 : 8,
+      shadowOffset: { width: 0, height: isLight ? 10 : 6 },
+      elevation: 4,
+    },
+    ramadanToggleButtonActive: {
+      backgroundColor: isLight ? "#DABA69" : colors.accent,
+      borderColor: withOpacity(colors.accent, 0.8),
+      shadowColor: colors.accent,
+      shadowOpacity: 0.45,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    ramadanToggleText: {
+      color: isLight ? colors.accent : colors.white,
+      fontSize: typography.bodyLg,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    ramadanToggleTextActive: {
+      color: colors.onAccent,
+    },
+    sectionHeader: {
+      alignItems: "center",
+      marginBottom: spacing.sm + 2,
+    },
+    sectionEyebrow: {
+      color: withOpacity(colors.accent, 0.92),
+      fontSize: typography.caption,
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    sectionTitle: {
+      color: colors.white,
+      fontSize: typography.title,
+      marginTop: spacing.xs,
+      fontFamily: "SFProDisplay-Bold",
+    },
+    prayerListCard: {
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.3)
+        : withOpacity(colors.black, 0.2),
+      borderRadius: 18,
+      padding: spacing.xl,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(colors.accent, 0.35)
+        : withOpacity(colors.white, 0.08),
+      shadowColor: colors.primaryDark,
+      shadowOpacity: isLight ? 0.22 : 0.25,
+      shadowRadius: isLight ? 20 : 24,
+      shadowOffset: { width: 0, height: isLight ? 10 : 16 },
+      elevation: isLight ? 4 : 6,
+      overflow: "hidden",
+    },
+    errorCard: {
+      backgroundColor: colors.primarySurface,
+      borderRadius: 12,
+      padding: spacing.lg - 2,
+      marginBottom: spacing.lg - 2,
+      borderWidth: 2,
+      borderColor: colors.accent,
+    },
+    errorHeader: { flexDirection: "row", alignItems: "center" },
+    errorTitle: {
+      color: colors.accent,
+      fontSize: typography.bodyLg,
+      marginLeft: spacing.sm,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    errorMessage: {
+      color: colors.white,
+      marginTop: spacing.sm,
+      lineHeight: 20,
+    },
+    errorActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.md,
+    },
+    retryButton: {
+      backgroundColor: colors.accent,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg - 2,
+      borderRadius: 8,
+      marginRight: spacing.sm + 2,
+    },
+    retryButtonText: {
+      color: colors.onAccent,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    settingsButton: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg - 2,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    settingsButtonText: {
+      color: colors.accent,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    emptyCard: {
+      backgroundColor: colors.primarySurface,
+      borderRadius: 12,
+      padding: spacing.lg,
+      borderWidth: 2,
+      borderColor: colors.primarySurface,
+    },
+    emptyText: {
+      color: colors.white,
+      textAlign: "center",
+    },
+    emptyRetryButton: {
+      alignSelf: "center",
+      marginTop: spacing.sm + 2,
+      backgroundColor: colors.accent,
+      paddingVertical: spacing.sm - 2,
+      paddingHorizontal: spacing.md,
+      borderRadius: 8,
+    },
+    emptyRetryButtonText: {
+      color: colors.onAccent,
+      fontWeight: "600",
+    },
+    nextPrayerContainer: {
+      marginBottom: spacing.md,
+      alignItems: "center",
+    },
+    nextPrayerCard: {
+      width: "100%",
+      backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.3),
+      borderRadius: 16,
+      paddingVertical: spacing.md + 2,
+      paddingHorizontal: spacing.lg,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accent, 0.35),
+      shadowColor: colors.primaryDark,
+      shadowOpacity: 0.22,
+      shadowRadius: 20,
+      shadowOffset: { width: 0, height: 10 },
+      elevation: 4,
+    },
+    nextPrayerLabel: {
+      color: withOpacity(colors.accent, 0.95),
+      fontSize: typography.caption,
+      fontFamily: "SFProDisplay-Semibold",
+      letterSpacing: 0.7,
+      textTransform: "uppercase",
+    },
+    nextPrayerRow: {
+      marginTop: spacing.xs,
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+    },
+    nextPrayerName: {
+      color: colors.white,
+      fontSize: typography.title,
+      fontFamily: "SFProDisplay-Bold",
+    },
+    nextPrayerTime: {
+      color: colors.accent,
+      fontSize: typography.bodyLg,
+      fontFamily: "SFProDisplay-Bold",
+    },
+    nextPrayerCountdown: {
+      marginTop: spacing.xs,
+      color: withOpacity(colors.white, 0.9),
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Semibold",
+    },
   });
 };

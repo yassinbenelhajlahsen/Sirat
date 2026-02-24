@@ -12,7 +12,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { PrayerTime } from "../../services/prayerTimes";
+import { PrayerTime } from "../services/prayerTimes";
 
 const PRAYER_ICONS: Record<string, string> = {
   Fajr: "moon-waning-crescent",

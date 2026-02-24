@@ -14,15 +14,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
-import { PortalProvider } from "@gorhom/portal";
 import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
+import { PortalProvider } from "@gorhom/portal";
 import { NotificationService } from "../services/notificationService";
-import SplashScreen from "./components/SplashScreen";
-import UpdateModal from "./components/UpdateModal";
-import { QuranMiniPlayerPortal } from "./components/quran/QuranMiniPlayerPortal";
+import SplashScreen from "./../components/SplashScreen";
+import UpdateModal from "./../components/UpdateModal";
+import { QuranMiniPlayerPortal } from "./../components/quran/QuranMiniPlayerPortal";
 
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
@@ -99,7 +99,11 @@ async function syncNotificationPermissionToToggle() {
   // 3) Mirror OS into your stored toggle so Settings UI stays truthful
   const rawEnabled = await AsyncStorage.getItem(NOTIF_ENABLED_KEY);
   const currentEnabled =
-    rawEnabled === "1" ? true : rawEnabled === "0" ? false : parseJSON<boolean>(rawEnabled, false);
+    rawEnabled === "1"
+      ? true
+      : rawEnabled === "0"
+        ? false
+        : parseJSON<boolean>(rawEnabled, false);
 
   let nextEnabled = currentEnabled;
   if (osGranted && !currentEnabled) nextEnabled = true;
@@ -288,22 +292,42 @@ function RootLayoutContent() {
   return (
     <SafeAreaProvider>
       <PortalProvider>
-      {/* Always render app content so it mounts and loads data while splash is visible */}
-      <QuranAudioProvider>
-        <View style={{ flex: 1, backgroundColor }}>
-          <Stack screenOptions={{ headerShown: false, animation: "none" }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="components/map"
-              options={{ animation: "fade", animationDuration: 300 }}
-            />
-          </Stack>
-          <QuranMiniPlayerPortal />
-        </View>
-      </QuranAudioProvider>
+        {/* Always render app content so it mounts and loads data while splash is visible */}
+        <QuranAudioProvider>
+          <View style={{ flex: 1, backgroundColor }}>
+            <Stack screenOptions={{ headerShown: false, animation: "none" }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen
+                name="MosqueMap"
+                options={{ animation: "fade", animationDuration: 300 }}
+              />
+            </Stack>
+            <QuranMiniPlayerPortal />
+          </View>
+        </QuranAudioProvider>
 
-      {/* Overlay splash on top; it fades out to reveal the already-rendered app */}
-      {showSplash && (
+        {/* Overlay splash on top; it fades out to reveal the already-rendered app */}
+        {showSplash && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+            pointerEvents={splashReady ? "none" : "auto"}
+          >
+            <SplashScreen
+              ready={splashReady}
+              fontsReady={fontsLoaded}
+              onReadyToHideNative={hideNativeSplash}
+              onFinished={() => setShowSplash(false)}
+            />
+          </View>
+        )}
+
+        {/* Opaque fallback used right before runtime OTA reload to prevent white-frame flashes */}
         <View
           style={{
             position: "absolute",
@@ -311,40 +335,20 @@ function RootLayoutContent() {
             left: 0,
             right: 0,
             bottom: 0,
+            backgroundColor,
+            opacity: showReloadCover ? 1 : 0,
           }}
-          pointerEvents={splashReady ? "none" : "auto"}
-        >
-          <SplashScreen
-            ready={splashReady}
-            fontsReady={fontsLoaded}
-            onReadyToHideNative={hideNativeSplash}
-            onFinished={() => setShowSplash(false)}
-          />
-        </View>
-      )}
+          pointerEvents={showReloadCover ? "auto" : "none"}
+        />
 
-      {/* Opaque fallback used right before runtime OTA reload to prevent white-frame flashes */}
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor,
-          opacity: showReloadCover ? 1 : 0,
-        }}
-        pointerEvents={showReloadCover ? "auto" : "none"}
-      />
-
-      <UpdateModal
-        visible={showUpdateModal && updateReady}
-        isRestarting={isRestartingUpdate}
-        onLater={() => setShowUpdateModal(false)}
-        onRestart={() => {
-          void handleRestartForUpdate();
-        }}
-      />
+        <UpdateModal
+          visible={showUpdateModal && updateReady}
+          isRestarting={isRestartingUpdate}
+          onLater={() => setShowUpdateModal(false)}
+          onRestart={() => {
+            void handleRestartForUpdate();
+          }}
+        />
       </PortalProvider>
     </SafeAreaProvider>
   );

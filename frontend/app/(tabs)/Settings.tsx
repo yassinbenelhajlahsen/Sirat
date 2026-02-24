@@ -27,11 +27,11 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import CitySearchModal from "../../components/CitySearchModal";
+import NotificationSettings from "../../components/NotificationSettings";
 import { clearPrayerCache } from "../../services/prayerTimes";
-import CALCULATION_METHODS from "../../util/calculationMethods";
-import CITIES, { City, cityKey } from "../../util/cities";
-import CitySearchModal from "../components/CitySearchModal";
-import NotificationSettings from "../components/NotificationSettings";
+import CALCULATION_METHODS from "../../utils/calculationMethods";
+import CITIES, { City, cityKey } from "../../utils/cities";
 
 export default function Settings() {
   const { theme, themeName, setTheme } = useTheme();
@@ -529,7 +529,8 @@ export default function Settings() {
                   onValueChange={handleToggle}
                   trackColor={{
                     false: themeColors.grayDark,
-                    true: theme.name === "light" ? "#DABA69" : themeColors.accent,
+                    true:
+                      theme.name === "light" ? "#DABA69" : themeColors.accent,
                   }}
                   thumbColor={useLocation ? "#FFFFFF" : themeColors.grayMuted}
                 />

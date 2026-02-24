@@ -1,9 +1,7 @@
-import {
-  withOpacity,
-  type AppTheme,
-} from "@/constants/theme";
-import { useTheme } from "@/context/ThemeContext";
+import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
+import { useTheme } from "@/context/ThemeContext";
+import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
 import {
   QuranBookmark,
   deleteBookmark,
@@ -18,7 +16,6 @@ import {
   getAyatIndexForSurahAndAyah,
   getSurahMeta,
 } from "@/services/quranData";
-import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
 import {
   getLastReadAyahIndex,
   saveLastReadAyahIndex,
@@ -47,14 +44,14 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PressableScale from "../components/PressableScale";
-import NavigatorModal from "../components/quran/navigator/NavigatorModal";
-import QuranAyahCard from "../components/quran/QuranAyahCard";
+import PressableScale from "../../components/PressableScale";
+import NavigatorModal from "../../components/quran/navigator/NavigatorModal";
+import QuranAyahCard from "../../components/quran/QuranAyahCard";
 import QuranBookmarkModal, {
   QuranBookmarkModalPayload,
-} from "../components/quran/QuranBookmarkModal";
-import QuranCompletionCard from "../components/quran/QuranCompletionCard";
-import QuranDisplaySettingsModal from "../components/quran/QuranDisplaySettingsModal";
+} from "../../components/quran/QuranBookmarkModal";
+import QuranCompletionCard from "../../components/quran/QuranCompletionCard";
+import QuranDisplaySettingsModal from "../../components/quran/QuranDisplaySettingsModal";
 
 type AyahItem = {
   type: "ayah";
@@ -760,8 +757,8 @@ export default function QuranScreen() {
     const sequence = ++displayModeAnchorSequenceRef.current;
     isProgrammaticScrollRef.current = true;
 
-    displayModeAnchorInteractionRef.current = InteractionManager.runAfterInteractions(
-      () => {
+    displayModeAnchorInteractionRef.current =
+      InteractionManager.runAfterInteractions(() => {
         if (sequence !== displayModeAnchorSequenceRef.current) {
           return;
         }
@@ -779,8 +776,7 @@ export default function QuranScreen() {
           });
           displayModeAnchorRafRef.current = null;
         });
-      },
-    );
+      });
   }, [
     listReady,
     pendingSurahFocusNumber,
@@ -957,7 +953,11 @@ export default function QuranScreen() {
       }
     }
 
-    if (numericLookup && !numericLookup.ayahNumber && numericLookup.surahNumber === 255) {
+    if (
+      numericLookup &&
+      !numericLookup.ayahNumber &&
+      numericLookup.surahNumber === 255
+    ) {
       try {
         const ayahIndex = getAyatIndexForSurahAndAyah(2, 255);
         const ayah = ayat[ayahIndex];
@@ -1411,181 +1411,181 @@ const createStyles = (theme: AppTheme) => {
   const { spacing, typography } = theme;
 
   return StyleSheet.create({
-  screen: { flex: 1 },
-  patternOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.05,
-    resizeMode: "repeat",
-    width: "100%",
-    height: "100%",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  header: {
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm + 2,
-    marginBottom: spacing.md,
-  },
-  headerEyebrow: {
-    color: withOpacity(themeColors.accent, 0.9),
-    fontSize: typography.caption,
-    fontFamily: "SFProDisplay-Semibold",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  headerTitle: {
-    color: themeColors.white,
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  headerSubsection: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
-  headerSubsectionCompact: {
-    flexDirection: "column",
-    alignItems: "stretch",
-    gap: spacing.sm,
-  },
-  headerDetails: {
-    flexShrink: 1,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: spacing.sm,
-  },
-  headerActionsCompact: {
-    marginLeft: 0,
-  },
-  capsuleBar: {
-    marginTop: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 999,
-    padding: 5,
-    maxWidth: "100%",
-  },
-  capsulePrimary: {
-    backgroundColor: withOpacity(themeColors.white, 0.08),
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.28),
-    minHeight: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  capsuleSecondary: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.5),
-    backgroundColor: withOpacity(themeColors.accent, 0.18),
-  },
-  capsuleUtility: {
-    borderRadius: 999,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.4),
-    backgroundColor: withOpacity(themeColors.accent, 0.14),
-  },
-  capsuleGap: {
-    marginLeft: 8,
-  },
-  headerSurahEnglish: {
-    color: themeColors.white,
-    fontSize: typography.subtitle,
-    fontWeight: "600",
-  },
-  headerSurahArabic: {
-    color: themeColors.accent,
-    fontSize: 20,
-    marginTop: 2,
-    marginBottom: 4,
-    textAlign: "left",
-  },
-  headerMeta: {
-    color: themeColors.white,
-    fontSize: typography.caption,
-    opacity: 0.88,
-    fontFamily: "SFProDisplay-Semibold",
-    marginTop: spacing.xs,
-  },
-  audioButton: {
-    backgroundColor: themeColors.accent,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  audioButtonDisabled: {
-    opacity: 0.6,
-  },
-  audioIcon: {
-    alignSelf: "center",
-  },
-  audioOfflinePill: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  audioOfflineText: {
-    color: withOpacity(themeColors.white, 0.9),
-    fontWeight: "600",
-    fontSize: typography.caption,
-    marginLeft: spacing.sm - 2,
-  },
-  jumpButton: {
-    backgroundColor: themeColors.accent,
-    borderRadius: 20,
-    paddingHorizontal: spacing.lg + 2,
-    paddingVertical: spacing.sm,
-    marginLeft: spacing.md,
-  },
-  settingsButton: {
-    backgroundColor: themeColors.accent,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginLeft: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  jumpButtonText: {
-    color: themeColors.white,
-    fontWeight: "600",
-    fontSize: typography.body,
-  },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xs,
-    paddingBottom: 72,
-  },
-  listPlaceholder: {
-    flex: 1,
-  },
-  footerNoteContainer: {
-    paddingTop: 6,
-    paddingBottom: 12,
-    alignItems: "center",
-  },
-  footerNote: {
-    color: withOpacity(themeColors.white, 0.65),
-    fontSize: 11,
-    textAlign: "center",
-  },
+    screen: { flex: 1 },
+    patternOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.05,
+      resizeMode: "repeat",
+      width: "100%",
+      height: "100%",
+    },
+    container: {
+      flex: 1,
+      backgroundColor: "transparent",
+    },
+    header: {
+      marginTop: spacing.xs,
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm + 2,
+      marginBottom: spacing.md,
+    },
+    headerEyebrow: {
+      color: withOpacity(themeColors.accent, 0.9),
+      fontSize: typography.caption,
+      fontFamily: "SFProDisplay-Semibold",
+      textTransform: "uppercase",
+      letterSpacing: 1,
+    },
+    headerTitle: {
+      color: themeColors.white,
+      marginTop: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+    headerSubsection: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+    },
+    headerSubsectionCompact: {
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: spacing.sm,
+    },
+    headerDetails: {
+      flexShrink: 1,
+    },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginLeft: spacing.sm,
+    },
+    headerActionsCompact: {
+      marginLeft: 0,
+    },
+    capsuleBar: {
+      marginTop: 15,
+      flexDirection: "row",
+      alignItems: "center",
+      borderRadius: 999,
+      padding: 5,
+      maxWidth: "100%",
+    },
+    capsulePrimary: {
+      backgroundColor: withOpacity(themeColors.white, 0.08),
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.28),
+      minHeight: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    capsuleSecondary: {
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.5),
+      backgroundColor: withOpacity(themeColors.accent, 0.18),
+    },
+    capsuleUtility: {
+      borderRadius: 999,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.4),
+      backgroundColor: withOpacity(themeColors.accent, 0.14),
+    },
+    capsuleGap: {
+      marginLeft: 8,
+    },
+    headerSurahEnglish: {
+      color: themeColors.white,
+      fontSize: typography.subtitle,
+      fontWeight: "600",
+    },
+    headerSurahArabic: {
+      color: themeColors.accent,
+      fontSize: 20,
+      marginTop: 2,
+      marginBottom: 4,
+      textAlign: "left",
+    },
+    headerMeta: {
+      color: themeColors.white,
+      fontSize: typography.caption,
+      opacity: 0.88,
+      fontFamily: "SFProDisplay-Semibold",
+      marginTop: spacing.xs,
+    },
+    audioButton: {
+      backgroundColor: themeColors.accent,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    audioButtonDisabled: {
+      opacity: 0.6,
+    },
+    audioIcon: {
+      alignSelf: "center",
+    },
+    audioOfflinePill: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    audioOfflineText: {
+      color: withOpacity(themeColors.white, 0.9),
+      fontWeight: "600",
+      fontSize: typography.caption,
+      marginLeft: spacing.sm - 2,
+    },
+    jumpButton: {
+      backgroundColor: themeColors.accent,
+      borderRadius: 20,
+      paddingHorizontal: spacing.lg + 2,
+      paddingVertical: spacing.sm,
+      marginLeft: spacing.md,
+    },
+    settingsButton: {
+      backgroundColor: themeColors.accent,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginLeft: spacing.md,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    jumpButtonText: {
+      color: themeColors.white,
+      fontWeight: "600",
+      fontSize: typography.body,
+    },
+    list: {
+      flex: 1,
+    },
+    listContent: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xs,
+      paddingBottom: 72,
+    },
+    listPlaceholder: {
+      flex: 1,
+    },
+    footerNoteContainer: {
+      paddingTop: 6,
+      paddingBottom: 12,
+      alignItems: "center",
+    },
+    footerNote: {
+      color: withOpacity(themeColors.white, 0.65),
+      fontSize: 11,
+      textAlign: "center",
+    },
   });
 };

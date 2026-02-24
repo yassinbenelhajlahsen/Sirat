@@ -13,18 +13,18 @@ import {
   View,
 } from "react-native";
 
-import { useAdhanPreview } from "../../hooks/useAdhanPreview";
-import { useNotificationPreferences } from "../../hooks/useNotificationPreferences";
+import { useAdhanPreview } from "../hooks/useAdhanPreview";
+import { useNotificationPreferences } from "../hooks/useNotificationPreferences";
 import {
   PRAYERS,
   SOUND_OPTIONS,
   SOUND_SEGMENT_GAP,
   type PrayerKey,
   type SoundMode,
-} from "../../util/notifications/constants";
-import { getNotificationStyles } from "../../util/notifications/styles";
+} from "../utils/notifications/constants";
+import { getNotificationStyles } from "../utils/notifications/styles";
 
-export { NOTIF_PREFS_UPDATED_EVENT } from "../../util/notifications/constants";
+export { NOTIF_PREFS_UPDATED_EVENT } from "../utils/notifications/constants";
 
 type Props = {
   // From Settings.tsx: "granted" | "denied" | null

@@ -21,7 +21,7 @@ export function QuranMiniPlayerPortal() {
   } = useQuranAudioController();
 
   const pathname = usePathname();
-  const hideOnMap = pathname?.startsWith("/components/map");
+  const hideOnMap = pathname?.startsWith("/MosqueMap");
 
   const [shouldRender, setShouldRender] = useState(miniPlayerVisible);
   const [displaySurahMeta, setDisplaySurahMeta] = useState(currentSurahMeta);
