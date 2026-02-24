@@ -15,6 +15,7 @@ import {
   Animated,
   FlatList,
   Image,
+  InteractionManager,
   Linking,
   Platform,
   ScrollView,
@@ -131,6 +132,7 @@ export default function MosqueScreen() {
   const [mosques, setMosques] = useState<Mosque[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchingFresh, setFetchingFresh] = useState(false);
+  const [openingMap, setOpeningMap] = useState(false);
 
   const checkStatus = async () => {
     const sOn = await Location.hasServicesEnabledAsync();
@@ -237,6 +239,16 @@ export default function MosqueScreen() {
       console.warn("openDirections error:", err);
       Alert.alert("Error", "Unable to open Maps for directions");
     }
+  };
+
+  const openFullMap = () => {
+    if (openingMap) return;
+    setOpeningMap(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    InteractionManager.runAfterInteractions(() => {
+      router.push("/components/map");
+      setTimeout(() => setOpeningMap(false), 450);
+    });
   };
 
   const needLocationGate = useMemo(() => {
@@ -420,6 +432,7 @@ export default function MosqueScreen() {
   const emptyNearby =
     !fetchingFresh && (mosques == null || mosques.length === 0);
   const topMosques = mosques.slice(0, 3);
+  const previewMosques = mosques.slice(0, 12);
 
   return (
     <LinearGradient
@@ -486,13 +499,16 @@ export default function MosqueScreen() {
                 ]}
               />
             ) : (
-              <PressableScale
+              <TouchableOpacity
                 style={styles.mapContainer}
-                onPress={() => router.push("/components/map")}
+                activeOpacity={0.94}
+                disabled={openingMap}
+                onPress={openFullMap}
                 accessibilityRole="button"
                 accessibilityLabel="Open full mosque map"
               >
                 <MapView
+                  pointerEvents="none"
                   style={StyleSheet.absoluteFillObject}
                   initialRegion={{
                     latitude: location!.latitude,
@@ -501,10 +517,14 @@ export default function MosqueScreen() {
                     longitudeDelta: 0.02,
                   }}
                   showsUserLocation
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  rotateEnabled={false}
+                  pitchEnabled={false}
                   customMapStyle={customMapStyle}
                   userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
                 >
-                  {mosques.map((m) => (
+                  {previewMosques.map((m) => (
                     <Marker
                       key={m.id}
                       coordinate={{ latitude: m.lat, longitude: m.lng }}
@@ -545,7 +565,12 @@ export default function MosqueScreen() {
                     <ActivityIndicator size="small" color={colors.accent} />
                   </View>
                 )}
-              </PressableScale>
+                {openingMap && (
+                  <View style={styles.mapOpeningOverlay}>
+                    <ActivityIndicator size="small" color={colors.accent} />
+                  </View>
+                )}
+              </TouchableOpacity>
             )}
           </View>
         </ScrollView>
@@ -784,6 +809,12 @@ const createStyles = (theme: AppTheme) => {
     borderRadius: 12,
     paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.sm - 2,
+  },
+  mapOpeningOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: withOpacity(colors.black, 0.18),
+    alignItems: "center",
+    justifyContent: "center",
   },
   pinContainer: {
     backgroundColor: colors.accent,
