@@ -1,9 +1,8 @@
 import {
-  colors,
-  spacing,
-  typography,
   withOpacity,
+  type AppTheme,
 } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,7 +32,9 @@ import {
 } from "../../services/getNearbyMosques";
 import PressableScale from "../components/PressableScale";
 
-const ShimmerCard = () => {
+type GeneratedStyles = ReturnType<typeof createStyles>;
+
+const ShimmerCard = ({ styles }: { styles: GeneratedStyles }) => {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -72,10 +73,10 @@ const ShimmerCard = () => {
   );
 };
 
-const SkeletonList = () => (
+const SkeletonList = ({ styles }: { styles: GeneratedStyles }) => (
   <View style={styles.list}>
     {[0, 1, 2].map((i) => (
-      <ShimmerCard key={i} />
+      <ShimmerCard key={i} styles={styles} />
     ))}
   </View>
 );
@@ -110,6 +111,11 @@ function formatDistanceLabel(km: number) {
 }
 
 export default function MosqueScreen() {
+  const { theme } = useTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const customMapStyle = useMemo(() => createCustomMapStyle(colors), [colors]);
+
   const router = useRouter();
 
   const [permissionStatus, setPermissionStatus] =
@@ -243,7 +249,7 @@ export default function MosqueScreen() {
     title,
     message,
     actions,
-    iconColor = colors.primary,
+    iconColor = colors.white,
   }: {
     icon: keyof typeof Ionicons.glyphMap;
     title: string;
@@ -441,7 +447,7 @@ export default function MosqueScreen() {
               <Text style={styles.header}>Nearest</Text>
             </View>
             {loading && mosques.length === 0 ? (
-              <SkeletonList />
+      <SkeletonList styles={styles} />
             ) : emptyNearby ? (
               <View style={styles.emptyCard}>
                 <View style={styles.emptyRow}>
@@ -504,7 +510,7 @@ export default function MosqueScreen() {
                         <FontAwesome5
                           name="mosque"
                           size={18}
-                          color={colors.primary}
+                          color={colors.primaryMuted}
                         />
                       </View>
 
@@ -521,7 +527,7 @@ export default function MosqueScreen() {
                             <Ionicons
                               name="navigate"
                               size={14}
-                              color={colors.primary}
+                              color={colors.onAccent}
                             />
                             <Text style={styles.directionText}>Directions</Text>
                           </TouchableOpacity>
@@ -544,13 +550,16 @@ export default function MosqueScreen() {
   );
 }
 
-const customMapStyle = [
+const createCustomMapStyle = (colors: AppTheme["colors"]) => [
   { elementType: "geometry", stylers: [{ color: colors.primaryDark }] },
   { elementType: "labels.text.fill", stylers: [{ color: colors.accent }] },
   { featureType: "poi.place_of_worship", stylers: [{ color: colors.primary }] },
 ];
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => {
+  const { colors, spacing, typography } = theme;
+
+  return StyleSheet.create({
   gradient: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: "transparent" },
   scrollContent: {
@@ -639,7 +648,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignSelf: "flex-start",
   },
-  ctaPrimaryText: { color: colors.primary, fontWeight: "700" },
+  ctaPrimaryText: { color: colors.onAccent, fontWeight: "700" },
   ctaSecondary: {
     borderColor: colors.accent,
     borderWidth: 1,
@@ -716,7 +725,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    backgroundColor: withOpacity(colors.white, 0.08),
+    backgroundColor: theme.name === "light" ? withOpacity(colors.primarySurface, 0.65) :  withOpacity(colors.white, 0.08),
     borderWidth: 1,
     borderColor: withOpacity(colors.accent, 0.25),
     borderRadius: 999,
@@ -777,7 +786,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 5,
     borderWidth: 2,
-    borderColor: colors.primary,
+    borderColor: withOpacity(colors.primaryMuted, 0.9),
     shadowColor: colors.black,
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -821,7 +830,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   directionText: {
-    color: colors.primary,
+    color: colors.onAccent,
     fontWeight: "600",
     marginLeft: spacing.sm - 3,
     fontSize: 13,
@@ -867,4 +876,5 @@ const styles = StyleSheet.create({
     width: "70%",
     marginTop: 2,
   },
-});
+  });
+};

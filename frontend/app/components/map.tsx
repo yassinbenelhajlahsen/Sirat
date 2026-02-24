@@ -1,14 +1,10 @@
-import {
-  colors as themeColors,
-  spacing,
-  typography,
-  withOpacity,
-} from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -34,6 +30,14 @@ import {
 type Perm = "undetermined" | "denied" | "granted";
 
 export default function MapScreen() {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const customMapStyle = useMemo(
+    () => createCustomMapStyle(themeColors),
+    [themeColors],
+  );
+
   const router = useRouter();
   const mapRef = useRef<MapView | null>(null);
 
@@ -127,7 +131,7 @@ export default function MapScreen() {
     } catch {
       Alert.alert(
         "Open Settings",
-        "Please open device settings and grant Location permission."
+        "Please open device settings and grant Location permission.",
       );
     }
   };
@@ -139,7 +143,7 @@ export default function MapScreen() {
         ios: "Settings → Privacy & Security → Location Services",
         android: "Enable Location in Quick Settings or Settings → Location",
         default: "Please enable Location Services on your device.",
-      }) as string
+      }) as string,
     );
   };
 
@@ -190,7 +194,7 @@ export default function MapScreen() {
           <Ionicons
             name="location-outline"
             size={20}
-            color={themeColors.primary}
+            color={themeColors.white}
           />
           <View style={styles.bannerBody}>
             <Text style={styles.bannerTitle}>Location required</Text>
@@ -255,7 +259,7 @@ export default function MapScreen() {
               <FontAwesome5
                 name="mosque"
                 size={20}
-                color={themeColors.primary}
+                color={themeColors.primaryMuted}
               />
             </View>
 
@@ -268,7 +272,7 @@ export default function MapScreen() {
                     <Ionicons
                       name="navigate"
                       size={14}
-                      color={themeColors.primary}
+                      color={themeColors.onAccent}
                     />
                     <Text style={styles.directionText}>Directions</Text>
                   </View>
@@ -298,7 +302,7 @@ export default function MapScreen() {
           accessibilityRole="button"
           accessibilityLabel="Search this area"
         >
-          <Ionicons name="search" size={18} color={themeColors.primary} />
+          <Ionicons name="search" size={18} color={themeColors.onAccent} />
           <Text style={styles.searchButtonText}>Search this area</Text>
         </TouchableOpacity>
       )}
@@ -312,8 +316,8 @@ export default function MapScreen() {
   );
 }
 
-const customMapStyle = [
-  { elementType: "geometry", stylers: [{ color: themeColors.primaryDark }] },
+const createCustomMapStyle = (themeColors: AppTheme["colors"]) => [
+  { elementType: "geometry", stylers: [{ color: themeColors.primary }] },
   {
     elementType: "labels.text.fill",
     stylers: [{ color: themeColors.accent }],
@@ -324,173 +328,177 @@ const customMapStyle = [
   },
 ];
 
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  gateScreen: {
-    flex: 1,
-    backgroundColor: themeColors.primary,
-    paddingTop: 50,
-    paddingHorizontal: spacing.xl,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: themeColors.primary,
-  },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    zIndex: 10,
-    backgroundColor: withOpacity(themeColors.primary, 0.85),
-    borderRadius: 30,
-    padding: 10,
-    shadowColor: themeColors.black,
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  gateBanner: { marginTop: spacing.xl },
-  banner: {
-    backgroundColor: withOpacity(themeColors.accent, 0.18),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.35),
-    borderRadius: 14,
-    padding: spacing.md,
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
-  bannerTitle: {
-    color: themeColors.accent,
-    fontSize: typography.bodyLg,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  bannerText: {
-    color: themeColors.white,
-    opacity: 0.95,
-    fontSize: typography.body,
-    marginTop: spacing.xs,
-  },
-  row: {
-    flexDirection: "row",
-    gap: spacing.sm + 2,
-    marginTop: spacing.sm + 2,
-    flexWrap: "wrap",
-  },
-  ctaPrimary: {
-    backgroundColor: themeColors.accent,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: 10,
-  },
-  ctaPrimaryText: { color: themeColors.primary, fontWeight: "700" },
-  ctaSecondary: {
-    borderColor: themeColors.accent,
-    borderWidth: 1,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: 10,
-  },
-  ctaSecondaryText: { color: themeColors.accent, fontWeight: "600" },
-  pinContainer: {
-    backgroundColor: themeColors.accent,
-    borderRadius: 30,
-    padding: 6,
-    borderWidth: 2,
-    borderColor: themeColors.primary,
-    shadowColor: themeColors.black,
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  callout: {
-    backgroundColor: themeColors.primary,
-    borderRadius: 12,
-    padding: 12,
-    width: 210,
-    borderColor: themeColors.accent,
-    borderWidth: 1,
-    shadowColor: themeColors.black,
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  calloutTitle: {
-    color: themeColors.accent,
-    fontFamily: "SFProDisplay-Bold",
-    fontSize: 16,
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  calloutAddress: {
-    color: themeColors.white,
-    fontFamily: "SFProDisplay-Regular",
-    fontSize: 13,
-    opacity: 0.9,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  directionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: themeColors.accent,
-    borderRadius: 8,
-    paddingVertical: spacing.sm - 3,
-    paddingHorizontal: spacing.sm + 2,
-    justifyContent: "center",
-  },
-  directionText: {
-    color: themeColors.primary,
-    fontWeight: "600",
-    marginLeft: spacing.sm - 3,
-    fontSize: 13,
-    textAlign: "center",
-  },
-  searchButton: {
-    position: "absolute",
-    bottom: 40,
-    alignSelf: "center",
-    flexDirection: "row",
-    backgroundColor: withOpacity(themeColors.accent, 0.95),
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.lg + 2,
-    borderRadius: 25,
-    alignItems: "center",
-    shadowColor: themeColors.black,
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  searchButtonText: {
-    marginLeft: spacing.sm - 2,
-    fontWeight: "600",
-    color: themeColors.primary,
-    fontSize: 15,
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: withOpacity(themeColors.black, 0.25),
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyOverlay: {
-    position: "absolute",
-    top: 90,
-    alignSelf: "center",
-    backgroundColor: withOpacity(themeColors.black, 0.35),
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    alignItems: "center",
-    gap: 4,
-  },
-  emptyText: { color: themeColors.white, fontSize: 14 },
-  emptySub: { color: themeColors.accent, fontSize: 12 },
-  helper: { color: themeColors.accentMuted, fontSize: 14, marginTop: 14 },
-  link: { color: themeColors.accent, textDecorationLine: "underline" },
-});
+const createStyles = (theme: AppTheme) => {
+  const { colors: themeColors, spacing, typography } = theme;
+
+  return StyleSheet.create({
+    screen: { flex: 1 },
+    gateScreen: {
+      flex: 1,
+      backgroundColor: themeColors.primary,
+      paddingTop: 50,
+      paddingHorizontal: spacing.xl,
+    },
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: themeColors.primary,
+    },
+    backButton: {
+      position: "absolute",
+      top: 50,
+      left: 20,
+      zIndex: 10,
+      backgroundColor: withOpacity(themeColors.primary, 0.85),
+      borderRadius: 30,
+      padding: 10,
+      shadowColor: themeColors.black,
+      shadowOpacity: 0.4,
+      shadowOffset: { width: 0, height: 3 },
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    gateBanner: { marginTop: spacing.xl },
+    banner: {
+      backgroundColor: withOpacity(themeColors.accent, 0.18),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.35),
+      borderRadius: 14,
+      padding: spacing.md,
+      flexDirection: "row",
+      alignItems: "flex-start",
+    },
+    bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
+    bannerTitle: {
+      color: themeColors.accent,
+      fontSize: typography.bodyLg,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    bannerText: {
+      color: themeColors.white,
+      opacity: 0.95,
+      fontSize: typography.body,
+      marginTop: spacing.xs,
+    },
+    row: {
+      flexDirection: "row",
+      gap: spacing.sm + 2,
+      marginTop: spacing.sm + 2,
+      flexWrap: "wrap",
+    },
+    ctaPrimary: {
+      backgroundColor: theme.name === "light" ? "#DABA69" : themeColors.accent,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: 10,
+    },
+    ctaPrimaryText: { color: themeColors.onAccent, fontWeight: "700" },
+    ctaSecondary: {
+      borderColor: themeColors.accent,
+      borderWidth: 1,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: 10,
+    },
+    ctaSecondaryText: { color: ((theme.name === "light") ? "#DABA69" : themeColors.accent), fontWeight: "600" },
+    pinContainer: {
+      backgroundColor: themeColors.accent,
+      borderRadius: 30,
+      padding: 6,
+      borderWidth: 2,
+      borderColor: withOpacity(themeColors.primary, 0.9),
+      shadowColor: themeColors.black,
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    callout: {
+      backgroundColor: themeColors.primary,
+      borderRadius: 12,
+      padding: 12,
+      width: 210,
+      borderColor: themeColors.accent,
+      borderWidth: 1,
+      shadowColor: themeColors.black,
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    calloutTitle: {
+      color: themeColors.accent,
+      fontFamily: "SFProDisplay-Bold",
+      fontSize: 16,
+      marginBottom: 4,
+      textAlign: "center",
+    },
+    calloutAddress: {
+      color: themeColors.white,
+      fontFamily: "SFProDisplay-Regular",
+      fontSize: 13,
+      opacity: 0.9,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    directionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: (theme.name === "light") ? "#DABA69" : themeColors.accent,
+      borderRadius: 8,
+      paddingVertical: spacing.sm - 3,
+      paddingHorizontal: spacing.sm + 2,
+      justifyContent: "center",
+    },
+    directionText: {
+      color: themeColors.onAccent,
+      fontWeight: "600",
+      marginLeft: spacing.sm - 3,
+      fontSize: 13,
+      textAlign: "center",
+    },
+    searchButton: {
+      position: "absolute",
+      bottom: 40,
+      alignSelf: "center",
+      flexDirection: "row",
+      backgroundColor: (theme.name === "light") ? withOpacity("#DABA69", 0.95) : withOpacity(themeColors.accent, 0.95),
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.lg + 2,
+      borderRadius: 25,
+      alignItems: "center",
+      shadowColor: themeColors.black,
+      shadowOpacity: 0.3,
+      shadowOffset: { width: 0, height: 3 },
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    searchButtonText: {
+      marginLeft: spacing.sm - 2,
+      fontWeight: "600",
+      color: themeColors.onAccent,
+      fontSize: 15,
+    },
+    loadingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: withOpacity(themeColors.black, 0.25),
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    emptyOverlay: {
+      position: "absolute",
+      top: 90,
+      alignSelf: "center",
+      backgroundColor: withOpacity(themeColors.black, 0.35),
+      borderRadius: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      alignItems: "center",
+      gap: 4,
+    },
+    emptyText: { color: themeColors.white, fontSize: 14 },
+    emptySub: { color: themeColors.accent, fontSize: 12 },
+    helper: { color: themeColors.accentMuted, fontSize: 14, marginTop: 14 },
+    link: { color: themeColors.accent, textDecorationLine: "underline" },
+  });
+};

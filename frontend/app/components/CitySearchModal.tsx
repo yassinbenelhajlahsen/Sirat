@@ -1,5 +1,6 @@
 // components/CitySearchModal.tsx
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -82,19 +83,37 @@ export default function CitySearchModal({
   onSelectKey,
   items,
   initialQuery = "",
-  colors = {
-    bg: withOpacity(themeColors.black, 0.55),
-    card: withOpacity(themeColors.primaryDeep, 0.96),
-    cardAlt: withOpacity(themeColors.primarySurfaceAlt, 0.9),
-    text: themeColors.white,
-    accent: themeColors.accent,
-    divider: withOpacity(themeColors.white, 0.12),
-    placeholder:
-      // fall back if grayLight does not exist
-      (themeColors as any).grayLight ?? withOpacity(themeColors.white, 0.55),
-  },
+  colors,
 }: CitySearchModalProps) {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const isLight = theme.name === "light";
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const bottomInset = useKeyboardInset();
+
+  const resolvedColors = useMemo(
+    () =>
+      colors ?? {
+        bg: isLight
+          ? withOpacity(themeColors.black, 0.28)
+          : withOpacity(themeColors.black, 0.55),
+        card: isLight
+          ? withOpacity(themeColors.primaryLift, 0.98)
+          : withOpacity(themeColors.primaryDeep, 0.96),
+        cardAlt: isLight
+          ? withOpacity(themeColors.primarySurfaceAlt, 0.46)
+          : withOpacity(themeColors.primarySurfaceAlt, 0.9),
+        text: isLight ? themeColors.offWhite : themeColors.white,
+        accent: isLight ? themeColors.primaryBorder : themeColors.accent,
+        divider: isLight
+          ? withOpacity(themeColors.primaryBorder, 0.45)
+          : withOpacity(themeColors.white, 0.12),
+        placeholder: isLight
+          ? withOpacity(themeColors.grayDark, 0.92)
+          : themeColors.grayLight ?? withOpacity(themeColors.white, 0.55),
+      },
+    [colors, isLight, themeColors],
+  );
 
   const [query, setQuery] = useState(initialQuery);
   const debounced = useDebounced(query, 150);
@@ -104,9 +123,8 @@ export default function CitySearchModal({
     if (visible) {
       const id = setTimeout(() => inputRef.current?.focus(), 80);
       return () => clearTimeout(id);
-    } else {
-      setQuery("");
     }
+    setQuery("");
   }, [visible]);
 
   const filtered = useMemo(() => {
@@ -130,7 +148,7 @@ export default function CitySearchModal({
         style={[
           styles.overlay,
           {
-            backgroundColor: colors.bg,
+            backgroundColor: resolvedColors.bg,
           },
         ]}
       >
@@ -147,8 +165,8 @@ export default function CitySearchModal({
               styles.card,
               {
                 maxHeight: MAX_CARD_HEIGHT,
-                backgroundColor: colors.card,
-                borderColor: withOpacity(colors.accent, 0.6),
+                backgroundColor: resolvedColors.card,
+                borderColor: withOpacity(resolvedColors.accent, 0.6),
               },
             ]}
           >
@@ -159,7 +177,7 @@ export default function CitySearchModal({
                 <Text
                   style={[
                     styles.subtitle,
-                    { color: withOpacity(colors.text, 0.7) },
+                    { color: withOpacity(resolvedColors.text, 0.7) },
                   ]}
                 >
                   Search from the supported cities list
@@ -187,22 +205,24 @@ export default function CitySearchModal({
               style={[
                 styles.searchContainer,
                 {
-                  backgroundColor: themeColors.primaryDark,
-                  borderColor: withOpacity(colors.accent, 0.45),
+                  backgroundColor: isLight
+                    ? resolvedColors.cardAlt
+                    : themeColors.primaryDark,
+                  borderColor: withOpacity(resolvedColors.accent, 0.45),
                 },
               ]}
             >
               <Ionicons
                 name="search"
                 size={18}
-                color={withOpacity(colors.placeholder, 0.85)}
+                color={withOpacity(resolvedColors.placeholder, 0.85)}
                 style={styles.searchIcon}
               />
               <TextInput
                 ref={inputRef}
                 placeholder="Search city"
-                placeholderTextColor={colors.placeholder}
-                style={[styles.searchInput, { color: colors.text }]}
+                placeholderTextColor={resolvedColors.placeholder}
+                style={[styles.searchInput, { color: resolvedColors.text }]}
                 value={query}
                 onChangeText={setQuery}
                 autoCorrect={false}
@@ -217,7 +237,7 @@ export default function CitySearchModal({
                   <Ionicons
                     name="close-circle"
                     size={18}
-                    color={withOpacity(colors.accent, 0.9)}
+                    color={withOpacity(resolvedColors.accent, 0.9)}
                   />
                 </TouchableOpacity>
               )}
@@ -236,7 +256,7 @@ export default function CitySearchModal({
                 <View
                   style={[
                     styles.itemSeparator,
-                    { backgroundColor: colors.divider },
+                    { backgroundColor: resolvedColors.divider },
                   ]}
                 />
               )}
@@ -250,7 +270,7 @@ export default function CitySearchModal({
                     style={[
                       styles.listLabel,
                       {
-                        color: colors.text,
+                        color: resolvedColors.text,
                       },
                     ]}
                   >
@@ -263,7 +283,7 @@ export default function CitySearchModal({
                   <Text
                     style={[
                       styles.emptyPrimary,
-                      { color: withOpacity(colors.text, 0.9) },
+                      { color: withOpacity(resolvedColors.text, 0.9) },
                     ]}
                   >
                     No results found
@@ -271,7 +291,7 @@ export default function CitySearchModal({
                   <Text
                     style={[
                       styles.emptySecondary,
-                      { color: withOpacity(colors.text, 0.7) },
+                      { color: withOpacity(resolvedColors.text, 0.7) },
                     ]}
                   >
                     Try a different spelling or nearby city name.
@@ -287,123 +307,127 @@ export default function CitySearchModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  cardWrapper: {
-    width: "100%",
-    alignItems: "center",
-  },
-  card: {
-    width: "100%",
-    maxWidth: 480,
-    borderRadius: 20,
-    borderWidth: 1,
-    overflow: "hidden",
-    shadowColor: withOpacity(themeColors.black, 0.9),
-    shadowOpacity: 0.35,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 18 },
-    elevation: 10,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: withOpacity(themeColors.white, 0.08),
-  },
-  title: {
-    fontSize: 18,
-    fontFamily: "SFProDisplay-Semibold",
-    letterSpacing: 0.2,
-    color: themeColors.white,
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 12,
-    fontFamily: "SFProDisplay-Regular",
-  },
-  dismissButton: {
-    padding: 6,
-  },
-  dismissIcon: {
-    width: 18,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dismissLine: {
-    position: "absolute",
-    width: 18,
-    height: 2,
-    backgroundColor: themeColors.white,
-    borderRadius: 999,
-  },
-  dismissLineFirst: {
-    transform: [{ rotate: "45deg" }],
-  },
-  dismissLineSecond: {
-    transform: [{ rotate: "-45deg" }],
-  },
-  searchContainer: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 10,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "SFProDisplay-Regular",
-    paddingVertical: 6,
-  },
-  list: {
-    flexGrow: 0,
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  listRow: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  listLabel: {
-    fontSize: 16,
-    fontFamily: "SFProDisplay-Regular",
-  },
-  itemSeparator: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 20,
-  },
-  emptyState: {
-    paddingHorizontal: 20,
-    paddingVertical: 26,
-    alignItems: "center",
-  },
-  emptyPrimary: {
-    fontSize: 15,
-    fontFamily: "SFProDisplay-Semibold",
-  },
-  emptySecondary: {
-    marginTop: 6,
-    fontSize: 12,
-    fontFamily: "SFProDisplay-Regular",
-    textAlign: "center",
-    lineHeight: 18,
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    cardWrapper: {
+      width: "100%",
+      alignItems: "center",
+    },
+    card: {
+      width: "100%",
+      maxWidth: 480,
+      borderRadius: 20,
+      borderWidth: 1,
+      overflow: "hidden",
+      shadowColor: withOpacity(themeColors.black, 0.9),
+      shadowOpacity: 0.35,
+      shadowRadius: 22,
+      shadowOffset: { width: 0, height: 18 },
+      elevation: 10,
+    },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 18,
+      paddingBottom: 12,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: withOpacity(themeColors.white, 0.08),
+    },
+    title: {
+      fontSize: 18,
+      fontFamily: "SFProDisplay-Semibold",
+      letterSpacing: 0.2,
+      color: themeColors.white,
+    },
+    subtitle: {
+      marginTop: 4,
+      fontSize: 12,
+      fontFamily: "SFProDisplay-Regular",
+    },
+    dismissButton: {
+      padding: 6,
+    },
+    dismissIcon: {
+      width: 18,
+      height: 18,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dismissLine: {
+      position: "absolute",
+      width: 18,
+      height: 2,
+      backgroundColor: themeColors.white,
+      borderRadius: 999,
+    },
+    dismissLineFirst: {
+      transform: [{ rotate: "45deg" }],
+    },
+    dismissLineSecond: {
+      transform: [{ rotate: "-45deg" }],
+    },
+    searchContainer: {
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 10,
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    searchIcon: {
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 15,
+      fontFamily: "SFProDisplay-Regular",
+      paddingVertical: 6,
+    },
+    list: {
+      flexGrow: 0,
+    },
+    listContent: {
+      paddingBottom: 16,
+    },
+    listRow: {
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+    },
+    listLabel: {
+      fontSize: 16,
+      fontFamily: "SFProDisplay-Regular",
+    },
+    itemSeparator: {
+      height: StyleSheet.hairlineWidth,
+      marginHorizontal: 20,
+    },
+    emptyState: {
+      paddingHorizontal: 20,
+      paddingVertical: 26,
+      alignItems: "center",
+    },
+    emptyPrimary: {
+      fontSize: 15,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    emptySecondary: {
+      marginTop: 6,
+      fontSize: 12,
+      fontFamily: "SFProDisplay-Regular",
+      textAlign: "center",
+      lineHeight: 18,
+    },
+  });
+};
