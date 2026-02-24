@@ -12,6 +12,7 @@ import {
   Animated,
   AppState,
   DeviceEventEmitter,
+  Easing,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -74,6 +75,7 @@ export default function Home() {
   const [duaLoading, setDuaLoading] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const duaSwapAnim = useRef(new Animated.Value(1)).current;
   const scrollViewRef = useRef<ScrollView>(null);
 
   const DEFAULT_METHOD = 2;
@@ -203,12 +205,33 @@ export default function Home() {
     };
   }
 
+  const runDuaTransition = useCallback(
+    (nextDua: Dua | null) => {
+      Animated.timing(duaSwapAnim, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }).start(() => {
+        setSelectedDua(nextDua);
+        duaSwapAnim.setValue(0);
+        Animated.spring(duaSwapAnim, {
+          toValue: 1,
+          speed: 15,
+          bounciness: 10,
+          useNativeDriver: true,
+        }).start();
+      });
+    },
+    [duaSwapAnim],
+  );
+
   // ---- Dua Handler ----
   const handleDuaSubmit = async (userRequest: string) => {
     try {
       setDuaLoading(true);
       const dua = await requestDua(userRequest);
-      setSelectedDua(dua);
+      runDuaTransition(dua);
       await saveDuaToHistory(dua);
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to find a dua");
@@ -377,6 +400,23 @@ export default function Home() {
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
   const tomorrowParam = encodeURIComponent(tomorrow.toISOString());
+  const duaCardAnimatedStyle = {
+    opacity: duaSwapAnim,
+    transform: [
+      {
+        translateY: duaSwapAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [14, 0],
+        }),
+      },
+      {
+        scale: duaSwapAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.96, 1],
+        }),
+      },
+    ],
+  };
 
   return (
     <LinearGradient
@@ -500,18 +540,22 @@ export default function Home() {
               <PrayerTimesList loading={loading} prayerTimes={prayerTimes} />
             </View>
             {/* Dua Section */}
-            {selectedDua ? (
-              <DuaResultCard
-                dua={selectedDua}
-                onClose={() => setSelectedDua(null)}
-              />
-            ) : (
-              <DuaCard
-                onSubmit={handleDuaSubmit}
-                loading={duaLoading}
-                onInputFocus={() => scrollToBottom(true)}
-              />
-            )}
+            <View style={styles.duaSection}>
+              <Animated.View style={duaCardAnimatedStyle}>
+                {selectedDua ? (
+                  <DuaResultCard
+                    dua={selectedDua}
+                    onClose={() => runDuaTransition(null)}
+                  />
+                ) : (
+                  <DuaCard
+                    onSubmit={handleDuaSubmit}
+                    loading={duaLoading}
+                    onInputFocus={() => scrollToBottom(true)}
+                  />
+                )}
+              </Animated.View>
+            </View>
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -674,6 +718,10 @@ const createStyles = (theme: AppTheme) => {
     fontSize: typography.bodyLg,
     fontFamily: "SFProDisplay-Semibold",
     textAlign: "center",
+  },
+  duaSection: {
+    position: "relative",
+    marginTop: spacing.xs,
   },
   });
 };

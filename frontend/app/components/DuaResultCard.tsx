@@ -8,15 +8,12 @@ import { Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-nati
 interface DuaResultCardProps {
   dua: Dua;
   onClose: () => void;
-  onSaveBookmark?: () => Promise<void>;
 }
 
-function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
+function DuaResultCard({ dua, onClose}: DuaResultCardProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-
-  const [bookmarkLoading, setBookmarkLoading] = React.useState(false);
 
   const handleShare = async () => {
     try {
@@ -29,18 +26,6 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
     }
   };
 
-  const handleBookmark = async () => {
-    if (!onSaveBookmark) return;
-
-    try {
-      setBookmarkLoading(true);
-      await onSaveBookmark();
-    } catch (err: any) {
-      console.error("Bookmark error:", err);
-    } finally {
-      setBookmarkLoading(false);
-    }
-  };
 
   return (
     <View style={styles.card}>
@@ -111,29 +96,6 @@ function DuaResultCard({ dua, onClose, onSaveBookmark }: DuaResultCardProps) {
             </Text>
           </Pressable>
 
-          {onSaveBookmark && (
-            <Pressable
-              onPress={handleBookmark}
-              disabled={bookmarkLoading}
-              accessibilityRole="button"
-              accessibilityLabel="Save dua"
-              style={[styles.actionButton, styles.actionButtonSpaced]}
-            >
-              <Ionicons
-                name="bookmark-outline"
-                size={16}
-                color={bookmarkLoading ? withOpacity(colors.onAccent, 0.45) : colors.onAccent}
-              />
-              <Text
-                style={[
-                  styles.actionButtonText,
-                  bookmarkLoading ? styles.actionButtonTextMuted : undefined,
-                ]}
-              >
-                Save
-              </Text>
-            </Pressable>
-          )}
         </View>
       </ScrollView>
     </View>
@@ -279,7 +241,7 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: withOpacity(colors.accent, 0.92),
+      backgroundColor: (theme.name === "light") ? "#DABA69" : colors.accent,
       borderRadius: 11,
       paddingVertical: spacing.sm + 3,
       borderWidth: 1,
