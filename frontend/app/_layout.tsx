@@ -21,6 +21,7 @@ import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { NotificationService } from "../services/notificationService";
 import SplashScreen from "./components/SplashScreen";
+import UpdateModal from "./components/UpdateModal";
 import { QuranMiniPlayerPortal } from "./components/quran/QuranMiniPlayerPortal";
 
 // Keep the native launch screen up until we say to hide it
@@ -137,67 +138,64 @@ function RootLayoutContent() {
 
   const [showSplash, setShowSplash] = useState(true);
   const [initialSynced, setInitialSynced] = useState(false);
-  const [otaChecked, setOtaChecked] = useState(false);
-  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [updateReady, setUpdateReady] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [isRestartingUpdate, setIsRestartingUpdate] = useState(false);
   const [showReloadCover, setShowReloadCover] = useState(false);
   const appStateRef = useRef(AppState.currentState);
   const otaCheckInFlightRef = useRef(false);
   const mountedRef = useRef(true);
 
-  const checkAndApplyOtaUpdate = useCallback(
-    async ({ markStartupComplete = false }: { markStartupComplete?: boolean } = {}) => {
-      if (otaCheckInFlightRef.current) return;
-      otaCheckInFlightRef.current = true;
+  const checkAndPrepareOtaUpdate = useCallback(async () => {
+    if (otaCheckInFlightRef.current || updateReady) return;
+    otaCheckInFlightRef.current = true;
 
-      try {
-        // Skip OTA checks entirely in Expo Go.
-        if (Constants.appOwnership === "expo") return;
+    try {
+      // Skip OTA checks entirely in Expo Go.
+      if (Constants.appOwnership === "expo") return;
 
-        const update = await Updates.checkForUpdateAsync();
-        if (!update.isAvailable) return;
+      const update = await Updates.checkForUpdateAsync();
+      if (!update.isAvailable) return;
 
-        await Updates.fetchUpdateAsync();
+      await Updates.fetchUpdateAsync();
 
-        // Re-validate foreground state before attempting reload.
-        if (AppState.currentState !== "active") return;
-
-        if (mountedRef.current) {
-          setShowReloadCover(true);
-          setShowSplash(true);
-          setIsApplyingUpdate(true);
-        }
-
-        // Give React time to paint the emergency cover before JS is torn down.
-        await new Promise<void>((resolve) => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => resolve());
-          });
-        });
-
-        if (AppState.currentState !== "active") {
-          if (mountedRef.current) {
-            setIsApplyingUpdate(false);
-            setShowReloadCover(false);
-          }
-          return;
-        }
-
-        await Updates.reloadAsync();
-      } catch (error) {
-        console.error("OTA update check failed", error);
-        if (mountedRef.current) {
-          setIsApplyingUpdate(false);
-          setShowReloadCover(false);
-        }
-      } finally {
-        otaCheckInFlightRef.current = false;
-        if (markStartupComplete && mountedRef.current) {
-          setOtaChecked(true);
-        }
+      if (mountedRef.current) {
+        setUpdateReady(true);
       }
-    },
-    [],
-  );
+    } catch (error) {
+      console.error("OTA update check failed", error);
+    } finally {
+      otaCheckInFlightRef.current = false;
+    }
+  }, [updateReady]);
+
+  const handleRestartForUpdate = useCallback(async () => {
+    if (isRestartingUpdate) return;
+
+    setIsRestartingUpdate(true);
+    setShowUpdateModal(false);
+    setShowReloadCover(true);
+    setShowSplash(true);
+
+    // Give React time to paint the cover before reloading JS.
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+
+    try {
+      await Updates.reloadAsync();
+    } catch (error) {
+      console.error("Failed to reload for OTA update", error);
+      if (mountedRef.current) {
+        setIsRestartingUpdate(false);
+        setShowReloadCover(false);
+        setShowSplash(false);
+        setShowUpdateModal(true);
+      }
+    }
+  }, [isRestartingUpdate]);
 
   useEffect(() => {
     NotificationService.init();
@@ -222,10 +220,10 @@ function RootLayoutContent() {
     };
   }, []);
 
-  // OTA update check - runs early and blocks splash screen
+  // OTA update check - run in background and prompt when ready
   useEffect(() => {
-    checkAndApplyOtaUpdate({ markStartupComplete: true });
-  }, [checkAndApplyOtaUpdate]);
+    checkAndPrepareOtaUpdate();
+  }, [checkAndPrepareOtaUpdate]);
 
   // Do the initial permission syncs on launch, and re-sync on foreground
   useEffect(() => {
@@ -260,7 +258,11 @@ function RootLayoutContent() {
         } catch (error) {
           console.error("Failed to re-sync permissions on foreground", error);
         }
-        await checkAndApplyOtaUpdate();
+        if (updateReady) {
+          setShowUpdateModal(true);
+          return;
+        }
+        await checkAndPrepareOtaUpdate();
       }
     });
 
@@ -268,7 +270,7 @@ function RootLayoutContent() {
       mounted = false;
       sub.remove();
     };
-  }, [checkAndApplyOtaUpdate]);
+  }, [checkAndPrepareOtaUpdate, updateReady]);
 
   // Native splash control
   const hasHiddenNative = useRef(false);
@@ -280,8 +282,8 @@ function RootLayoutContent() {
     } catch {}
   }, []);
 
-  const appReady = fontsLoaded && initialSynced && otaChecked && isHydrated;
-  const splashReady = appReady && !isApplyingUpdate;
+  const appReady = fontsLoaded && initialSynced && isHydrated;
+  const splashReady = appReady;
 
   return (
     <SafeAreaProvider>
@@ -333,6 +335,15 @@ function RootLayoutContent() {
           opacity: showReloadCover ? 1 : 0,
         }}
         pointerEvents={showReloadCover ? "auto" : "none"}
+      />
+
+      <UpdateModal
+        visible={showUpdateModal && updateReady}
+        isRestarting={isRestartingUpdate}
+        onLater={() => setShowUpdateModal(false)}
+        onRestart={() => {
+          void handleRestartForUpdate();
+        }}
       />
       </PortalProvider>
     </SafeAreaProvider>
