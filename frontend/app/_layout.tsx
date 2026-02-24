@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Asset } from "expo-asset";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 import * as Updates from "expo-updates";
@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
+import { PortalProvider } from "@gorhom/portal";
 import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { preloadQuranData } from "@/services/quranData";
@@ -284,10 +285,17 @@ function RootLayoutContent() {
 
   return (
     <SafeAreaProvider>
+      <PortalProvider>
       {/* Always render app content so it mounts and loads data while splash is visible */}
       <QuranAudioProvider>
         <View style={{ flex: 1, backgroundColor }}>
-          <Slot />
+          <Stack screenOptions={{ headerShown: false, animation: "none" }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="components/map"
+              options={{ animation: "fade", animationDuration: 300 }}
+            />
+          </Stack>
           <QuranMiniPlayerPortal />
         </View>
       </QuranAudioProvider>
@@ -326,6 +334,7 @@ function RootLayoutContent() {
         }}
         pointerEvents={showReloadCover ? "auto" : "none"}
       />
+      </PortalProvider>
     </SafeAreaProvider>
   );
 }

@@ -49,6 +49,7 @@ export default function MapScreen() {
     latitude: number;
     longitude: number;
   }>(null);
+  const [mapInitialRegion, setMapInitialRegion] = useState<Region | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
 
   const [mosques, setMosques] = useState<Mosque[]>([]);
@@ -88,7 +89,9 @@ export default function MapScreen() {
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
         };
+        setMapInitialRegion(initialRegion);
         setRegion(initialRegion);
+        setLoading(false);
 
         const cached = await getCachedMosques(latitude, longitude);
         setMosques(cached);
@@ -98,9 +101,9 @@ export default function MapScreen() {
         setMosques(fresh);
       } catch (error) {
         console.error("Error initializing map:", error);
+        setLoading(false);
       } finally {
         setFetching(false);
-        setLoading(false);
       }
     })();
   }, []);
@@ -167,10 +170,9 @@ export default function MapScreen() {
     !loading &&
     (servicesOn === false ||
       permissionStatus !== "granted" ||
-      location == null ||
-      region == null);
+      location == null);
 
-  if (loading && !location) {
+  if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={themeColors.accent} />
@@ -182,7 +184,7 @@ export default function MapScreen() {
     return (
       <View style={styles.gateScreen}>
         <TouchableOpacity
-          onPress={() => router.push("/(tabs)/Mosques")}
+          onPress={() => router.back()}
           style={styles.backButton}
           accessibilityRole="button"
           accessibilityLabel="Back to mosques"
@@ -225,12 +227,21 @@ export default function MapScreen() {
     );
   }
 
+  // Keep MapView unmounted until we have a stable initial region.
+  if (!location || !mapInitialRegion || !region) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={themeColors.accent} />
+      </View>
+    );
+  }
+
   const empty = mosques.length === 0;
 
   return (
     <View style={styles.screen}>
       <TouchableOpacity
-        onPress={() => router.push("/(tabs)/Mosques")}
+        onPress={() => router.back()}
         style={styles.backButton}
         accessibilityRole="button"
         accessibilityLabel="Back to mosques"
@@ -243,7 +254,7 @@ export default function MapScreen() {
         style={StyleSheet.absoluteFillObject}
         customMapStyle={customMapStyle}
         userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
-        initialRegion={region!}
+        initialRegion={mapInitialRegion}
         onRegionChangeComplete={handleRegionChange}
         showsUserLocation
       >
@@ -351,6 +362,7 @@ const createStyles = (theme: AppTheme) => {
       top: 50,
       left: 20,
       zIndex: 10,
+      elevation: 10,
       backgroundColor: withOpacity(themeColors.primary, 0.85),
       borderRadius: 30,
       padding: 10,
@@ -358,7 +370,6 @@ const createStyles = (theme: AppTheme) => {
       shadowOpacity: 0.4,
       shadowOffset: { width: 0, height: 3 },
       shadowRadius: 6,
-      elevation: 5,
     },
     gateBanner: { marginTop: spacing.xl },
     banner: {

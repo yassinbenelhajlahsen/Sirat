@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-picker/picker": "2.11.1",
     "@react-navigation/bottom-tabs": "^7.3.10",
