@@ -65,7 +65,9 @@ frontend/
 - App startup preloads Quran data/display modes and syncs location/notification permissions in `app/_layout.tsx`.
 - Theme state is provided by `context/ThemeContext.tsx` and persisted under `app_theme_v1`.
 - Root layout waits for theme hydration before marking the app as ready to avoid startup flicker.
-- Root layout also checks and applies OTA updates outside Expo Go in `app/_layout.tsx`.
+- Root layout checks OTA updates outside Expo Go in `app/_layout.tsx` and downloads them in the background (no immediate forced reload).
+- A themed restart prompt (`app/components/UpdateModal.tsx`) is shown on the next foreground event when a downloaded update is ready.
+- Tapping `Restart` applies the OTA via runtime reload; tapping `Later` defers until a future foreground/cold launch.
 - Notification scheduling is handled by `services/notificationService.ts`.
 - Notification master flag (`notif_enabled_v1`) is persisted as string `"1"`/`"0"` in AsyncStorage.
 - Prayer-time caching and annual calendar fetch live in `services/prayerTimes.ts` (uses `/calendar/year` first, with monthly fallback).

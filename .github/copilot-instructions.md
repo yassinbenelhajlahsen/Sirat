@@ -94,7 +94,9 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 ## Permissions and Sync
 
 - Initial permission sync runs in `frontend/app/_layout.tsx`.
-- Root layout also initializes notifications, preloads Quran assets, and checks OTA updates when not running in Expo Go.
+- Root layout also initializes notifications, preloads Quran assets, and checks/fetches OTA updates in the background when not running in Expo Go.
+- Downloaded OTA updates are not applied immediately; a themed restart prompt (`frontend/app/components/UpdateModal.tsx`) is shown on the next foreground event.
+- Choosing `Restart` applies the update via runtime reload; choosing `Later` defers until a future foreground/cold launch.
 - Root layout also updates native background color from active theme to avoid restart/OTA white flashes.
 - Location permission affects prayer location mode.
 - Notification OS permission is mirrored into app toggle state.
