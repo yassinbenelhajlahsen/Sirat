@@ -15,6 +15,7 @@ import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
 import { QuranAudioProvider } from "@/context/QuranAudioProvider";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { NotificationService } from "../services/notificationService";
@@ -30,7 +31,6 @@ const NOTIF_ENABLED_KEY = "notif_enabled_v1";
 const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
 const SETTINGS_CHANGED_EVENT = "settingsChanged";
 const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
-const APP_BACKGROUND_COLOR = "#134b0a";
 
 async function preloadImages() {
   await Asset.loadAsync([
@@ -116,6 +116,17 @@ async function syncNotificationPermissionToToggle() {
 }
 
 export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootLayoutContent />
+    </ThemeProvider>
+  );
+}
+
+function RootLayoutContent() {
+  const { theme, isHydrated } = useTheme();
+  const backgroundColor = theme.colors.primaryDark;
+
   const [fontsLoaded] = useFonts({
     "SFProDisplay-Bold": require("../assets/fonts/SF-Pro-Display-Bold.otf"),
     "SFProDisplay-Regular": require("../assets/fonts/SF-Pro-Display-Regular.otf"),
@@ -194,8 +205,8 @@ export default function RootLayout() {
   // Keep native root/system background aligned with app color to avoid white frames
   // during bridge restarts (for example, immediate OTA reloads).
   useEffect(() => {
-    SystemUI.setBackgroundColorAsync(APP_BACKGROUND_COLOR).catch(() => {});
-  }, []);
+    SystemUI.setBackgroundColorAsync(backgroundColor).catch(() => {});
+  }, [backgroundColor]);
 
   // Clear old Adhan notifications when the app opens so the tray stays clean.
   useEffect(() => {
@@ -268,14 +279,14 @@ export default function RootLayout() {
     } catch {}
   }, []);
 
-  const appReady = fontsLoaded && initialSynced && otaChecked;
+  const appReady = fontsLoaded && initialSynced && otaChecked && isHydrated;
   const splashReady = appReady && !isApplyingUpdate;
 
   return (
     <SafeAreaProvider>
       {/* Always render app content so it mounts and loads data while splash is visible */}
       <QuranAudioProvider>
-        <View style={{ flex: 1, backgroundColor: APP_BACKGROUND_COLOR }}>
+        <View style={{ flex: 1, backgroundColor }}>
           <Slot />
           <QuranMiniPlayerPortal />
         </View>
@@ -310,7 +321,7 @@ export default function RootLayout() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: APP_BACKGROUND_COLOR,
+          backgroundColor,
           opacity: showReloadCover ? 1 : 0,
         }}
         pointerEvents={showReloadCover ? "auto" : "none"}
