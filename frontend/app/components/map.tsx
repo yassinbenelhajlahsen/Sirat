@@ -33,10 +33,10 @@ export default function MapScreen() {
   const { theme } = useTheme();
   const themeColors = theme.colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const customMapStyle = useMemo(
-    () => createCustomMapStyle(themeColors),
-    [themeColors],
-  );
+  const customMapStyle = useMemo(() => {
+    if (theme.name === "light") return undefined;
+    return createCustomMapStyle(themeColors);
+  }, [theme.name, themeColors]);
 
   const router = useRouter();
   const mapRef = useRef<MapView | null>(null);
@@ -242,6 +242,7 @@ export default function MapScreen() {
         ref={mapRef}
         style={StyleSheet.absoluteFillObject}
         customMapStyle={customMapStyle}
+        userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
         initialRegion={region!}
         onRegionChangeComplete={handleRegionChange}
         showsUserLocation

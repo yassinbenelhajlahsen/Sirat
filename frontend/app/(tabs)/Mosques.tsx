@@ -114,7 +114,10 @@ export default function MosqueScreen() {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const customMapStyle = useMemo(() => createCustomMapStyle(colors), [colors]);
+  const customMapStyle = useMemo(() => {
+    if (theme.name === "light") return undefined;
+    return createCustomMapStyle(colors);
+  }, [theme.name, colors]);
 
   const router = useRouter();
 
@@ -499,6 +502,7 @@ export default function MosqueScreen() {
                   }}
                   showsUserLocation
                   customMapStyle={customMapStyle}
+                  userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
                 >
                   {mosques.map((m) => (
                     <Marker
