@@ -2,16 +2,14 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Animated,
   Easing,
   Image,
-  PanResponder,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -21,39 +19,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PressableScale from "../../components/PressableScale";
 import {
   dateKeyFromDate,
-  getHolidayMapForYear,
-  getHolidaysForYear,
 } from "../../services/holidayService";
-import {
-  computeRamadanEnd,
-  findRamadanStart,
-  getMissedFastDays,
-  getRamadanPeriodSummary,
-  isInRamadanWindow,
-} from "../../services/ramadanTracker";
-
-const getMonthMatrix = (year: number, month: number) => {
-  const firstDay = new Date(year, month, 1).getDay();
-  const numDays = new Date(year, month + 1, 0).getDate();
-
-  const weeks: number[][] = [];
-  let day = 1 - firstDay;
-  for (let i = 0; i < 6; i++) {
-    const week: number[] = [];
-    for (let j = 0; j < 7; j++) {
-      week.push(day > 0 && day <= numDays ? day : 0);
-      day++;
-    }
-    weeks.push(week);
-  }
-  return weeks;
-};
-
-function parseDateKey(dateStr: string): Date | null {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d);
-}
+import { useCalendarData } from "../../hooks/useCalendarData";
+import { useCalendarNavigationTransitions } from "../../hooks/useCalendarNavigationTransitions";
+import { useCalendarSummaryTransition } from "../../hooks/useCalendarSummaryTransition";
+import { useCalendarViewState } from "../../hooks/useCalendarViewState";
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
@@ -61,372 +31,68 @@ export default function CalendarScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const router = useRouter();
-  const today = new Date();
   const { month, year } = useLocalSearchParams();
   const { width } = useWindowDimensions();
   const isSmall = width < 360;
-  const initialMonth =
-    typeof month === "string" ? parseInt(month, 10) : today.getMonth();
-  const initialYear =
-    typeof year === "string" ? parseInt(year, 10) : today.getFullYear();
-  const initialIsViewingToday =
-    initialMonth === today.getMonth() && initialYear === today.getFullYear();
-
-  const minDate = new Date(today.getFullYear(), 0);
-  const maxDate = new Date(today.getFullYear() + 1, 11);
-
-  const [viewYear, setViewYear] = useState(initialYear);
-  const [viewMonth, setViewMonth] = useState(initialMonth);
-  const [holidayMap, setHolidayMap] = useState<Record<string, string>>({});
-  const [loadingHolidays, setLoadingHolidays] = useState(false);
-  const [navigating, setNavigating] = useState(false);
-
-  // Ramadan tracking state
-  const [missedFastsMap, setMissedFastsMap] = useState<Record<string, boolean>>(
-    {},
-  );
-  const [ramadanMonthActive, setRamadanMonthActive] = useState(false);
-  const [ramadanStart, setRamadanStart] = useState<Date | null>(null);
-  const [ramadanEnd, setRamadanEnd] = useState<Date | null>(null);
-
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const ramadanSummaryAnim = useRef(new Animated.Value(0)).current;
-  const backToTodayAnim = useRef(
-    new Animated.Value(initialIsViewingToday ? 0 : 1),
-  ).current;
-  const { width: screenWidth } = useWindowDimensions();
+  const {
+    today,
+    minDate,
+    maxDate,
+    viewYear,
+    setViewYear,
+    viewMonth,
+    setViewMonth,
+    viewMonthRef,
+    viewYearRef,
+    initialIsViewingToday,
+    isViewingToday,
+    canGoPrev,
+    canGoNext,
+    dayButtonSize,
+    visibleMatrix,
+    monthName,
+  } = useCalendarViewState({
+    monthParam: month,
+    yearParam: year,
+    isSmall,
+  });
+  const {
+    holidayMap,
+    loadingHolidays,
+    ramadanStart,
+    ramadanEnd,
+    ramadanSummary,
+    firstMissedFastDate,
+    missedDaysLabel,
+    showRamadanSummary,
+  } = useCalendarData(viewYear, viewMonth);
+  const { ramadanSummaryAnim, renderRamadanSummary } =
+    useCalendarSummaryTransition(showRamadanSummary);
+  const {
+    navigating,
+    setNavigating,
+    fadeAnim,
+    translateX,
+    backToTodayAnim,
+    panHandlers,
+    goToPreviousMonth,
+    goToNextMonth,
+    goBackToToday,
+  } = useCalendarNavigationTransitions({
+    viewYear,
+    viewMonth,
+    setViewYear,
+    setViewMonth,
+    viewYearRef,
+    viewMonthRef,
+    minDate,
+    maxDate,
+    today,
+    screenWidth: width,
+    initialIsViewingToday,
+    isViewingToday,
+  });
   const tabBarHeight = useBottomTabBarHeight();
-
-  // keep refs for current viewMonth/viewYear so PanResponder callbacks read fresh values
-  const viewMonthRef = useRef(viewMonth);
-  const viewYearRef = useRef(viewYear);
-  useEffect(() => {
-    viewMonthRef.current = viewMonth;
-    viewYearRef.current = viewYear;
-  }, [viewMonth, viewYear]);
-
-  const isViewingToday =
-    viewMonth === today.getMonth() && viewYear === today.getFullYear();
-  const canGoPrev = new Date(viewYear, viewMonth - 1) >= minDate;
-  const canGoNext = new Date(viewYear, viewMonth + 1) <= maxDate;
-  const dayButtonSize = isSmall ? 34 : 40;
-
-  const matrix = useMemo(
-    () => getMonthMatrix(viewYear, viewMonth),
-    [viewYear, viewMonth],
-  );
-  const visibleMatrix = useMemo(() => {
-    let lastWeekWithDates = matrix.length - 1;
-    while (
-      lastWeekWithDates >= 0 &&
-      matrix[lastWeekWithDates].every((day) => day === 0)
-    ) {
-      lastWeekWithDates -= 1;
-    }
-
-    return matrix.slice(0, Math.max(lastWeekWithDates + 1, 1));
-  }, [matrix]);
-  const monthName = useMemo(
-    () =>
-      new Date(viewYear, viewMonth).toLocaleString("default", {
-        month: "long",
-      }),
-    [viewYear, viewMonth],
-  );
-
-  // Compute Ramadan summary for the entire Ramadan period
-  const ramadanSummary = useMemo(() => {
-    if (!ramadanMonthActive || !ramadanStart || !ramadanEnd) return null;
-    return getRamadanPeriodSummary(missedFastsMap, ramadanStart, ramadanEnd);
-  }, [missedFastsMap, ramadanMonthActive, ramadanStart, ramadanEnd]);
-  const firstMissedFastDate = useMemo(() => {
-    if (!ramadanMonthActive || !ramadanStart || !ramadanEnd) return null;
-
-    const windowStart = new Date(ramadanStart);
-    windowStart.setDate(windowStart.getDate() - 3);
-    windowStart.setHours(0, 0, 0, 0);
-
-    const windowEnd = new Date(ramadanEnd);
-    windowEnd.setDate(windowEnd.getDate() + 3);
-    windowEnd.setHours(0, 0, 0, 0);
-
-    const earliestDateKey = Object.entries(missedFastsMap)
-      .filter(([, isMissed]) => isMissed)
-      .map(([dateKey]) => dateKey)
-      .sort()
-      .find((dateKey) => {
-        const parsed = parseDateKey(dateKey);
-        if (!parsed) return false;
-        parsed.setHours(0, 0, 0, 0);
-        return parsed >= windowStart && parsed <= windowEnd;
-      });
-
-    return earliestDateKey ? parseDateKey(earliestDateKey) : null;
-  }, [missedFastsMap, ramadanMonthActive, ramadanStart, ramadanEnd]);
-  const missedDaysLabel = useMemo(() => {
-    if (!ramadanSummary || ramadanSummary.missedDays.length === 0) return "";
-    return ramadanSummary.missedDays.join(", ");
-  }, [ramadanSummary]);
-  const showRamadanSummary =
-    !!ramadanSummary && ramadanSummary.totalMissed > 0 && !!firstMissedFastDate;
-  const [renderRamadanSummary, setRenderRamadanSummary] =
-    useState(showRamadanSummary);
-
-  useEffect(() => {
-    if (showRamadanSummary) {
-      setRenderRamadanSummary(true);
-      ramadanSummaryAnim.setValue(0);
-      Animated.timing(ramadanSummaryAnim, {
-        toValue: 1,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
-      }).start();
-      return;
-    }
-
-    if (!renderRamadanSummary) return;
-
-    Animated.timing(ramadanSummaryAnim, {
-      toValue: 0,
-      duration: 180,
-      easing: Easing.in(Easing.cubic),
-      useNativeDriver: false,
-    }).start(({ finished }) => {
-      if (finished) setRenderRamadanSummary(false);
-    });
-  }, [renderRamadanSummary, ramadanSummaryAnim, showRamadanSummary]);
-
-  useEffect(() => {
-    Animated.timing(backToTodayAnim, {
-      toValue: isViewingToday ? 0 : 1,
-      duration: 220,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-  }, [backToTodayAnim, isViewingToday]);
-
-  // Load holidays for the visible year
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoadingHolidays(true);
-      try {
-        const map = await getHolidayMapForYear(viewYear);
-        if (mounted) setHolidayMap(map);
-      } catch (err) {
-        console.error("Failed to load holidays:", err);
-        if (mounted) setHolidayMap({});
-      } finally {
-        if (mounted) setLoadingHolidays(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [viewYear]);
-
-  // Load Ramadan data and check if current month is in Ramadan window
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        // Load Ramadan tracker data
-        const map = await getMissedFastDays();
-        if (mounted) setMissedFastsMap(map);
-
-        // Check if current month is in Ramadan window
-        const holidays = await getHolidaysForYear(viewYear);
-        const startDate = findRamadanStart(holidays);
-
-        if (startDate) {
-          const endDate = computeRamadanEnd(startDate);
-          const firstOfMonth = new Date(viewYear, viewMonth, 1);
-          const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
-
-          // Month is "Ramadan active" if any day in the month is in window
-          const monthInWindow =
-            isInRamadanWindow(firstOfMonth, startDate, endDate) ||
-            isInRamadanWindow(lastOfMonth, startDate, endDate);
-
-          if (mounted) {
-            setRamadanMonthActive(monthInWindow);
-            setRamadanStart(startDate);
-            setRamadanEnd(endDate);
-          }
-        } else {
-          if (mounted) {
-            setRamadanMonthActive(false);
-            setRamadanStart(null);
-            setRamadanEnd(null);
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to load Ramadan data:", e);
-        if (mounted) {
-          setMissedFastsMap({});
-          setRamadanMonthActive(false);
-          setRamadanStart(null);
-          setRamadanEnd(null);
-        }
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [viewYear, viewMonth]);
-
-  // Reload Ramadan map when returning to Calendar (after marking a day)
-  useFocusEffect(
-    useCallback(() => {
-      (async () => {
-        try {
-          const map = await getMissedFastDays();
-          setMissedFastsMap(map);
-        } catch (e) {
-          console.warn("Failed to reload Ramadan map on focus:", e);
-        }
-      })();
-    }, []),
-  );
-
-  // Slide + fade animation helper. dir = 1 => next month (slide left), dir = -1 => previous month (slide right)
-  const animateSlideChange = (
-    dir: 1 | -1,
-    targetYear: number,
-    targetMonth: number,
-  ) => {
-    // if already animating, ignore
-    if (navigating) return;
-    setNavigating(true);
-
-    // slide out in the swipe direction + slight fade
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: -dir * screenWidth,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 0.9,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // set new month/year
-      setViewYear(targetYear);
-      setViewMonth(targetMonth);
-
-      // prepare incoming position (opposite side) and animate back to center
-      translateX.setValue(dir * screenWidth);
-      Animated.parallel([
-        Animated.timing(translateX, {
-          toValue: 0,
-          duration: 240,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setNavigating(false);
-      });
-    });
-  };
-
-  // Updated button handlers to use slide animation
-  const goToPreviousMonth = () => {
-    const prev = new Date(viewYear, viewMonth - 1);
-    if (prev >= minDate) {
-      animateSlideChange(-1, prev.getFullYear(), prev.getMonth());
-    }
-  };
-
-  const goToNextMonth = () => {
-    const next = new Date(viewYear, viewMonth + 1);
-    if (next <= maxDate) {
-      animateSlideChange(1, next.getFullYear(), next.getMonth());
-    }
-  };
-
-  // PanResponder for horizontal swipes
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        Math.abs(gestureState.dx) > 8 && Math.abs(gestureState.dy) < 20,
-      onPanResponderGrant: () => {
-        // stop any ongoing animations and use translateX directly
-        translateX.stopAnimation();
-      },
-      onPanResponderMove: (_, gestureState) => {
-        // follow finger
-        translateX.setValue(gestureState.dx);
-        // subtle fade while dragging
-        const fade =
-          1 - Math.min(Math.abs(gestureState.dx) / screenWidth, 0.25);
-        fadeAnim.setValue(fade);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const dx = gestureState.dx;
-        const vx = gestureState.vx;
-        const threshold = Math.min(0.25 * screenWidth, 80); // threshold to trigger
-        // determine direction: left swipe (next) if dx < -threshold OR high left velocity
-        if (dx < -threshold || (vx < -0.8 && Math.abs(dx) > 20)) {
-          // next month
-          const currentYear = viewYearRef.current;
-          const currentMonth = viewMonthRef.current;
-          const next = new Date(currentYear, currentMonth + 1);
-          if (next <= maxDate) {
-            animateSlideChange(1, next.getFullYear(), next.getMonth());
-            return;
-          }
-        } else if (dx > threshold || (vx > 0.8 && Math.abs(dx) > 20)) {
-          // previous month
-          const currentYear = viewYearRef.current;
-          const currentMonth = viewMonthRef.current;
-          const prev = new Date(currentYear, currentMonth - 1);
-          if (prev >= minDate) {
-            animateSlideChange(-1, prev.getFullYear(), prev.getMonth());
-            return;
-          }
-        }
-
-        // otherwise snap back to center
-        Animated.parallel([
-          Animated.timing(translateX, {
-            toValue: 0,
-            duration: 180,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 160,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      },
-      onPanResponderTerminate: () => {
-        // snap back
-        Animated.timing(translateX, {
-          toValue: 0,
-          duration: 160,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 140,
-          useNativeDriver: true,
-        }).start();
-      },
-    }),
-  ).current;
 
   // Animate fade-out before navigating to date details
   const handleDatePress = (selectedDate: Date, holidayName?: string) => {
@@ -551,7 +217,7 @@ export default function CalendarScreen() {
 
         {/* Animated calendar grid (swipe + slide animations applied here only) */}
         <Animated.View
-          {...panResponder.panHandlers}
+          {...panHandlers}
           style={{
             flex: 1,
             paddingHorizontal: spacing.lg,
@@ -734,16 +400,7 @@ export default function CalendarScreen() {
           >
             <PressableScale
               disabled={isViewingToday}
-              onPress={() => {
-                const targetYear = today.getFullYear();
-                const targetMonth = today.getMonth();
-                if (targetYear === viewYear && targetMonth === viewMonth)
-                  return;
-                const targetDate = new Date(targetYear, targetMonth);
-                const currentDate = new Date(viewYear, viewMonth);
-                const dir = targetDate > currentDate ? 1 : -1;
-                animateSlideChange(dir, targetYear, targetMonth);
-              }}
+              onPress={goBackToToday}
               style={styles.backToToday}
               accessibilityRole="button"
               accessibilityLabel="Back to current month"
