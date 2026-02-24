@@ -10,7 +10,8 @@ import {
   useWindowDimensions,
 } from "react-native";
 
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { NormalizedSurahMeta } from "@/services/quranData";
 
 import PressableScale from "../../PressableScale";
@@ -51,6 +52,11 @@ function SurahTab({
   onSelectJuz,
   onClose,
 }: SurahTabProps) {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const isLight = theme.name === "light";
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const trimmedQuery = surahSearchQuery.trim();
   const [showJuzGrid, setShowJuzGrid] = useState(false);
   const data = useMemo(() => {
@@ -113,7 +119,7 @@ function SurahTab({
         </PressableScale>
       );
     },
-    [dataLength, handleSelect, numColumns],
+    [dataLength, handleSelect, numColumns, styles],
   );
 
   const keyExtractor = useCallback((item: SurahItem) => {
@@ -131,7 +137,11 @@ function SurahTab({
       <TextInput
         style={styles.searchInput}
         placeholder="Search verses or 2:255"
-        placeholderTextColor={withOpacity(themeColors.white, 0.5)}
+        placeholderTextColor={
+          isLight
+            ? withOpacity(themeColors.grayDark, 0.86)
+            : withOpacity(themeColors.white, 0.5)
+        }
         value={surahSearchQuery}
         onChangeText={onSurahSearchQueryChange}
       />
@@ -245,160 +255,203 @@ function SurahTab({
 
 export default memo(SurahTab);
 
-const styles = StyleSheet.create({
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    paddingTop: 8,
-  },
-  columnWrapper: {
-    paddingBottom: 12,
-  },
-  headerContainer: {
-    marginBottom: 14,
-  },
-  sectionHeading: {
-    color: withOpacity(themeColors.white, 0.86),
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 12,
-    marginBottom: 8,
-    letterSpacing: 0.35,
-    textTransform: "uppercase",
-  },
-  ayahResultsContainer: {
-    marginBottom: 8,
-  },
-  ayahResultTile: {
-    backgroundColor: withOpacity(themeColors.white, 0.08),
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.28),
-    marginBottom: 9,
-  },
-  ayahResultMeta: {
-    color: themeColors.accent,
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  ayahResultText: {
-    color: withOpacity(themeColors.white, 0.84),
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  juzSection: {
-    marginTop: 10,
-  },
-  juzHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  juzToggle: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.24),
-    backgroundColor: withOpacity(themeColors.white, 0.08),
-  },
-  juzToggleActive: {
-    borderColor: withOpacity(themeColors.accent, 0.48),
-    backgroundColor: withOpacity(themeColors.accent, 0.16),
-  },
-  juzToggleText: {
-    color: withOpacity(themeColors.white, 0.86),
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.3,
-  },
-  juzToggleTextActive: {
-    color: themeColors.accent,
-  },
-  juzGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    rowGap: 8,
-    columnGap: 8,
-  },
-  juzTile: {
-    flexBasis: "18%", // base width
-    flexGrow: 1,
-    width: "16.66%",
-    marginBottom: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: withOpacity(themeColors.white, 0.08),
-    borderRadius: 11,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.3),
-    minHeight: 36,
-  },
-  juzTileText: {
-    color: themeColors.white,
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  searchInput: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 15,
-    backgroundColor: withOpacity(themeColors.white, 0.09),
-    color: themeColors.white,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.16),
-  },
-  surahTile: {
-    flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-    backgroundColor: withOpacity(themeColors.white, 0.07),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.28),
-    marginBottom: 12,
-  },
-  surahTileSpaced: {
-    flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-    backgroundColor: withOpacity(themeColors.white, 0.07),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.28),
-    marginBottom: 12,
-    marginRight: 12,
-  },
-  surahTileRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  surahEnglish: {
-    color: themeColors.white,
-    fontSize: 16,
-    fontWeight: "600",
-    flexShrink: 1,
-    marginRight: 12,
-  },
-  surahArabic: {
-    color: themeColors.accent,
-    fontSize: 18,
-  },
-  surahMeta: {
-    color: withOpacity(themeColors.white, 0.66),
-    fontSize: 12,
-  },
-  emptyStateText: {
-    color: withOpacity(themeColors.white, 0.7),
-    textAlign: "center",
-    fontSize: 14,
-    paddingVertical: 12,
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
+    listContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 18,
+      paddingTop: 8,
+    },
+    columnWrapper: {
+      paddingBottom: 12,
+    },
+    headerContainer: {
+      marginBottom: 14,
+    },
+    sectionHeading: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.95)
+        : withOpacity(themeColors.white, 0.86),
+      fontSize: 13,
+      fontWeight: "600",
+      marginTop: 12,
+      marginBottom: 8,
+      letterSpacing: 0.35,
+      textTransform: "uppercase",
+    },
+    ayahResultsContainer: {
+      marginBottom: 8,
+    },
+    ayahResultTile: {
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primaryHighlight, 0.94)
+        : withOpacity(themeColors.white, 0.08),
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.7)
+        : withOpacity(themeColors.accent, 0.28),
+      marginBottom: 9,
+    },
+    ayahResultMeta: {
+      color: isLight ? themeColors.primaryOutline : themeColors.accent,
+      fontSize: 12,
+      fontWeight: "600",
+      marginBottom: 4,
+    },
+    ayahResultText: {
+      color: isLight
+        ? withOpacity(themeColors.offWhite, 0.88)
+        : withOpacity(themeColors.white, 0.84),
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    juzSection: {
+      marginTop: 10,
+    },
+    juzHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 10,
+    },
+    juzToggle: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.66)
+        : withOpacity(themeColors.white, 0.24),
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurface, 0.92)
+        : withOpacity(themeColors.white, 0.08),
+    },
+    juzToggleActive: {
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryOutline, 0.85)
+        : withOpacity(themeColors.accent, 0.48),
+      backgroundColor: isLight
+        ? withOpacity(themeColors.accentSoft, 0.85)
+        : withOpacity(themeColors.accent, 0.16),
+    },
+    juzToggleText: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.96)
+        : withOpacity(themeColors.white, 0.86),
+      fontSize: 12,
+      fontWeight: "600",
+      letterSpacing: 0.3,
+    },
+    juzToggleTextActive: {
+      color: isLight ? themeColors.offWhite : themeColors.accent,
+    },
+    juzGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      rowGap: 8,
+      columnGap: 8,
+    },
+    juzTile: {
+      flexBasis: "18%", // base width
+      flexGrow: 1,
+      width: "16.66%",
+      marginBottom: 8,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurface, 0.94)
+        : withOpacity(themeColors.white, 0.08),
+      borderRadius: 11,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.7)
+        : withOpacity(themeColors.accent, 0.3),
+      minHeight: 36,
+    },
+    juzTileText: {
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontWeight: "600",
+      fontSize: 13,
+    },
+    searchInput: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 15,
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurface, 0.95)
+        : withOpacity(themeColors.white, 0.09),
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 15,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.72)
+        : withOpacity(themeColors.white, 0.16),
+    },
+    surahTile: {
+      flex: 1,
+      paddingVertical: 15,
+      paddingHorizontal: 16,
+      borderRadius: 15,
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primaryHighlight, 0.94)
+        : withOpacity(themeColors.white, 0.07),
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.72)
+        : withOpacity(themeColors.accent, 0.28),
+      marginBottom: 12,
+    },
+    surahTileSpaced: {
+      flex: 1,
+      paddingVertical: 15,
+      paddingHorizontal: 16,
+      borderRadius: 15,
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primaryHighlight, 0.94)
+        : withOpacity(themeColors.white, 0.07),
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.72)
+        : withOpacity(themeColors.accent, 0.28),
+      marginBottom: 12,
+      marginRight: 12,
+    },
+    surahTileRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 6,
+    },
+    surahEnglish: {
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 16,
+      fontWeight: "600",
+      flexShrink: 1,
+      marginRight: 12,
+    },
+    surahArabic: {
+      color: isLight ? themeColors.primaryOutline : themeColors.accent,
+      fontSize: 18,
+    },
+    surahMeta: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.94)
+        : withOpacity(themeColors.white, 0.66),
+      fontSize: 12,
+    },
+    emptyStateText: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.92)
+        : withOpacity(themeColors.white, 0.7),
+      textAlign: "center",
+      fontSize: 14,
+      paddingVertical: 12,
+    },
+  });
+};

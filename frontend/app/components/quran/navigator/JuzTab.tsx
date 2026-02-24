@@ -7,7 +7,8 @@ import {
   View,
 } from "react-native";
 
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 import PressableScale from "../../PressableScale";
 
@@ -17,6 +18,9 @@ type JuzTabProps = {
 };
 
 function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const rows = useMemo(() => {
     const JUZ_PER_ROW = 3;
     const TOTAL_JUZ = 30;
@@ -77,41 +81,45 @@ function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
 
 export default memo(JuzTab);
 
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    paddingTop: 20,
-  },
-  heading: {
-    color: themeColors.white,
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  row: {
-    flexDirection: "row",
-    marginBottom: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor:themeColors.primaryDark,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.25),
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonSpaced: {
-    marginRight: 12,
-  },
-  buttonText: {
-    color: themeColors.white,
-    fontWeight: "600",
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+
+  return StyleSheet.create({
+    scrollView: {
+      flex: 1,
+    },
+    contentContainer: {
+      paddingHorizontal: 20,
+      paddingBottom: 16,
+      paddingTop: 20,
+    },
+    heading: {
+      color: themeColors.white,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 12,
+    },
+    row: {
+      flexDirection: "row",
+      marginBottom: 12,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 12,
+      backgroundColor: themeColors.primaryDark,
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.25),
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    buttonSpaced: {
+      marginRight: 12,
+    },
+    buttonText: {
+      color: themeColors.white,
+      fontWeight: "600",
+    },
+  });
+};

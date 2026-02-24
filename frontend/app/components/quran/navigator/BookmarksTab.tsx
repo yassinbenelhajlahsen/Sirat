@@ -13,7 +13,8 @@ import {
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
-import { colors as themeColors, withOpacity } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { QuranBookmark } from "@/services/quranBookmarks";
 
 import PressableScale from "../../PressableScale";
@@ -41,6 +42,8 @@ type BookmarkRowProps = {
   onSelectBookmark: (bookmark: QuranBookmark) => void;
   onDeleteBookmark: (bookmark: QuranBookmark) => void;
   onClose: () => void;
+  styles: ReturnType<typeof createStyles>;
+  themeColors: AppTheme["colors"];
 };
 
 const BookmarkRow = memo(function BookmarkRow({
@@ -48,6 +51,8 @@ const BookmarkRow = memo(function BookmarkRow({
   onSelectBookmark,
   onDeleteBookmark,
   onClose,
+  styles,
+  themeColors,
 }: BookmarkRowProps) {
   const swipeableRef = useRef<Swipeable | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -144,7 +149,7 @@ const BookmarkRow = memo(function BookmarkRow({
         </Pressable>
       </Animated.View>
     ),
-    [deleteActionOpacity, handleDelete]
+    [deleteActionOpacity, handleDelete, styles, themeColors]
   );
 
   return (
@@ -192,6 +197,11 @@ function BookmarksTab({
   onDeleteBookmark,
   onClose,
 }: BookmarksTabProps) {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const isLight = theme.name === "light";
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const trimmedQuery = bookmarkSearchQuery.trim();
   const hasBookmarks = bookmarks.length > 0;
   const visibleBookmarks = useMemo(() => {
@@ -210,7 +220,11 @@ function BookmarksTab({
           <TextInput
             style={styles.searchInput}
             placeholder="Search bookmarks..."
-            placeholderTextColor={withOpacity(themeColors.white, 0.5)}
+            placeholderTextColor={
+              isLight
+                ? withOpacity(themeColors.grayDark, 0.85)
+                : withOpacity(themeColors.white, 0.5)
+            }
             value={bookmarkSearchQuery}
             onChangeText={onBookmarkSearchQueryChange}
           />
@@ -222,6 +236,8 @@ function BookmarksTab({
                 onSelectBookmark={onSelectBookmark}
                 onDeleteBookmark={onDeleteBookmark}
                 onClose={onClose}
+                styles={styles}
+                themeColors={themeColors}
               />
             ))}
           </View>
@@ -243,97 +259,122 @@ function BookmarksTab({
 
 export default memo(BookmarksTab);
 
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    paddingTop: 8,
-  },
-  sectionHeading: {
-    color: themeColors.white,
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  searchInput: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 15,
-    backgroundColor: withOpacity(themeColors.white, 0.09),
-    color: themeColors.white,
-    fontSize: 15,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.16),
-  },
-  bookmarkList: {
-    marginBottom: 12,
-  },
-  bookmarkRow: {
-    borderRadius: 15,
-    overflow: "hidden",
-    marginBottom: 11,
-  },
-  bookmarkButton: {
-    paddingVertical: 15,
-    paddingLeft: 16,
-    paddingRight: 36,
-    borderRadius: 15,
-    backgroundColor: withOpacity(themeColors.white, 0.07),
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.accent, 0.28),
-  },
-  bookmarkTitle: {
-    color: themeColors.white,
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  bookmarkMeta: {
-    color: withOpacity(themeColors.white, 0.68),
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  bookmarkSurahNames: {
-    color: themeColors.accent,
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  bookmarkNote: {
-    color: withOpacity(themeColors.white, 0.8),
-    fontSize: 13,
-  },
-  bookmarkEmptyText: {
-    color: withOpacity(themeColors.white, 0.7),
-    fontSize: 13,
-    paddingVertical: 6,
-    textAlign: "center",
-  },
-  bookmarkSwipeHint: {
-    color: withOpacity(themeColors.white, 0.62),
-    fontSize: 12,
-  },
-  deleteActionContainer: {
-    justifyContent: "center",
-    marginVertical: 4,
-    paddingLeft: 20,
-  },
-  deleteAction: {
-    backgroundColor: withOpacity("#C44545", 0.92),
-    paddingVertical: 17,
-    paddingHorizontal: 17,
-    borderRadius: 15,
-    marginRight: 4,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: withOpacity(themeColors.white, 0.22),
-  },
-  deleteActionContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-});
+const createStyles = (theme: AppTheme) => {
+  const themeColors = theme.colors;
+  const isLight = theme.name === "light";
+
+  return StyleSheet.create({
+    scrollView: {
+      flex: 1,
+    },
+    contentContainer: {
+      paddingHorizontal: 20,
+      paddingBottom: 18,
+      paddingTop: 8,
+    },
+    sectionHeading: {
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 12,
+    },
+    searchInput: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 15,
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurface, 0.95)
+        : withOpacity(themeColors.white, 0.09),
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 15,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.72)
+        : withOpacity(themeColors.white, 0.16),
+    },
+    bookmarkList: {
+      marginBottom: 12,
+    },
+    bookmarkRow: {
+      borderRadius: 15,
+      overflow: "hidden",
+      marginBottom: 11,
+    },
+    bookmarkButton: {
+      paddingVertical: 15,
+      paddingLeft: 16,
+      paddingRight: 36,
+      borderRadius: 15,
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primaryHighlight, 0.95)
+        : withOpacity(themeColors.white, 0.07),
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.72)
+        : withOpacity(themeColors.accent, 0.28),
+    },
+    bookmarkTitle: {
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 4,
+    },
+    bookmarkMeta: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.94)
+        : withOpacity(themeColors.white, 0.68),
+      fontSize: 12,
+      marginBottom: 2,
+    },
+    bookmarkSurahNames: {
+      color: isLight ? themeColors.primaryOutline : themeColors.accent,
+      fontSize: 13,
+      marginBottom: 4,
+    },
+    bookmarkNote: {
+      color: isLight
+        ? withOpacity(themeColors.offWhite, 0.86)
+        : withOpacity(themeColors.white, 0.8),
+      fontSize: 13,
+    },
+    bookmarkEmptyText: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.92)
+        : withOpacity(themeColors.white, 0.7),
+      fontSize: 13,
+      paddingVertical: 6,
+      textAlign: "center",
+    },
+    bookmarkSwipeHint: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.88)
+        : withOpacity(themeColors.white, 0.62),
+      fontSize: 12,
+    },
+    deleteActionContainer: {
+      justifyContent: "center",
+      marginVertical: 4,
+      paddingLeft: 20,
+    },
+    deleteAction: {
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.72)
+        : "#fd0000ff",
+      paddingVertical: 17,
+      paddingHorizontal: 17,
+      borderRadius: 15,
+      marginRight: 4,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryOutline, 0.88)
+        : withOpacity(themeColors.white, 0.22),
+    },
+    deleteActionContent: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+  });
+};
