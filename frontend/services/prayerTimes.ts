@@ -1,190 +1,38 @@
-// services/prayerTimes.ts
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Location from "expo-location";
-import { City } from "../utils/cities";
+import {
+  buildPrayerCacheKey,
+  clearPrayerMemoryCache,
+  loadPrayerStorageCache,
+  readPrayerMemoryCache,
+  savePrayerStorageCache,
+  writePrayerMemoryCache,
+} from "./prayer-times/cacheStore";
+import { resolveCoordsAndCountry } from "./prayer-times/environment";
+import { fetchPrayerProxy } from "./prayer-times/apiClient";
+import {
+  dateKey,
+  formatTo12Hour,
+  mapTimingsToPrayerTimes,
+  mergeCalendarDayIntoStore,
+} from "./prayer-times/transformers";
+import type {
+  BackendCalendarDay,
+  BackendCalendarYearPayload,
+  BackendTimingsPayload,
+  CalendarCache,
+  PrayerLocationOverride,
+  PrayerMethodParam,
+  PrayerSettings,
+  PrayerTime,
+  ResolvedEnv,
+} from "./prayer-times/types";
 
-const PRAYER_API_BASE =
-  process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
-
-/* ============================
- * Types
- * ============================ */
-export interface PrayerSettings {
-  useLocation: boolean; // true = use device location if available
-  method: number; // Aladhan calculation method (-1 = Auto resolved by backend)
-  city?: City; // manual city fallback or explicit city when useLocation=false
-}
-
-export interface PrayerTime {
-  label: "Fajr" | "Sunrise" | "Dhuhr" | "Asr" | "Maghrib" | "Isha" | string;
-  time: string; // "h:mm AM/PM"
-}
-
-type BackendErrorShape = {
-  error?:
-    | {
-        code?: string;
-        message?: string;
-      }
-    | string;
-};
-
-type BackendProxyResponse<T> = {
-  success?: boolean;
-  data?: T;
-} & BackendErrorShape;
-
-type RequiredTimingMap = {
-  Fajr: string;
-  Sunrise: string;
-  Dhuhr: string;
-  Asr: string;
-  Maghrib: string;
-  Isha: string;
-};
-
-type BackendTimingsPayload = {
-  timings?: RequiredTimingMap;
-};
-
-type BackendCalendarDay = {
-  date?: {
-    gregorian?: {
-      date?: string;
-    };
-  };
-  timings?: RequiredTimingMap;
-};
-
-type BackendCalendarYearPayload = {
-  days?: BackendCalendarDay[];
-};
-
-type PrayerMethodParam = number | "auto";
-
-/* ============================
- * Internal cache model
- * ============================ */
-type CalendarCache = {
-  cacheKey: string; // year + settingsKey (incl. bucket)
-  year: number;
-  data: Record<string, PrayerTime[]>; // keyed by "YYYY-MM-DD"
-};
-
-// In-memory caches keyed by our composite cacheKey
-let memoryCalendars: Record<string, CalendarCache> = {};
-
-/* ============================
- * Helpers
- * ============================ */
-function dateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-export function formatTo12Hour(time24: string): string {
-  // Aladhan sometimes returns "05:23 (EDT)" or "05:23 +05:00"
-  const clean = time24.split(" ")[0]; // drop any zone or offset
-  const [hStr, mStr] = clean.split(":");
-  let h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  const ampm = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return `${h}:${String(m).padStart(2, "0")} ${ampm}`;
-}
-
-function settingsToKey(settings: PrayerSettings) {
-  return JSON.stringify({
-    useLocation: settings.useLocation,
-    method: settings.method,
-    city: settings.city?.name || "",
-  });
-}
-
-function coordBucket(lat: number, lng: number) {
-  // ~1–2 km precision buckets so moving cities invalidates cached calendar
-  return `${lat.toFixed(2)},${lng.toFixed(2)}`;
-}
-
-function makeCacheKey(
-  year: number,
-  settingsKey: string,
-  bucket: string | null,
-): string {
-  return `${year}::${settingsKey}${bucket ? `::${bucket}` : ""}`;
-}
-
-function storageKeyFor(cacheKey: string) {
-  return `prayerCalendar-${cacheKey}`;
-}
-
-function buildQueryString(params: Record<string, string | number>): string {
-  return Object.entries(params)
-    .map(
-      ([key, value]) =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
-    )
-    .join("&");
-}
-
-function backendErrorMessage(
-  status: number,
-  body: BackendErrorShape | null,
-): string {
-  if (typeof body?.error === "string") {
-    return body.error;
-  }
-
-  const fromBody = body?.error?.message;
-  if (typeof fromBody === "string" && fromBody.length > 0) {
-    return fromBody;
-  }
-  return `Prayer times API error (${status})`;
-}
-
-async function fetchPrayerProxy<T>(
-  path: string,
-  params: Record<string, string | number>,
-): Promise<T> {
-  const query = buildQueryString(params);
-  const url = `${PRAYER_API_BASE}${path}?${query}`;
-  const res = await fetch(url);
-  const body = (await res
-    .json()
-    .catch(() => null)) as BackendProxyResponse<T> | null;
-
-  if (!res.ok) {
-    throw new Error(backendErrorMessage(res.status, body));
-  }
-
-  if (!body?.success || body.data === undefined) {
-    throw new Error("Invalid response from prayer times API");
-  }
-
-  return body.data;
-}
-
-function mergeCalendarDayIntoStore(
-  allTimes: Record<string, PrayerTime[]>,
-  day: BackendCalendarDay,
-) {
-  const greg = day?.date?.gregorian?.date;
-  if (!greg || !day.timings) return;
-
-  const [dd, mm, yy] = greg.split("-").map((x: string) => parseInt(x, 10));
-  const key = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
-
-  allTimes[key] = [
-    { label: "Fajr", time: formatTo12Hour(day.timings.Fajr) },
-    { label: "Sunrise", time: formatTo12Hour(day.timings.Sunrise) },
-    { label: "Dhuhr", time: formatTo12Hour(day.timings.Dhuhr) },
-    { label: "Asr", time: formatTo12Hour(day.timings.Asr) },
-    { label: "Maghrib", time: formatTo12Hour(day.timings.Maghrib) },
-    { label: "Isha", time: formatTo12Hour(day.timings.Isha) },
-  ];
-}
+export type {
+  PrayerSettings,
+  PrayerTime,
+  PrayerMethodParam,
+  ResolvedEnv,
+} from "./prayer-times/types";
+export { formatTo12Hour };
 
 async function fetchYearCalendarLegacy(
   year: number,
@@ -201,6 +49,7 @@ async function fetchYearCalendarLegacy(
       month,
       year,
     };
+
     if (method === "auto" && env.country) {
       params.country = env.country;
     }
@@ -225,136 +74,19 @@ async function fetchYearCalendarLegacy(
   return allTimes;
 }
 
-/* ============================
- * Coords / Country resolution
- * ============================ */
-type ResolvedEnv = {
-  latitude: number;
-  longitude: number;
-  country: string; // country name or ISO code if available, else ""
-  bucket: string; // coord bucket for cache-keying
-};
-
-async function resolveCoordsAndCountry(
-  settings: PrayerSettings,
-  override?: {
-    coords?: { latitude: number; longitude: number };
-    country?: string;
-  },
-): Promise<ResolvedEnv> {
-  // If override coords are provided (e.g., Home already resolved once), use them
-  if (override?.coords) {
-    const { latitude, longitude } = override.coords;
-    const bucket = coordBucket(latitude, longitude);
-    return {
-      latitude,
-      longitude,
-      bucket,
-      country: override.country ?? "",
-    };
-  }
-
-  if (!settings.useLocation) {
-    if (!settings.city)
-      throw new Error("City must be provided when location is disabled");
-    const { lat, lng, country } = settings.city;
-    return {
-      latitude: lat,
-      longitude: lng,
-      country: country || "",
-      bucket: coordBucket(lat, lng),
-    };
-  }
-
-  // Location path
-  const servicesEnabled = await Location.hasServicesEnabledAsync();
-  let perm = await Location.getForegroundPermissionsAsync();
-
-  if (!servicesEnabled || perm.status !== "granted") {
-    try {
-      if (perm.status !== "granted") {
-        perm = await Location.requestForegroundPermissionsAsync();
-      }
-    } catch {}
-  }
-
-  if (servicesEnabled && perm.status === "granted") {
-    const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-    let country = "";
-    try {
-      const geo = await Location.reverseGeocodeAsync(loc.coords);
-      if (geo.length > 0) {
-        country =
-          (geo[0].country as string) || (geo[0].isoCountryCode as string) || "";
-      }
-    } catch {}
-    return {
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-      country,
-      bucket: coordBucket(loc.coords.latitude, loc.coords.longitude),
-    };
-  }
-
-  // Fallback to manual when location fails
-  if (settings.city) {
-    const { lat, lng, country } = settings.city;
-    return {
-      latitude: lat,
-      longitude: lng,
-      country: country || "",
-      bucket: coordBucket(lat, lng),
-    };
-  }
-
-  throw new Error(
-    "Location unavailable. Enable Location Services or set a manual city in Settings.",
-  );
-}
-
-/* ============================
- * Storage helpers
- * ============================ */
-async function saveToStorage(cache: CalendarCache) {
-  try {
-    await AsyncStorage.setItem(
-      storageKeyFor(cache.cacheKey),
-      JSON.stringify(cache),
-    );
-  } catch (e) {
-    console.warn("Failed to save prayer calendar:", e);
-  }
-}
-
-async function loadFromStorage(
-  cacheKey: string,
-): Promise<CalendarCache | null> {
-  try {
-    const val = await AsyncStorage.getItem(storageKeyFor(cacheKey));
-    if (!val) return null;
-    return JSON.parse(val);
-  } catch (e) {
-    console.warn("Failed to load prayer calendar:", e);
-    return null;
-  }
-}
-
-/* ============================
- * Fast path (today only)
- * ============================ */
 async function getPrayerTimesFastToday(
   settings: PrayerSettings,
   env: ResolvedEnv,
 ): Promise<PrayerTime[]> {
   const method: PrayerMethodParam =
     settings.method === -1 ? "auto" : settings.method;
+
   const params: Record<string, string | number> = {
     latitude: env.latitude,
     longitude: env.longitude,
     method,
   };
+
   if (method === "auto" && env.country) {
     params.country = env.country;
   }
@@ -363,22 +95,15 @@ async function getPrayerTimesFastToday(
     "/api/prayer-times/timings",
     params,
   );
-  const t = data?.timings;
-  if (!t) throw new Error("Invalid response from API");
 
-  return [
-    { label: "Fajr", time: formatTo12Hour(t.Fajr) },
-    { label: "Sunrise", time: formatTo12Hour(t.Sunrise) },
-    { label: "Dhuhr", time: formatTo12Hour(t.Dhuhr) },
-    { label: "Asr", time: formatTo12Hour(t.Asr) },
-    { label: "Maghrib", time: formatTo12Hour(t.Maghrib) },
-    { label: "Isha", time: formatTo12Hour(t.Isha) },
-  ];
+  const timings = data?.timings;
+  if (!timings) {
+    throw new Error("Invalid response from API");
+  }
+
+  return mapTimingsToPrayerTimes(timings);
 }
 
-/* ============================
- * Full-year calendar fetch
- * ============================ */
 async function fetchYearCalendar(
   year: number,
   settings: PrayerSettings,
@@ -396,6 +121,7 @@ async function fetchYearCalendar(
       method,
       year,
     };
+
     if (method === "auto" && env.country) {
       params.country = env.country;
     }
@@ -404,6 +130,7 @@ async function fetchYearCalendar(
       "/api/prayer-times/calendar/year",
       params,
     );
+
     const days = Array.isArray(yearPayload?.days) ? yearPayload.days : [];
     days.forEach((day) => {
       mergeCalendarDayIntoStore(allTimes, day);
@@ -413,30 +140,26 @@ async function fetchYearCalendar(
       throw new Error("Invalid yearly calendar payload");
     }
   } catch {
-    // Rollout compatibility for older backend versions.
     allTimes = await fetchYearCalendarLegacy(year, method, env);
   }
 
-  const settingsKey = settingsToKey(settings);
-  const cacheKey = makeCacheKey(year, settingsKey, env.bucket);
+  const { cacheKey } = buildPrayerCacheKey({
+    year,
+    settings,
+    bucket: env.bucket,
+  });
+
   const cache: CalendarCache = {
     cacheKey,
     year,
     data: allTimes,
   };
-  memoryCalendars[cacheKey] = cache;
-  await saveToStorage(cache);
+
+  writePrayerMemoryCache(cache);
+  await savePrayerStorageCache(cache);
   return cache;
 }
 
-/* ============================
- * Public API
- * ============================ */
-
-/**
- * Get prayer times for a specific date using year calendar cache.
- * Fast-path today: returns immediately with /timings, then prefetches the year in the background.
- */
 export async function getPrayerTimesForDate(
   settings: PrayerSettings,
   date: Date,
@@ -444,58 +167,46 @@ export async function getPrayerTimesForDate(
   const year = date.getFullYear();
   const isoKey = dateKey(date);
 
-  // Resolve environment (coords + country + bucket)
   const env = await resolveCoordsAndCountry(settings);
+  const { cacheKey } = buildPrayerCacheKey({
+    year,
+    settings,
+    bucket: env.bucket,
+  });
 
-  // Compose keys
-  const settingsKey = settingsToKey(settings);
-  const cacheKey = makeCacheKey(year, settingsKey, env.bucket);
-
-  // 1) In-memory
-  const mem = memoryCalendars[cacheKey];
+  const mem = readPrayerMemoryCache(cacheKey);
   if (mem) {
     return mem.data[isoKey] || [];
   }
 
-  // 2) AsyncStorage
-  const stored = await loadFromStorage(cacheKey);
+  const stored = await loadPrayerStorageCache(cacheKey);
   if (stored) {
-    memoryCalendars[cacheKey] = stored;
+    writePrayerMemoryCache(stored);
     return stored.data[isoKey] || [];
   }
 
-  // 3) No cache yet — fast path for *today only*
   const isToday = date.toDateString() === new Date().toDateString();
 
   if (isToday) {
     try {
       const fast = await getPrayerTimesFastToday(settings, env);
-      // Fire-and-forget prefetch of the full calendar
       fetchYearCalendar(year, settings, env).catch(() => {});
       return fast;
     } catch {
-      // Fall back to calendar fetch if fast path fails
+      // fall back to yearly fetch
     }
   }
 
-  // 4) Full calendar fetch
   const fresh = await fetchYearCalendar(year, settings, env);
   return fresh.data[isoKey] || [];
 }
 
-/**
- * Get prayer times for today.
- * Accepts optional override { coords, country } to reuse a single resolved location.
- */
 export async function getPrayerTimesToday(
   settings: PrayerSettings,
-  opts?: {
-    coords?: { latitude: number; longitude: number };
-    country?: string;
-  },
+  opts?: PrayerLocationOverride,
 ): Promise<PrayerTime[]> {
   const today = new Date();
-  // If we were given coords, use them for the fast path & cache keys
+
   if (opts?.coords || opts?.country) {
     const env = await resolveCoordsAndCountry(settings, {
       coords: opts.coords,
@@ -504,33 +215,31 @@ export async function getPrayerTimesToday(
 
     const year = today.getFullYear();
     const isoKey = dateKey(today);
-    const settingsKey = settingsToKey(settings);
-    const cacheKey = makeCacheKey(year, settingsKey, env.bucket);
+    const { cacheKey } = buildPrayerCacheKey({
+      year,
+      settings,
+      bucket: env.bucket,
+    });
 
-    // Try memory/storage first to avoid unnecessary network
-    const mem = memoryCalendars[cacheKey];
-    if (mem?.data?.[isoKey]) return mem.data[isoKey];
+    const mem = readPrayerMemoryCache(cacheKey);
+    if (mem?.data?.[isoKey]) {
+      return mem.data[isoKey];
+    }
 
-    const stored = await loadFromStorage(cacheKey);
+    const stored = await loadPrayerStorageCache(cacheKey);
     if (stored?.data?.[isoKey]) {
-      memoryCalendars[cacheKey] = stored;
+      writePrayerMemoryCache(stored);
       return stored.data[isoKey];
     }
 
-    // Otherwise fast fetch today, and seed the calendar in background
     const fast = await getPrayerTimesFastToday(settings, env);
     fetchYearCalendar(year, settings, env).catch(() => {});
     return fast;
   }
 
-  // Default path — rely on the generic function (includes fast path logic)
   return getPrayerTimesForDate(settings, today);
 }
 
-/**
- * Alias used by the scheduler for arbitrary days (kept for backward compat).
- * Note the argument order matches your older code: (date, settings).
- */
 export async function getPrayerTimesOn(
   date: Date,
   settings: PrayerSettings,
@@ -538,10 +247,6 @@ export async function getPrayerTimesOn(
   return getPrayerTimesForDate(settings, date);
 }
 
-/**
- * Clear in-memory calendar cache.
- * Note: This does NOT purge AsyncStorage (same behavior as your original code).
- */
 export async function clearPrayerCache() {
-  memoryCalendars = {};
+  clearPrayerMemoryCache();
 }
