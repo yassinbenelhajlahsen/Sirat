@@ -132,7 +132,7 @@ export default function Home() {
             )}
 
             <View style={styles.headerSection}>
-              <Text style={styles.sectionTitle}>Prayer Times</Text>
+              <Text style={styles.sectionTitle}>Prayer Times test</Text>
 
               {locationLabel ? (
                 <Text style={styles.locationLabel}>{locationLabel}</Text>
