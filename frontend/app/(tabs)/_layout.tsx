@@ -1,17 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { colors, withOpacity } from "../../constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 type TabGlyphProps = {
   focused: boolean;
   children: ReactNode;
+  styles: ReturnType<typeof createStyles>;
 };
 
-function TabGlyph({ focused, children }: TabGlyphProps) {
+function TabGlyph({ focused, children, styles }: TabGlyphProps) {
   return (
     <View style={styles.iconShell}>
       <View style={[styles.iconBubble, focused ? styles.iconBubbleActive : undefined]}>
@@ -22,6 +24,10 @@ function TabGlyph({ focused, children }: TabGlyphProps) {
 }
 
 export default function TabLayout() {
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   return (
     <SafeAreaProvider>
       <Tabs
@@ -41,11 +47,11 @@ export default function TabLayout() {
           options={{
             title: "Home",
             tabBarIcon: ({ color, focused }) => (
-              <TabGlyph focused={focused}>
+              <TabGlyph focused={focused} styles={styles}>
                 <Ionicons
                   name={focused ? "home" : "home-outline"}
                   size={22}
-                  color={focused ? colors.primaryDeep : color}
+                  color={focused ? colors.onAccent : color}
                 />
               </TabGlyph>
             ),
@@ -57,11 +63,11 @@ export default function TabLayout() {
           options={{
             title: "Mosques",
             tabBarIcon: ({ color, focused }) => (
-              <TabGlyph focused={focused}>
+              <TabGlyph focused={focused} styles={styles}>
                 <Ionicons
                   name={focused ? "location" : "location-outline"}
                   size={22}
-                  color={focused ? colors.primaryDeep : color}
+                  color={focused ? colors.onAccent : color}
                 />
               </TabGlyph>
             ),
@@ -73,11 +79,11 @@ export default function TabLayout() {
           options={{
             title: "Qibla",
             tabBarIcon: ({ color, focused }) => (
-              <TabGlyph focused={focused}>
+              <TabGlyph focused={focused} styles={styles}>
                 <Ionicons
                   name={focused ? "compass" : "compass-outline"}
                   size={25}
-                  color={focused ? colors.primaryDeep : color}
+                  color={focused ? colors.onAccent : color}
                 />
               </TabGlyph>
             ),
@@ -89,11 +95,11 @@ export default function TabLayout() {
           options={{
             title: "Quran",
             tabBarIcon: ({ color, focused }) => (
-              <TabGlyph focused={focused}>
+              <TabGlyph focused={focused} styles={styles}>
                 <Ionicons
                   name={focused ? "book" : "book-outline"}
                   size={22}
-                  color={focused ? colors.primaryDeep : color}
+                  color={focused ? colors.onAccent : color}
                 />
               </TabGlyph>
             ),
@@ -105,11 +111,11 @@ export default function TabLayout() {
           options={{
             title: "Calendar",
             tabBarIcon: ({ color, focused }) => (
-              <TabGlyph focused={focused}>
+              <TabGlyph focused={focused} styles={styles}>
                 <Ionicons
                   name={focused ? "today" : "today-outline"}
                   size={22}
-                  color={focused ? colors.primaryDeep : color}
+                  color={focused ? colors.onAccent : color}
                 />
               </TabGlyph>
             ),
@@ -121,11 +127,11 @@ export default function TabLayout() {
           options={{
             title: "Settings",
             tabBarIcon: ({ color, focused }) => (
-              <TabGlyph focused={focused}>
+              <TabGlyph focused={focused} styles={styles}>
                 <Ionicons
                   name={focused ? "settings" : "settings-outline"}
                   size={22}
-                  color={focused ? colors.primaryDeep : color}
+                  color={focused ? colors.onAccent : color}
                 />
               </TabGlyph>
             ),
@@ -136,45 +142,48 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  tabBar: {
-    position: "absolute",
-    marginHorizontal: 14,
-    bottom: 20,
-    height: 56,
-    paddingTop: 6,
-    paddingBottom: 6,
-    borderRadius: 999,
-    backgroundColor: withOpacity(colors.primaryDeep, 0.93),
-    borderTopWidth: 0,
-    borderWidth: 1,
-    borderColor: withOpacity(colors.white, 0.1),
-    elevation: 0,
-    shadowColor: colors.black,
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-  },
-  tabItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 0,
-  },
-  iconShell: {
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 36,
-    transform: [{ translateY: 2.5 }],
-  },
-  iconBubble: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconBubbleActive: {
-    backgroundColor: withOpacity(colors.accent, 0.95),
-  },
+const createStyles = (theme: AppTheme) => {
+  const colors = theme.colors;
 
-});
+  return StyleSheet.create({
+    tabBar: {
+      position: "absolute",
+      marginHorizontal: 14,
+      bottom: 20,
+      height: 56,
+      paddingTop: 6,
+      paddingBottom: 6,
+      borderRadius: 999,
+      backgroundColor: withOpacity(colors.primaryDeep, 0.93),
+      borderTopWidth: 0,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.white, 0.1),
+      elevation: 0,
+      shadowColor: colors.black,
+      shadowOpacity: 0.35,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 8 },
+    },
+    tabItem: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 0,
+    },
+    iconShell: {
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 36,
+      transform: [{ translateY: 2.5 }],
+    },
+    iconBubble: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    iconBubbleActive: {
+      backgroundColor: ( theme.name === "light" ? withOpacity(colors.primarySurface, 0.95) :  withOpacity(colors.accent, 0.95)),
+    },
+  });
+};
