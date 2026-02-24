@@ -1221,7 +1221,7 @@ const createStyles = (theme: AppTheme) => {
     elevation: 4,
   },
   ramadanToggleButtonActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: isLight? "#DABA69" : colors.accent,
     borderColor: withOpacity(colors.accent, 0.8),
     shadowColor: colors.accent,
     shadowOpacity: 0.45,
