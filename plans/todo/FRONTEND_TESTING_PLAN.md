@@ -1,0 +1,330 @@
+# Frontend Testing Plan — React Native Islamic Utility App (Sirat)
+
+> Goal: Establish reliable frontend test infrastructure and incrementally add high-value automated tests across core user flows (notifications + prayer times + Quran + permissions), prioritizing regression-prone logic.
+
+## Current State
+
+- No frontend test files found.
+- No test scripts/tooling in `frontend/package.json`.
+- High-risk areas identified (notifications lifecycle, prayer-times caching, bootstrap permission sync, hooks with retries/refresh, Quran preload contract, persistence, etc.).
+
+## Principles
+
+- **Start with test infrastructure** so every subsequent suite is runnable in CI.
+- Prefer **unit tests for pure logic** and **hook/component tests** for behavior + side effects.
+- Make tests **deterministic**:
+  - Freeze time (`Date.now`)
+  - Fix timezone
+  - Use fake timers for retries/backoff and scheduling
+- Standardize mocks for:
+  - Storage (AsyncStorage / wrapper)
+  - Notifications scheduling API
+  - Permissions
+  - Network client
+  - App lifecycle events (foreground/background)
+- Treat tests as contracts for:
+  - **Idempotency** (no duplicate schedules)
+  - **Cache correctness**
+  - **Permission state mapping**
+  - **Event emission + hydration ordering**
+
+---
+
+## Phase 0 — Add Test Infrastructure (Required First)
+
+### Deliverables
+1. Install tooling:
+   - Jest
+   - React Native Testing Library
+   - TS/Jest integration (`ts-jest` or Babel preset approach)
+2. Add scripts to `frontend/package.json`:
+   - `test`
+   - `test:watch`
+   - `test:ci` (coverage + CI-friendly settings)
+3. Add configuration files:
+   - `jest.config.*`
+   - `jest.setup.*`
+4. Add reusable mocks/helpers:
+   - `__mocks__/AsyncStorage`
+   - Notifications API mock (Expo Notifications or equivalent)
+   - Permissions mock
+   - Network mock (fetch/axios)
+   - Time helpers (freeze now, set timezone)
+5. Establish folder conventions:
+   - `frontend/__tests__/...`
+   - `frontend/test-utils/...`
+
+### Acceptance Criteria
+- `npm test` (or `yarn test`) runs successfully on a clean machine/CI.
+- A simple smoke test passes.
+- Fake timers and fixed-time helper verified.
+- Coverage output produced in CI mode.
+
+---
+
+## Phase 1 — Notification Scheduling Lifecycle (Highest ROI)
+
+### Targets
+- `frontend/services/notificationService.ts`
+- `frontend/services/notifications/scheduler.ts`
+- `frontend/services/notifications/lifecycle.ts`
+- `frontend/services/notifications/storage.ts`
+- `frontend/services/notifications/permissions.ts`
+
+### Test Scenarios
+- Reschedule triggers:
+  - app bootstrap
+  - settings change
+  - app foreground
+- Fingerprint dedupe:
+  - same schedule does not create duplicates
+  - existing scheduled entries matched and reused/ignored correctly
+- Permission denied behavior:
+  - no scheduling occurs
+  - correct storage flags/events updated
+- Midnight rollover:
+  - “today” schedule transitions safely to “tomorrow”
+  - reschedule at boundary does not duplicate
+- Cancel + rebuild flows:
+  - cancel clears OS schedules and local storage
+  - rebuild is idempotent
+- Duplicate-notification prevention:
+  - storage + OS scheduled list reconciliation
+
+### Acceptance Criteria
+- Tests cover all listed flows with deterministic time + mocks.
+- Scheduling is proven idempotent (same inputs ⇒ same scheduled state).
+- Permission-denied is proven safe (no schedules, correct state updates).
+
+---
+
+## Phase 2 — Prayer Times Retrieval + Caching (Core Correctness)
+
+### Targets
+- `frontend/services/prayerTimes.ts`
+- `frontend/services/prayer-times/cacheStore.ts`
+- `frontend/services/prayer-times/environment.ts`
+- `frontend/services/prayer-times/apiClient.ts`
+- `frontend/services/prayer-times/transformers.ts`
+
+### Test Scenarios
+- Cache hit paths:
+  - memory cache hit
+  - storage cache hit
+  - network fetch + write-back
+- Retrieval strategies:
+  - “today fast path” vs yearly fallback
+  - legacy month-by-month fallback behavior
+- Parameter handling:
+  - method/country/other params reflected in request
+  - cache key incorporates relevant params correctly
+- Transformer integrity:
+  - stable mapping from API payload to internal model
+  - date parsing correctness around timezone edges (if applicable)
+
+### Acceptance Criteria
+- Caching behaves correctly across memory/storage/network.
+- No accidental cache poisoning across settings/method changes.
+- Transformers validated with representative payload fixtures.
+
+---
+
+## Phase 3 — Home Prayer Feature Behavior (Hooks)
+
+### Targets
+- `frontend/hooks/useHomePrayerTimes.ts`
+- `frontend/hooks/usePrayerTimes.ts`
+
+### Test Scenarios
+- Retry backoff:
+  - increases delays as expected
+  - stops after max attempts
+  - uses fake timers, no real waiting
+- Permission error classification:
+  - denied vs undetermined vs “services off” (as applicable)
+- Refresh triggers:
+  - settings-change refresh
+  - app-foreground refresh
+- Next-day Fajr logic:
+  - when no upcoming prayers remain, next shown is next day Fajr
+
+### Acceptance Criteria
+- Hook behavior validated without flaky timing.
+- Refresh logic proven to trigger exactly once per event.
+- Next-prayer logic is correct at day boundary.
+
+---
+
+## Phase 4 — Settings/Permission Sync on Bootstrap
+
+### Targets
+- `frontend/app/_layout.tsx`
+- `frontend/hooks/useSettingsPermissions.ts`
+- `frontend/hooks/usePrayerSettingsState.ts`
+
+### Test Scenarios
+- OS permission sync into storage:
+  - correct `"1"` / `"0"` toggle behavior
+  - permission revoked after previously granted
+- Event emission:
+  - `settingsChanged`
+  - `NOTIF_PREFS_UPDATED`
+- Hydration ordering:
+  - settings loaded before downstream actions that depend on them
+  - no duplicate emissions during hydration
+
+### Acceptance Criteria
+- Bootstrap ordering is enforced by tests.
+- Storage + event system reflect OS permissions reliably.
+
+---
+
+## Phase 5 — Quran Data Preload Contract (Fast, Deterministic)
+
+### Targets
+- `frontend/services/quranData.ts`
+- `frontend/app/_layout.tsx` (preload call site)
+
+### Test Scenarios
+- Preload-required guard:
+  - throws (or returns explicit error) before preload
+- Normalization integrity:
+  - expected shape after preload
+  - stable IDs, no missing critical fields
+- Indexing correctness:
+  - juz/surah indexing logic correct for sample fixtures
+- Invalid asset-shape handling:
+  - missing fields / malformed payload produces safe failure
+
+### Acceptance Criteria
+- Preload contract is enforced with clear failure behavior.
+- Indexing correctness validated with fixtures.
+
+---
+
+## Phase 6 — Quran User State Persistence
+
+### Targets
+- `frontend/services/quranBookmarks.ts`
+- `frontend/services/quranProgress.ts`
+- `frontend/services/quranDisplayModes.ts`
+- `frontend/hooks/useQuranDisplayModes.ts`
+
+### Test Scenarios
+- Sanitization:
+  - invalid inputs safely rejected/coerced
+- Dedupe/update semantics:
+  - update existing bookmark/progress rather than duplicate
+- Default-mode fallback:
+  - missing/unknown mode falls back safely
+- Event-driven cross-screen sync:
+  - listeners update state without loops or duplication
+
+### Acceptance Criteria
+- Persistence is robust to corrupted storage.
+- Cross-screen sync behavior is deterministic.
+
+---
+
+## Phase 7 — Dua Flow (Offline-first + Backend Fallback)
+
+### Targets
+- `frontend/services/duaService.ts`
+- `frontend/services/duaMatcher.ts`
+- `frontend/hooks/useDuaInteraction.ts`
+
+### Test Scenarios
+- Regex priority/order:
+  - test fixture set proving precedence rules
+- Offline fallback correctness:
+  - local results returned when network unavailable
+- Backend/network error mapping:
+  - correct user-facing error classification
+- Simulated delay timing:
+  - uses fake timers; respects intended delay
+- History cap/persistence:
+  - capped list behavior
+  - persistence + restore
+
+### Acceptance Criteria
+- Offline-first works reliably.
+- History behavior remains bounded and stable.
+
+---
+
+## Phase 8 — Location-heavy Features (Later: Integration Complexity)
+
+### 8A: Qibla/location permission flows
+#### Targets
+- `frontend/hooks/useQibla.ts`
+- `frontend/app/(tabs)/Qibla.tsx`
+
+#### Test Scenarios
+- denied/undetermined UX branches
+- location-services-off behavior
+- happy path with mocked location + heading/orientation inputs
+
+#### Acceptance Criteria
+- Permission and services-off paths tested without real device APIs.
+
+### 8B: Location-based mosque feature
+#### Targets
+- (to be enumerated when implemented/located)
+
+#### Test Scenarios
+- permission gating
+- query/caching
+- empty/error/loading UI states
+
+---
+
+## Phase 9 — Holiday/Ramadan Calendar Data Integrity
+
+### Targets
+- `frontend/services/holidayService.ts`
+- `frontend/services/ramadanTracker.ts`
+- `frontend/hooks/useRamadanTracker.ts`
+- `frontend/hooks/useCalendarData.ts`
+
+### Test Scenarios
+- Payload sanitization
+- Date-key correctness
+- Cache invalidation rules
+- Missed-fast tracking persistence
+
+### Acceptance Criteria
+- Calendar integrity holds across edge dates and storage restores.
+
+---
+
+## Test Conventions & Utilities
+
+### Conventions
+- Prefer:
+  - Unit tests for services/transformers/utility modules
+  - Hook tests for behavior + side effects
+- Avoid snapshot tests unless UI is stable and meaningful.
+- Keep tests isolated:
+  - reset mocks between tests
+  - no reliance on global mutable state
+
+### Utilities to Create
+- `freezeTime(isoString)` / `advanceTime(ms)`
+- `setTimezone("America/New_York")` (or consistent deterministic TZ in test env)
+- `mockStorage()` with easy seed + inspect helpers
+- `mockNotifications()` with inspectable scheduled list
+- `mockPermissions()` with per-test state
+- `mockNetwork()` with success/failure/timeout helpers
+
+---
+
+## CI Checklist
+
+- Run `test:ci` on every PR.
+- Enforce:
+  - deterministic timezone
+  - coverage artifact output
+- Optional:
+  - minimum coverage thresholds once baseline is established
+
+---
