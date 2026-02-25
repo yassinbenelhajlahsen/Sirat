@@ -27,6 +27,15 @@ npm run web
 npm run lint
 ```
 
+Testing:
+
+```bash
+npm test
+npm run test:coverage
+```
+
+See `frontend/__tests__/README.md` for test-suite coverage and conventions.
+
 ## Environment Variables
 
 Create `frontend/.env`:

@@ -31,6 +31,9 @@ Run commands from the correct package directory:
 - `npm run ios` -> `expo run:ios`
 - `npm run web` -> `expo start --web`
 - `npm run lint` -> `expo lint`
+- `npm test` -> `jest`
+- `npm run test:watch` -> `jest --watch`
+- `npm run test:coverage` -> `jest --coverage`
 - `npm run reset-project` -> `node ./scripts/reset-project.js` (script target file is missing in repo)
 
 ## Architecture
@@ -123,3 +126,4 @@ Important frontend flows:
 - Keep theme-aware UI changes on `useTheme()` + theme-driven style factories (`createStyles`) instead of static color constants.
 - When changing prayer/notification behavior, verify both `Settings` and `NotificationService` integration paths.
 - When changing dua schema/category behavior, keep frontend and backend dua data/logic aligned.
+- Frontend test coverage map and conventions live in `frontend/__tests__/README.md`; update it when adding/removing major frontend test suites.
