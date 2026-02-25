@@ -217,7 +217,7 @@ function RootLayoutContent() {
         setShowUpdateModal(true);
       }
     }
-  }, [isRestartingUpdate]);
+  }, [isRestartingUpdate, theme.colors.primaryDark]);
 
   useEffect(() => {
     NotificationService.init();
