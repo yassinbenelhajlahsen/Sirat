@@ -4,9 +4,12 @@
 
 ## Current State
 
-- No frontend test files found.
-- No test scripts/tooling in `frontend/package.json`.
-- High-risk areas identified (notifications lifecycle, prayer-times caching, bootstrap permission sync, hooks with retries/refresh, Quran preload contract, persistence, etc.).
+- Core service/hook phases are now covered (Phases 0-9).
+- Most missing risk is **UI contract coverage**:
+  - screen/component rendering contracts
+  - navigation contracts
+  - integrated user flows that stitch hooks + services together
+- Current gap is less about pure logic correctness and more about preventing UI regressions.
 
 ## Principles
 
@@ -294,6 +297,105 @@
 
 ### Acceptance Criteria
 - Calendar integrity holds across edge dates and storage restores.
+
+---
+
+## UI Contract Expansion Plan (Next Wave)
+
+### Why this plan
+- Existing coverage is strong for services and hooks, but users experience the app through screens and navigation.
+- UI contract tests should verify:
+  - critical text/actions are rendered
+  - primary interactions invoke the right side effects
+  - navigation boundaries and route params work as expected
+  - key empty/loading/error states remain stable
+
+---
+
+## Phase 10 — Shared Component Contracts
+
+### Targets
+- `frontend/components/DuaCard.tsx`
+- `frontend/components/DuaResultCard.tsx`
+- `frontend/components/PrayerTimesList.tsx`
+- `frontend/components/NotificationSettings.tsx`
+- `frontend/components/CitySearchModal.tsx`
+- `frontend/components/quran/*` (highest-use cards/modals first)
+
+### Test Scenarios
+- Renders required content from props (labels, values, accessibility text).
+- Fires callback contracts on press/toggle/select events.
+- Handles empty/null props safely (no crash, expected fallback UI).
+- Honors key conditional rendering branches (loading/disabled/hidden states).
+
+### Acceptance Criteria
+- Shared components have stable contract tests for primary props/events.
+- No snapshots unless the UI is intentionally static and meaningful.
+
+---
+
+## Phase 11 — Screen-Level Contract Tests (Tabs + Key Routes)
+
+### Targets
+- `frontend/app/(tabs)/index.tsx` (Home)
+- `frontend/app/(tabs)/Settings.tsx`
+- `frontend/app/(tabs)/Quran.tsx`
+- `frontend/app/(tabs)/Calendar.tsx`
+- `frontend/app/(tabs)/Mosques.tsx`
+- `frontend/app/(tabs)/Qibla.tsx`
+- `frontend/app/MosqueMap.tsx`
+- `frontend/app/[date].tsx` (priority branches only)
+
+### Test Scenarios
+- Screen boot path renders expected loading/default UI.
+- Screen reacts to mocked hook/service outputs (success, empty, error).
+- Primary CTAs are wired (retry/open settings/open map/open modal/etc.).
+- Cross-screen event updates are reflected where applicable (settings/notif/quran display events).
+
+### Acceptance Criteria
+- Each core screen has at least one happy-path and one failure/empty-state contract test.
+- High-risk screens (Home/Settings/Quran/Calendar) cover primary interaction loops.
+
+---
+
+## Phase 12 — Navigation Contracts
+
+### Targets
+- `frontend/app/(tabs)/_layout.tsx`
+- `frontend/app/_layout.tsx`
+- Route links/pushes between tabs and stack routes (`MosqueMap`, date route, etc.)
+
+### Test Scenarios
+- Initial route and tab availability are correct.
+- Route params are passed and read correctly.
+- Navigation actions (push/replace/back) trigger the expected destination and state.
+- Deep-link-like path resolution for critical routes does not regress.
+
+### Acceptance Criteria
+- Navigation graph contracts are validated with integration-style tests.
+- Route param regressions are caught by automated tests.
+
+---
+
+## Phase 13 — End-to-End-Like User Flows (In-App Integration)
+
+### Targets
+- High-value user journeys spanning multiple hooks/services/screens:
+  - Home prayer-times load -> settings change -> refreshed prayer times
+  - Dua request -> result render -> history update
+  - Quran display mode change -> reflected on Quran screen
+  - Calendar Ramadan missed-fast toggle -> summary updates
+  - Mosques permission -> results/list-map handoff
+
+### Test Scenarios
+- Render screen/container with realistic mocks and simulate user interactions.
+- Assert state transitions across UI + mocked service boundaries.
+- Validate loading -> success/error transitions for each flow.
+- Ensure expected persistent side effects occur (storage/event emission).
+
+### Acceptance Criteria
+- At least one integration flow test per critical feature cluster.
+- Flows are deterministic (fake timers/frozen time where needed) and CI-safe.
 
 ---
 
