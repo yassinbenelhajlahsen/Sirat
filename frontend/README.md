@@ -35,6 +35,7 @@ npm run test:coverage
 ```
 
 See `frontend/__tests__/README.md` for test-suite coverage and conventions.
+Current suites include service/hook contracts, screen/component contracts, navigation contracts, and integration-style flow tests.
 
 ## Environment Variables
 

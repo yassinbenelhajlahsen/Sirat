@@ -5,6 +5,10 @@ This folder contains frontend automated tests for the Expo/React Native app.
 ## Structure
 
 - `app/`: root layout/bootstrap behavior tests
+- `components/`: shared UI contract tests
+- `screens/`: tab/screen contract tests
+- `navigation/`: route registration and param contracts
+- `flows/`: integration-style user-flow tests
 - `hooks/`: behavior tests for reusable hooks
 - `services/`: unit tests for service modules (API, storage, matching, scheduling, caching)
 
@@ -42,6 +46,20 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/ramadanTracker.test.ts`
   - `hooks/useRamadanTracker.test.ts`
   - `hooks/useCalendarData.test.ts`
+- `shared component contracts testing`
+  - `components/*.contract.test.tsx`
+- `screen level contract tests testing`
+  - `screens/screen-contracts.test.tsx`
+- `navigation contracts testing`
+  - `navigation/navigation-contracts.test.tsx`
+  - `navigation/tabs-layout.contract.test.tsx`
+  - `navigation/root-layout-navigation.contract.test.tsx`
+  - `navigation/routes-params.contract.test.tsx`
+- `end to end like user flows testing`
+  - `flows/home-settings-refresh.flow.test.tsx`
+  - `flows/dua-request-history.flow.test.tsx`
+  - `flows/quran-display-mode.flow.test.tsx`
+  - `flows/calendar-missed-fast.flow.test.tsx`
 
 ## Run Tests
 

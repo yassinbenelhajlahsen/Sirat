@@ -4,12 +4,14 @@
 
 ## Current State
 
-- Core service/hook phases are now covered (Phases 0-9).
-- Most missing risk is **UI contract coverage**:
-  - screen/component rendering contracts
-  - navigation contracts
-  - integrated user flows that stitch hooks + services together
-- Current gap is less about pure logic correctness and more about preventing UI regressions.
+- Phases 0-13 are covered with automated tests.
+- Coverage now includes:
+  - service and hook correctness contracts
+  - shared component UI contracts
+  - screen-level UI contracts
+  - navigation route/param contracts
+  - integration-style user flows
+- Remaining risk is mainly device/runtime-native behavior that unit/integration tests do not fully emulate (for example sensor accuracy, real permission UX, OEM notification behavior).
 
 ## Principles
 
@@ -300,7 +302,7 @@
 
 ---
 
-## UI Contract Expansion Plan (Next Wave)
+## UI Contract Expansion Plan (Completed)
 
 ### Why this plan
 - Existing coverage is strong for services and hooks, but users experience the app through screens and navigation.
