@@ -87,14 +87,6 @@ Select the BEST matching dua ID. Respond with ONLY JSON: { "duaId": number }`;
     if (!Number.isInteger(parsed.duaId)) {
       throw new Error("Invalid duaId in response");
     }
-
-    console.log(
-      JSON.stringify({
-        event: "dua_openai_selection_success",
-        timestamp: new Date().toISOString(),
-        duaId: parsed.duaId,
-      }),
-    );
     return parsed;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";

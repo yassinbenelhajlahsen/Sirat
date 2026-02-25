@@ -108,9 +108,6 @@ export async function requestDua(userRequest: string): Promise<Dua> {
     if (regexCategory) {
       const matchedDua = getRandomDuaByCategory(regexCategory);
       if (matchedDua) {
-        console.log(
-          `✅ Local regex match: "${trimmedRequest}" → ${regexCategory} → ${matchedDua.id}`,
-        );
         await applySimulatedLoading(startTime);
         return matchedDua;
       }
@@ -119,20 +116,15 @@ export async function requestDua(userRequest: string): Promise<Dua> {
     const isOnline = await hasInternetConnection();
     if (!isOnline) {
       const fallbackDua = getGeneralFallbackDua();
-      console.log(
-        `📴 Offline + no regex match: using general dua ${fallbackDua.id}`,
-      );
       await applySimulatedLoading(startTime);
       return fallbackDua;
     }
 
-    console.log(`📤 No local regex match. Requesting AI backup for "${trimmedRequest}"`);
     const response = await axios.post<DuaResponse>(`${DUA_API_BASE}/api/dua`, {
       userRequest: trimmedRequest,
     });
 
-    const { dua, matchSource } = response.data;
-    console.log(`✅ AI backup dua: ${dua.id} (${dua.category}) via ${matchSource || "unknown"}`);
+    const { dua } = response.data;
 
     // Validate structure
     if (
@@ -147,17 +139,12 @@ export async function requestDua(userRequest: string): Promise<Dua> {
 
     return dua;
   } catch (err: any) {
-    console.error("❌ Dua request error:", err.message);
-
     const isNetworkError =
       err.code === "ECONNREFUSED" ||
       err.code === "ERR_NETWORK" ||
       err.message === "Network Error";
     if (isNetworkError) {
       const fallbackDua = getGeneralFallbackDua();
-      console.log(
-        `📴 Network error while using AI backup. Using general dua ${fallbackDua.id}`,
-      );
       await applySimulatedLoading(startTime);
       return fallbackDua;
     }
@@ -195,7 +182,6 @@ export async function saveDuaToHistory(dua: Dua): Promise<void> {
     }
 
     await AsyncStorage.setItem("dua_history_v1", JSON.stringify(history));
-    console.log(`📝 Saved dua to history (total: ${history.length})`);
   } catch (err) {
     console.error("❌ Error saving dua to history:", err);
     // Non-fatal: don't throw, just log
@@ -210,7 +196,6 @@ export async function getDuaHistory(): Promise<Dua[]> {
   try {
     const raw = await AsyncStorage.getItem("dua_history_v1");
     const history = raw ? JSON.parse(raw) : [];
-    console.log(`📖 Retrieved ${history.length} duas from history`);
     return history;
   } catch (err) {
     console.error("❌ Error retrieving dua history:", err);
@@ -224,7 +209,6 @@ export async function getDuaHistory(): Promise<Dua[]> {
 export async function clearDuaHistory(): Promise<void> {
   try {
     await AsyncStorage.removeItem("dua_history_v1");
-    console.log("🗑️  Cleared dua history");
   } catch (err) {
     console.error("❌ Error clearing dua history:", err);
   }

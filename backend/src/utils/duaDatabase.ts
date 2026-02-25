@@ -26,7 +26,6 @@ export async function loadDuas(): Promise<Dua[]> {
     const data = await fs.readFile(filePath, "utf-8");
     const parsed = JSON.parse(data);
     duasCache = parsed.duas || [];
-    console.log(`✅ Loaded ${(duasCache as Dua[]).length} duas from duas.json`);
     return duasCache as Dua[];
   } catch (err) {
     console.error("❌ Failed to load duas.json:", err);
