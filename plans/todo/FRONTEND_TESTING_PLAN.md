@@ -461,3 +461,80 @@
   - minimum coverage thresholds once baseline is established
 
 ---
+
+## Coverage Gap Burn-down Plan (Post-Phase 13)
+
+### Why this section
+- Latest coverage run (49 suites / 184 tests) shows strong service-level confidence but lower UI/runtime coverage in Qibla screen contracts, settings permission hook behavior, theme context hydration, and calendar view-state hooks.
+- This section tracks the next improvements needed to reduce uncovered high-risk UI logic.
+
+---
+
+## Phase 14 — Qibla Screen + Permission Hook Contracts
+
+### Targets
+- `frontend/app/(tabs)/Qibla.tsx`
+- `frontend/hooks/useSettingsPermissions.ts`
+
+### Test Scenarios
+- Qibla gate rendering:
+  - services-off state
+  - denied permission state
+  - undetermined state
+- Qibla runtime rendering:
+  - loading state when direction is pending
+  - error card branch when compass/location error is present
+  - aligned/adjusting status-pill branch
+- Settings permission hook:
+  - bootstrap status refresh maps permission + notification state correctly
+  - active-app refresh path re-checks and synchronizes `useLocation`
+  - toggle flow: services off, permission denied, and granted branches
+
+### Acceptance Criteria
+- Qibla screen coverage includes both location-gate and active-compass UI branches.
+- `useSettingsPermissions` coverage includes bootstrap, app-state refresh, and toggle error/success paths.
+
+---
+
+## Phase 15 — Theme + Calendar View-State Determinism
+
+### Targets
+- `frontend/context/ThemeContext.tsx`
+- `frontend/hooks/useCalendarViewState.ts`
+
+### Test Scenarios
+- Theme context:
+  - hydrate from stored value
+  - invalid stored value fallback
+  - persistence path on `setTheme`
+  - `useTheme` outside provider throws contract error
+- Calendar view-state:
+  - month/year parameter parsing
+  - prev/next boundary guards vs min/max allowed dates
+  - visible matrix trimming removes trailing all-zero weeks
+  - day-button sizing branch (`isSmall`)
+
+### Acceptance Criteria
+- Theme context no longer remains untested.
+- Calendar view-state hook has deterministic matrix/navigation assertions.
+
+---
+
+## Phase 16 — Quran Navigator/Modal Component Contracts
+
+### Targets
+- `frontend/components/quran/NavigatorModal.tsx`
+- `frontend/components/quran/NavigatorTabs.tsx`
+- `frontend/components/quran/QuranDisplaySettingsModal.tsx`
+
+### Test Scenarios
+- Renders expected controls/text for each active tab.
+- Tab switching invokes parent callbacks.
+- Display settings modal toggles invoke expected callbacks.
+- Hidden/closed modal state renders safely with no interactive leakage.
+
+### Acceptance Criteria
+- At least one contract test exists for each listed Quran navigator/modal component.
+- Coverage improves across current `0%` Quran navigator/modal files.
+
+---
