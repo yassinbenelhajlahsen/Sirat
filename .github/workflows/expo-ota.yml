@@ -10,7 +10,8 @@ on:
       - "!frontend/*.md"
       - "!frontend/**/.gitignore"
       - "!frontend/.gitignore"
-
+  workflow_dispatch:
+    
 jobs:
   update:
     runs-on: ubuntu-latest
