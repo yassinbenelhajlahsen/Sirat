@@ -292,18 +292,18 @@
 #### Current Coverage Status
 - Implemented:
   - service-level permission/fetch/error contracts (`getNearbyMosques`)
+  - cache-keying/freshness invalidation contracts (`getNearbyMosques.cache`)
+  - dedicated Nearby Mosques screen loading/empty/error/cached-first contracts
+  - retry/refresh user flow coverage for failed permission path
   - basic map handoff route contract
+  - list->map continuity flow contract for shared mosque marker continuity
   - location-services-off screen contract
-- Missing:
-  - explicit cache freshness/invalidation contract
-  - end-to-end list->map->refresh user flow assertions
-  - deterministic empty/loading UI state contracts in dedicated mosque-focused tests
 
 #### Remaining Implementation Plan (Phase 8 Follow-up)
-1. Add `__tests__/services/getNearbyMosques.cache.test.ts` for cache-keying and freshness invalidation rules.
-2. Add `__tests__/screens/nearby-mosques.contract.test.tsx` for loading/empty/error/cached-first rendering.
-3. Add `__tests__/flows/nearby-mosques-refresh.flow.test.tsx` for retry and refresh behavior after failures.
-4. Add `__tests__/flows/nearby-list-to-map.flow.test.tsx` for route-param and marker continuity from list into `MosqueMap`.
+1. ✅ `__tests__/services/getNearbyMosques.cache.test.ts` for cache-keying and freshness invalidation rules.
+2. ✅ `__tests__/screens/nearby-mosques.contract.test.tsx` for loading/empty/error/cached-first rendering.
+3. ✅ `__tests__/flows/nearby-mosques-refresh.flow.test.tsx` for retry and refresh behavior after failures.
+4. ✅ `__tests__/flows/nearby-list-to-map.flow.test.tsx` for route-param and marker continuity from list into `MosqueMap`.
 
 #### Acceptance Criteria (Expanded)
 - Permission, cache behavior, and UI state contracts are deterministic and isolated from real device/network APIs.

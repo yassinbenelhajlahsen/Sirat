@@ -41,6 +41,10 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `location heavy features testing`
   - `hooks/useQibla.test.ts`
   - `services/getNearbyMosques.test.ts`
+  - `services/getNearbyMosques.cache.test.ts`
+  - `screens/nearby-mosques.contract.test.tsx`
+  - `flows/nearby-mosques-refresh.flow.test.tsx`
+  - `flows/nearby-list-to-map.flow.test.tsx`
 - `holiday ramadan calendar data integrity testing`
   - `services/holidayService.test.ts`
   - `services/ramadanTracker.test.ts`
@@ -50,6 +54,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/*.contract.test.tsx`
 - `screen level contract tests testing`
   - `screens/screen-contracts.test.tsx`
+  - `screens/nearby-mosques.contract.test.tsx`
 - `navigation contracts testing`
   - `navigation/navigation-contracts.test.tsx`
   - `navigation/tabs-layout.contract.test.tsx`
@@ -60,6 +65,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `flows/dua-request-history.flow.test.tsx`
   - `flows/quran-display-mode.flow.test.tsx`
   - `flows/calendar-missed-fast.flow.test.tsx`
+  - `flows/nearby-mosques-refresh.flow.test.tsx`
+  - `flows/nearby-list-to-map.flow.test.tsx`
 
 ## Run Tests
 
