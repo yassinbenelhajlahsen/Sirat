@@ -35,17 +35,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Lint
+      - name: Frontend CI checks
         working-directory: frontend
-        run: npm run lint
-
-      - name: Type check
-        working-directory: frontend
-        run: npx tsc --noEmit
-
-      - name: Run tests
-        working-directory: frontend
-        run: npm test -- --ci --runInBand --watchman=false
+        run: npm run verify
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
