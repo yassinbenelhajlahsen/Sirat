@@ -81,7 +81,7 @@ describe("notifications/scheduler", () => {
       days: 1,
       prefs: makePrefs(true),
       cityDisplay: "Chicago",
-      effective: { useLocation: true, method: 2, city: null },
+      effective: { useLocation: true, method: 2, city: undefined },
       soundMode: "default" as const,
     };
 
@@ -107,7 +107,7 @@ describe("notifications/scheduler", () => {
       days: 1,
       prefs: makePrefs(true),
       cityDisplay: "Chicago",
-      effective: { useLocation: true, method: 2, city: null },
+      effective: { useLocation: true, method: 2, city: undefined },
       soundMode: "default",
     });
 

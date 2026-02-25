@@ -38,7 +38,7 @@ const mockNotifications = {
 jest.mock("expo-notifications", () => mockNotifications);
 
 if (!(global as { fetch?: unknown }).fetch) {
-  (global as { fetch: jest.Mock }).fetch = jest.fn();
+  (global as unknown as { fetch: jest.Mock }).fetch = jest.fn();
 }
 
 global.freezeTestTime = (isoDate: string | Date) => {
