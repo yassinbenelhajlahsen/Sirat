@@ -53,7 +53,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (jest.isMockFunction(setTimeout)) {
+  if (
+    typeof globalThis.setTimeout === "function" &&
+    jest.isMockFunction(globalThis.setTimeout)
+  ) {
     jest.useRealTimers();
   }
 });
