@@ -1,5 +1,5 @@
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { render, waitFor } from "@testing-library/react-native";
 import { AppState } from "react-native";
 
 jest.mock("@expo/vector-icons", () => ({ Ionicons: { font: {} } }));
@@ -77,6 +77,7 @@ jest.mock("expo-router", () => {
 });
 
 import RootLayout from "@/app/_layout";
+import { preloadQuranData } from "@/services/quranData";
 
 describe("root layout navigation contract", () => {
   let appStateListenerSpy: jest.SpyInstance;
@@ -92,7 +93,7 @@ describe("root layout navigation contract", () => {
     appStateListenerSpy.mockRestore();
   });
 
-  it("registers tabs and MosqueMap screens in the root stack", () => {
+  it("registers tabs and MosqueMap screens in the root stack", async () => {
     const expoRouter = jest.requireMock("expo-router") as {
       Stack: jest.Mock & { Screen: jest.Mock };
     };
@@ -100,6 +101,12 @@ describe("root layout navigation contract", () => {
     const stackScreenMock = expoRouter.Stack.Screen as jest.Mock;
 
     render(<RootLayout />);
+
+    // Wait for the initial async app sync effect to settle so state updates
+    // occur within the test's act lifecycle.
+    await waitFor(() => {
+      expect(preloadQuranData).toHaveBeenCalled();
+    });
 
     expect(stackMock).toHaveBeenCalled();
     const stackProps = stackMock.mock.calls[0]?.[0];
