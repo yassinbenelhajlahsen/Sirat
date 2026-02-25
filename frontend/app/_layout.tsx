@@ -30,11 +30,11 @@ const LAUNCH_BACKGROUND_COLOR = "#0E1117";
 SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
 
 // Storage keys and events used elsewhere in your app
-const PRAYER_SETTINGS_KEY = "prayerSettings";
-const NOTIF_ENABLED_KEY = "notif_enabled_v1";
-const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
-const SETTINGS_CHANGED_EVENT = "settingsChanged";
-const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
+export const PRAYER_SETTINGS_KEY = "prayerSettings";
+export const NOTIF_ENABLED_KEY = "notif_enabled_v1";
+export const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
+export const SETTINGS_CHANGED_EVENT = "settingsChanged";
+export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
 async function preloadImages() {
   await Asset.loadAsync([
@@ -51,7 +51,7 @@ function parseJSON<T>(raw: string | null, fallback: T): T {
   }
 }
 
-async function syncLocationPermissionToSettings() {
+export async function syncLocationPermissionToSettings() {
   // 1) Read current OS permission without prompting
   const { status: currentStatus } =
     await Location.getForegroundPermissionsAsync();
@@ -85,7 +85,7 @@ async function syncLocationPermissionToSettings() {
   } catch {}
 }
 
-async function syncNotificationPermissionToToggle() {
+export async function syncNotificationPermissionToToggle() {
   // 1) Read OS state
   const perms = await Notifications.getPermissionsAsync();
   let status = perms.status;
@@ -121,6 +121,32 @@ async function syncNotificationPermissionToToggle() {
       osStatus: status,
     });
   } catch {}
+}
+
+type InitialSyncDeps = {
+  syncLocationPermissionToSettings: () => Promise<void>;
+  syncNotificationPermissionToToggle: () => Promise<void>;
+  preloadQuranData: () => Promise<void>;
+  preloadQuranDisplayModes: () => Promise<void>;
+  preloadImages: () => Promise<void>;
+};
+
+export async function runInitialAppSync(
+  deps: InitialSyncDeps = {
+    syncLocationPermissionToSettings,
+    syncNotificationPermissionToToggle,
+    preloadQuranData,
+    preloadQuranDisplayModes,
+    preloadImages,
+  },
+) {
+  await Promise.all([
+    deps.syncLocationPermissionToSettings(),
+    deps.syncNotificationPermissionToToggle(),
+    deps.preloadQuranData(),
+    deps.preloadQuranDisplayModes(),
+    deps.preloadImages(),
+  ]);
 }
 
 export default function RootLayout() {
@@ -253,13 +279,7 @@ function RootLayoutContent() {
 
     (async () => {
       try {
-        await Promise.all([
-          syncLocationPermissionToSettings(),
-          syncNotificationPermissionToToggle(),
-          preloadQuranData(),
-          preloadQuranDisplayModes(),
-          preloadImages(),
-        ]);
+        await runInitialAppSync();
       } catch (error) {
         console.error("Failed to complete initial app sync", error);
       } finally {
