@@ -274,12 +274,41 @@
 
 ### 8B: Location-based mosque feature
 #### Targets
-- (to be enumerated when implemented/located)
+- `frontend/services/getNearbyMosques.ts`
+- `frontend/app/(tabs)/NearbyMosques.tsx`
+- `frontend/app/MosqueMap.tsx`
+- `frontend/hooks/useNearbyMosquesData.ts` (if introduced/refactored for screen data orchestration)
 
 #### Test Scenarios
 - permission gating
 - query/caching
 - empty/error/loading UI states
+- cached-first render path (show cached list/map markers before live refresh resolves)
+- pull-to-refresh/manual retry path after network failure
+- map handoff contract (Nearby list -> full map route params remain stable)
+- stale cache invalidation behavior (TTL or equivalent freshness rule)
+- graceful fallback when location services are off but cached mosque data exists
+
+#### Current Coverage Status
+- Implemented:
+  - service-level permission/fetch/error contracts (`getNearbyMosques`)
+  - basic map handoff route contract
+  - location-services-off screen contract
+- Missing:
+  - explicit cache freshness/invalidation contract
+  - end-to-end list->map->refresh user flow assertions
+  - deterministic empty/loading UI state contracts in dedicated mosque-focused tests
+
+#### Remaining Implementation Plan (Phase 8 Follow-up)
+1. Add `__tests__/services/getNearbyMosques.cache.test.ts` for cache-keying and freshness invalidation rules.
+2. Add `__tests__/screens/nearby-mosques.contract.test.tsx` for loading/empty/error/cached-first rendering.
+3. Add `__tests__/flows/nearby-mosques-refresh.flow.test.tsx` for retry and refresh behavior after failures.
+4. Add `__tests__/flows/nearby-list-to-map.flow.test.tsx` for route-param and marker continuity from list into `MosqueMap`.
+
+#### Acceptance Criteria (Expanded)
+- Permission, cache behavior, and UI state contracts are deterministic and isolated from real device/network APIs.
+- Nearby mosques list/map flow is covered end-to-end through at least one refresh/retry cycle.
+- Cache freshness rules are enforced by tests and fail loudly on regressions.
 
 ---
 
