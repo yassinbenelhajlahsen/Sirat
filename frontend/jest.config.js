@@ -22,4 +22,5 @@ module.exports = {
     '!**/__tests__/**',
   ],
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/.expo/'],
+  reporters: ['jest-silent-reporter', 'summary'],
 };
