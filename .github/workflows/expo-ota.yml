@@ -13,6 +13,7 @@ on:
       - "!frontend/__tests__/**"
       - "!frontend/test/**"
       - "!frontend/tests/**"
+      - "!frontend/jest.config.js"
   workflow_dispatch:
 
 jobs:
