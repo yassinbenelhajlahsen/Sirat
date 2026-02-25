@@ -1,7 +1,5 @@
 import "@testing-library/jest-native/extend-expect";
 
-import AsyncStorageMock from "@react-native-async-storage/async-storage/jest/async-storage-mock";
-
 declare global {
   // eslint-disable-next-line no-var
   var freezeTestTime: (isoDate: string | Date) => void;
@@ -9,7 +7,10 @@ declare global {
   var resetTestTime: () => void;
 }
 
-jest.mock("@react-native-async-storage/async-storage", () => AsyncStorageMock);
+const mockAsyncStorage =
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock");
+
+jest.mock("@react-native-async-storage/async-storage", () => mockAsyncStorage);
 
 jest.mock("expo-network", () => ({
   getNetworkStateAsync: jest.fn(async () => ({
@@ -19,7 +20,7 @@ jest.mock("expo-network", () => ({
   })),
 }));
 
-const notificationsMock = {
+const mockNotifications = {
   getPermissionsAsync: jest.fn(async () => ({ status: "granted", ios: { status: 3 } })),
   requestPermissionsAsync: jest.fn(async () => ({ status: "granted", ios: { status: 3 } })),
   setNotificationHandler: jest.fn(),
@@ -34,7 +35,7 @@ const notificationsMock = {
   IosAuthorizationStatus: { PROVISIONAL: 3 },
 };
 
-jest.mock("expo-notifications", () => notificationsMock);
+jest.mock("expo-notifications", () => mockNotifications);
 
 if (!(global as { fetch?: unknown }).fetch) {
   (global as { fetch: jest.Mock }).fetch = jest.fn();
