@@ -204,7 +204,7 @@ function RootLayoutContent() {
 
       await Updates.reloadAsync({
         reloadScreenOptions: {
-          backgroundColor: LAUNCH_BACKGROUND_COLOR,
+          backgroundColor: theme.colors.primaryDark,
           fade: true,
         },
       });
