@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { DeviceEventEmitter } from "react-native";
+import type { EmitterSubscription } from "react-native";
 
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
 import {
@@ -62,7 +63,7 @@ describe("useQuranDisplayModes", () => {
         if (eventName === QURAN_DISPLAY_MODES_UPDATED_EVENT) {
           listener = handler as (value: unknown) => void;
         }
-        return { remove } as { remove: () => void };
+        return { remove } as unknown as EmitterSubscription;
       });
 
     const { result, unmount } = renderHook(() => useQuranDisplayModes());
