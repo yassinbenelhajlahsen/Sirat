@@ -10,8 +10,11 @@ on:
       - "!frontend/*.md"
       - "!frontend/**/.gitignore"
       - "!frontend/.gitignore"
+      - "!frontend/__tests__/**"
+      - "!frontend/test/**"
+      - "!frontend/tests/**"
   workflow_dispatch:
-    
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -24,10 +27,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Type check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm test -- --ci --runInBand
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
