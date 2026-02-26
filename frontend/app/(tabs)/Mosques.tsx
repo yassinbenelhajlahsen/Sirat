@@ -97,9 +97,10 @@ function distanceKm(
 
 function formatDistanceLabel(km: number) {
   if (!Number.isFinite(km)) return "";
-  if (km < 1) return `${Math.round(km * 1000)} m away`;
-  if (km < 10) return `${km.toFixed(1)} km away`;
-  return `${Math.round(km)} km away`;
+  const miles = km * 0.621371;
+  if (miles < 0.1) return `${Math.round(km * 3280.84)} ft away`;
+  if (miles < 10) return `${miles.toFixed(1)} mi away`;
+  return `${Math.round(miles)} mi away`;
 }
 
 export default function MosqueScreen() {
