@@ -32,10 +32,14 @@ describe("PrayerTimesList contract", () => {
       <PrayerTimesList loading prayerTimes={prayerTimes} />
     );
 
+    // Only the time column is skeletonised — one progressbar per prayer row
     expect(
       UNSAFE_getAllByProps({ accessibilityRole: "progressbar" }).length
     ).toBeGreaterThanOrEqual(6);
-    expect(queryByText("Fajr")).toBeNull();
+    // Prayer names are shown statically while times load
+    expect(queryByText("Fajr")).toBeTruthy();
+    // Actual time values must not appear yet
+    expect(queryByText("05:14 AM")).toBeNull();
   });
 
   it("renders prayer labels, times, and mapped icons in loaded state", () => {

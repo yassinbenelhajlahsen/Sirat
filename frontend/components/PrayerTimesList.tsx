@@ -24,7 +24,6 @@ const PRAYER_ICONS: Record<string, string> = {
 };
 
 type GeneratedStyles = ReturnType<typeof createStyles>;
-type GeneratedRowStyles = ReturnType<typeof createRowStyles>;
 type ThemeColors = AppTheme["colors"];
 
 /* ---------- Pure JS shimmer bar (no gradient libs) ---------- */
@@ -127,98 +126,9 @@ function SkeletonBar({
   );
 }
 
-/* ---------- One skeleton row that matches real row footprint exactly ---------- */
-function PrayerRowSkeleton({
-  progress,
-  rowStyles,
-  styles,
-  themeColors,
-}: {
-  progress?: Animated.Value;
-  rowStyles: GeneratedRowStyles;
-  styles: GeneratedStyles;
-  themeColors: ThemeColors;
-}) {
-  return (
-    <View
-      style={[
-        rowStyles.containerBase,
-        {
-          backgroundColor: "transparent",
-          borderColor: "transparent",
-        },
-      ]}
-    >
-      <View style={styles.leftCluster}>
-        <SkeletonBar
-          style={styles.skeletonIcon}
-          height={22}
-          progress={progress}
-          styles={styles}
-          themeColors={themeColors}
-        />
-        <SkeletonBar
-          style={{ width: 96 }}
-          height={18}
-          progress={progress}
-          styles={styles}
-          themeColors={themeColors}
-        />
-      </View>
-      <SkeletonBar
-        style={styles.skeletonTime}
-        height={18}
-        progress={progress}
-        styles={styles}
-        themeColors={themeColors}
-      />
-    </View>
-  );
-}
-
-/* ---------- Skeleton list with shared animation for smoothness and efficiency ---------- */
-function PrayerTimesSkeletonList({
-  rows = 6,
-  rowStyles,
-  styles,
-  themeColors,
-}: {
-  rows?: number;
-  rowStyles: GeneratedRowStyles;
-  styles: GeneratedStyles;
-  themeColors: ThemeColors;
-}) {
-  const progress = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [progress]);
-
-  return (
-    <View>
-      {Array.from({ length: rows }).map((_, i) => (
-        <PrayerRowSkeleton
-          key={i}
-          progress={progress}
-          rowStyles={rowStyles}
-          styles={styles}
-          themeColors={themeColors}
-        />
-      ))}
-    </View>
-  );
-}
-
 /* ---------- Main list ---------- */
+const STATIC_PRAYER_ROWS = Object.keys(PRAYER_ICONS).map((label) => ({ label }));
+
 export default function PrayerTimesList({
   loading,
   prayerTimes,
@@ -235,20 +145,28 @@ export default function PrayerTimesList({
   const styles = useMemo(() => createStyles(theme), [theme]);
   const rowStyles = useMemo(() => createRowStyles(theme), [theme]);
 
-  if (loading) {
-    return (
-      <PrayerTimesSkeletonList
-        rows={6}
-        rowStyles={rowStyles}
-        styles={styles}
-        themeColors={themeColors}
-      />
+  const shimmerProgress = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!loading) return;
+    const loop = Animated.loop(
+      Animated.timing(shimmerProgress, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
     );
-  }
+    loop.start();
+    return () => loop.stop();
+  }, [loading, shimmerProgress]);
+
+  const rows = loading
+    ? STATIC_PRAYER_ROWS.map(({ label }) => ({ label, time: null }))
+    : prayerTimes;
 
   return (
     <View>
-      {prayerTimes.map(({ label, time }) => {
+      {rows.map(({ label, time }) => {
         const iconName = PRAYER_ICONS[label] ?? "time-outline";
 
         return (
@@ -267,19 +185,29 @@ export default function PrayerTimesList({
               <Text style={[rowStyles.labelText, styles.labelSpacing]}>{label}</Text>
             </View>
 
-            <Animated.Text
-              style={[
-                rowStyles.timeText,
-                timeOpacity && timeSlide
-                  ? {
-                      opacity: timeOpacity,
-                      transform: [{ translateX: timeSlide }],
-                    }
-                  : {},
-              ]}
-            >
-              {time}
-            </Animated.Text>
+            {loading ? (
+              <SkeletonBar
+                style={styles.skeletonTime}
+                height={18}
+                progress={shimmerProgress}
+                styles={styles}
+                themeColors={themeColors}
+              />
+            ) : (
+              <Animated.Text
+                style={[
+                  rowStyles.timeText,
+                  timeOpacity && timeSlide
+                    ? {
+                        opacity: timeOpacity,
+                        transform: [{ translateX: timeSlide }],
+                      }
+                    : {},
+                ]}
+              >
+                {time}
+              </Animated.Text>
+            )}
           </View>
         );
       })}
@@ -351,10 +279,6 @@ const createStyles = (theme: AppTheme) => {
       backgroundColor: withOpacity(themeColors.accent, 0.12),
       borderWidth: 1,
       borderColor: withOpacity(themeColors.accent, 0.28),
-    },
-    skeletonIcon: {
-      width: 22,
-      borderRadius: 999,
     },
     skeletonTime: {
       width: 88,
