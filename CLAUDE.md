@@ -65,5 +65,5 @@ See `AGENTS.md` for full architecture details. Key points:
 
 ## CI/CD
 
-- Pushes to `main` touching `frontend/**` trigger OTA update via `.github/workflows/expo-ota.yml` (skipped if commit message contains `[non-ota]`)
+- Pushes to `main` touching `frontend/**` trigger OTA update via `.github/workflows/expo-ota.yml` (skipped if commit message contains `[no-ota]`)
 - Pushes to `main` touching `docs/**` deploy to GitHub Pages via `.github/workflows/pages.yml`
