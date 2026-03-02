@@ -1,75 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta name="theme-color" content="#08260b" />
     <meta charset="UTF-8" />
-    <!-- Edge-to-edge on iOS -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-
-    <!-- Match the browser UI color on mobile -->
-    <meta
-      name="theme-color"
-      content="#08260b"
-      media="(prefers-color-scheme: dark)"
-    />
-    <meta
-      name="theme-color"
-      content="#08260b"
-      media="(prefers-color-scheme: light)"
-    />
-
-    <!-- Optional PWA status bar style -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#041a07" />
+    <meta name="theme-color" content="#041a07" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#041a07" media="(prefers-color-scheme: light)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <title>Privacy Policy | Sirat</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
       :root {
-        --bg-top: #08260b;
-        --bg-mid: #0c3605;
-        --bg-bottom: #06280a;
+        --bg-deep:    #041a07;
+        --bg-mid:     #0a2e0d;
+        --bg-surface: #0d3710;
+        --gold:       #d4b463;
+        --gold-light: #e8cf8a;
+        --gold-dim:   #a08a42;
+        --text-primary:   #f0ede6;
+        --text-secondary: #b0ad9f;
+        --text-tertiary:  #6e6b5e;
+        --glass-bg:     rgba(255,255,255,0.025);
+        --glass-border: rgba(255,255,255,0.07);
       }
 
-      /* Keep a simple fallback on html; the fixed gradient lives on body::before so safe-area and mobile browsers render correctly immediately */
-      html,
-      body {
-        height: 100%;
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html, body {
         margin: 0;
-      }
-
-      @media (hover: none) and (pointer: coarse) {
-        html {
-          background-attachment: initial;
-        }
+        height: 100%;
       }
 
       html {
-        background-color: var(--bg-top); /* fast paint fallback */
-        height: 100%;
+        background-color: var(--bg-deep);
+        scroll-behavior: smooth;
       }
 
       body {
-        color: #fff;
-
-        /* Safe-area padding */
+        font-family: 'DM Sans', sans-serif;
+        color: var(--text-primary);
         padding-top: env(safe-area-inset-top);
         padding-top: constant(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         padding-bottom: constant(safe-area-inset-bottom);
-
-        min-height: 100svh;
         min-height: 100dvh;
-        min-height: 100vh;
-        box-sizing: border-box;
         overflow-x: hidden;
-        background-color: transparent; /* allow the fixed gradient layer to show immediately */
+        background-color: transparent;
       }
 
       body::before {
@@ -78,169 +61,213 @@
         inset: 0;
         z-index: -1;
         pointer-events: none;
-        /* The real fixed gradient layer */
-        background: linear-gradient(
-          180deg,
-          var(--bg-top) 0%,
-          var(--bg-mid) 50%,
-          var(--bg-bottom) 100%
-        );
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-attachment: fixed;
+        background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 50%, var(--bg-deep) 100%);
         -webkit-transform: translateZ(0);
       }
 
-      .glass {
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.03),
-          rgba(255, 255, 255, 0.02)
-        );
-        backdrop-filter: blur(6px);
+      .font-serif { font-family: 'DM Serif Display', serif; }
+
+      .text-hero {
+        font-family: 'DM Serif Display', serif;
+        font-size: clamp(2rem, 5vw, 3.25rem);
+        line-height: 1.1;
+        letter-spacing: -0.018em;
+      }
+
+      .text-policy-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 1.35rem;
+        line-height: 1.3;
+      }
+
+      /* Nav */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        transition: background 0.35s ease, backdrop-filter 0.35s ease;
+      }
+      nav.scrolled {
+        background: rgba(4, 26, 7, 0.88);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--glass-border);
+      }
+
+      /* Scroll reveal */
+      .reveal {
+        opacity: 0;
+        transform: translateY(22px);
+        transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .sep {
+        width: 100%;
+        height: 1px;
+        background: var(--glass-border);
+      }
+
+      .policy-section {
+        padding-top: 2.5rem;
+        padding-bottom: 2.5rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
       }
     </style>
   </head>
 
-  <body class="px-6 py-12">
-    <div class="max-w-3xl mx-auto">
-      <a
-        href="index.html"
-        class="inline-flex items-center gap-2 text-gray-200 bg-white/5 hover:bg-white/10 px-3 py-2 rounded-md mb-6 transition-transform duration-200 ease-in-out transform hover:-translate-y-1 hover:text-[#f5d36e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#f5d36e]"
-        aria-label="Return to home"
-      >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        Back to Home
-      </a>
+  <body>
 
-      <main class="glass rounded-2xl p-8 shadow-lg">
-        <header class="text-center mb-6">
-          <img
-            src="assets/Sirat-Icon.jpg"
-            alt="Sirat"
-            class="mx-auto w-20 h-20 rounded-lg"
-          />
-          <h1 class="text-3xl text-[#f5d36e] font-semibold mt-4">
-            Privacy Policy
-          </h1>
-          <p class="text-sm text-gray-300 mt-2">
-            How Sirat handles your data in a simple, privacy-first way.
+    <!-- ═══════════════════════════════════════ NAV -->
+    <nav id="main-nav" aria-label="Main navigation">
+      <div class="w-full px-6 flex items-center py-4">
+        <a href="index.html" class="flex items-center gap-3" aria-label="Return to Sirat home">
+          <img src="assets/Sirat-Icon.jpg" alt="Sirat app icon" class="w-10 h-10 rounded-xl shadow-sm" />
+          <span class="font-serif text-xl" style="color: var(--gold)">Sirat</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════ PAGE HEADER -->
+    <header class="text-center px-6 pt-20 pb-16">
+      <div class="max-w-2xl mx-auto">
+        <img
+          src="assets/Sirat-Icon.jpg"
+          alt="Sirat"
+          class="reveal mx-auto w-16 h-16 rounded-2xl shadow-lg mb-6"
+        />
+        <h1 class="text-hero reveal" style="color: var(--gold); transition-delay: 0.08s;">Privacy Policy</h1>
+        <p class="reveal" style="color: var(--text-secondary); font-size: 1rem; margin-top: 0.75rem; transition-delay: 0.15s;">
+          How Sirat handles your data in a simple, privacy-first way.
+        </p>
+        <p class="reveal" style="color: var(--text-tertiary); font-size: 0.8rem; margin-top: 0.5rem; transition-delay: 0.2s;">
+          Last updated: February 23, 2026
+        </p>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════ POLICY SECTIONS -->
+    <main class="px-6 pb-24">
+      <div class="max-w-2xl mx-auto">
+
+        <div class="sep reveal"></div>
+
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">1. Location Data</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            Sirat uses location to calculate prayer times, determine Qibla, and show nearby mosques. Depending on the feature, coordinates may be sent to Sirat's backend, which may call third-party APIs (for example Aladhan and Google Places) to return results. Sirat does not operate its own long-term location database for users.
           </p>
-          <p class="text-xs text-gray-400 mt-1">Last updated: February 23, 2026</p>
-        </header>
+        </div>
 
-        <section class="space-y-6 text-gray-200">
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">
-              1. Location Data
-            </h2>
-            <p class="mt-2 text-sm">
-              Sirat uses location to calculate prayer times, determine Qibla,
-              and show nearby mosques. Depending on the feature, coordinates may
-              be sent to Sirat's backend, which may call third-party APIs (for
-              example Aladhan and Google Places) to return results. Sirat does
-              not operate its own long-term location database for users.
-            </p>
-          </div>
+        <div class="sep reveal"></div>
 
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">
-              2. Device Information
-            </h2>
-            <p class="mt-2 text-sm">
-              Sirat uses device capabilities and permission state (location,
-              notifications, and audio/session behavior) to provide app
-              features. Core preferences and caches are stored locally on your
-              device.
-            </p>
-          </div>
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">2. Device Information</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            Sirat uses device capabilities and permission state (location, notifications, and audio/session behavior) to provide app features. Core preferences and caches are stored locally on your device.
+          </p>
+        </div>
 
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">
-              3. Prayer Notifications
-            </h2>
-            <p class="mt-2 text-sm">
-              Notification preferences are saved locally on your device. Sirat
-              does not collect usage telemetry for notifications.
-            </p>
-          </div>
+        <div class="sep reveal"></div>
 
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">
-              4. Internet Access
-            </h2>
-            <p class="mt-2 text-sm">
-              Sirat calls backend endpoints for dua matching, prayer times,
-              holiday data, and mosque lookup; backend services may call trusted
-              APIs such as Aladhan, Google Places, and OpenAI when needed. Sirat
-              also streams Quran audio from online sources. For dua matching,
-              local regex matching is used first in-app when possible.
-            </p>
-          </div>
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">3. Prayer Notifications</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            Notification preferences are saved locally on your device. Sirat does not collect usage telemetry for notifications.
+          </p>
+        </div>
 
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">
-              5. Data Retention
-            </h2>
-            <p class="mt-2 text-sm">
-              App data such as settings, notification preferences, prayer-time
-              caches, Quran bookmarks/progress, dua history, and Ramadan tracker
-              entries are stored locally on your device. You can clear this data
-              by uninstalling the app or resetting local app storage.
-            </p>
-          </div>
+        <div class="sep reveal"></div>
 
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">
-              6. Third-Party Services
-            </h2>
-            <p class="mt-2 text-sm">
-              Sirat does not use analytics tools, advertising networks, tracking
-              SDKs, or user profiling services. Third-party services used for app
-              functionality may include Google Maps/Places, Aladhan, OpenAI, and
-              Expo services. Review their privacy policies for details.
-            </p>
-          </div>
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">4. Internet Access</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            Sirat calls backend endpoints for dua matching, prayer times, holiday data, and mosque lookup; backend services may call trusted APIs such as Aladhan, Google Places, and OpenAI when needed. Sirat also streams Quran audio from online sources. For dua matching, local regex matching is used first in-app when possible.
+          </p>
+        </div>
 
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">
-              7. Your Consent
-            </h2>
-            <p class="mt-2 text-sm">
-              Using Sirat indicates acceptance of this policy. If you disagree,
-              discontinue use of the app.
-            </p>
-          </div>
+        <div class="sep reveal"></div>
 
-          <div>
-            <h2 class="text-lg text-[#f5d36e] font-semibold">8. Contact</h2>
-            <p class="mt-2 text-sm">
-              Questions? Contact
-              <a
-                href="mailto:yassinbenelhajlahsen@gmail.com"
-                class="underline text-[#f5d36e]"
-                >yassinbenelhajlahsen@gmail.com</a>
-            </p>
-          </div>
-        </section>
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">5. Data Retention</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            App data such as settings, notification preferences, prayer-time caches, Quran bookmarks/progress, dua history, and Ramadan tracker entries are stored locally on your device. You can clear this data by uninstalling the app or resetting local app storage.
+          </p>
+        </div>
 
-        <footer class="text-center text-sm text-gray-400 mt-8">
-          © 2025 Sirat by Yassin Benelhajlahsen
-        </footer>
-      </main>
-    </div>
+        <div class="sep reveal"></div>
+
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">6. Third-Party Services</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            Sirat does not use analytics tools, advertising networks, tracking SDKs, or user profiling services. Third-party services used for app functionality may include Google Maps/Places, Aladhan, OpenAI, and Expo services. Review their privacy policies for details.
+          </p>
+        </div>
+
+        <div class="sep reveal"></div>
+
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">7. Your Consent</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            Using Sirat indicates acceptance of this policy. If you disagree, discontinue use of the app.
+          </p>
+        </div>
+
+        <div class="sep reveal"></div>
+
+        <div class="policy-section reveal">
+          <h2 class="text-policy-title mb-3" style="color: var(--gold)">8. Contact</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75;">
+            Questions? Contact
+            <a
+              href="mailto:yassinbenelhajlahsen@gmail.com"
+              style="color: var(--gold); text-decoration: underline; text-underline-offset: 3px;"
+            >yassinbenelhajlahsen@gmail.com</a>
+          </p>
+        </div>
+
+        <div class="sep reveal"></div>
+
+      </div>
+    </main>
+
+    <!-- ═══════════════════════════════════════ FOOTER -->
+    <footer class="px-6 py-12">
+      <p class="text-center" style="color: var(--text-tertiary); font-size: 0.85rem;">
+        © 2025 Sirat by Yassin Benelhajlahsen
+      </p>
+    </footer>
+
+    <script>
+      // Scroll-triggered reveals
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            observer.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+      // Nav scroll blur
+      const nav = document.getElementById('main-nav');
+      window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 50);
+      }, { passive: true });
+    </script>
+
   </body>
 </html>

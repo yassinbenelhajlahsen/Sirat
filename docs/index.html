@@ -2,377 +2,458 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Edge-to-edge on iOS -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <meta name="theme-color" content="#08260b" />
-
-    <!-- Match the browser UI color on mobile -->
-    <meta
-      name="theme-color"
-      content="#08260b"
-      media="(prefers-color-scheme: dark)"
-    />
-    <meta
-      name="theme-color"
-      content="#08260b"
-      media="(prefers-color-scheme: light)"
-    />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#041a07" />
+    <meta name="theme-color" content="#041a07" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#041a07" media="(prefers-color-scheme: light)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <title>Sirat – Your Daily Companion</title>
     <link rel="icon" href="assets/Sirat-FaviconV2.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
       :root {
-        --bg-top: #08260b;
-        --bg-mid: #0c3605;
-        --bg-bottom: #06280a;
+        --bg-deep:    #041a07;
+        --bg-mid:     #0a2e0d;
+        --bg-surface: #0d3710;
+        --gold:       #d4b463;
+        --gold-light: #e8cf8a;
+        --gold-dim:   #a08a42;
+        --text-primary:   #f0ede6;
+        --text-secondary: #b0ad9f;
+        --text-tertiary:  #6e6b5e;
+        --glass-bg:     rgba(255,255,255,0.025);
+        --glass-border: rgba(255,255,255,0.07);
       }
 
-      html,
-      body {
-        height: 100%;
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html, body {
         margin: 0;
-      }
-
-      /* Primary gradient on the root so it fills the full page and scrolls correctly on desktop */
-      html {
-        background-color: var(--bg-top); /* fast paint fallback */
         height: 100%;
       }
 
-      /* Body uses safe-area padding and relies on html's background */
-      body {
-        color: #fff;
+      html {
+        background-color: var(--bg-deep);
+        scroll-behavior: smooth;
+      }
 
-        /* Safe-area padding for notch/home indicator */
+      body {
+        font-family: 'DM Sans', sans-serif;
+        color: var(--text-primary);
         padding-top: env(safe-area-inset-top);
         padding-top: constant(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         padding-bottom: constant(safe-area-inset-bottom);
-
-        min-height: 100svh;
         min-height: 100dvh;
-        min-height: 100vh;
-        box-sizing: border-box;
         overflow-x: hidden;
-        background-color: transparent; /* allow the fixed gradient layer to show immediately */
+        background-color: transparent;
       }
-      @media (hover: none) and (pointer: coarse) {
-        html {
-          background-attachment: initial;
-        }
-      }
-      /* Small fixed fallback layer for mobile browsers (covers notch areas); harmless on desktop */
+
       body::before {
         content: "";
         position: fixed;
         inset: 0;
         z-index: -1;
         pointer-events: none;
-        /* The real fixed gradient layer */
-        background: linear-gradient(
-          180deg,
-          var(--bg-top) 0%,
-          var(--bg-mid) 50%,
-          var(--bg-bottom) 100%
-        );
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-attachment: fixed;
+        background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 50%, var(--bg-deep) 100%);
         -webkit-transform: translateZ(0);
       }
 
-      /* subtle glass card */
+      /* Typography */
+      .font-serif { font-family: 'DM Serif Display', serif; }
+
+      .text-hero {
+        font-family: 'DM Serif Display', serif;
+        font-size: clamp(2.4rem, 6vw, 4.5rem);
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+      }
+
+      .text-section {
+        font-family: 'DM Serif Display', serif;
+        font-size: clamp(1.75rem, 4vw, 2.75rem);
+        line-height: 1.15;
+        letter-spacing: -0.015em;
+      }
+
+      .text-card-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: clamp(1.2rem, 2.2vw, 1.45rem);
+        line-height: 1.25;
+      }
+
+      /* Glass */
       .glass {
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.03),
-          rgba(255, 255, 255, 0.02)
-        );
-        backdrop-filter: blur(6px);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      /* Sticky nav */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        transition: background 0.35s ease, backdrop-filter 0.35s ease;
+      }
+      nav.scrolled {
+        background: rgba(4, 26, 7, 0.88);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--glass-border);
+      }
+
+      /* Scroll reveal */
+      .reveal {
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Stagger delays for feature items */
+      .stagger .reveal:nth-child(1) { transition-delay: 0s; }
+      .stagger .reveal:nth-child(2) { transition-delay: 0.1s; }
+      .stagger .reveal:nth-child(3) { transition-delay: 0.18s; }
+
+      /* Gold button glow */
+      .btn-gold {
+        background: var(--gold);
+        color: var(--bg-deep);
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        border-radius: 9999px;
+        padding: 0.85rem 2.25rem;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 0 32px rgba(212, 180, 99, 0.18);
+        text-decoration: none;
+      }
+      .btn-gold:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 48px rgba(212, 180, 99, 0.3);
+      }
+
+      .link-subtle {
+        color: var(--text-secondary);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+      .link-subtle:hover { color: var(--gold-light); }
+
+      /* Feature card */
+      .feature-card {
+        padding: 2rem;
+        border-radius: 1.25rem;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+      }
+
+      /* Icon circle */
+      .icon-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        background: rgba(212, 180, 99, 0.1);
+        border: 1px solid rgba(212, 180, 99, 0.2);
+        margin-bottom: 1.25rem;
+        font-size: 1.5rem;
+      }
+
+      /* Separator */
+      .sep {
+        width: 100%;
+        height: 1px;
+        background: var(--glass-border);
+      }
+
+      /* Social links */
+      .social-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+      .social-link:hover { color: var(--gold-light); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
       }
     </style>
   </head>
 
-  <body class="text-white font-sans flex flex-col">
-    <div class="max-w-5xl mx-auto w-full px-6">
-      <!-- Top navigation -->
-      <nav class="flex items-center justify-between py-6">
-        <a href="/" class="flex items-center gap-3">
-          <img
-            src="assets/Sirat-Icon.jpg"
-            alt="Sirat"
-            class="w-12 h-12 rounded-lg shadow-sm"
-          />
-          <div>
-            <span class="block text-xl font-semibold text-[#f5d36e]"
-              >Sirat</span>
-            <span class="block text-xs text-gray-300 -mt-1"
-              >Your Daily Companion</span>
-          </div>
+  <body>
+
+    <!-- ═══════════════════════════════════════ NAV -->
+    <nav id="main-nav" aria-label="Main navigation">
+      <div class="w-full px-6 flex items-center justify-between py-4">
+        <a href="/" class="flex items-center gap-3" aria-label="Sirat home">
+          <img src="assets/Sirat-Icon.jpg" alt="Sirat app icon" class="w-10 h-10 rounded-xl shadow-sm" />
+          <span class="font-serif text-xl" style="color: var(--gold)">Sirat</span>
         </a>
-      </nav>
+        <a
+          href="https://apps.apple.com/us/app/sirat-the-path-to-your-deen/id6753838183"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-gold hidden sm:inline-flex"
+          style="padding: 0.55rem 1.4rem; font-size: 0.875rem;"
+        >Download</a>
+      </div>
+    </nav>
 
-      <!-- Hero -->
-      <header
-        class="glass rounded-2xl p-8 sm:p-12 flex flex-col sm:flex-row items-center gap-8 shadow-xl"
-      >
-        <div class="flex-1">
-          <h1
-            class="text-4xl sm:text-5xl font-extrabold text-[#f5d36e] leading-tight"
-          >
-            Stay connected with prayer times, Quran, Qibla, and duas.
-          </h1>
-          <p class="mt-4 text-gray-200 max-w-lg">
-            Sirat provides prayer times, Quran reading and audio, nearby mosque
-            discovery, calendar tracking, local-first dua matching with AI
-            fallback, and personalized app themes.
-          </p>
-
-          <div class="mt-6 flex flex-wrap gap-3">
-            <!-- iOS-style App Store badge (hero) -->
-            <a
-              href="https://apps.apple.com/us/app/sirat-the-path-to-your-deen/id6753838183"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Download Sirat on the App Store"
-            >
-              <img
-                src="assets/AppStore.svg"
-                alt="Download on the App Store"
-                class="block w-36 sm:w-44"
-              />
-            </a>
-
-            <a
-              href="https://github.com/yassinbenelhajlahsen/sirat"
-              target="_blank"
-              class="inline-flex items-center gap-2 border border-[#f5d36e] text-[#f5d36e] px-4 py-3 rounded-lg hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
-              >View on GitHub</a>
-            <a
-              href="privacy.html"
-              class="inline-flex items-center gap-2 border border-[#f5d36e] text-[#f5d36e] px-4 py-3 rounded-lg hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
-              >Privacy Policy</a>
-          </div>
-        </div>
-      </header>
-
-      <!-- Features grid -->
-      <section class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">
-            Accurate Prayer Times
-          </h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Automatic location mode with manual city fallback and configurable
-            calculation methods.
-          </p>
-        </div>
-
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">Real-time Qibla</h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Compass direction powered by device sensors, with alignment
-            feedback and permission guidance.
-          </p>
-        </div>
-
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">Mosque Discovery</h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Find nearby mosques with map previews and quick directions.
-          </p>
-        </div>
-
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">
-            Calendar &amp; Ramadan Tracker
-          </h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Islamic holidays with missed-fast tracking during Ramadan windows.
-          </p>
-        </div>
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">
-            Immersive Quran Reader
-          </h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Read and listen to the Quran seamlessly with instant search and
-            automatic progress restore.
-          </p>
-        </div>
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">
-            Personalized Themes
-          </h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Switch between Default, Dark, and Light themes from Settings with
-            your preference saved automatically.
-          </p>
-        </div>
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">
-            Prayer Notifications
-          </h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Configure per-prayer reminders with optional Adhan audio and
-            system-level notification controls.
-          </p>
-        </div>
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">AI Dua Search</h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            Local regex matching works fast and offline, with backend AI used
-            as fallback when needed.
-          </p>
-        </div>
-        <div
-          tabindex="0"
-          class="glass rounded-xl p-6 transition-transform duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:bg-white/6 focus:outline-none focus:ring-2 focus:ring-[#f5d36e]/25"
-        >
-          <h3 class="text-lg font-semibold text-[#f5d36e]">
-            Privacy-First Experience
-          </h3>
-          <p class="mt-2 text-gray-200 text-sm">
-            No intrusive trackers, local-first features, and settings designed
-            to keep your worship focused.
-          </p>
-        </div>
-      </section>
-
-      <!-- About / Mission -->
-      <section class="mt-8 glass rounded-xl p-6">
-        <div class="max-w-4xl mx-auto">
-          <h4 class="text-xl font-semibold text-[#f5d36e]">
-            About &amp; Mission
-          </h4>
-
-          <p class="mt-3 text-gray-200">
-            I built Sirat to provide an ad-free, affordable way to share
-            reliable prayer times, Quran, Qibla direction and nearby mosque
-            information with my friends and family. The app is designed to be
-            privacy-first and free from intrusive trackers so everyone can use
-            it without distractions.
-          </p>
-
-          <p class="mt-3 text-gray-200">
-            This project is also a personal learning space — it helps me improve
-            my software engineering skills by shipping thoughtful, dependable
-            mobile experiences for my community.
-          </p>
-
-          <div class="mt-6 flex flex-wrap items-center gap-4">
-            <a
-              href="https://linkedin.com/in/yassin-benelhajlahsen"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Yassin on LinkedIn"
-              class="inline-flex items-center gap-2 text-sm text-gray-200 hover:text-[#f5d36e] transition"
-            >
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4.98 3.5C4.98 4.6 4.08 5.5 2.98 5.5 1.88 5.5 1 4.6 1 3.5 1 2.4 1.9 1.5 3 1.5 4.1 1.5 4.98 2.4 4.98 3.5zM.5 8.98h5v14.52h-5V8.98zM9.5 8.98h4.78v2.02h.07c.67-1.26 2.3-2.59 4.73-2.59 5.05 0 5.98 3.33 5.98 7.66V24.5h-5V17.1c0-1.78-.03-4.07-2.48-4.07-2.49 0-2.87 1.94-2.87 3.95V24.5h-5V8.98z"
-                />
-              </svg>
-              LinkedIn
-            </a>
-
-            <a
-              href="https://github.com/yassinbenelhajlahsen"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Yassin on GitHub"
-              class="inline-flex items-center gap-2 text-sm text-gray-200 hover:text-[#f5d36e] transition"
-            >
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 .5C5.65.5.5 5.65.5 12.02c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.11-.75.4-1.25.72-1.54-2.56-.29-5.26-1.28-5.26-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.45.11-3.02 0 0 .97-.31 3.18 1.18a11.05 11.05 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.57.23 2.73.11 3.02.74.81 1.19 1.84 1.19 3.1 0 4.44-2.71 5.41-5.29 5.7.41.35.77 1.04.77 2.1 0 1.52-.01 2.75-.01 3.12 0 .31.21.67.79.56A11.53 11.53 0 0 0 23.5 12c0-6.37-5.15-11.5-11.5-11.5z"
-                />
-              </svg>
-              GitHub
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- CTA strip -->
-      <section
-        class="mt-10 glass rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
-      >
-        <div>
-          <h4 class="text-lg font-semibold text-[#f5d36e]">
-            Ready to try Sirat?
-          </h4>
-          <p class="text-sm text-gray-200 mt-1">
-            Install the app and keep your worship schedule reliable and private.
-          </p>
-        </div>
-        <div class="flex gap-3 items-center">
+    <!-- ═══════════════════════════════════════ HERO -->
+    <header class="text-center px-6 pt-24 pb-32">
+      <div class="max-w-4xl mx-auto">
+        <p class="reveal" style="color: var(--gold-dim); font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; margin-bottom: 1.5rem;">Islamic Companion for iOS</p>
+        <h1 class="text-hero reveal" style="color: var(--gold); transition-delay: 0.08s;">
+          Stay connected with<br />prayer, Quran &amp; community.
+        </h1>
+        <p class="reveal" style="color: var(--text-secondary); font-size: 1.125rem; line-height: 1.75; max-width: 36rem; margin: 1.75rem auto 0; transition-delay: 0.16s;">
+          Prayer times, Quran reading and audio, Qibla direction, nearby mosque discovery, dua search, and more — ad-free and privacy-first.
+        </p>
+        <div class="reveal flex flex-col items-center gap-4 mt-10" style="transition-delay: 0.24s;">
           <a
             href="https://apps.apple.com/us/app/sirat-the-path-to-your-deen/id6753838183"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Download Sirat on the App Store"
-            class="ml-2 inline-flex items-center gap-2 bg-[#f5d36e] text-[#0c3605] px-4 py-2 rounded-lg font-medium hover:scale-[1.02] transition shadow-md"
-            >Download</a>
-
-          <a
-            href="https://github.com/yassinbenelhajlahsen/sirat"
-            target="_blank"
-            class="px-4 py-2 rounded-md border border-[#f5d36e] text-[#f5d36e] hover:bg-[#f5d36e] hover:text-[#0c3605] transition"
-            >View Source</a>
+          >
+            <img src="assets/AppStore.svg" alt="Download on the App Store" class="block w-44" />
+          </a>
+          <div class="flex items-center gap-6 mt-2">
+            <a href="https://github.com/yassinbenelhajlahsen/sirat" target="_blank" class="link-subtle">View on GitHub</a>
+            <span style="color: var(--glass-border); font-size: 1.25rem;">·</span>
+            <a href="privacy.html" class="link-subtle">Privacy Policy</a>
+          </div>
         </div>
-      </section>
+      </div>
+    </header>
 
-      <!-- Footer -->
-      <footer class="text-center text-sm text-gray-400 mt-12 pb-10">
-        © 2025 Sirat by Yassin Benelhajlahsen. All rights reserved.
-      </footer>
-    </div>
+    <!-- ═══════════════════════════════════════ FEATURES GROUP 1 -->
+    <section class="px-6 py-24">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-16 reveal">
+          <p style="color: var(--gold-dim); font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; margin-bottom: 0.75rem;">Core Pillars</p>
+          <h2 class="text-section" style="color: var(--text-primary)">Always know your direction.</h2>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-3 stagger">
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">🕌</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Accurate Prayer Times</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Automatic location mode with manual city fallback and configurable calculation methods.
+            </p>
+          </div>
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">🧭</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Real-time Qibla</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Compass direction powered by device sensors, with alignment feedback and permission guidance.
+            </p>
+          </div>
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">📍</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Mosque Discovery</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Find nearby mosques with map previews and quick directions.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ FEATURES GROUP 2 -->
+    <section class="px-6 py-24">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-16 reveal">
+          <p style="color: var(--gold-dim); font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; margin-bottom: 0.75rem;">Spiritual Tools</p>
+          <h2 class="text-section" style="color: var(--text-primary)">Everything for your practice.</h2>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-3 stagger">
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">📅</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Calendar &amp; Ramadan</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Islamic holidays with missed-fast tracking during Ramadan windows.
+            </p>
+          </div>
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">📖</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Immersive Quran</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Read and listen seamlessly with instant search and automatic progress restore.
+            </p>
+          </div>
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">✨</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">AI Dua Search</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Local regex matching works fast and offline, with backend AI used as fallback when needed.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ FEATURES GROUP 3 -->
+    <section class="px-6 py-24">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-16 reveal">
+          <p style="color: var(--gold-dim); font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; margin-bottom: 0.75rem;">Your Experience</p>
+          <h2 class="text-section" style="color: var(--text-primary)">Made to feel like yours.</h2>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-3 stagger">
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">🎨</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Personalized Themes</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Switch between Default, Dark, and Light themes with your preference saved automatically.
+            </p>
+          </div>
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">🔔</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Prayer Notifications</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              Configure per-prayer reminders with optional Adhan audio and system-level controls.
+            </p>
+          </div>
+          <div class="feature-card glass reveal">
+            <div class="icon-wrap">🔒</div>
+            <h3 class="text-card-title mb-3" style="color: var(--gold)">Privacy-First</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.65;">
+              No intrusive trackers, local-first features, and settings designed to keep your worship focused.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ ABOUT -->
+    <section class="px-6 py-24">
+      <div class="max-w-2xl mx-auto text-center">
+        <div class="reveal">
+          <p style="color: var(--gold-dim); font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; margin-bottom: 0.75rem;">About &amp; Mission</p>
+          <h2 class="text-section mb-8" style="color: var(--text-primary)">Built for community.</h2>
+        </div>
+        <p class="reveal" style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.8; transition-delay: 0.1s;">
+          I built Sirat to provide an ad-free, affordable way to share reliable prayer times, Quran, Qibla direction and nearby mosque information with my friends and family. The app is designed to be privacy-first and free from intrusive trackers so everyone can use it without distractions.
+        </p>
+        <p class="reveal" style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.8; margin-top: 1.25rem; transition-delay: 0.18s;">
+          This project is also a personal learning space — it helps me improve my software engineering skills by shipping thoughtful, dependable mobile experiences for my community.
+        </p>
+        <div class="reveal flex items-center justify-center gap-8 mt-10" style="transition-delay: 0.26s;">
+          <a
+            href="https://linkedin.com/in/yassin-benelhajlahsen"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Yassin on LinkedIn"
+            class="social-link"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M4.98 3.5C4.98 4.6 4.08 5.5 2.98 5.5 1.88 5.5 1 4.6 1 3.5 1 2.4 1.9 1.5 3 1.5 4.1 1.5 4.98 2.4 4.98 3.5zM.5 8.98h5v14.52h-5V8.98zM9.5 8.98h4.78v2.02h.07c.67-1.26 2.3-2.59 4.73-2.59 5.05 0 5.98 3.33 5.98 7.66V24.5h-5V17.1c0-1.78-.03-4.07-2.48-4.07-2.49 0-2.87 1.94-2.87 3.95V24.5h-5V8.98z"/>
+            </svg>
+            LinkedIn
+          </a>
+          <a
+            href="https://github.com/yassinbenelhajlahsen"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Yassin on GitHub"
+            class="social-link"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 .5C5.65.5.5 5.65.5 12.02c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.11-.75.4-1.25.72-1.54-2.56-.29-5.26-1.28-5.26-5.71 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.45.11-3.02 0 0 .97-.31 3.18 1.18a11.05 11.05 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.57.23 2.73.11 3.02.74.81 1.19 1.84 1.19 3.1 0 4.44-2.71 5.41-5.29 5.7.41.35.77 1.04.77 2.1 0 1.52-.01 2.75-.01 3.12 0 .31.21.67.79.56A11.53 11.53 0 0 0 23.5 12c0-6.37-5.15-11.5-11.5-11.5z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ CTA -->
+    <section class="px-6 py-24 text-center">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="text-section reveal" style="color: var(--gold)">Ready to try Sirat?</h2>
+        <p class="reveal" style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.75; margin: 1rem auto 0; max-width: 28rem; transition-delay: 0.1s;">
+          Install the app and keep your worship schedule reliable and private.
+        </p>
+        <div class="reveal flex flex-col items-center gap-4 mt-10" style="transition-delay: 0.18s;">
+          <a
+            href="https://apps.apple.com/us/app/sirat-the-path-to-your-deen/id6753838183"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Download Sirat on the App Store"
+            class="btn-gold"
+          >
+            Download on the App Store
+          </a>
+          <a href="https://github.com/yassinbenelhajlahsen/sirat" target="_blank" class="link-subtle">
+            View Source on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ FOOTER -->
+    <footer class="px-6 py-12">
+      <div class="max-w-6xl mx-auto">
+        <div class="sep mb-8"></div>
+        <p class="text-center" style="color: var(--text-tertiary); font-size: 0.85rem;">
+          © 2025 Sirat by Yassin Benelhajlahsen. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // Scroll-triggered reveals
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            observer.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -32px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+      // Nav scroll blur
+      const nav = document.getElementById('main-nav');
+      window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 50);
+      }, { passive: true });
+    </script>
 
   </body>
 </html>
