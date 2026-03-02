@@ -29,6 +29,8 @@ type BackendProxyResponse<T> = {
 // Use year:number as the key for in-memory cache
 let cachedHolidays: Record<number, Holiday[]> = {};
 
+const HOLIDAY_STORAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 function sanitizeHolidayList(input: unknown): Holiday[] {
   if (!Array.isArray(input)) {
     return [];
@@ -66,7 +68,10 @@ function sanitizeHolidayList(input: unknown): Holiday[] {
 // Persist
 async function saveToStorage(year: number, holidays: Holiday[]) {
   try {
-    await AsyncStorage.setItem(`holidays-${year}`, JSON.stringify(holidays));
+    await AsyncStorage.setItem(
+      `holidays-${year}`,
+      JSON.stringify({ holidays, savedAt: Date.now() }),
+    );
   } catch (e) {
     console.warn("Failed to save holidays:", e);
   }
@@ -77,7 +82,18 @@ async function loadFromStorage(year: number): Promise<Holiday[] | null> {
   try {
     const val = await AsyncStorage.getItem(`holidays-${year}`);
     if (!val) return null;
-    return sanitizeHolidayList(JSON.parse(val));
+    const parsed = JSON.parse(val);
+    // Backward compat: old format was a plain array — treat as expired
+    if (Array.isArray(parsed)) return null;
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      typeof parsed.savedAt !== "number" ||
+      Date.now() - parsed.savedAt > HOLIDAY_STORAGE_TTL_MS
+    ) {
+      return null;
+    }
+    return sanitizeHolidayList(parsed.holidays);
   } catch (e) {
     console.warn("Failed to load holidays:", e);
     return null;
