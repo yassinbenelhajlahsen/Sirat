@@ -15,7 +15,67 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Critical Tailwind utilities inlined, rest deferred -->
+    <style>
+      @layer base {
+        .flex { display: flex; }
+        .inline-flex { display: inline-flex; }
+        .grid { display: grid; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-5 { gap: 1.25rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-8 { gap: 2rem; }
+        .w-full { width: 100%; }
+        .w-10 { width: 2.5rem; }
+        .w-16 { width: 4rem; }
+        .w-44 { width: 11rem; }
+        .w-4 { width: 1rem; }
+        .h-10 { height: 2.5rem; }
+        .h-16 { height: 4rem; }
+        .h-4 { height: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+        .py-14 { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+        .pt-16 { padding-top: 4rem; }
+        .pt-20 { padding-top: 5rem; }
+        .pb-16 { padding-bottom: 4rem; }
+        .pb-20 { padding-bottom: 5rem; }
+        .pb-24 { padding-bottom: 6rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-10 { margin-bottom: 2.5rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-10 { margin-top: 2.5rem; }
+        .text-center { text-align: center; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .rounded-3xl { border-radius: 1.5rem; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+        .max-w-2xl { max-width: 42rem; }
+        .max-w-4xl { max-width: 56rem; }
+        .max-w-5xl { max-width: 64rem; }
+        .max-w-6xl { max-width: 72rem; }
+        .block { display: block; }
+        .hidden { display: none; }
+        @media (max-width: 640px) {
+          .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+          .sm\:inline-flex { display: inline-flex; }
+        }
+      }
+    </style>
+
+    <!-- Defer non-critical Tailwind until after page load -->
+    <script defer src="https://cdn.tailwindcss.com"></script>
 
     <style>
       :root {
@@ -219,7 +279,10 @@
     <nav id="main-nav" aria-label="Main navigation">
       <div class="w-full px-6 flex items-center justify-between py-4">
         <a href="/" class="flex items-center gap-3" aria-label="Sirat home">
-          <img src="assets/Sirat-Icon.jpg" alt="Sirat app icon" class="w-10 h-10 rounded-xl shadow-sm" />
+          <picture>
+            <source srcset="assets/Sirat-Icon.webp" type="image/webp" />
+            <img src="assets/Sirat-Icon.jpg" alt="Sirat app icon" class="w-10 h-10 rounded-xl shadow-sm" fetchpriority="high" />
+          </picture>
           <span class="font-serif text-xl" style="color: var(--gold)">Sirat</span>
         </a>
         <a
