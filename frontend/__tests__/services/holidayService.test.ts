@@ -65,10 +65,13 @@ describe("services/holidayService", () => {
   it("reads sanitized data from AsyncStorage cache before backend", async () => {
     await AsyncStorage.setItem(
       "holidays-2027",
-      JSON.stringify([
-        { date: "2027-03-01", name: " Ramadan 1st " },
-        { date: "nope", name: "bad" },
-      ]),
+      JSON.stringify({
+        holidays: [
+          { date: "2027-03-01", name: " Ramadan 1st " },
+          { date: "nope", name: "bad" },
+        ],
+        savedAt: Date.now(),
+      }),
     );
 
     const holidays = await getHolidaysForYear(2027);
