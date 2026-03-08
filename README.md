@@ -13,6 +13,20 @@ Sirat is a mobile-first Islamic companion app with an Expo frontend and a Node/E
 └── README.md
 ```
 
+## Demo
+
+<div align="center">
+
+| Home | Quran | Calendar |
+|------|-------|----------|
+| <img src="demos/home.gif" width="180"/> | <img src="demos/quran.gif" width="180"/> | <img src="demos/calendar.gif" width="180"/> |
+
+| Mosques | Qibla | Settings |
+|---------|-------|----------|
+| <img src="demos/mosques.gif" width="180"/> | <img src="demos/qibla.gif" width="180"/> | <img src="demos/settings.gif" width="180"/> |
+
+</div>
+
 ## Current Feature Set
 
 - Prayer times via backend-proxied Aladhan data with auto-location or manual city fallback
