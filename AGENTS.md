@@ -34,7 +34,6 @@ Run commands from the correct package directory:
 - `npm test` -> `jest`
 - `npm run test:watch` -> `jest --watch`
 - `npm run test:coverage` -> `jest --coverage`
-- `npm run reset-project` -> `node ./scripts/reset-project.js` (script target file is missing in repo)
 
 ## Architecture
 
@@ -46,6 +45,7 @@ Run commands from the correct package directory:
 - Google Maps integration: `backend/src/services/googleMapsService.ts`
 - Aladhan integration/proxy + cache/retry: `backend/src/services/aladhanService.ts`
 - Dua data source/caching: `backend/src/utils/duaDatabase.ts`
+- Prayer method resolution (integer → Aladhan method, `auto` → IP-based): `backend/src/utils/prayerMethodResolver.ts`
 - Error middleware: `backend/src/middleware/errorHandler.ts`
 - Canonical backend dua dataset: `backend/public/duas.json`
 
@@ -58,11 +58,12 @@ Dua API flow:
 
 ### Frontend
 - Router entry/layout: `frontend/app/_layout.tsx`
-- Tabs: `frontend/app/(tabs)/`
-- Shared UI components: `frontend/components/`
+- Tabs: `frontend/app/(tabs)/` — `index.tsx` (home/prayer), `Calendar.tsx`, `Mosques.tsx`, `Qibla.tsx`, `Quran.tsx`, `Settings.tsx`
+- Non-tab screens: `frontend/app/[date].tsx` (calendar day detail), `frontend/app/MosqueMap.tsx` (full-screen map)
+- Shared UI components: `frontend/components/` — generic components at root, `quran/` sub-dir (QuranAyahCard, QuranMiniPlayer, QuranMiniPlayerPortal, QuranBookmarkModal, QuranDisplaySettingsModal, QuranCompletionCard, navigator/)
 - Core logic in `frontend/services/`
 - Reusable hooks in `frontend/hooks/`
-- Shared utilities: `frontend/utils/`
+- Shared utilities: `frontend/utils/` — `calculationMethods.ts`, `cities.ts`, `getTimeUntil.ts`, `notifications/` (constants + styles)
 - App providers in `frontend/context/` (`QuranAudioProvider`, `ThemeContext`)
 - App data assets in `frontend/assets/data/`
 
@@ -71,7 +72,7 @@ Important frontend flows:
 - Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (modular internals in `frontend/services/prayer-times/`) using `/api/prayer-times/timings` + `/api/prayer-times/calendar/year`, with monthly `/api/prayer-times/calendar` fallback
 - Notifications: rolling scheduling coordinated in `frontend/services/notificationService.ts` with modular helpers in `frontend/services/notifications/`
 - Themes: app-wide theme state in `frontend/context/ThemeContext.tsx` with settings picker in `frontend/app/(tabs)/Settings.tsx`
-- Quran: preload/normalize local dataset in `frontend/services/quranData.ts`
+- Quran: preload/normalize local dataset (`frontend/services/quranData.ts`); audio URL generation (`quranAudio.ts`); bookmark CRUD with AsyncStorage (`quranBookmarks.ts`, key: `quran:bookmarks`); display mode persistence — arabic/english/transliteration (`quranDisplayModes.ts`, key: `quran_display_modes`, event: `QURAN_DISPLAY_MODES_UPDATED`); last-read position tracking (`quranProgress.ts`, keys: `quran:last-read:index`, `quran:last-read:position`). Audio playback managed by `frontend/context/QuranAudioProvider.tsx`
 - Mosques: backend-proxied Google Places Nearby Search via `frontend/services/getNearbyMosques.ts` and `backend/src/routes/mosque.ts`
 - Calendar/Ramadan: backend holiday year proxy + missed fast tracking (`holidayService.ts`, `ramadanTracker.ts`)
 
@@ -93,7 +94,6 @@ Important frontend flows:
 
 ## Constraints and Gotchas
 - Backend `loadDuas()` resolves file via `process.cwd()/public/duas.json`; run backend from `backend/` or data load fails.
-- `frontend/package.json` includes `reset-project` script, but `frontend/scripts/reset-project.js` does not exist.
 - Backend mosque `radius` is clamped to `100..5000` in `backend/src/controllers/mosqueController.ts` (default `3000`).
 - Theme selection is stored as string key `app_theme_v1` (`default` | `dark` | `light`).
 - Root app readiness depends on theme hydration in `frontend/app/_layout.tsx` to avoid first-frame flash.

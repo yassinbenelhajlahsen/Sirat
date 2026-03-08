@@ -86,4 +86,3 @@ frontend/
 - Prayer-time orchestration lives in `services/prayerTimes.ts` with modular internals in `services/prayer-times/` (uses `/calendar/year` first, with monthly fallback).
 - Prayer method `-1` in settings maps to backend `method=auto` with optional country-based resolution.
 - Holiday year fetch and caching live in `services/holidayService.ts`.
-- `npm run reset-project` currently points to a missing `frontend/scripts/reset-project.js` file.
