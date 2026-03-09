@@ -59,6 +59,7 @@ describe("services/getNearbyMosques", () => {
     expect(mocks.getCurrentPositionAsync).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("latitude=10.1&longitude=20.2&radius=3000"),
+      expect.any(Object),
     );
   });
 
@@ -74,11 +75,16 @@ describe("services/getNearbyMosques", () => {
     expect(mocks.getCurrentPositionAsync).toHaveBeenCalledTimes(1);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("latitude=41.881&longitude=-87.623&radius=3000"),
+      expect.any(Object),
     );
   });
 
   it("throws API error on non-2xx response", async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500 });
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => null,
+    });
 
     const { getNearbyMosques } = loadMosqueService();
 

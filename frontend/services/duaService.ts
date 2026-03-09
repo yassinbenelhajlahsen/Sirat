@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import * as Network from "expo-network";
+import { AppUpdateRequiredError, apiPost } from "./apiClient";
 import { matchByRegex } from "./duaMatcher";
 
 /**
@@ -25,7 +25,6 @@ interface DuaResponse {
   matchSource?: "ai" | "fallback";
 }
 
-const DUA_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 const LOCAL_DUA_DATA = require("../assets/data/duas.json") as {
   duas: LocalDua[];
 };
@@ -120,11 +119,11 @@ export async function requestDua(userRequest: string): Promise<Dua> {
       return fallbackDua;
     }
 
-    const response = await axios.post<DuaResponse>(`${DUA_API_BASE}/api/dua`, {
+    const response = await apiPost<DuaResponse>("/api/dua", {
       userRequest: trimmedRequest,
     });
 
-    const { dua } = response.data;
+    const { dua } = response;
 
     // Validate structure
     if (
@@ -139,22 +138,17 @@ export async function requestDua(userRequest: string): Promise<Dua> {
 
     return dua;
   } catch (err: any) {
+    if (err instanceof AppUpdateRequiredError) throw err;
+
     const isNetworkError =
-      err.code === "ECONNREFUSED" ||
-      err.code === "ERR_NETWORK" ||
-      err.message === "Network Error";
+      (err instanceof TypeError &&
+        err.message.includes("Network request failed")) ||
+      err.message === "Network Error" ||
+      err.code === "ECONNREFUSED";
     if (isNetworkError) {
       const fallbackDua = getGeneralFallbackDua();
       await applySimulatedLoading(startTime);
       return fallbackDua;
-    }
-
-    if (err.response?.status === 400) {
-      throw new Error(err.response.data.error || "Invalid request");
-    }
-
-    if (err.response?.status === 500) {
-      throw new Error("Backend error. Please try again.");
     }
 
     throw new Error(err.message || "Failed to find a dua. Please try again.");

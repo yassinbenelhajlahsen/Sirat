@@ -1,12 +1,25 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import * as Network from "expo-network";
 
 import { clearDuaHistory, getDuaHistory, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
 
-jest.mock("axios");
+jest.mock("@/services/apiClient", () => ({
+  apiPost: jest.fn(),
+  AppUpdateRequiredError: class AppUpdateRequiredError extends Error {
+    minVersion: string;
+    currentVersion: string;
+    constructor(minVersion: string, currentVersion: string) {
+      super("APP_UPDATE_REQUIRED");
+      this.name = "AppUpdateRequiredError";
+      this.minVersion = minVersion;
+      this.currentVersion = currentVersion;
+    }
+  },
+}));
 
-const mockAxiosPost = axios.post as jest.MockedFunction<typeof axios.post>;
+import { apiPost } from "@/services/apiClient";
+
+const mockApiPost = apiPost as jest.MockedFunction<typeof apiPost>;
 const mockGetNetworkStateAsync = Network.getNetworkStateAsync as jest.MockedFunction<
   typeof Network.getNetworkStateAsync
 >;
@@ -37,7 +50,7 @@ describe("services/duaService", () => {
     const dua = await request;
 
     expect(dua.category).toBe("exam");
-    expect(mockAxiosPost).not.toHaveBeenCalled();
+    expect(mockApiPost).not.toHaveBeenCalled();
   });
 
   it("returns general fallback when offline and no regex match", async () => {
@@ -54,45 +67,19 @@ describe("services/duaService", () => {
     const dua = await request;
 
     expect(dua.id).toBe(GENERAL_DUA_ID);
-    expect(mockAxiosPost).not.toHaveBeenCalled();
+    expect(mockApiPost).not.toHaveBeenCalled();
   });
 
-  it("maps 400 backend errors to backend message", async () => {
+  it("maps backend errors to their message", async () => {
     mockGetNetworkStateAsync.mockResolvedValue({
       isConnected: true,
       isInternetReachable: true,
       type: "WIFI",
     } as Network.NetworkState);
 
-    mockAxiosPost.mockRejectedValue({
-      response: {
-        status: 400,
-        data: { error: "Request too short" },
-      },
-      message: "Bad Request",
-    });
+    mockApiPost.mockRejectedValue(new Error("Request too short"));
 
     await expect(requestDua("not matched by regex")).rejects.toThrow("Request too short");
-  });
-
-  it("maps 500 backend errors to generic backend failure message", async () => {
-    mockGetNetworkStateAsync.mockResolvedValue({
-      isConnected: true,
-      isInternetReachable: true,
-      type: "WIFI",
-    } as Network.NetworkState);
-
-    mockAxiosPost.mockRejectedValue({
-      response: {
-        status: 500,
-        data: {},
-      },
-      message: "Server Error",
-    });
-
-    await expect(requestDua("not matched by regex")).rejects.toThrow(
-      "Backend error. Please try again.",
-    );
   });
 
   it("falls back to general dua on network errors", async () => {
@@ -102,10 +89,9 @@ describe("services/duaService", () => {
       type: "WIFI",
     } as Network.NetworkState);
 
-    mockAxiosPost.mockRejectedValue({
-      code: "ERR_NETWORK",
-      message: "Network Error",
-    });
+    mockApiPost.mockRejectedValue(
+      Object.assign(new TypeError("Network request failed"), {}),
+    );
 
     const request = requestDua("not matched by regex");
 

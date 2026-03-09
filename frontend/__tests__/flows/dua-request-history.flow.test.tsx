@@ -1,15 +1,28 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, renderHook } from "@testing-library/react-native";
-import axios from "axios";
 import * as Network from "expo-network";
 import { Alert, Animated } from "react-native";
 
 import { useDuaInteraction } from "@/hooks/useDuaInteraction";
 import type { Dua } from "@/services/duaService";
 
-jest.mock("axios");
+jest.mock("@/services/apiClient", () => ({
+  apiPost: jest.fn(),
+  AppUpdateRequiredError: class AppUpdateRequiredError extends Error {
+    minVersion: string;
+    currentVersion: string;
+    constructor(minVersion: string, currentVersion: string) {
+      super("APP_UPDATE_REQUIRED");
+      this.name = "AppUpdateRequiredError";
+      this.minVersion = minVersion;
+      this.currentVersion = currentVersion;
+    }
+  },
+}));
 
-const mockAxiosPost = axios.post as jest.MockedFunction<typeof axios.post>;
+import { apiPost } from "@/services/apiClient";
+
+const mockApiPost = apiPost as jest.MockedFunction<typeof apiPost>;
 const mockGetNetworkStateAsync = Network.getNetworkStateAsync as jest.MockedFunction<
   typeof Network.getNetworkStateAsync
 >;
@@ -78,7 +91,7 @@ describe("flows/dua-request-history", () => {
     expect(history).toHaveLength(1);
     expect(history[0].id).toBe(result.current.selectedDua?.id);
     expect(history[0].category).toBe("exam");
-    expect(mockAxiosPost).not.toHaveBeenCalled();
+    expect(mockApiPost).not.toHaveBeenCalled();
   });
 
   it("transitions loading to error and does not persist history when backend rejects", async () => {
@@ -87,13 +100,7 @@ describe("flows/dua-request-history", () => {
       isInternetReachable: true,
       type: "WIFI",
     } as Network.NetworkState);
-    mockAxiosPost.mockRejectedValue({
-      response: {
-        status: 400,
-        data: { error: "Request too short" },
-      },
-      message: "Bad Request",
-    });
+    mockApiPost.mockRejectedValue(new Error("Request too short"));
 
     const { result } = renderHook(() => useDuaInteraction());
 
@@ -111,7 +118,7 @@ describe("flows/dua-request-history", () => {
     expect(result.current.duaLoading).toBe(false);
     expect(result.current.selectedDua).toBeNull();
     expect(Alert.alert).toHaveBeenCalledWith("Error", "Request too short");
-    expect(mockAxiosPost).toHaveBeenCalledTimes(1);
+    expect(mockApiPost).toHaveBeenCalledTimes(1);
 
     const rawHistory = await AsyncStorage.getItem("dua_history_v1");
     expect(rawHistory).toBeNull();

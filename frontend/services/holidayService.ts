@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { handleForceUpdate } from "@/services/apiClient";
+import { getVersionHeaders } from "@/services/appVersion";
 
 const HOLIDAY_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 const YYYY_MM_DD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -134,10 +136,14 @@ function backendErrorMessage(status: number, body: BackendErrorShape | null): st
 async function fetchHolidaysFromBackend(year: number): Promise<Holiday[]> {
   const query = buildQueryString({ year });
   const url = `${HOLIDAY_API_BASE}/api/holidays/year?${query}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: getVersionHeaders() });
   const body = (await res.json().catch(() => null)) as
     | BackendProxyResponse<BackendHolidayPayload>
     | null;
+
+  if (res.status === 426) {
+    handleForceUpdate(body);
+  }
 
   if (!res.ok) {
     throw new Error(backendErrorMessage(res.status, body));
