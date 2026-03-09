@@ -39,7 +39,7 @@ export default function UpdateModal({
         <Animated.View style={[styles.card, cardAnimatedStyle]}>
           <Text style={styles.title}>Update Ready</Text>
           <Text style={styles.description}>
-            A new version has finished downloading. Restart now to apply it.
+            A new version is available. Restart now to apply it.
           </Text>
           <View style={styles.buttonRow}>
             <Pressable style={styles.laterButton} onPress={onLater}>

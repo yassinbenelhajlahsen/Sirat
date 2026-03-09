@@ -64,7 +64,7 @@ describe("UpdateModal contract", () => {
     expect(getByText("Update Ready")).toBeTruthy();
     expect(
       getByText(
-        "A new version has finished downloading. Restart now to apply it."
+        "A new version is available. Restart now to apply it."
       )
     ).toBeTruthy();
 
