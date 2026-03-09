@@ -7,6 +7,8 @@ export const ENV = {
   GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || "",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:8081",
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
+  MIN_SUPPORTED_APP_VERSION: process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0",
+  ENFORCE_MIN_VERSION: process.env.ENFORCE_MIN_VERSION || "false",
 } as const;
 
 if (!ENV.GOOGLE_MAPS_API_KEY) {

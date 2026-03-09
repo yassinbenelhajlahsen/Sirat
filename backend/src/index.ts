@@ -3,6 +3,8 @@ import "dotenv/config";
 import express from "express";
 import { ENV } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { minVersionGate } from "./middleware/minVersionGate.js";
+import appRoutes from "./routes/app.js";
 import duaRoutes from "./routes/dua.js";
 import holidayRoutes from "./routes/holiday.js";
 import mosqueRoutes from "./routes/mosque.js";
@@ -37,7 +39,11 @@ app.use(
   }),
 );
 
+// Version gate middleware (monitor mode by default, enforcement via ENFORCE_MIN_VERSION=true)
+app.use(minVersionGate);
+
 // Routes
+app.use("/api/app", appRoutes);
 app.use("/api/dua", duaRoutes);
 app.use("/api/mosque", mosqueRoutes);
 app.use("/api/prayer-times", prayerTimesRoutes);
@@ -61,6 +67,7 @@ app.get("/", (req, res) => {
       "GET /api/prayer-times/calendar/year":
         "Proxy prayer calendar year by lat/lng/method/year (method supports integer or 'auto'; country optional)",
       "GET /api/prayer-times/health": "Prayer times service health check",
+      "GET /api/app/version": "Proactive app version compatibility check",
       "GET /api/holidays/year": "Proxy holiday list for a Gregorian year",
       "GET /api/holidays/health": "Holiday service health check",
     },
