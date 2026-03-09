@@ -39,14 +39,16 @@ Run commands from the correct package directory:
 
 ### Backend
 - Entry: `backend/src/index.ts`
-- Routes: `backend/src/routes/dua.ts`, `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`
+- Routes: `backend/src/routes/dua.ts`, `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`, `backend/src/routes/app.ts` (version check)
 - Controller: `backend/src/controllers/duaController.ts`, `backend/src/controllers/mosqueController.ts`, `backend/src/controllers/prayerTimesController.ts`, `backend/src/controllers/holidayController.ts`
 - OpenAI integration: `backend/src/services/openaiService.ts`
 - Google Maps integration: `backend/src/services/googleMapsService.ts`
 - Aladhan integration/proxy + cache/retry: `backend/src/services/aladhanService.ts`
 - Dua data source/caching: `backend/src/utils/duaDatabase.ts`
 - Prayer method resolution (integer → Aladhan method, `auto` → IP-based): `backend/src/utils/prayerMethodResolver.ts`
+- Semver comparison: `backend/src/utils/semver.ts`
 - Error middleware: `backend/src/middleware/errorHandler.ts`
+- Version gate middleware: `backend/src/middleware/minVersionGate.ts` (monitor/enforce mode, 426 response)
 - Canonical backend dua dataset: `backend/public/duas.json`
 
 Dua API flow:
@@ -87,9 +89,11 @@ Important frontend flows:
 - `OPENAI_API_KEY` default: empty (AI disabled, fallback mode used)
 - `OPENAI_MODEL` default: `gpt-4-turbo`
 - `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
+- `MIN_SUPPORTED_APP_VERSION` default: `1.0.0` (minimum client version allowed)
+- `ENFORCE_MIN_VERSION` default: `false` (monitor mode — logs but never blocks; set to `true` to enforce)
 
 ### Frontend env/config
-- `EXPO_PUBLIC_API_URL` used in `frontend/services/duaService.ts`, `frontend/services/getNearbyMosques.ts`, `frontend/services/prayerTimes.ts`, and `frontend/services/holidayService.ts`, default `http://localhost:3001`
+- `EXPO_PUBLIC_API_URL` used in `frontend/services/apiClient.ts` (shared API client) and `frontend/app/_layout.tsx` (version check), default `http://localhost:3001`
 - `frontend/app.config.js` sets `newArchEnabled: true`, iOS bundle metadata, notifications plugin with `adhan.wav`
 
 ## Constraints and Gotchas
@@ -99,7 +103,7 @@ Important frontend flows:
 - Root app readiness depends on theme hydration in `frontend/app/_layout.tsx` to avoid first-frame flash.
 - Notification master toggle in UI opens OS settings; it does not directly toggle permission state in-app.
 - Notification enable flag is stored as string `"1"`/`"0"` (`notif_enabled_v1`), not JSON boolean.
-- Cross-screen sync relies on exact `DeviceEventEmitter` event names (`settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`).
+- Cross-screen sync relies on exact `DeviceEventEmitter` event names (`settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`, `FORCE_UPDATE_REQUIRED`).
 - `quranData` accessors throw if preload has not occurred; preload is triggered in root layout.
 - Calendar month navigation is constrained to current year through next year.
 - CORS allowlist in backend is explicit; add origins in `backend/src/index.ts` if needed.
@@ -127,3 +131,5 @@ Important frontend flows:
 - When changing prayer/notification behavior, verify both `Settings` and `NotificationService` integration paths.
 - When changing dua schema/category behavior, keep frontend and backend dua data/logic aligned.
 - Frontend test coverage map and conventions live in `frontend/__tests__/README.md`; update it when adding/removing major frontend test suites.
+- All frontend API calls must go through `frontend/services/apiClient.ts` (`apiFetch`/`apiPost`) so version headers and 426 interception are applied consistently. Do not add raw `fetch`/`axios` calls in service files.
+- Force update gate rollout: deploy backend with `ENFORCE_MIN_VERSION=false` first, ship frontend OTA second, then flip `ENFORCE_MIN_VERSION=true`.

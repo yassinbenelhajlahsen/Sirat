@@ -48,7 +48,8 @@ See `AGENTS.md` for full architecture details. Key points:
 - Screens in `app/(tabs)/` are thin — they delegate to hooks and services
 - Business logic lives in `services/`, with modular sub-directories (`prayer-times/`, `notifications/`) orchestrated by facade files (`prayerTimes.ts`, `notificationService.ts`)
 - State: React Context (`ThemeContext`, `QuranAudioProvider`) + local state + AsyncStorage persistence — no Redux/Zustand
-- Cross-screen sync via `DeviceEventEmitter` with exact event names: `settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`
+- Cross-screen sync via `DeviceEventEmitter` with exact event names: `settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`, `FORCE_UPDATE_REQUIRED`
+- All backend HTTP calls go through `frontend/services/apiClient.ts` (`apiFetch`/`apiPost`) which attaches version headers and intercepts 426 responses
 
 **Backend patterns:**
 - Classic routes → controllers → services → utils layered architecture
@@ -57,6 +58,7 @@ See `AGENTS.md` for full architecture details. Key points:
 - Prompt injection defense on the dua endpoint — new dua categories/tags must not trigger it
 - Production mode strips internal error messages from API responses (debug locally for full details)
 - JSON body limit: 16KB
+- Minimum version gate: `minVersionGate` middleware (registered after CORS, before routes) logs in monitor mode (`ENFORCE_MIN_VERSION=false`, the default) and blocks with 426 in enforcement mode. `GET /api/app/version` and health endpoints are always exempt.
 
 ## Key Conventions
 
@@ -86,6 +88,7 @@ Versioned keys — do not rename without migrating all references.
 - Frontend prayer method `-1` maps to `method=auto` in backend API
 - CORS allowlist in `backend/src/index.ts` is explicit — add new origins there when needed
 - Trust proxy resolves to `true` in production, `false` in development (override with `TRUST_PROXY` env var)
+- **Force update rollout order:** deploy backend first (`ENFORCE_MIN_VERSION=false`), ship frontend OTA update second, then flip `ENFORCE_MIN_VERSION=true`. Never enable enforcement before the frontend update is live or all existing users get locked out.
 
 ## CI/CD
 
