@@ -7,8 +7,6 @@ import { useMemo } from "react";
 import {
   Animated,
   Image,
-  KeyboardAvoidingView,
-  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -44,8 +42,7 @@ export default function Home() {
   } = useHomePrayerTimes();
   const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua } =
     useDuaInteraction();
-  const { scrollViewRef, scrollToBottom, handleContentSizeChange } =
-    useKeyboardAutoScroll();
+  const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
   const hasPrayerSummary = !!(nextPrayer || nextDayFajr);
   const {
     shouldRender: shouldRenderPrayerSummary,
@@ -102,19 +99,15 @@ export default function Home() {
         style={styles.patternOverlay}
       />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={-60}
-        style={styles.screen}
-      >
+      <View style={styles.screen}>
         <SafeAreaView style={styles.screen}>
           <ScrollView
             ref={scrollViewRef}
+            onLayout={onScrollViewLayout}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, keyboardHeight > 0 && { paddingBottom: keyboardHeight}]}
             showsVerticalScrollIndicator={false}
             scrollEnabled={true}
-            onContentSizeChange={handleContentSizeChange}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -156,7 +149,9 @@ export default function Home() {
                     >
                       {nextPrayer ? (
                         <View style={styles.nextPrayerCard}>
-                          <Text style={styles.nextPrayerLabel}>Next Prayer</Text>
+                          <Text style={styles.nextPrayerLabel}>
+                            Next Prayer
+                          </Text>
                           <View style={styles.nextPrayerRow}>
                             <Text style={styles.nextPrayerName}>
                               {nextPrayer.label}
@@ -203,22 +198,18 @@ export default function Home() {
               <PrayerTimesList loading={loading} prayerTimes={prayerTimes} />
             </View>
             {/* Dua Section */}
-            <View style={styles.duaSection}>
+            <View style={styles.duaSection} onLayout={onDuaSectionLayout}>
               <Animated.View style={duaCardAnimatedStyle}>
                 {selectedDua ? (
                   <DuaResultCard dua={selectedDua} onClose={closeDua} />
                 ) : (
-                  <DuaCard
-                    onSubmit={submitDua}
-                    loading={duaLoading}
-                    onInputFocus={() => scrollToBottom(true)}
-                  />
+                  <DuaCard onSubmit={submitDua} loading={duaLoading} />
                 )}
               </Animated.View>
             </View>
           </ScrollView>
         </SafeAreaView>
-      </KeyboardAvoidingView>
+      </View>
     </LinearGradient>
   );
 }

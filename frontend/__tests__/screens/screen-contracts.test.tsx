@@ -677,8 +677,9 @@ describe("Screen contracts", () => {
     mockUseDuaInteraction.mockReturnValue(buildDuaInteraction() as any);
     mockUseKeyboardAutoScroll.mockReturnValue({
       scrollViewRef: { current: null },
-      scrollToBottom: mockScrollToBottom,
-      handleContentSizeChange: jest.fn(),
+      keyboardHeight: 0,
+      onDuaSectionLayout: jest.fn(),
+      onScrollViewLayout: jest.fn(),
     } as any);
     mockUseModalTransition.mockReturnValue({
       shouldRender: true,

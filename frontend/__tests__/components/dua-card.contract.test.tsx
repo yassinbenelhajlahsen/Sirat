@@ -27,19 +27,6 @@ jest.mock("@/components/PressableScale", () => {
 });
 
 describe("DuaCard contract", () => {
-  const originalRequestAnimationFrame = global.requestAnimationFrame;
-
-  beforeAll(() => {
-    (global as any).requestAnimationFrame = (callback: (time: number) => void) => {
-      callback(0);
-      return 0;
-    };
-  });
-
-  afterAll(() => {
-    (global as any).requestAnimationFrame = originalRequestAnimationFrame;
-  });
-
   it("renders core content and keeps submit disabled until input is meaningful", () => {
     const { getByLabelText, getByText } = render(
       <DuaCard onSubmit={jest.fn(async () => {})} />
@@ -90,14 +77,4 @@ describe("DuaCard contract", () => {
     expect(getByLabelText("Dua request input").props.editable).toBe(false);
   });
 
-  it("wires onInputFocus callback", () => {
-    const onInputFocus = jest.fn();
-    const { getByLabelText } = render(
-      <DuaCard onSubmit={jest.fn(async () => {})} onInputFocus={onInputFocus} />
-    );
-
-    fireEvent(getByLabelText("Dua request input"), "focus");
-
-    expect(onInputFocus).toHaveBeenCalledTimes(1);
-  });
 });

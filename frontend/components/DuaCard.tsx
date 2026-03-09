@@ -16,10 +16,9 @@ import PressableScale from "./PressableScale";
 interface DuaCardProps {
   onSubmit: (request: string) => Promise<void>;
   loading?: boolean;
-  onInputFocus?: () => void;
 }
 
-function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
+function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -74,10 +73,7 @@ function DuaCard({ onSubmit, loading = false, onInputFocus }: DuaCardProps) {
           onSubmitEditing={handleSubmit}
           maxLength={150}
           editable={!loading}
-          onFocus={() => {
-            requestAnimationFrame(() => onInputFocus?.());
-          }}
-          accessibilityLabel="Dua request input"
+accessibilityLabel="Dua request input"
           accessibilityHint="Describe what you need help with"
           style={styles.input}
         />
