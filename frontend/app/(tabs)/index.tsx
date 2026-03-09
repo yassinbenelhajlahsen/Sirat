@@ -3,7 +3,7 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Animated,
   Image,
@@ -43,6 +43,15 @@ export default function Home() {
   const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua } =
     useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
+
+  const handleSubmitDua = useCallback(async (userRequest: string) => {
+    await submitDua(userRequest);
+    // Allow the result card to render before scrolling
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 400);
+  }, [submitDua, scrollViewRef]);
+
   const hasPrayerSummary = !!(nextPrayer || nextDayFajr);
   const {
     shouldRender: shouldRenderPrayerSummary,
@@ -203,7 +212,7 @@ export default function Home() {
                 {selectedDua ? (
                   <DuaResultCard dua={selectedDua} onClose={closeDua} />
                 ) : (
-                  <DuaCard onSubmit={submitDua} loading={duaLoading} />
+                  <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />
                 )}
               </Animated.View>
             </View>
