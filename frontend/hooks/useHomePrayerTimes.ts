@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, DeviceEventEmitter } from "react-native";
 import { dateKeyFromDate } from "../services/holidayService";
 import { getPrayerTimesToday, PrayerSettings, PrayerTime } from "../services/prayerTimes";
@@ -148,6 +148,8 @@ async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
 
 export function useHomePrayerTimes() {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
+  const prayerTimesRef = useRef(prayerTimes);
+  useEffect(() => { prayerTimesRef.current = prayerTimes; }, [prayerTimes]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [prayerTimesDateKey, setPrayerTimesDateKey] = useState<string | null>(
     null,
@@ -165,7 +167,9 @@ export function useHomePrayerTimes() {
 
   const loadData = useCallback(async (reset = false) => {
     try {
-      setLoading(true);
+      if (reset || prayerTimesRef.current.length === 0) {
+        setLoading(true);
+      }
       if (reset) {
         setPrayerTimes([]);
         setSelectedDate(null);
