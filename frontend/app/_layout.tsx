@@ -20,9 +20,11 @@ import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { PortalProvider } from "@gorhom/portal";
 import { NotificationService } from "../services/notificationService";
+import ForceUpdateGate from "@/components/ForceUpdateGate";
 import SplashScreen from "@/components/SplashScreen";
 import UpdateModal from "@/components/UpdateModal";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
+import { getVersionHeaders } from "@/services/appVersion";
 
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
@@ -176,6 +178,10 @@ function RootLayoutContent() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [isRestartingUpdate, setIsRestartingUpdate] = useState(false);
   const [showReloadCover, setShowReloadCover] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState<{
+    minVersion: string;
+    currentVersion: string;
+  } | null>(null);
   const appStateRef = useRef(AppState.currentState);
   const otaCheckInFlightRef = useRef(false);
   const mountedRef = useRef(true);
@@ -202,6 +208,29 @@ function RootLayoutContent() {
       otaCheckInFlightRef.current = false;
     }
   }, [updateReady]);
+
+  const checkMinVersion = useCallback(async () => {
+    // Skip in Expo Go — developers should never see the force update gate.
+    if (Constants.appOwnership === "expo") return;
+
+    try {
+      const apiBase =
+        process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+      const res = await fetch(`${apiBase}/api/app/version`, {
+        headers: getVersionHeaders(),
+      });
+      if (!res.ok) return; // non-426 server errors — fail silently
+      const body = await res.json().catch(() => null);
+      if (body?.supported === false && mountedRef.current) {
+        setForceUpdate({
+          minVersion: body.minVersion ?? "",
+          currentVersion: body.currentVersion ?? "",
+        });
+      }
+    } catch {
+      // Network error or offline — do not block the user
+    }
+  }, []);
 
   const handleRestartForUpdate = useCallback(async () => {
     if (isRestartingUpdate) return;
@@ -273,6 +302,17 @@ function RootLayoutContent() {
     checkAndPrepareOtaUpdate();
   }, [checkAndPrepareOtaUpdate]);
 
+  // Listen for 426 force-update events emitted by any API call
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener(
+      "FORCE_UPDATE_REQUIRED",
+      (payload: { minVersion: string; currentVersion: string }) => {
+        setForceUpdate(payload);
+      },
+    );
+    return () => sub.remove();
+  }, []);
+
   // Do the initial permission syncs on launch, and re-sync on foreground
   useEffect(() => {
     let mounted = true;
@@ -285,6 +325,7 @@ function RootLayoutContent() {
       } finally {
         if (mounted) setInitialSynced(true);
       }
+      checkMinVersion();
     })();
 
     const sub = AppState.addEventListener("change", async (state) => {
@@ -304,7 +345,7 @@ function RootLayoutContent() {
           setShowUpdateModal(true);
           return;
         }
-        await checkAndPrepareOtaUpdate();
+        await Promise.all([checkAndPrepareOtaUpdate(), checkMinVersion()]);
       }
     });
 
@@ -312,7 +353,7 @@ function RootLayoutContent() {
       mounted = false;
       sub.remove();
     };
-  }, [checkAndPrepareOtaUpdate, updateReady]);
+  }, [checkAndPrepareOtaUpdate, checkMinVersion, updateReady]);
 
   // Native splash control
   const hasHiddenNative = useRef(false);
@@ -386,6 +427,12 @@ function RootLayoutContent() {
           onRestart={() => {
             void handleRestartForUpdate();
           }}
+        />
+
+        <ForceUpdateGate
+          visible={forceUpdate !== null}
+          minVersion={forceUpdate?.minVersion ?? ""}
+          currentVersion={forceUpdate?.currentVersion ?? ""}
         />
       </PortalProvider>
     </SafeAreaProvider>

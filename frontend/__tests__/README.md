@@ -50,6 +50,10 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/ramadanTracker.test.ts`
   - `hooks/useRamadanTracker.test.ts`
   - `hooks/useCalendarData.test.ts`
+- `force update gate testing`
+  - `services/appVersion.test.ts`
+  - `services/apiClient.test.ts`
+  - `components/force-update-gate.contract.test.tsx`
 - `shared component contracts testing`
   - `components/*.contract.test.tsx`
 - `screen level contract tests testing`
