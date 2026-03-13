@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -15,6 +15,7 @@ type QuranAyahCardProps = {
   showTransliteration?: boolean;
   isBookmarked?: boolean;
   onDoubleTap?: () => void;
+  onLongPress?: () => void;
 };
 
 const DOUBLE_TAP_INTERVAL_MS = 280;
@@ -28,6 +29,7 @@ function QuranAyahCard({
   showTransliteration = false,
   isBookmarked = false,
   onDoubleTap,
+  onLongPress,
 }: QuranAyahCardProps) {
   const { theme } = useTheme();
   const themeColors = theme.colors;
@@ -43,6 +45,25 @@ function QuranAyahCard({
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isDoubleTapFeedbackVisible, setIsDoubleTapFeedbackVisible] =
     useState(false);
+  const holdScale = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(holdScale, {
+      toValue: 0.965,
+      speed: 40,
+      bounciness: 0,
+      useNativeDriver: true,
+    }).start();
+  }, [holdScale]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(holdScale, {
+      toValue: 1,
+      speed: 30,
+      bounciness: 4,
+      useNativeDriver: true,
+    }).start();
+  }, [holdScale]);
 
   useEffect(() => {
     return () => {
@@ -87,6 +108,7 @@ function QuranAyahCard({
         </View>
       ) : null}
 
+      <Animated.View style={{ transform: [{ scale: holdScale }] }}>
       <Pressable
         style={[
           styles.ayahCard,
@@ -94,6 +116,10 @@ function QuranAyahCard({
           isDoubleTapFeedbackVisible && onDoubleTap ? styles.ayahCardPressed : null,
         ]}
         onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onLongPress={onLongPress}
+        delayLongPress={400}
         accessibilityRole="button"
         accessibilityLabel={`Ayah ${ayah.ayahNumber} from Surah ${ayah.surahNumber}`}
       >
@@ -134,6 +160,7 @@ function QuranAyahCard({
           <Text style={styles.translation}>{ayah.englishText}</Text>
         ) : null}
       </Pressable>
+      </Animated.View>
     </View>
   );
 }

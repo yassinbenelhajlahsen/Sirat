@@ -35,6 +35,7 @@ import {
   Alert,
   AppState,
   AppStateStatus,
+  Clipboard,
   Image,
   InteractionManager,
   StyleSheet,
@@ -52,6 +53,9 @@ import QuranBookmarkModal, {
 } from "../../components/quran/QuranBookmarkModal";
 import QuranCompletionCard from "../../components/quran/QuranCompletionCard";
 import QuranDisplaySettingsModal from "../../components/quran/QuranDisplaySettingsModal";
+import QuranCopySheet from "../../components/quran/QuranCopySheet";
+import CopyToast from "../../components/CopyToast";
+import * as Haptics from "expo-haptics";
 
 type AyahItem = {
   type: "ayah";
@@ -370,6 +374,8 @@ export default function QuranScreen() {
   const [navigatorInitialTab, setNavigatorInitialTab] =
     useState<NavigatorInitialTab>("goto");
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
+  const [copySheetAyah, setCopySheetAyah] = useState<NormalizedAyah | null>(null);
+  const [toastVisible, setToastVisible] = useState(false);
   const [surahSearchQuery, setSurahSearchQuery] = useState("");
   const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
 
@@ -1106,6 +1112,18 @@ export default function QuranScreen() {
     [bookmarkMap, openNavigator],
   );
 
+  const handleAyahLongPress = useCallback((ayah: NormalizedAyah) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCopySheetAyah(ayah);
+  }, []);
+
+  const handleCopy = useCallback((text: string) => {
+    Clipboard.setString(text);
+    setCopySheetAyah(null);
+    setToastVisible(true);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
+
   const renderItem = useCallback<ListRenderItem<QuranListItem>>(
     ({ item }: ListRenderItemInfo<QuranListItem>) => {
       if (item.type === "ayah") {
@@ -1126,6 +1144,7 @@ export default function QuranScreen() {
             onDoubleTap={() =>
               handleAyahDoubleTap(item.ayah, item.ayahGlobalIndex, ayahKey)
             }
+            onLongPress={() => handleAyahLongPress(item.ayah)}
           />
         );
       }
@@ -1135,6 +1154,7 @@ export default function QuranScreen() {
     [
       bookmarkedAyahKeys,
       handleAyahDoubleTap,
+      handleAyahLongPress,
       scrollToTopAnimated,
       showArabic,
       showEnglish,
@@ -1399,6 +1419,21 @@ export default function QuranScreen() {
           <QuranDisplaySettingsModal
             visible={displaySettingsOpen}
             onClose={() => setDisplaySettingsOpen(false)}
+          />
+
+          <QuranCopySheet
+            visible={copySheetAyah !== null}
+            ayah={copySheetAyah}
+            showArabic={showArabic}
+            showEnglish={showEnglish}
+            showTransliteration={showTransliteration}
+            onCopy={handleCopy}
+            onClose={() => setCopySheetAyah(null)}
+          />
+
+          <CopyToast
+            visible={toastVisible}
+            onHide={() => setToastVisible(false)}
           />
         </View>
       </SafeAreaView>

@@ -34,6 +34,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/quranProgress.test.ts`
   - `services/quranDisplayModes.test.ts`
   - `hooks/useQuranDisplayModes.test.ts`
+- `quran copy text formatting testing`
+  - `services/quranCopyText.test.ts`
 - `dua flow testing`
   - `services/duaMatcher.test.ts`
   - `services/duaService.test.ts`
