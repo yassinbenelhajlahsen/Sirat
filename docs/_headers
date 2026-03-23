@@ -4,7 +4,7 @@
 /index.html
   Cache-Control: public, max-age=3600
 
-/privacy.html
+/privacy/index.html
   Cache-Control: public, max-age=3600
 
 /*.svg
