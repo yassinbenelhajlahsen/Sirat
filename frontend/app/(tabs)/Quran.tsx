@@ -421,7 +421,7 @@ export default function QuranScreen() {
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === "active") {
+      if (nextAppState === "active" && isPlaying) {
         setIsAudioActiveAsync(true).catch((error) =>
           console.warn("Failed to reactivate audio session", error),
         );
@@ -433,7 +433,7 @@ export default function QuranScreen() {
       handleAppStateChange,
     );
     return () => subscription.remove();
-  }, []);
+  }, [isPlaying]);
 
   useEffect(() => {
     let mounted = true;
