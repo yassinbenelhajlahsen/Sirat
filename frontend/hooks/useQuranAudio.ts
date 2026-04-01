@@ -61,7 +61,7 @@ export function useQuranAudio({
       if (!hasConfiguredAudioSessionRef.current) {
         await setAudioModeAsync({
           playsInSilentMode: true,
-          interruptionMode: "mixWithOthers",
+          interruptionMode: "doNotMix",
           interruptionModeAndroid: "duckOthers",
           allowsRecording: false,
           shouldPlayInBackground: true,
