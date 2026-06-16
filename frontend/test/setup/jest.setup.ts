@@ -37,6 +37,32 @@ const mockNotifications = {
 
 jest.mock("expo-notifications", () => mockNotifications);
 
+jest.mock(
+  "expo-glass-effect",
+  () => {
+    const React = require("react");
+    const { View } = require("react-native");
+    return {
+      GlassView: ({ children, ...props }: any) =>
+        React.createElement(View, props, children),
+      GlassContainer: ({ children, ...props }: any) =>
+        React.createElement(View, props, children),
+      isGlassEffectAvailable: jest.fn(() => true),
+      isGlassEffectAPIAvailable: jest.fn(() => true),
+      isLiquidGlassAvailable: jest.fn(() => true),
+    };
+  },
+  { virtual: true },
+);
+
+jest.mock("expo-haptics", () => ({
+  selectionAsync: jest.fn(async () => {}),
+  impactAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+  NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
+}));
+
 (global as unknown as { fetch: jest.Mock }).fetch = jest.fn();
 
 global.freezeTestTime = (isoDate: string | Date) => {
