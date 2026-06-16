@@ -25,10 +25,12 @@ export default function Screen({ children, safeArea = true, style }: ScreenProps
       end={{ x: 1, y: 1 }}
       style={styles.fill}
     >
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.pattern}
-      />
+      <View pointerEvents="none" style={styles.pattern}>
+        <Image
+          source={require("@/assets/patterns/islamic-gold2.png")}
+          style={styles.patternImage}
+        />
+      </View>
       {safeArea ? <SafeAreaView style={styles.fill}>{inner}</SafeAreaView> : inner}
     </LinearGradient>
   );
@@ -36,8 +38,6 @@ export default function Screen({ children, safeArea = true, style }: ScreenProps
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  pattern: {
-    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-    opacity: 0.04, resizeMode: "repeat", width: "100%", height: "100%",
-  },
+  pattern: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+  patternImage: { width: "100%", height: "100%", opacity: 0.04, resizeMode: "repeat" },
 });
