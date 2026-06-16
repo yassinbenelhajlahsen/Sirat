@@ -242,7 +242,6 @@ describe("navigation contracts", () => {
       "Qibla",
       "Mosques",
       "Calendar",
-      "Settings",
     ]);
   });
 

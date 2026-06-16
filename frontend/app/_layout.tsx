@@ -14,6 +14,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
+import { ThemeProvider as NavThemeProvider, DarkTheme } from "@react-navigation/native";
+
 import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { preloadQuranData } from "@/services/quranData";
@@ -374,13 +376,25 @@ function RootLayoutContent() {
         {/* Always render app content so it mounts and loads data while splash is visible */}
         <QuranAudioProvider>
           <View style={{ flex: 1, backgroundColor }}>
-            <Stack screenOptions={{ headerShown: false, animation: "fade", animationDuration: 280 }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen
-                name="MosqueMap"
-                options={{ animation: "fade", animationDuration: 300 }}
-              />
-            </Stack>
+            <NavThemeProvider
+              value={{ ...DarkTheme, colors: { ...DarkTheme.colors, background: theme.colors.primaryDark } }}
+            >
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  animation: "fade",
+                  animationDuration: 280,
+                  contentStyle: { backgroundColor: theme.colors.primaryDark },
+                }}
+              >
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen
+                  name="MosqueMap"
+                  options={{ animation: "fade", animationDuration: 300 }}
+                />
+                <Stack.Screen name="Settings" options={{ presentation: "modal", headerShown: false }} />
+              </Stack>
+            </NavThemeProvider>
             <QuranMiniPlayerPortal />
           </View>
         </QuranAudioProvider>

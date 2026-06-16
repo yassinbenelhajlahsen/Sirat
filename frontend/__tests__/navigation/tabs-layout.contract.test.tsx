@@ -66,7 +66,6 @@ describe("tabs layout navigation contract", () => {
       "Qibla",
       "Mosques",
       "Calendar",
-      "Settings",
     ]);
 
     tabScreenMock.mock.calls.forEach(([props]) => {

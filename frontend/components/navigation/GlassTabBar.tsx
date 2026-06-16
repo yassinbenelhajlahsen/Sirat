@@ -1,14 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlassSurface from "@/components/ui/GlassSurface";
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
-
-const HIDDEN = new Set(["Settings"]);
 
 const ICONS: Record<string, { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap; label: string }> = {
   index: { on: "home", off: "home-outline", label: "Home" },
@@ -18,29 +17,61 @@ const ICONS: Record<string, { on: keyof typeof Ionicons.glyphMap; off: keyof typ
   Calendar: { on: "today", off: "today-outline", label: "Calendar" },
 };
 
+const H_MARGIN = 14;
+const PAD = 8;
+
 export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const insets = useSafeAreaInsets();
   const haptic = useHaptics();
+  const { width } = useWindowDimensions();
 
-  const visible = state.routes.filter((r) => !HIDDEN.has(r.name));
+  const tabs = state.routes.filter((r) => ICONS[r.name]);
+  const count = tabs.length || 1;
+  const pillWidth = Math.max(0, width - H_MARGIN * 2);
+  const slot = (pillWidth - PAD * 2) / count;
+  const indicatorW = Math.max(0, slot - 8);
+
+  const activeKey = state.routes[state.index]?.key;
+  const activeIdx = Math.max(0, tabs.findIndex((r) => r.key === activeKey));
+
+  const translateX = useRef(new Animated.Value(activeIdx * slot)).current;
+  useEffect(() => {
+    Animated.spring(translateX, {
+      toValue: activeIdx * slot,
+      useNativeDriver: true, // translateX is native-thread safe
+      speed: 16,
+      bounciness: 8,
+    }).start();
+  }, [activeIdx, slot, translateX]);
 
   return (
     <View style={[styles.wrap, { bottom: Math.max(insets.bottom, 14) + 6 }]} pointerEvents="box-none">
-      <GlassSurface tier="chrome" radius={theme.radii.pill} style={styles.pill}>
-        {visible.map((route) => {
+      <GlassSurface tier="chrome" radius={theme.radii.pill} style={[styles.pill, { paddingHorizontal: PAD }]}>
+        {/* Fluid sliding glass-capsule indicator (translucent highlight over the glass pill). */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.indicator,
+            {
+              width: indicatorW,
+              left: PAD + (slot - indicatorW) / 2,
+              borderRadius: theme.radii.pill,
+              backgroundColor: withOpacity(colors.white, 0.22),
+              borderColor: withOpacity(colors.white, 0.3),
+              transform: [{ translateX }],
+            },
+          ]}
+        />
+        {tabs.map((route, i) => {
           const meta = ICONS[route.name];
-          if (!meta) return null;
-          const activeIndex = state.routes.findIndex((r) => r.key === route.key);
-          const focused = state.index === activeIndex;
-
+          const focused = i === activeIdx;
           const onPress = () => {
             haptic("selection");
             const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true } as any);
             if (!focused && !(event as any)?.defaultPrevented) navigation.navigate(route.name as never);
           };
-
           return (
             <Pressable
               key={route.key}
@@ -48,14 +79,10 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
               accessibilityState={{ selected: focused }}
               accessibilityLabel={meta.label}
               onPress={onPress}
-              style={styles.item}
+              style={[styles.item, { width: slot }]}
             >
-              <View style={[styles.bubble, focused && { backgroundColor: colors.accent }]}>
-                <Ionicons
-                  name={focused ? meta.on : meta.off}
-                  size={22}
-                  color={focused ? colors.onAccent : withOpacity(colors.white, 0.6)}
-                />
+              <View style={{ transform: [{ scale: focused ? 1.12 : 1 }] }}>
+                <Ionicons name={focused ? meta.on : meta.off} size={22} color={focused ? colors.accent : withOpacity(colors.white, 0.55)} />
               </View>
             </Pressable>
           );
@@ -66,18 +93,17 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: "absolute", left: 14, right: 14 },
+  wrap: { position: "absolute", left: H_MARGIN, right: H_MARGIN },
   pill: {
     height: 64,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 8,
+    justifyContent: "space-between",
     shadowColor: "#000",
     shadowOpacity: 0.4,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 12 },
   },
-  item: { alignItems: "center", justifyContent: "center", minWidth: 44, minHeight: 44 },
-  bubble: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  indicator: { position: "absolute", top: 7, bottom: 7, borderWidth: 1 },
+  item: { alignItems: "center", justifyContent: "center", minHeight: 44 },
 });

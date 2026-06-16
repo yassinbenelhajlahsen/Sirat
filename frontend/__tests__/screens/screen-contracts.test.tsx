@@ -400,7 +400,7 @@ jest.mock("@/components/quran/QuranDisplaySettingsModal", () => {
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Home from "@/app/(tabs)/index";
-import Settings from "@/app/(tabs)/Settings";
+import Settings from "@/app/Settings";
 import QuranScreen from "@/app/(tabs)/Quran";
 import CalendarScreen from "@/app/(tabs)/Calendar";
 import MosqueScreen from "@/app/(tabs)/Mosques";

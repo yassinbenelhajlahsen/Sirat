@@ -20,11 +20,11 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import CitySearchModal from "../../components/CitySearchModal";
-import NotificationSettings from "../../components/NotificationSettings";
-import { usePrayerSettingsState } from "../../hooks/usePrayerSettingsState";
-import { useSettingsDropdowns } from "../../hooks/useSettingsDropdowns";
-import { useSettingsPermissions } from "../../hooks/useSettingsPermissions";
+import CitySearchModal from "@/components/CitySearchModal";
+import NotificationSettings from "@/components/NotificationSettings";
+import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
+import { useSettingsDropdowns } from "@/hooks/useSettingsDropdowns";
+import { useSettingsPermissions } from "@/hooks/useSettingsPermissions";
 
 export default function Settings() {
   const { theme, themeName, setTheme } = useTheme();
