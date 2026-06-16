@@ -374,7 +374,7 @@ function RootLayoutContent() {
         {/* Always render app content so it mounts and loads data while splash is visible */}
         <QuranAudioProvider>
           <View style={{ flex: 1, backgroundColor }}>
-            <Stack screenOptions={{ headerShown: false, animation: "none" }}>
+            <Stack screenOptions={{ headerShown: false, animation: "fade", animationDuration: 280 }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen
                 name="MosqueMap"
