@@ -3,7 +3,7 @@ import * as Updates from "expo-updates";
 import { Platform } from "react-native";
 
 export function getAppVersion(): string {
-  return Updates.runtimeVersion ?? Constants.expoConfig?.version ?? "0.0.0";
+  return Constants.expoConfig?.version ?? Updates.runtimeVersion ?? "0.0.0";
 }
 
 export function getAppPlatform(): string {
