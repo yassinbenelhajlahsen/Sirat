@@ -113,7 +113,8 @@ describe("root layout navigation contract", () => {
     expect(stackProps.screenOptions).toEqual(
       expect.objectContaining({
         headerShown: false,
-        animation: "none",
+        animation: "fade",
+        animationDuration: 280,
       }),
     );
 

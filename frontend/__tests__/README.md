@@ -11,6 +11,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `flows/`: integration-style user-flow tests
 - `hooks/`: behavior tests for reusable hooks
 - `services/`: unit tests for service modules (API, storage, matching, scheduling, caching)
+- `constants/`: token/constant value tests
+- `utils/`: pure utility function tests
 
 ## Phase Coverage
 
@@ -73,6 +75,13 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `flows/calendar-missed-fast.flow.test.tsx`
   - `flows/nearby-mosques-refresh.flow.test.tsx`
   - `flows/nearby-list-to-map.flow.test.tsx`
+- `visual refresh foundations (Plan 1) testing`
+  - `utils/greeting.test.ts`
+  - `constants/motion.test.ts`
+  - `hooks/useHaptics.test.ts`
+  - `components/glass-surface.contract.test.tsx`
+  - `components/ui-text.contract.test.tsx`
+  - `navigation/glass-tab-bar.contract.test.tsx`
 
 ## Run Tests
 
@@ -97,6 +106,8 @@ Global test setup is in `frontend/test/setup/jest.setup.ts` and includes:
 - AsyncStorage mock
 - notification mock (`expo-notifications`)
 - network default mock (`global.fetch`, `expo-network`)
+- Liquid Glass mock (`expo-glass-effect`: `GlassView`/`GlassContainer` render as `View`; `isGlassEffectAPIAvailable` → true)
+- haptics mock (`expo-haptics`: `selectionAsync`/`impactAsync`/`notificationAsync` + feedback enums)
 - test time helpers: `freezeTestTime(...)`, `resetTestTime()`
 
 When adding tests for retry/backoff/scheduling logic, prefer fake timers and frozen time.

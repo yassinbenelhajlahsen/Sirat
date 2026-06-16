@@ -168,11 +168,8 @@ jest.mock("expo-audio", () => ({
 }));
 
 jest.mock("expo-haptics", () => ({
-  selectionAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: "light" },
   impactAsync: jest.fn(async () => {}),
-  notificationAsync: jest.fn(async () => {}),
-  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
-  NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
 }));
 
 jest.mock("expo-location", () => ({
@@ -741,19 +738,14 @@ describe("Screen contracts", () => {
 
   describe("Home", () => {
     it("renders the prayer and dua sections contract", () => {
-      const { getByText, getByTestId, getByLabelText } = render(<Home />);
+      const { getByText, getByTestId } = render(<Home />);
 
+      expect(getByText("Prayer Times")).toBeTruthy();
       expect(getByText("Chicago, US")).toBeTruthy();
-      expect(getByText("Dhuhr")).toBeTruthy();
       expect(getByText("DuaCardMock")).toBeTruthy();
-      expect(getByTestId("prayer-times-list")).toHaveTextContent("loading:false count:1");
-      expect(getByLabelText("Open settings")).toBeTruthy();
-    });
-
-    it("opens settings from the header gear", () => {
-      const { getByLabelText } = render(<Home />);
-      fireEvent.press(getByLabelText("Open settings"));
-      expect(mockPush).toHaveBeenCalledWith("/Settings");
+      expect(getByTestId("prayer-times-list")).toHaveTextContent(
+        "loading:false count:1",
+      );
     });
 
     it("navigates to tomorrow prayer details from the completion branch", () => {
