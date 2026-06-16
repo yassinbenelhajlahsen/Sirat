@@ -238,9 +238,9 @@ describe("navigation contracts", () => {
     );
     expect(routeNames).toEqual([
       "index",
-      "Mosques",
-      "Qibla",
       "Quran",
+      "Qibla",
+      "Mosques",
       "Calendar",
       "Settings",
     ]);

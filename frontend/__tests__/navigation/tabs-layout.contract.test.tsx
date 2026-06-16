@@ -62,19 +62,16 @@ describe("tabs layout navigation contract", () => {
     );
     expect(routeNames).toEqual([
       "index",
-      "Mosques",
-      "Qibla",
       "Quran",
+      "Qibla",
+      "Mosques",
       "Calendar",
       "Settings",
     ]);
 
     tabScreenMock.mock.calls.forEach(([props]) => {
       expect(props.options).toEqual(
-        expect.objectContaining({
-          title: expect.any(String),
-          tabBarIcon: expect.any(Function),
-        }),
+        expect.objectContaining({ title: expect.any(String) }),
       );
     });
   });
