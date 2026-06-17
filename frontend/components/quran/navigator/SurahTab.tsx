@@ -131,20 +131,13 @@ function SurahTab({
     ayahSearchResults.length === 0 &&
     !juzSearchResult;
 
-  const listHeaderComponent = (
+  const hasSearchResults =
+    trimmedQuery.length > 0 &&
+    (ayahSearchResults.length > 0 || juzSearchResult !== null);
+
+  const listHeaderComponent = hasSearchResults ? (
     <View style={styles.headerContainer}>
-      <BottomSheetTextInput
-        style={styles.searchInput}
-        placeholder="Search verses or 2:255"
-        placeholderTextColor={
-          isLight
-            ? withOpacity(themeColors.grayDark, 0.86)
-            : withOpacity(themeColors.white, 0.5)
-        }
-        value={surahSearchQuery}
-        onChangeText={onSurahSearchQueryChange}
-      />
-      {trimmedQuery.length > 0 && ayahSearchResults.length > 0 ? (
+      {ayahSearchResults.length > 0 ? (
         <View style={styles.ayahResultsContainer}>
           <Text style={styles.sectionHeading}>Verse Matches</Text>
           {ayahSearchResults.map((result) => (
@@ -166,7 +159,7 @@ function SurahTab({
           ))}
         </View>
       ) : null}
-      {trimmedQuery.length > 0 && juzSearchResult ? (
+      {juzSearchResult ? (
         <View style={styles.ayahResultsContainer}>
           <Text style={styles.sectionHeading}>Juz Match</Text>
           <PressableScale
@@ -183,32 +176,51 @@ function SurahTab({
         </View>
       ) : null}
     </View>
+  ) : null;
+
+  const stickySearch = (
+    <View style={styles.searchContainer}>
+      <BottomSheetTextInput
+        style={styles.searchInput}
+        placeholder="Search verses or 2:255"
+        placeholderTextColor={
+          isLight
+            ? withOpacity(themeColors.grayDark, 0.86)
+            : withOpacity(themeColors.white, 0.5)
+        }
+        value={surahSearchQuery}
+        onChangeText={onSurahSearchQueryChange}
+      />
+    </View>
   );
 
   return (
-    <BottomSheetFlatList
-      data={data as readonly SurahItem[]}
-      extraData={numColumns}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      numColumns={numColumns}
-      ListHeaderComponent={listHeaderComponent}
-      ListEmptyComponent={
-        showEmptyState
-          ? () => (
-              <Text style={styles.emptyStateText}>
-                No matching verses or surahs.
-              </Text>
-            )
-          : null
-      }
-      style={styles.list}
-      contentContainerStyle={styles.listContent}
-      columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="always"
-      keyboardDismissMode="none"
-    />
+    <View style={styles.container}>
+      {stickySearch}
+      <BottomSheetFlatList
+        data={data as readonly SurahItem[]}
+        extraData={numColumns}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        numColumns={numColumns}
+        ListHeaderComponent={listHeaderComponent}
+        ListEmptyComponent={
+          showEmptyState
+            ? () => (
+                <Text style={styles.emptyStateText}>
+                  No matching verses or surahs.
+                </Text>
+              )
+            : null
+        }
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="none"
+      />
+    </View>
   );
 }
 
@@ -220,13 +232,21 @@ const createStyles = (theme: AppTheme) => {
   const mat = theme.materials.row;
 
   return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    searchContainer: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 10,
+    },
     list: {
       flex: 1,
     },
     listContent: {
       paddingHorizontal: 20,
       paddingBottom: 32,
-      paddingTop: 8,
+      paddingTop: 4,
     },
     columnWrapper: {
       paddingBottom: 12,

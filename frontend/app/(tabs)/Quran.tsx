@@ -1,5 +1,4 @@
 import Aurora from "@/components/ui/Aurora";
-import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
@@ -1292,7 +1291,12 @@ export default function QuranScreen() {
       <Aurora />
       <View style={styles.screen}>
         <View style={styles.container}>
-          <GlassSurface tier="chrome" radius={0} style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
+          <LinearGradient
+            colors={[themeColors.primaryDeep, themeColors.primary]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={[styles.headerBar, { paddingTop: insets.top + 10 }]}
+          >
             <View style={styles.headerText}>
               <View style={styles.headerTitleRow}>
                 <Headline color={themeColors.white}>{currentSurahMeta?.englishName ?? ""}</Headline>
@@ -1327,7 +1331,7 @@ export default function QuranScreen() {
                 <Text style={styles.aa}>Aa</Text>
               </PressableScale>
             </View>
-          </GlassSurface>
+          </LinearGradient>
 
           {listReady ? (
             <Animated.View style={[styles.list, { opacity: listOpacity }]}>

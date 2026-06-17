@@ -15,6 +15,8 @@ function DisplaySettingsSheetBackground(p: Parameters<typeof SheetBackground>[0]
   return <SheetBackground {...p} solid />;
 }
 
+const SNAP_POINTS = ["40%"];
+
 type QuranDisplaySettingsModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -85,7 +87,8 @@ export default function QuranDisplaySettingsModal({
     <BottomSheet
       ref={sheetRef}
       index={0}
-      enableDynamicSizing
+      snapPoints={SNAP_POINTS}
+      enableDynamicSizing={false}
       enablePanDownToClose
       backgroundComponent={DisplaySettingsSheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}

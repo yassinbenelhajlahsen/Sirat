@@ -1,4 +1,4 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -43,7 +43,7 @@ type QuranNavigatorModalProps = {
   onClose: () => void;
 };
 
-const SNAP_POINTS = ["90%"];
+const SNAP_POINTS = ["78%"];
 
 function NavigatorModal({
   visible,
@@ -112,12 +112,13 @@ function NavigatorModal({
       ref={sheetRef}
       index={0}
       snapPoints={SNAP_POINTS}
+      enableDynamicSizing={false}
       enablePanDownToClose
       backgroundComponent={NavigatorSheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}
       onChange={handleSheetChange}
     >
-      <BottomSheetView style={styles.content}>
+      <View style={styles.content}>
         <View style={styles.modalHeader}>
           <View>
             <Text style={styles.modalTitle}>Navigation</Text>
@@ -142,13 +143,7 @@ function NavigatorModal({
         <NavigatorTabs selectedTab={selectedTab} onSelectTab={handleSelectTab} />
 
         <View style={styles.tabContentContainer}>
-          <View
-            style={[
-              styles.tabPanel,
-              selectedTab === "surah" ? styles.tabPanelActive : styles.tabPanelInactive,
-            ]}
-            pointerEvents={selectedTab === "surah" ? "auto" : "none"}
-          >
+          {selectedTab === "surah" ? (
             <SurahTab
               surahs={surahs}
               filteredSurahs={filteredSurahs}
@@ -161,25 +156,9 @@ function NavigatorModal({
               onSelectJuz={onSelectJuz}
               onClose={onClose}
             />
-          </View>
-
-          <View
-            style={[
-              styles.tabPanel,
-              selectedTab === "juz" ? styles.tabPanelActive : styles.tabPanelInactive,
-            ]}
-            pointerEvents={selectedTab === "juz" ? "auto" : "none"}
-          >
+          ) : selectedTab === "juz" ? (
             <JuzTab onSelectJuz={onSelectJuz} onClose={onClose} />
-          </View>
-
-          <View
-            style={[
-              styles.tabPanel,
-              selectedTab === "bookmarks" ? styles.tabPanelActive : styles.tabPanelInactive,
-            ]}
-            pointerEvents={selectedTab === "bookmarks" ? "auto" : "none"}
-          >
+          ) : (
             <BookmarksTab
               bookmarks={bookmarks}
               filteredBookmarks={filteredBookmarks}
@@ -189,9 +168,9 @@ function NavigatorModal({
               onDeleteBookmark={onDeleteBookmark}
               onClose={onClose}
             />
-          </View>
+          )}
         </View>
-      </BottomSheetView>
+      </View>
     </BottomSheet>
   );
 }
@@ -264,16 +243,6 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
       minHeight: 0,
       paddingTop: 2,
-    },
-    tabPanel: {
-      flex: 1,
-    },
-    tabPanelActive: {
-      position: "relative",
-      opacity: 1,
-    },
-    tabPanelInactive: {
-      display: "none",
     },
   });
 };
