@@ -36,6 +36,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/quranProgress.test.ts`
   - `services/quranDisplayModes.test.ts`
   - `hooks/useQuranDisplayModes.test.ts`
+  - `components/surah-banner.contract.test.tsx`
 - `quran copy text formatting testing`
   - `services/quranCopyText.test.ts`
 - `dua flow testing`
@@ -63,6 +64,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/force-update-gate.contract.test.tsx`
 - `shared component contracts testing`
   - `components/*.contract.test.tsx`
+  - `components/sheet-background.contract.test.tsx`
 - `screen level contract tests testing`
   - `screens/screen-contracts.test.tsx`
   - `screens/nearby-mosques.contract.test.tsx`

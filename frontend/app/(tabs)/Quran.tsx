@@ -36,7 +36,9 @@ import { setIsAudioActiveAsync } from "expo-audio";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   Alert,
+  Animated,
   AppState,
   AppStateStatus,
   Clipboard,
@@ -47,6 +49,8 @@ import {
   ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHaptics } from "@/hooks/useHaptics";
+import { TIMING_ENTER } from "@/constants/motion";
 import PressableScale from "../../components/PressableScale";
 import NavigatorModal from "../../components/quran/navigator/NavigatorModal";
 import QuranAyahCard from "../../components/quran/QuranAyahCard";
@@ -57,7 +61,6 @@ import QuranCompletionCard from "../../components/quran/QuranCompletionCard";
 import QuranDisplaySettingsModal from "../../components/quran/QuranDisplaySettingsModal";
 import QuranCopySheet from "../../components/quran/QuranCopySheet";
 import CopyToast from "../../components/CopyToast";
-import * as Haptics from "expo-haptics";
 
 type AyahItem = {
   type: "ayah";
@@ -314,6 +317,8 @@ export default function QuranScreen() {
   const spacing = theme.spacing;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const haptic = useHaptics();
+  const listOpacity = useRef(new Animated.Value(0)).current;
 
   const ayat = useMemo(() => Array.from(getAllAyat()), []);
   const surahs = useMemo(() => Array.from(getSurahMeta()), []);
@@ -693,6 +698,24 @@ export default function QuranScreen() {
       hasAppliedInitialScrollRef.current = true;
     }
   }, [listReady]);
+
+  // Calm entrance fade-in when list becomes ready; skipped when Reduce Motion is on.
+  useEffect(() => {
+    if (!listReady) return;
+    AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
+      if (reduced) {
+        listOpacity.setValue(1);
+        return;
+      }
+      Animated.timing(listOpacity, {
+        toValue: 1,
+        duration: TIMING_ENTER,
+        useNativeDriver: true,
+      }).start();
+    }).catch(() => {
+      listOpacity.setValue(1);
+    });
+  }, [listReady, listOpacity]);
 
   useEffect(() => {
     if (displayModeAnchorInteractionRef.current) {
@@ -1115,16 +1138,16 @@ export default function QuranScreen() {
   );
 
   const handleAyahLongPress = useCallback((ayah: NormalizedAyah) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    haptic("light");
     setCopySheetAyah(ayah);
-  }, []);
+  }, [haptic]);
 
   const handleCopy = useCallback((text: string) => {
     Clipboard.setString(text);
     setCopySheetAyah(null);
     setToastVisible(true);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, []);
+    haptic("success");
+  }, [haptic]);
 
   const renderItem = useCallback<ListRenderItem<QuranListItem>>(
     ({ item }: ListRenderItemInfo<QuranListItem>) => {
@@ -1299,25 +1322,27 @@ export default function QuranScreen() {
           </GlassSurface>
 
           {listReady ? (
-            <FlashList
-              ref={flashListRef}
-              data={listData}
-              showsVerticalScrollIndicator={false}
-              scrollsToTop={false}
-              onScroll={handleTabBarScroll}
-              scrollEventThrottle={16}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              estimatedItemSize={ESTIMATED_ITEM_SIZE}
-              getItemType={getItemType}
-              style={styles.list}
-              contentContainerStyle={{ ...styles.listContent, paddingTop: HEADER_HEIGHT + insets.top, paddingBottom: insets.bottom + 72 }}
-              contentInsetAdjustmentBehavior="never"
-              onLoad={handleListLoad}
-              onViewableItemsChanged={handleViewableItemsChanged}
-              viewabilityConfig={viewabilityConfigRef.current}
-              onScrollToIndexFailed={handleScrollToIndexFailed}
-            />
+            <Animated.View style={[styles.list, { opacity: listOpacity }]}>
+              <FlashList
+                ref={flashListRef}
+                data={listData}
+                showsVerticalScrollIndicator={false}
+                scrollsToTop={false}
+                onScroll={handleTabBarScroll}
+                scrollEventThrottle={16}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                estimatedItemSize={ESTIMATED_ITEM_SIZE}
+                getItemType={getItemType}
+                style={styles.list}
+                contentContainerStyle={{ ...styles.listContent, paddingTop: HEADER_HEIGHT + insets.top, paddingBottom: insets.bottom + 72 }}
+                contentInsetAdjustmentBehavior="never"
+                onLoad={handleListLoad}
+                onViewableItemsChanged={handleViewableItemsChanged}
+                viewabilityConfig={viewabilityConfigRef.current}
+                onScrollToIndexFailed={handleScrollToIndexFailed}
+              />
+            </Animated.View>
           ) : (
             <View style={styles.listPlaceholder} />
           )}
