@@ -45,6 +45,32 @@ const NOW = (() => {
   return d;
 })();
 
+const TIMES = [
+  { label: "Fajr", time: "5:31 AM" },
+  { label: "Sunrise", time: "7:48 AM" },
+  { label: "Dhuhr", time: "12:18 PM" },
+  { label: "Asr", time: "3:42 PM" },
+  { label: "Maghrib", time: "6:02 PM" },
+  { label: "Isha", time: "7:29 PM" },
+];
+
+describe("PrayerArc live vs static", () => {
+  it("shows the live label by default", () => {
+    const { getByText } = render(
+      <PrayerArc loading={false} prayerTimes={TIMES as any} nextPrayer={{ label: "Asr", time: "3:42 PM" }} />,
+    );
+    expect(getByText("TODAY'S PRAYERS")).toBeTruthy();
+  });
+
+  it("shows the static label and no next highlight when live=false", () => {
+    const { getByText, queryByText } = render(
+      <PrayerArc loading={false} prayerTimes={TIMES as any} nextPrayer={null} live={false} />,
+    );
+    expect(getByText("PRAYER TIMES")).toBeTruthy();
+    expect(queryByText("TODAY'S PRAYERS")).toBeNull();
+  });
+});
+
 describe("PrayerArc contract", () => {
   it("renders all six prayers with their (period-stripped) times", () => {
     const { getByText } = render(

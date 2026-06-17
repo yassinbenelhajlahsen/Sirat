@@ -36,6 +36,7 @@ type PrayerArcProps = {
   prayerTimes: PrayerTime[];
   nextPrayer: { label: string; time: string } | null;
   now?: Date;
+  live?: boolean;
 };
 
 export default function PrayerArc({
@@ -43,18 +44,19 @@ export default function PrayerArc({
   prayerTimes,
   nextPrayer,
   now,
+  live = true,
 }: PrayerArcProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const prayers = useMemo(
-    () => prayerStates(prayerTimes, nextPrayer?.label ?? null),
-    [prayerTimes, nextPrayer],
+    () => prayerStates(prayerTimes, live ? (nextPrayer?.label ?? null) : null),
+    [prayerTimes, nextPrayer, live],
   );
   const sun = useMemo(
-    () => (loading ? null : sunMarker(prayerTimes, now ?? new Date())),
-    [loading, prayerTimes, now],
+    () => (loading || !live ? null : sunMarker(prayerTimes, now ?? new Date())),
+    [loading, live, prayerTimes, now],
   );
   const sunPoint = sun ? arcPoint(sun.t) : null;
   const progressLen = sun ? arcLength(sun.t) : 0;
@@ -63,6 +65,7 @@ export default function PrayerArc({
   // the hero badge; never animate opacity of glass).
   const breath = useRef(new Animated.Value(0)).current;
   useEffect(() => {
+    if (!live) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(breath, {
@@ -87,7 +90,7 @@ export default function PrayerArc({
   return (
     <GlassSurface tier="card" radius={theme.radii.cardLg} style={styles.card}>
       <Caption color={withOpacity(colors.white, 0.5)} style={styles.label}>
-        TODAY&apos;S PRAYERS
+        {live ? "TODAY'S PRAYERS" : "PRAYER TIMES"}
       </Caption>
 
       <View style={styles.arcWrap}>
@@ -127,7 +130,7 @@ export default function PrayerArc({
         {prayers.map((p) => (
           <Marker
             key={p.label}
-            prayer={p}
+            prayer={live ? p : { ...p, state: "upcoming" }}
             colors={colors}
             slot={styles.markerSlot}
             breathScale={breathScale}
@@ -155,14 +158,15 @@ export default function PrayerArc({
 
       <View style={styles.row}>
         {prayers.map((p) => {
+          const state = live ? p.state : "upcoming";
           const nameColor =
-            p.state === "next"
+            state === "next"
               ? colors.accent
-              : withOpacity(colors.white, p.state === "passed" ? 0.4 : 0.75);
+              : withOpacity(colors.white, state === "passed" ? 0.4 : 0.75);
           const timeColor =
-            p.state === "next"
+            state === "next"
               ? colors.accent
-              : withOpacity(colors.white, p.state === "passed" ? 0.4 : 1);
+              : withOpacity(colors.white, state === "passed" ? 0.4 : 1);
           return (
             <View key={p.label} style={styles.col}>
               <Caption color={nameColor} numberOfLines={1} style={styles.name}>
