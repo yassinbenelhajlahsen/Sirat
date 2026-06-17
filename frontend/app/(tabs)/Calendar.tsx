@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,7 +29,6 @@ import { useNextPrayer } from "@/hooks/useNextPrayer";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { dateKeyFromDate } from "@/services/holidayService";
-import { useWindowDimensions } from "react-native";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 

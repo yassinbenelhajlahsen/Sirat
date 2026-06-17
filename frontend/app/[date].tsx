@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Platform } from "react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Linking,
   PanResponder,
+  Platform,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -56,7 +56,6 @@ export default function CalendarDetail() {
 
   useEffect(() => {
     if (typeof date === "string") setSelectedDate(new Date(decodeURIComponent(date)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
 
   useEffect(() => {
