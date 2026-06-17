@@ -1,3 +1,4 @@
+import Aurora from "@/components/ui/Aurora";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +10,6 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-  Image,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -147,10 +147,7 @@ export default function CalendarScreen() {
       end={{ x: 1, y: 1 }}
       style={styles.screen}
     >
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+      <Aurora />
       <SafeAreaView style={styles.screen}>
         {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
         <View style={styles.header}>
@@ -420,17 +417,6 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     screen: { flex: 1 },
-    patternOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: 0.05,
-      resizeMode: "repeat",
-      width: "100%",
-      height: "100%",
-    },
     header: { padding: spacing.lg },
     eyebrow: {
       color: withOpacity(colors.accent, 0.92),

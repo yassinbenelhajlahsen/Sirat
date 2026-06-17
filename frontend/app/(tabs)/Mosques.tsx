@@ -1,3 +1,4 @@
+import Aurora from "@/components/ui/Aurora";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
@@ -12,7 +13,6 @@ import {
   Alert,
   Animated,
   FlatList,
-  Image,
   InteractionManager,
   Linking,
   Platform,
@@ -287,10 +287,7 @@ export default function MosqueScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <Image
-          source={require("../../assets/patterns/islamic-gold2.png")}
-          style={styles.patternOverlay}
-        />
+        <Aurora />
 
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
@@ -434,10 +431,7 @@ export default function MosqueScreen() {
       end={{ x: 1, y: 1 }}
       style={styles.gradient}
     >
-      <Image
-        source={require("../../assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+      <Aurora />
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -590,17 +584,6 @@ const createStyles = (theme: AppTheme) => {
       paddingBottom: spacing.xl + spacing.xl,
     },
     container: { flex: 1, padding: spacing.xl },
-    patternOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: 0.05,
-      resizeMode: "repeat",
-      width: "100%",
-      height: "100%",
-    },
     headerSection: {
       marginTop: spacing.xs,
       marginBottom: spacing.md,

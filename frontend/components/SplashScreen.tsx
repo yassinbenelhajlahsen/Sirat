@@ -8,13 +8,13 @@ import {
   Animated,
   Easing,
   I18nManager,
-  Image,
   LayoutChangeEvent,
   Platform,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import Aurora from "@/components/ui/Aurora";
 import hadiths from "../assets/data/hadiths.json";
 
 const LAST_SPLASH_KEY = "lastSplashDate";
@@ -196,11 +196,8 @@ export default function SplashScreen({
       style={styles.gradient}
       onLayout={handleLayout}
     >
-      {/* Subtle pattern overlay */}
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+      {/* Ambient aurora background */}
+      <Aurora />
 
       <Animated.View
         style={[
@@ -306,17 +303,6 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-    },
-    patternOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: 0.03, // More subtle
-      resizeMode: "repeat",
-      width: "100%",
-      height: "100%",
     },
     container: {
       flex: 1,

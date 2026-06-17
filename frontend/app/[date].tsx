@@ -1,3 +1,4 @@
+import Aurora from "@/components/ui/Aurora";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,7 +8,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
-  Image,
   Linking,
   PanResponder,
   Platform,
@@ -501,10 +501,7 @@ export default function CalendarDetail() {
       end={{ x: 1, y: 1 }}
       style={styles.screen}
     >
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+      <Aurora />
       <SafeAreaView style={styles.screen}>
         {/* Top Navigation Bar - stays fixed */}
         <View style={styles.topBar}>
@@ -712,17 +709,6 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     screen: { flex: 1 },
-    patternOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: 0.05,
-      resizeMode: "repeat",
-      width: "100%",
-      height: "100%",
-    },
     topBar: {
       flexDirection: "row",
       alignItems: "center",

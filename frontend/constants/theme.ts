@@ -101,6 +101,8 @@ export function buildMaterials(colors: AppColors, isLight: boolean): Materials {
   };
 }
 
+export type AuroraColors = { accent: string; secondary: string; core: string };
+
 export type AppTheme = {
   name: ThemeName;
   colors: AppColors;
@@ -109,6 +111,7 @@ export type AppTheme = {
   type: typeof type;
   radii: typeof radii;
   materials: Materials;
+  aurora: AuroraColors;
 };
 
 const ACCENT_COLORS = {
@@ -195,14 +198,18 @@ const lightColors: AppColors = {
 export const defaultTheme: AppTheme = {
   name: "default", colors: defaultColors, spacing, typography, type, radii,
   materials: buildMaterials(defaultColors, false),
+  aurora: { accent: defaultColors.accent, secondary: defaultColors.accentSecondary, core: defaultColors.accentGlow },
 };
 export const darkTheme: AppTheme = {
   name: "dark", colors: darkColors, spacing, typography, type, radii,
   materials: buildMaterials(darkColors, false),
+  // Cool indigo + teal aurora — harmonises with the navy canvas; gold accent still pops.
+  aurora: { accent: "#6E8BFF", secondary: darkColors.accentSecondary, core: "#8FA8FF" },
 };
 export const lightTheme: AppTheme = {
   name: "light", colors: lightColors, spacing, typography, type, radii,
   materials: buildMaterials(lightColors, true),
+  aurora: { accent: lightColors.accent, secondary: lightColors.accentSecondary, core: lightColors.accentGlow },
 };
 
 export const themeMap: Record<ThemeName, AppTheme> = {

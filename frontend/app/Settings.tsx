@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import {
   Alert,
   Animated,
-  Image,
   ImageStyle,
   Linking,
   Pressable,
@@ -21,6 +20,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import Aurora from "@/components/ui/Aurora";
 import CitySearchModal from "@/components/CitySearchModal";
 import NotificationSettings from "@/components/NotificationSettings";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
@@ -171,10 +171,7 @@ export default function Settings() {
       end={{ x: 1, y: 1 }}
       style={styles.screen}
     >
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+      <Aurora />
       <SafeAreaView style={styles.screen}>
         <ScrollView
           contentContainerStyle={[
@@ -505,17 +502,6 @@ const createStyles = (theme: AppTheme) => {
     screen: { flex: 1 },
     scrollView: { zIndex: 0 },
     scrollContent: { paddingTop: 2 },
-    patternOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: 0.05,
-      resizeMode: "repeat",
-      width: "100%",
-      height: "100%",
-    },
     titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
     eyebrow: {
       color: withOpacity(themeColors.accent, 0.9),

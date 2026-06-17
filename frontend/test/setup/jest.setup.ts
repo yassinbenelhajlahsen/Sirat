@@ -63,6 +63,19 @@ jest.mock("expo-haptics", () => ({
   NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
 }));
 
+// react-native-svg renders as plain Views in tests (Aurora background, PrayerArc).
+// Every named export (Svg/Path/Rect/Defs/RadialGradient/Stop/…) maps to the mock.
+jest.mock("react-native-svg", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  const Mock = ({ children, ...props }: any) =>
+    React.createElement(View, props, children);
+  return new Proxy(
+    { __esModule: true, default: Mock },
+    { get: (target: any, prop: string) => target[prop] ?? Mock },
+  );
+});
+
 (global as unknown as { fetch: jest.Mock }).fetch = jest.fn();
 
 global.freezeTestTime = (isoDate: string | Date) => {

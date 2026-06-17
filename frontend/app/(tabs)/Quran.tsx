@@ -1,3 +1,4 @@
+import Aurora from "@/components/ui/Aurora";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useTheme } from "@/context/ThemeContext";
@@ -37,7 +38,6 @@ import {
   AppState,
   AppStateStatus,
   Clipboard,
-  Image,
   InteractionManager,
   StyleSheet,
   Text,
@@ -1257,10 +1257,7 @@ export default function QuranScreen() {
       end={{ x: 1, y: 1 }}
       style={styles.screen}
     >
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+      <Aurora />
       <SafeAreaView style={styles.screen}>
         <View style={styles.container}>
           <View style={styles.header}>
@@ -1450,17 +1447,6 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     screen: { flex: 1 },
-    patternOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: 0.05,
-      resizeMode: "repeat",
-      width: "100%",
-      height: "100%",
-    },
     container: {
       flex: 1,
       backgroundColor: "transparent",

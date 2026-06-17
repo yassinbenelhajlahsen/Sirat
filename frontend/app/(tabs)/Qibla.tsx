@@ -3,6 +3,7 @@ import {
   withOpacity,
   type AppTheme,
 } from "@/constants/theme";
+import Aurora from "@/components/ui/Aurora";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -11,7 +12,6 @@ import * as Location from "expo-location";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
-  Image,
   ImageSourcePropType,
   Linking,
   Platform,
@@ -174,10 +174,7 @@ export default function Qibla() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <Image
-          source={require("@/assets/patterns/islamic-gold2.png")}
-          style={styles.patternOverlay}
-        />
+        <Aurora />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
             <View style={styles.headerSection}>
@@ -284,10 +281,7 @@ export default function Qibla() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
     >
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+      <Aurora />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <View style={styles.headerSection}>
@@ -376,17 +370,6 @@ const createStyles = (theme: AppTheme) => {
 
   container: { flex: 1, padding: spacing.xl },
   gateContent: { flex: 1, marginTop: spacing.md },
-  patternOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.05,
-    resizeMode: "repeat",
-    width: "100%",
-    height: "100%",
-  },
   headerSection: {
     marginTop: spacing.xs,
     marginBottom: spacing.md,
