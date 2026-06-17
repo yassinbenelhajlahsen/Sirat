@@ -11,7 +11,7 @@ import ReAnimated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import Svg, { Circle, G, Line, Text as SvgText } from "react-native-svg";
+import Svg, { G, Line, Text as SvgText } from "react-native-svg";
 
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Footnote, Title1, Title3 } from "@/components/ui/Text";
