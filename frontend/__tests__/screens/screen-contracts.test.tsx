@@ -131,6 +131,16 @@ jest.mock("@/hooks/useCalendarSummaryTransition", () => ({
   useCalendarSummaryTransition: jest.fn(),
 }));
 
+jest.mock("@/hooks/usePrayerTimes", () => ({
+  usePrayerTimes: jest.fn(),
+}));
+jest.mock("@/hooks/useNextPrayer", () => ({
+  useNextPrayer: jest.fn(),
+}));
+jest.mock("@/hooks/useRamadanTracker", () => ({
+  useRamadanTracker: jest.fn(),
+}));
+
 jest.mock("@/context/QuranAudioProvider", () => ({
   useQuranAudioController: jest.fn(),
 }));
@@ -418,6 +428,9 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 import { useCalendarNavigationTransitions } from "@/hooks/useCalendarNavigationTransitions";
 import { useCalendarSummaryTransition } from "@/hooks/useCalendarSummaryTransition";
 import { useCalendarViewState } from "@/hooks/useCalendarViewState";
+import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { useNextPrayer } from "@/hooks/useNextPrayer";
+import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { deleteBookmark, getBookmarkKey, getBookmarks, upsertBookmark } from "@/services/quranBookmarks";
 import { getAllAyat, getAyatIndexForSurahAndAyah, getSurahMeta } from "@/services/quranData";
 import { getCachedMosques, getNearbyMosques } from "@/services/getNearbyMosques";
@@ -461,6 +474,9 @@ const mockUseCalendarSummaryTransition =
   useCalendarSummaryTransition as jest.MockedFunction<
     typeof useCalendarSummaryTransition
   >;
+const mockUsePrayerTimes = usePrayerTimes as jest.MockedFunction<typeof usePrayerTimes>;
+const mockUseNextPrayer = useNextPrayer as jest.MockedFunction<typeof useNextPrayer>;
+const mockUseRamadanTracker = useRamadanTracker as jest.MockedFunction<typeof useRamadanTracker>;
 
 const mockGetAllAyat = getAllAyat as jest.MockedFunction<typeof getAllAyat>;
 const mockGetSurahMeta = getSurahMeta as jest.MockedFunction<typeof getSurahMeta>;
@@ -620,6 +636,14 @@ const buildCalendarViewState = (overrides: Record<string, unknown> = {}) => ({
   canGoPrev: true,
   canGoNext: true,
   dayButtonSize: 40,
+  fullMatrix: [
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [10, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+  ],
   visibleMatrix: [[10, 0, 0, 0, 0, 0, 0]],
   monthName: "March",
   ...overrides,
@@ -721,6 +745,20 @@ describe("Screen contracts", () => {
     mockUseCalendarSummaryTransition.mockReturnValue(
       buildCalendarSummaryTransition() as any,
     );
+    mockUsePrayerTimes.mockReturnValue({
+      prayerTimes: [{ label: "Fajr", time: "5:31 AM" }],
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+      prayerTimesDateKey: "2026-03-10",
+    } as any);
+    mockUseNextPrayer.mockReturnValue({ nextPrayer: null, timeLeft: "" } as any);
+    mockUseRamadanTracker.mockReturnValue({
+      isRamadan: false,
+      isFastMissed: false,
+      loadingRamadan: false,
+      toggleMissedFast: jest.fn(),
+    } as any);
     mockDateKeyFromDate.mockImplementation((date: Date) =>
       date.toISOString().slice(0, 10),
     );
@@ -841,8 +879,8 @@ describe("Screen contracts", () => {
       const { getByText, getByLabelText } = render(<CalendarScreen />);
 
       expect(getByText("Calendar")).toBeTruthy();
-      expect(getByText("March 2026")).toBeTruthy();
-      expect(getByLabelText("Open March 10, 2026")).toBeTruthy();
+      expect(getByText("Mar 2026")).toBeTruthy();
+      expect(getByLabelText("Select March 10, 2026")).toBeTruthy();
     });
 
     it("routes next month button to transition handler", () => {

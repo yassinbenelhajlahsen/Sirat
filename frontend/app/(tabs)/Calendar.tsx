@@ -1,39 +1,48 @@
-import Aurora from "@/components/ui/Aurora";
-import { withOpacity, type AppTheme } from "@/constants/theme";
-import { useTheme } from "@/context/ThemeContext";
-import { Ionicons } from "@expo/vector-icons";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Easing,
+  Linking,
+  Platform,
+  ScrollView,
   StyleSheet,
-  Text,
-  useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import PressableScale from "../../components/PressableScale";
-import {
-  dateKeyFromDate,
-} from "../../services/holidayService";
-import { useCalendarData } from "../../hooks/useCalendarData";
-import { useCalendarNavigationTransitions } from "../../hooks/useCalendarNavigationTransitions";
-import { useCalendarSummaryTransition } from "../../hooks/useCalendarSummaryTransition";
-import { useCalendarViewState } from "../../hooks/useCalendarViewState";
+import { Ionicons } from "@expo/vector-icons";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import DayDetailPanel from "@/components/calendar/DayDetailPanel";
+import PressableScale from "@/components/PressableScale";
+import GlassSurface from "@/components/ui/GlassSurface";
+import Screen from "@/components/ui/Screen";
+import { Body, Caption, Headline, LargeTitle } from "@/components/ui/Text";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useCalendarData } from "@/hooks/useCalendarData";
+import { useCalendarNavigationTransitions } from "@/hooks/useCalendarNavigationTransitions";
+import { useCalendarViewState } from "@/hooks/useCalendarViewState";
+import { useNextPrayer } from "@/hooks/useNextPrayer";
+import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { useRamadanTracker } from "@/hooks/useRamadanTracker";
+import { dateKeyFromDate } from "@/services/holidayService";
+import { useWindowDimensions } from "react-native";
+
+const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const haptics = useHaptics();
 
-  const router = useRouter();
   const { month, year } = useLocalSearchParams();
   const { width } = useWindowDimensions();
   const isSmall = width < 360;
+
   const {
     today,
     minDate,
@@ -49,13 +58,10 @@ export default function CalendarScreen() {
     canGoPrev,
     canGoNext,
     dayButtonSize,
-    visibleMatrix,
+    fullMatrix,
     monthName,
-  } = useCalendarViewState({
-    monthParam: month,
-    yearParam: year,
-    isSmall,
-  });
+  } = useCalendarViewState({ monthParam: month, yearParam: year, isSmall });
+
   const {
     holidayMap,
     loadingHolidays,
@@ -66,11 +72,9 @@ export default function CalendarScreen() {
     missedDaysLabel,
     showRamadanSummary,
   } = useCalendarData(viewYear, viewMonth);
-  const { ramadanSummaryAnim, renderRamadanSummary } =
-    useCalendarSummaryTransition(showRamadanSummary);
+
   const {
     navigating,
-    setNavigating,
     fadeAnim,
     translateX,
     backToTodayAnim,
@@ -94,498 +98,368 @@ export default function CalendarScreen() {
   });
   const tabBarHeight = useBottomTabBarHeight();
 
-  // Animate fade-out before navigating to date details
-  const handleDatePress = (selectedDate: Date, holidayName?: string) => {
-    if (navigating) return; // prevent double-press
-    setNavigating(true);
+  // ---- Selected day (inline agenda) ----
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const pendingSelectRef = useRef<Date | null>(null);
 
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 140,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) {
-        // delay slightly to ensure animation finishes visually
-        setTimeout(() => {
-          router.push({
-            pathname: "/[date]",
-            params: {
-              date: selectedDate.toISOString(),
-              month: viewMonth.toString(),
-              year: viewYear.toString(),
-              holiday: holidayName || "",
-              ramadanStart: ramadanStart?.toISOString() || "",
-              ramadanEnd: ramadanEnd?.toISOString() || "",
-            },
-          });
-          // do NOT reset fadeAnim immediately; let new screen take over
-          setNavigating(false);
-        }, 50);
-      }
-    });
-  };
+  // On mount and whenever the viewed month changes, resolve the selection:
+  // an explicit pending pick wins; otherwise auto-select today if it's in
+  // view, else clear to the prompt.
+  useEffect(() => {
+    if (pendingSelectRef.current) {
+      setSelectedDate(pendingSelectRef.current);
+      pendingSelectRef.current = null;
+      return;
+    }
+    const todayInView =
+      viewMonth === today.getMonth() && viewYear === today.getFullYear();
+    setSelectedDate(todayInView ? new Date(today) : null);
+    // `today` is a fresh Date each render; intentionally keyed on the month only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMonth, viewYear]);
+
+  const ramadanParam = useMemo(
+    () => ({
+      start: ramadanStart?.toISOString(),
+      end: ramadanEnd?.toISOString(),
+    }),
+    [ramadanStart, ramadanEnd],
+  );
+
+  const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
+    usePrayerTimes(selectedDate);
+  const { nextPrayer, timeLeft } = useNextPrayer(
+    selectedDate,
+    prayerTimes,
+    prayerTimesDateKey,
+  );
+  const { isRamadan, isFastMissed, toggleMissedFast } = useRamadanTracker(
+    selectedDate,
+    ramadanParam.start,
+    ramadanParam.end,
+  );
+
+  const selectedIsToday =
+    !!selectedDate && selectedDate.toDateString() === today.toDateString();
+  const selectedHoliday = selectedDate
+    ? holidayMap[dateKeyFromDate(selectedDate)] ?? null
+    : null;
+
+  const selectDay = useCallback(
+    (day: number) => {
+      if (day <= 0) return;
+      haptics("selection");
+      setSelectedDate(new Date(viewYear, viewMonth, day));
+    },
+    [haptics, viewMonth, viewYear],
+  );
+
+  const handlePrevMonth = useCallback(() => {
+    haptics("selection");
+    goToPreviousMonth();
+  }, [goToPreviousMonth, haptics]);
+
+  const handleNextMonth = useCallback(() => {
+    haptics("selection");
+    goToNextMonth();
+  }, [goToNextMonth, haptics]);
+
   const handleRamadanSummaryPress = useCallback(() => {
-    if (!firstMissedFastDate || navigating) return;
-    router.push({
-      pathname: "/[date]",
-      params: {
-        date: firstMissedFastDate.toISOString(),
-        month: firstMissedFastDate.getMonth().toString(),
-        year: firstMissedFastDate.getFullYear().toString(),
-        holiday: "",
-        ramadanStart: ramadanStart?.toISOString() || "",
-        ramadanEnd: ramadanEnd?.toISOString() || "",
-      },
-    });
-  }, [firstMissedFastDate, navigating, ramadanEnd, ramadanStart, router]);
+    if (!firstMissedFastDate) return;
+    haptics("selection");
+    const m = firstMissedFastDate.getMonth();
+    const y = firstMissedFastDate.getFullYear();
+    if (m !== viewMonth || y !== viewYear) {
+      pendingSelectRef.current = firstMissedFastDate;
+      setViewYear(y);
+      setViewMonth(m);
+    } else {
+      setSelectedDate(firstMissedFastDate);
+    }
+  }, [firstMissedFastDate, haptics, setViewMonth, setViewYear, viewMonth, viewYear]);
+
+  const openSettings = useCallback(async () => {
+    try {
+      if (Platform.OS === "ios") await Linking.openURL("app-settings:");
+      else await Linking.openSettings();
+    } catch {}
+  }, []);
 
   return (
-    <LinearGradient
-      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.screen}
-    >
-      <Aurora />
-      <SafeAreaView style={styles.screen}>
-        {/* Header + Month Navigation: static so arrows and title don't move on swipe */}
+    <Screen>
+      <View style={styles.fill}>
+        {/* Header: title + bare top-right month switcher */}
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>Planner</Text>
-          <Text style={[styles.title, isSmall ? styles.titleSmall : undefined]}>
-            Calendar
-          </Text>
-          <Text style={styles.subtitle}>
-            Track important days and Ramadan progress.
-          </Text>
-
-          <View style={styles.monthNav}>
+          <View style={styles.headerLeft}>
+            <Caption color={withOpacity(colors.accent, 0.92)} style={styles.eyebrow}>
+              Planner
+            </Caption>
+            <LargeTitle>Calendar</LargeTitle>
+          </View>
+          <View style={styles.monthSwitcher}>
             <PressableScale
-              onPress={goToPreviousMonth}
+              onPress={handlePrevMonth}
               disabled={!canGoPrev}
-              style={[
-                styles.navIconButton,
-                !canGoPrev ? styles.navIconButtonDisabled : undefined,
-              ]}
               accessibilityRole="button"
               accessibilityLabel="Previous month"
+              style={styles.monthChevron}
             >
               <Ionicons
                 name="chevron-back"
-                size={24}
-                color={canGoPrev ? colors.accent : colors.grayDark}
+                size={20}
+                color={canGoPrev ? colors.accent : withOpacity(colors.accent, 0.3)}
               />
             </PressableScale>
-
-            <Text style={styles.monthLabel}>
-              {monthName} {viewYear}
-            </Text>
-
+            <Headline style={styles.monthLabel}>
+              {monthName.slice(0, 3)} {viewYear}
+            </Headline>
             <PressableScale
-              onPress={goToNextMonth}
+              onPress={handleNextMonth}
               disabled={!canGoNext}
-              style={[
-                styles.navIconButton,
-                !canGoNext ? styles.navIconButtonDisabled : undefined,
-              ]}
               accessibilityRole="button"
               accessibilityLabel="Next month"
+              style={styles.monthChevron}
             >
               <Ionicons
                 name="chevron-forward"
-                size={24}
-                color={canGoNext ? colors.accent : colors.grayDark}
+                size={20}
+                color={canGoNext ? colors.accent : withOpacity(colors.accent, 0.3)}
               />
             </PressableScale>
           </View>
         </View>
 
-        {/* Day of week header (static, not animated) */}
+        {/* Weekday row */}
         <View style={styles.weekdayRow}>
-          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-            <Text
+          {WEEKDAYS.map((d, i) => (
+            <Caption
               key={`${d}-${i}`}
+              color={colors.accent}
               style={[styles.weekdayText, { width: dayButtonSize }]}
             >
               {d}
-            </Text>
+            </Caption>
           ))}
         </View>
 
-        {/* Animated calendar grid (swipe + slide animations applied here only) */}
+        {/* Fixed-height 6-row grid (month swipe lives here only) */}
         <Animated.View
           {...panHandlers}
-          style={{
-            flex: 1,
-            paddingHorizontal: spacing.lg,
-            opacity: fadeAnim,
-            transform: [
-              {
-                translateX: translateX,
-              },
-              {
-                scale: fadeAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.98, 1],
-                }),
-              },
-            ],
-          }}
+          style={[
+            styles.gridWrap,
+            { opacity: fadeAnim, transform: [{ translateX }] },
+          ]}
         >
-          {/* Calendar Grid */}
-          <View style={styles.gridContainer}>
-            {loadingHolidays ? (
-              <View style={styles.loadingWrap}>
-                <ActivityIndicator size="small" color={colors.accent} />
-              </View>
-            ) : (
-              <View style={styles.gridBody}>
-                {visibleMatrix.map((week, i) => (
-                  <View key={i} style={styles.weekRow}>
-                    {week.map((day, j) => {
-                      const isToday =
-                        day === today.getDate() &&
-                        viewMonth === today.getMonth() &&
-                        viewYear === today.getFullYear();
-
-                      let holidayName: string | null = null;
-                      if (day > 0) {
-                        const dateObj = new Date(viewYear, viewMonth, day);
-                        const key = dateKeyFromDate(dateObj);
-                        holidayName = holidayMap[key] ?? null;
+          {loadingHolidays ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="small" color={colors.accent} />
+            </View>
+          ) : (
+            fullMatrix.map((week, i) => (
+              <View key={i} style={styles.weekRow}>
+                {week.map((day, j) => {
+                  const isToday =
+                    day === today.getDate() &&
+                    viewMonth === today.getMonth() &&
+                    viewYear === today.getFullYear();
+                  const holidayName =
+                    day > 0
+                      ? holidayMap[dateKeyFromDate(new Date(viewYear, viewMonth, day))] ?? null
+                      : null;
+                  const isSelected =
+                    !!selectedDate &&
+                    day > 0 &&
+                    selectedDate.getDate() === day &&
+                    selectedDate.getMonth() === viewMonth &&
+                    selectedDate.getFullYear() === viewYear;
+                  return (
+                    <PressableScale
+                      key={j}
+                      onPress={() => selectDay(day)}
+                      disabled={navigating || day <= 0}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        day > 0 ? `Select ${monthName} ${day}, ${viewYear}` : "Empty day"
                       }
-
-                      const isHoliday = !!holidayName;
-
-                      return (
-                        <PressableScale
-                          key={j}
-                          onPress={() => {
-                            if (day > 0) {
-                              const selectedDate = new Date(
-                                viewYear,
-                                viewMonth,
-                                day,
-                              );
-                              handleDatePress(selectedDate, holidayName || "");
-                            }
-                          }}
-                          disabled={navigating}
-                          style={[
-                            styles.dayButton,
-                            {
-                              width: dayButtonSize,
-                              height: dayButtonSize,
-                              borderRadius: dayButtonSize / 2,
-                            },
-                            isToday
-                              ? styles.dayButtonToday
-                              : isHoliday
-                                ? styles.dayButtonHoliday
-                                : undefined,
-                          ]}
-                          accessibilityRole="button"
-                          accessibilityLabel={
-                            day > 0
-                              ? `Open ${monthName} ${day}, ${viewYear}`
-                              : "Empty day"
-                          }
-                        >
-                          <Text
-                            style={[
-                              styles.dayText,
-                              isSmall ? styles.dayTextSmall : undefined,
-                              isToday
-                                ? styles.dayTextToday
-                                : isHoliday
-                                  ? styles.dayTextHoliday
-                                  : undefined,
-                            ]}
-                          >
-                            {day > 0 ? day : ""}
-                          </Text>
-                        </PressableScale>
-                      );
-                    })}
-                  </View>
-                ))}
+                      style={[
+                        styles.dayButton,
+                        { width: dayButtonSize, height: dayButtonSize, borderRadius: dayButtonSize / 2 },
+                        isToday ? styles.dayToday : isSelected ? styles.daySelected : holidayName ? styles.dayHoliday : null,
+                      ]}
+                    >
+                      <Body
+                        color={
+                          isToday
+                            ? colors.onAccent
+                            : isSelected || holidayName
+                            ? colors.accent
+                            : colors.white
+                        }
+                        style={[styles.dayText, isSmall ? styles.dayTextSmall : null]}
+                      >
+                        {day > 0 ? String(day) : ""}
+                      </Body>
+                    </PressableScale>
+                  );
+                })}
               </View>
-            )}
-          </View>
+            ))
+          )}
         </Animated.View>
 
-        {/* Ramadan Summary */}
-        <View style={[styles.footer, { paddingBottom: tabBarHeight + 8 }]}>
-          {renderRamadanSummary && (
-            <Animated.View
-              pointerEvents={showRamadanSummary ? "auto" : "none"}
-              style={{
-                opacity: ramadanSummaryAnim,
-                marginBottom: ramadanSummaryAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, spacing.lg],
-                }),
-                maxHeight: ramadanSummaryAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 180],
-                }),
-                transform: [
-                  {
-                    scale: ramadanSummaryAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.94, 1],
-                    }),
-                  },
-                ],
-                overflow: "hidden",
-              }}
-            >
+        <View style={styles.divider} />
+
+        {/* Scrolling day panel */}
+        <ScrollView
+          style={styles.fill}
+          contentInsetAdjustmentBehavior="never"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.panelContent,
+            { paddingBottom: tabBarHeight + insets.bottom + spacing.lg },
+          ]}
+        >
+          {!isViewingToday && (
+            <Animated.View style={{ opacity: backToTodayAnim }}>
               <PressableScale
-                onPress={handleRamadanSummaryPress}
-                style={styles.summaryCard}
+                onPress={goBackToToday}
                 accessibilityRole="button"
-                accessibilityLabel="Open first missed Ramadan fast date"
+                accessibilityLabel="Back to current month"
+                style={styles.backToToday}
               >
-                <View style={styles.summaryTopRow}>
-                  <Text style={styles.summaryTitle}>Ramadan Summary</Text>
-                  <Ionicons
-                    name="arrow-forward-circle-outline"
-                    size={20}
-                    color={withOpacity(colors.accent, 0.95)}
-                  />
-                </View>
-                <Text style={styles.summaryText}>
-                  Missed fasts: {ramadanSummary?.totalMissed ?? 0}
-                </Text>
-                <Text style={styles.summaryTextSecondary}>
-                  Missed days: {missedDaysLabel}
-                </Text>
-                <Text style={styles.summaryHint}>Tap to review and update</Text>
+                <Ionicons name="today-outline" size={15} color={colors.onAccent} />
+                <Headline color={colors.onAccent} style={styles.backToTodayText}>
+                  Back to Today
+                </Headline>
               </PressableScale>
             </Animated.View>
           )}
 
-          {/* Back to Today */}
-          <Animated.View
-            pointerEvents={isViewingToday ? "none" : "auto"}
-            style={[
-              styles.backToTodayWrap,
-              {
-                height: backToTodayAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 56],
-                }),
-                marginTop: backToTodayAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, spacing.sm],
-                }),
-                marginBottom: backToTodayAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, spacing.sm],
-                }),
-                opacity: backToTodayAnim,
-                transform: [
-                  {
-                    translateY: backToTodayAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [-8, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
+          {showRamadanSummary && (
             <PressableScale
-              disabled={isViewingToday}
-              onPress={goBackToToday}
-              style={styles.backToToday}
+              onPress={handleRamadanSummaryPress}
               accessibilityRole="button"
-              accessibilityLabel="Back to current month"
+              accessibilityLabel="Open first missed Ramadan fast date"
+              style={styles.summaryWrap}
             >
-              <Text style={styles.backToTodayText}>Back to Today</Text>
+              <GlassSurface tier="card" radius={theme.radii.card} style={styles.summaryCard}>
+                <View style={styles.summaryTop}>
+                  <Headline color={colors.accent}>Ramadan Summary</Headline>
+                  <Ionicons name="arrow-forward-circle-outline" size={20} color={withOpacity(colors.accent, 0.95)} />
+                </View>
+                <Body color={colors.white} style={styles.summaryText}>
+                  Missed fasts: {ramadanSummary?.totalMissed ?? 0}
+                </Body>
+                <Caption color={withOpacity(colors.white, 0.85)}>Missed days: {missedDaysLabel}</Caption>
+              </GlassSurface>
             </PressableScale>
-          </Animated.View>
-        </View>
-      </SafeAreaView>
-    </LinearGradient>
+          )}
+
+          {selectedDate ? (
+            <DayDetailPanel
+              date={selectedDate}
+              isToday={selectedIsToday}
+              holiday={selectedHoliday}
+              loading={loading}
+              prayerTimes={prayerTimes}
+              error={error}
+              onRetry={retry}
+              onOpenSettings={openSettings}
+              nextPrayer={nextPrayer}
+              timeLeft={timeLeft}
+              isRamadan={isRamadan}
+              isFastMissed={isFastMissed}
+              onToggleMissedFast={toggleMissedFast}
+            />
+          ) : (
+            <View style={styles.prompt}>
+              <Ionicons name="calendar-outline" size={30} color={withOpacity(colors.accent, 0.6)} />
+              <Body color={withOpacity(colors.white, 0.7)} style={styles.promptText}>
+                Tap any day to see its prayer times &amp; events.
+              </Body>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </Screen>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing, typography } = theme;
-  const isLight = theme.name === "light";
-
+  const { colors, spacing } = theme;
   return StyleSheet.create({
-    screen: { flex: 1 },
-    header: { padding: spacing.lg },
-    eyebrow: {
-      color: withOpacity(colors.accent, 0.92),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-      letterSpacing: 1,
-      textTransform: "uppercase",
-    },
-    title: {
-      color: colors.white,
-      fontFamily: "SFProDisplay-Bold",
-      fontSize: 38,
-      marginTop: spacing.xs,
-      marginBottom: spacing.xs,
-    },
-    titleSmall: { fontSize: 34 },
-    subtitle: {
-      color: withOpacity(colors.white, 0.88),
-      fontFamily: "SFProDisplay-Regular",
-      fontSize: typography.body,
-      marginBottom: spacing.md,
-    },
-    monthNav: {
+    fill: { flex: 1 },
+    header: {
       flexDirection: "row",
+      alignItems: "flex-end",
       justifyContent: "space-between",
-      alignItems: "center",
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.sm,
       marginBottom: spacing.sm,
     },
-    navIconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    navIconButtonDisabled: {
-      opacity: 0.6,
-    },
-    monthLabel: {
-      color: colors.white,
-      fontSize: typography.title,
-      fontFamily: "SFProDisplay-Semibold",
-    },
+    headerLeft: { flexShrink: 1 },
+    eyebrow: { textTransform: "uppercase", letterSpacing: 1 },
+    monthSwitcher: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+    monthChevron: { padding: spacing.xs, minWidth: 32, alignItems: "center" },
+    monthLabel: {},
     weekdayRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingHorizontal: spacing.lg,
-      marginTop: spacing.sm,
-      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.xl,
+      marginBottom: spacing.xs,
     },
-    weekdayText: {
-      color: colors.accent,
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Regular",
-      textAlign: "center",
-    },
-    gridContainer: { flex: 1, justifyContent: "flex-start" },
-    loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
-    gridBody: { flexGrow: 1, justifyContent: "space-evenly" },
+    weekdayText: { textAlign: "center" },
+    gridWrap: { paddingHorizontal: spacing.xl },
+    loadingWrap: { height: 6 * 44, justifyContent: "center", alignItems: "center" },
     weekRow: {
       flexDirection: "row",
       justifyContent: "space-between",
       marginVertical: spacing.xs,
     },
-    dayButton: {
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    dayButtonToday: {
-      backgroundColor: theme.name === "light" ? "#DABA69" : colors.accent,
+    dayButton: { justifyContent: "center", alignItems: "center" },
+    dayToday: {
+      backgroundColor: colors.accent,
       shadowColor: colors.accent,
       shadowOpacity: 0.35,
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 4 },
       elevation: 3,
     },
-    dayButtonHoliday: {
-      backgroundColor:
-        theme.name === "light" ? "#E2CEB1" : colors.primaryBorder,
-      borderColor: theme.name === "light" ? "#DABA69" : colors.accent,
+    daySelected: {
+      borderWidth: 2,
+      borderColor: colors.accent,
+      backgroundColor: withOpacity(colors.accent, 0.14),
+    },
+    dayHoliday: {
       borderWidth: 1.5,
+      borderColor: withOpacity(colors.accent, 0.6),
     },
-    dayText: {
-      color: colors.white,
-      fontFamily: "SFProDisplay-Regular",
-      fontSize: typography.bodyLg,
-    },
-    dayTextSmall: {
-      fontSize: typography.body,
-    },
-    dayTextToday: {
-      color: colors.onAccent,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    dayTextHoliday: {
-      color: colors.accent,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    footer: {
-      paddingHorizontal: spacing.lg,
-    },
-    summaryCard: {
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : withOpacity(colors.black, 0.25),
-      borderRadius: isLight ? 16 : 12,
-      padding: spacing.md + 2,
-      marginBottom: spacing.lg,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, isLight ? 0.35 : 0.3),
-      shadowColor: colors.primaryDark,
-      shadowOpacity: isLight ? 0.22 : 0,
-      shadowRadius: isLight ? 20 : 0,
-      shadowOffset: { width: 0, height: isLight ? 10 : 0 },
-      elevation: isLight ? 4 : 0,
-    },
-    summaryTopRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: spacing.xs + 2,
-    },
-    summaryTitle: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    summaryText: {
-      color: colors.white,
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    summaryTextSecondary: {
-      color: withOpacity(colors.white, 0.88),
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Regular",
-      marginTop: spacing.xs,
-    },
-    summaryHint: {
-      color: withOpacity(colors.accent, 0.92),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
+    dayText: { textAlign: "center" },
+    dayTextSmall: {},
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(colors.white, 0.12),
+      marginHorizontal: spacing.xl,
       marginTop: spacing.sm,
     },
-    backToTodayWrap: {
-      overflow: "hidden",
-    },
+    panelContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
     backToToday: {
       alignSelf: "center",
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : colors.accent,
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.35)
-        : withOpacity(colors.white, 0.15),
-      shadowColor: colors.primaryDark,
-      shadowOpacity: isLight ? 0.22 : 0,
-      shadowRadius: isLight ? 20 : 0,
-      shadowOffset: { width: 0, height: isLight ? 10 : 0 },
-      elevation: isLight ? 4 : 0,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      backgroundColor: colors.accent,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      borderRadius: theme.radii.pill,
+      marginBottom: spacing.lg,
     },
-    backToTodayText: {
-      color: isLight ? colors.accent : colors.onAccent,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Semibold",
-    },
+    backToTodayText: {},
+    summaryWrap: { marginBottom: spacing.lg },
+    summaryCard: { padding: spacing.lg },
+    summaryTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.xs },
+    summaryText: {},
+    prompt: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.huge, gap: spacing.sm },
+    promptText: { textAlign: "center", maxWidth: 240 },
   });
 };
