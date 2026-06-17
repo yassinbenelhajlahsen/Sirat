@@ -254,7 +254,7 @@ export default function Qibla() {
         <View style={styles.statusRow}>
           <GlassSurface tier="row" radius={theme.radii.pill} style={styles.statusPill}>
             <Ionicons name="compass-outline" size={15} color={withOpacity(colors.accent, 0.95)} />
-            <Caption color={withOpacity(colors.white, 0.92)} style={styles.statusPillText}>
+            <Caption color={withOpacity(colors.white, 0.92)}>
               {accuracy != null && accuracy >= 0
                 ? `Accuracy ±${Math.round(accuracy)}°`
                 : "Calibrating compass..."}
@@ -270,7 +270,7 @@ export default function Qibla() {
               size={15}
               color={isAligned ? colors.accentSecondary : withOpacity(colors.accent, 0.95)}
             />
-            <Caption color={colors.white} style={styles.statusPillText}>
+            <Caption color={colors.white}>
               {isAligned ? "Aligned" : "Adjusting"}
             </Caption>
           </GlassSurface>
@@ -369,7 +369,6 @@ const createStyles = (theme: AppTheme) => {
       paddingVertical: spacing.xs + 2,
     },
     statusPillAligned: { borderColor: withOpacity(colors.accent, 0.6) },
-    statusPillText: {},
     compassArea: { flex: 1, alignItems: "center", justifyContent: "center" },
     stateBlock: { alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.lg },
     errorIcon: { marginBottom: spacing.sm },

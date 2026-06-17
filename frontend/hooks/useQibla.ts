@@ -26,6 +26,7 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+
 function norm360(a: number) { const r = a % 360; return r < 0 ? r + 360 : r; }
 function shortestDelta(a: number, b: number) { return ((b - a + 540) % 360) - 180; }
 
