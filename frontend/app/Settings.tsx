@@ -1,8 +1,9 @@
 import { withOpacity, type AppTheme, type ThemeName } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { LinearGradient } from "expo-linear-gradient";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
+  Alert,
   Animated,
   Image,
   ImageStyle,
@@ -25,6 +26,12 @@ import NotificationSettings from "@/components/NotificationSettings";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
 import { useSettingsDropdowns } from "@/hooks/useSettingsDropdowns";
 import { useSettingsPermissions } from "@/hooks/useSettingsPermissions";
+import {
+  alternateIconsSupported,
+  applyIconForTheme,
+  getActiveIconName,
+  iconNameForTheme,
+} from "@/services/appIcon";
 
 export default function Settings() {
   const { theme, themeName, setTheme } = useTheme();
@@ -83,6 +90,30 @@ export default function Settings() {
     ]).start();
 
     await handleLocationToggle(val);
+  };
+
+  // App-icon-per-theme: never auto-swaps (iOS forces a confirmation alert on
+  // every change). Instead an inline option appears when the live Home Screen
+  // icon doesn't match the selected theme, and only an explicit tap applies it.
+  const [iconSupported] = useState(alternateIconsSupported);
+  const [activeIcon, setActiveIcon] = useState<string | null>(getActiveIconName);
+  const [applyingIcon, setApplyingIcon] = useState(false);
+  const iconNeedsMatch =
+    iconSupported && iconNameForTheme(themeName) !== activeIcon;
+
+  const handleMatchIcon = async () => {
+    setApplyingIcon(true);
+    try {
+      await applyIconForTheme(themeName);
+    } catch {
+      Alert.alert(
+        "Couldn't change icon",
+        "The app icon couldn't be updated. Please try again.",
+      );
+    } finally {
+      setActiveIcon(getActiveIconName());
+      setApplyingIcon(false);
+    }
   };
 
   const cityModalColors = useMemo(
@@ -241,6 +272,41 @@ export default function Settings() {
               />
             </Animated.View>
           </View>
+
+          {/* Opt-in: match the Home Screen icon to the selected theme. Shown
+              only when they differ; tapping triggers iOS's one-time alert. */}
+          {iconNeedsMatch ? (
+            <View style={styles.iconMatchSection}>
+              <Pressable
+                onPress={handleMatchIcon}
+                disabled={applyingIcon}
+                accessibilityRole="button"
+                accessibilityLabel="Match app icon to theme"
+                accessibilityHint="Updates the Home Screen app icon to match the selected theme. iOS will ask you to confirm."
+                style={({ pressed }) => [
+                  styles.iconMatchRow,
+                  {
+                    opacity: applyingIcon ? 0.6 : 1,
+                    transform: [{ scale: pressed ? 0.99 : 1 }],
+                  },
+                ]}
+              >
+                <View style={styles.iconMatchTextBlock}>
+                  <Text style={styles.iconMatchTitle}>
+                    Match app icon to theme
+                  </Text>
+                  <Text style={styles.iconMatchSubtitle}>
+                    Update your Home Screen icon to fit this theme. iOS will ask
+                    you to confirm.
+                  </Text>
+                </View>
+                <Text style={styles.iconMatchAction}>
+                  {applyingIcon ? "…" : "Apply"}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View style={styles.sectionHeaderBlock}>
             <Text style={styles.sectionGroupTitle}>Prayer Times</Text>
             <Text style={styles.sectionGroupDescription}>
@@ -499,6 +565,45 @@ const createStyles = (theme: AppTheme) => {
     appearanceDropdownSection: {
       zIndex: 3000,
       elevation: 12,
+    },
+    iconMatchSection: {
+      paddingHorizontal: 20,
+      marginTop: 12,
+      zIndex: 1,
+    },
+    iconMatchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurface, 0.9)
+        : withOpacity(themeColors.primaryDeep, 0.4),
+      borderColor: withOpacity(themeColors.accent, 0.4),
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+    },
+    iconMatchTextBlock: { flex: 1, paddingRight: 12 },
+    iconMatchTitle: {
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 15,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    iconMatchSubtitle: {
+      color: withOpacity(
+        isLight ? themeColors.offWhite : themeColors.white,
+        0.72,
+      ),
+      fontSize: 12,
+      marginTop: 2,
+      fontFamily: "SFProDisplay-Regular",
+      lineHeight: 16,
+    },
+    iconMatchAction: {
+      color: themeColors.accent,
+      fontSize: 15,
+      fontFamily: "SFProDisplay-Bold",
     },
     section: {
       paddingHorizontal: 20,

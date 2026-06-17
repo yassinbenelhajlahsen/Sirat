@@ -44,6 +44,18 @@ export default {
           ],
         },
       ],
+      // Alternate app icons matched to in-app themes. iOS-only by design.
+      // Names are PascalCase to match what setAlternateAppIcon expects.
+      // NOTE: this plugin also adds Android activity-aliases referencing
+      // @mipmap/ic_launcher_dark|light — Android builds would need adaptive
+      // icon assets added here before they will compile.
+      [
+        "expo-alternate-app-icons",
+        [
+          { name: "Dark", ios: "./assets/icons/icon-dark.png" },
+          { name: "Light", ios: "./assets/icons/icon-light.png" },
+        ],
+      ],
     ],
     experiments: {
       typedRoutes: true,
