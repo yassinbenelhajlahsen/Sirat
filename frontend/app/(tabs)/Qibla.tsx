@@ -123,14 +123,14 @@ export default function Qibla() {
     actions?: React.ReactNode;
     iconColor?: string;
   }) => (
-    <View style={styles.banner}>
+    <GlassSurface tier="card" radius={theme.radii.card} style={styles.banner}>
       <Ionicons name={icon} size={20} color={iconColor} />
       <View style={styles.bannerBody}>
-        <Text style={styles.bannerTitle}>{title}</Text>
-        <Text style={styles.bannerText}>{message}</Text>
+        <Headline color={colors.accent}>{title}</Headline>
+        <Body color={withOpacity(colors.white, 0.95)} style={styles.bannerText}>{message}</Body>
         {actions}
       </View>
-    </View>
+    </GlassSurface>
   );
 
   // ----- Top-of-screen gate like Mosques -----
@@ -225,12 +225,12 @@ export default function Qibla() {
               />
             ) : null}
 
-            <View style={styles.infoCard}>
-              <Text style={styles.infoText}>
+            <GlassSurface tier="row" radius={theme.radii.row} style={styles.infoCard}>
+              <Body color={withOpacity(colors.white, 0.9)} style={styles.infoText}>
                 Prayer Times still work without location. You can use a manual
                 city from the Settings tab.
-              </Text>
-            </View>
+              </Body>
+            </GlassSurface>
           </View>
         </View>
       </Screen>
@@ -324,24 +324,12 @@ const createStyles = (theme: AppTheme) => {
     },
     subtitle: { marginTop: spacing.xs },
     banner: {
-      backgroundColor: withOpacity(colors.accent, 0.18),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.35),
-      borderRadius: 14,
       padding: spacing.md,
       flexDirection: "row",
       alignItems: "flex-start",
     },
     bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
-    bannerTitle: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Semibold",
-    },
     bannerText: {
-      color: colors.white,
-      opacity: 0.95,
-      fontSize: typography.body,
       marginTop: spacing.xs,
     },
     row: {
@@ -389,17 +377,10 @@ const createStyles = (theme: AppTheme) => {
     helperText: { marginTop: spacing.md, textAlign: "center" },
     infoCard: {
       marginTop: spacing.md,
-      borderRadius: 14,
       paddingVertical: spacing.sm + 2,
       paddingHorizontal: spacing.md,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.2),
-      backgroundColor: withOpacity(colors.white, 0.05),
     },
     infoText: {
-      color: withOpacity(colors.white, 0.9),
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Regular",
       textAlign: "center",
     },
   });
