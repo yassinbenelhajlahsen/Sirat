@@ -39,6 +39,7 @@ jest.mock("react-native-safe-area-context", () => {
     SafeAreaView: ({ children, ...rest }: { children: React.ReactNode }) => (
       <View {...rest}>{children}</View>
     ),
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   };
 });
 
@@ -49,28 +50,23 @@ jest.mock("expo-location", () => ({
 }));
 
 jest.mock("expo-haptics", () => ({
-  ImpactFeedbackStyle: { Light: "light" },
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
+  NotificationFeedbackType: { Success: "success", Error: "error" },
   impactAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  selectionAsync: jest.fn(async () => {}),
 }));
 
-jest.mock("react-native-reanimated", () => {
-  const { Image } = require("react-native");
+jest.mock("@/components/qibla/CompassDial", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return { __esModule: true, default: (p: object) => <View testID="compass-dial" {...p} /> };
+});
 
-  function useSharedValue(initial: number) {
-    const shared = {
-      value: initial,
-      get: () => shared.value,
-    };
-    return shared;
-  }
-
-  return {
-    __esModule: true,
-    default: { Image },
-    useSharedValue,
-    useAnimatedStyle: (updater: () => object) => updater(),
-    withSpring: (value: number) => value,
-  };
+jest.mock("@/components/ui/Aurora", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return { __esModule: true, default: () => <View testID="aurora" /> };
 });
 
 jest.mock("@/hooks/useQibla", () => jest.fn());
@@ -84,6 +80,7 @@ function primeQibla(overrides?: Partial<ReturnType<typeof useQibla>>) {
     rotation: null,
     heading: null,
     qiblaAngle: null,
+    distanceKm: null,
     accuracy: null,
     error: null,
     isAligned: false,
@@ -217,6 +214,9 @@ describe("screens/Qibla contracts", () => {
   it("renders aligned runtime state and triggers haptic feedback", async () => {
     primeQibla({
       rotation: 1,
+      heading: 10,
+      qiblaAngle: 45,
+      distanceKm: 100,
       accuracy: 2.4,
       isAligned: true,
       error: null,
@@ -228,8 +228,8 @@ describe("screens/Qibla contracts", () => {
       expect(getByText("Accuracy ±2°")).toBeTruthy();
       expect(getByText("Aligned")).toBeTruthy();
     });
-    expect(mockHaptics.impactAsync).toHaveBeenCalledWith(
-      Haptics.ImpactFeedbackStyle.Light,
+    expect(mockHaptics.notificationAsync).toHaveBeenCalledWith(
+      Haptics.NotificationFeedbackType.Success,
     );
   });
 });
