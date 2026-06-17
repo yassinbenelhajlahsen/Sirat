@@ -94,7 +94,7 @@ export default function DayDetailPanel({
             size={16}
             color={isFastMissed ? colors.onAccent : colors.accent}
           />
-          <Headline color={isFastMissed ? colors.onAccent : colors.accent} style={styles.toggleText}>
+          <Headline color={isFastMissed ? colors.onAccent : colors.accent}>
             {isFastMissed ? "Marked as missed fast" : "Mark fast as missed"}
           </Headline>
         </TouchableOpacity>
@@ -125,7 +125,7 @@ export default function DayDetailPanel({
               accessibilityLabel="Retry loading prayer times"
               style={styles.primaryBtn}
             >
-              <Body color={colors.onAccent} style={styles.primaryBtnText}>Try again</Body>
+              <Headline color={colors.onAccent}>Try again</Headline>
             </TouchableOpacity>
             {error.code === "PERMISSION" ? (
               <TouchableOpacity
@@ -134,7 +134,7 @@ export default function DayDetailPanel({
                 accessibilityLabel="Open app settings"
                 style={styles.secondaryBtn}
               >
-                <Body color={colors.accent} style={styles.primaryBtnText}>Open Settings</Body>
+                <Headline color={colors.accent}>Open Settings</Headline>
               </TouchableOpacity>
             ) : null}
           </View>
@@ -150,7 +150,7 @@ export default function DayDetailPanel({
             accessibilityLabel="Retry loading prayer times"
             style={[styles.primaryBtn, styles.emptyBtn]}
           >
-            <Body color={colors.onAccent} style={styles.primaryBtnText}>Try again</Body>
+            <Headline color={colors.onAccent}>Try again</Headline>
           </TouchableOpacity>
         </GlassSurface>
       ) : (
@@ -199,7 +199,6 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: spacing.md,
     },
     toggleOn: { backgroundColor: colors.accent, borderColor: colors.accent },
-    toggleText: {},
     nextLine: { marginBottom: spacing.sm },
     stateCard: { padding: spacing.lg },
     stateHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
@@ -219,7 +218,6 @@ const createStyles = (theme: AppTheme) => {
       borderWidth: 1,
       borderColor: colors.accent,
     },
-    primaryBtnText: { fontFamily: "SFProDisplay-Semibold" },
     emptyText: { textAlign: "center" },
     emptyBtn: { alignSelf: "center", marginTop: spacing.sm + 2 },
   });
