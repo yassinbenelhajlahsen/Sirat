@@ -84,11 +84,6 @@ jest.mock("@/components/UpdateModal", () => "UpdateModal");
 jest.mock("@/components/quran/QuranMiniPlayerPortal", () => ({
   QuranMiniPlayerPortal: () => null,
 }));
-jest.mock("../../components/PrayerTimesList", () => {
-  const React = require("react");
-  const { View } = require("react-native");
-  return () => React.createElement(View);
-});
 jest.mock("../../components/PressableScale", () => {
   const React = require("react");
   const { Pressable } = require("react-native");

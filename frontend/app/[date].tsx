@@ -33,6 +33,9 @@ export default function CalendarDetail() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
+  const minDate = new Date(new Date().getFullYear(), 0, 1);
+  const maxDate = new Date(new Date().getFullYear() + 1, 11, 31);
+
   const {
     date,
     month,
@@ -89,6 +92,10 @@ export default function CalendarDetail() {
     if (!current) return;
     const next = new Date(current);
     next.setDate(next.getDate() + deltaDays);
+    if (next < minDate || next > maxDate) {
+      Animated.timing(slide, { toValue: 0, duration: 160, useNativeDriver: true }).start();
+      return;
+    }
     const dir = deltaDays > 0 ? -1 : 1;
     Animated.timing(slide, { toValue: dir * width, duration: 130, useNativeDriver: true }).start(() => {
       setSelectedDate(next);

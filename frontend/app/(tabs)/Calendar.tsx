@@ -210,7 +210,7 @@ export default function CalendarScreen() {
                 color={canGoPrev ? colors.accent : withOpacity(colors.accent, 0.3)}
               />
             </PressableScale>
-            <Headline style={styles.monthLabel}>
+            <Headline>
               {monthName.slice(0, 3)} {viewYear}
             </Headline>
             <PressableScale
@@ -295,7 +295,7 @@ export default function CalendarScreen() {
                             ? colors.accent
                             : colors.white
                         }
-                        style={[styles.dayText, isSmall ? styles.dayTextSmall : null]}
+                        style={styles.dayText}
                       >
                         {day > 0 ? String(day) : ""}
                       </Body>
@@ -328,7 +328,7 @@ export default function CalendarScreen() {
                 style={styles.backToToday}
               >
                 <Ionicons name="today-outline" size={15} color={colors.onAccent} />
-                <Headline color={colors.onAccent} style={styles.backToTodayText}>
+                <Headline color={colors.onAccent}>
                   Back to Today
                 </Headline>
               </PressableScale>
@@ -347,7 +347,7 @@ export default function CalendarScreen() {
                   <Headline color={colors.accent}>Ramadan Summary</Headline>
                   <Ionicons name="arrow-forward-circle-outline" size={20} color={withOpacity(colors.accent, 0.95)} />
                 </View>
-                <Body color={colors.white} style={styles.summaryText}>
+                <Body color={colors.white}>
                   Missed fasts: {ramadanSummary?.totalMissed ?? 0}
                 </Body>
                 <Caption color={withOpacity(colors.white, 0.85)}>Missed days: {missedDaysLabel}</Caption>
@@ -401,7 +401,6 @@ const createStyles = (theme: AppTheme) => {
     eyebrow: { textTransform: "uppercase", letterSpacing: 1 },
     monthSwitcher: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
     monthChevron: { padding: spacing.xs, minWidth: 32, alignItems: "center" },
-    monthLabel: {},
     weekdayRow: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -435,7 +434,6 @@ const createStyles = (theme: AppTheme) => {
       borderColor: withOpacity(colors.accent, 0.6),
     },
     dayText: { textAlign: "center" },
-    dayTextSmall: {},
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: withOpacity(colors.white, 0.12),
@@ -454,11 +452,9 @@ const createStyles = (theme: AppTheme) => {
       borderRadius: theme.radii.pill,
       marginBottom: spacing.lg,
     },
-    backToTodayText: {},
     summaryWrap: { marginBottom: spacing.lg },
     summaryCard: { padding: spacing.lg },
     summaryTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.xs },
-    summaryText: {},
     prompt: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.huge, gap: spacing.sm },
     promptText: { textAlign: "center", maxWidth: 240 },
   });

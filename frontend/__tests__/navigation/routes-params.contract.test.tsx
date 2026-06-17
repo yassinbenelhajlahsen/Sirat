@@ -138,12 +138,6 @@ jest.mock("../../services/getNearbyMosques", () => ({
   getNearbyMosques: (...args: any[]) => mockGetNearbyMosques(...args),
 }));
 
-jest.mock("../../components/PrayerTimesList", () => {
-  const React = require("react");
-  const { View } = require("react-native");
-  return () => React.createElement(View);
-});
-
 import CalendarScreen from "@/app/(tabs)/Calendar";
 import MosqueScreen from "@/app/(tabs)/Mosques";
 import CalendarDetail from "@/app/[date]";
