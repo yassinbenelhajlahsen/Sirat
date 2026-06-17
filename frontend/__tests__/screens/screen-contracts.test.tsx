@@ -234,11 +234,11 @@ jest.mock("@shopify/flash-list", () => {
   return { FlashList };
 });
 
-jest.mock("@/components/PrayerTimesList", () => {
+jest.mock("@/components/PrayerArc", () => {
   const React = require("react");
   const { Text } = require("react-native");
 
-  return function PrayerTimesListMock({
+  return function PrayerArcMock({
     loading,
     prayerTimes,
   }: {
@@ -246,7 +246,7 @@ jest.mock("@/components/PrayerTimesList", () => {
     prayerTimes: unknown[];
   }) {
     return (
-      <Text testID="prayer-times-list">
+      <Text testID="prayer-arc">
         loading:{String(loading)} count:{prayerTimes.length}
       </Text>
     );
@@ -746,7 +746,7 @@ describe("Screen contracts", () => {
       expect(getByText("Chicago, US")).toBeTruthy();
       expect(getByText("Dhuhr")).toBeTruthy();
       expect(getByText("DuaCardMock")).toBeTruthy();
-      expect(getByTestId("prayer-times-list")).toHaveTextContent("loading:false count:1");
+      expect(getByTestId("prayer-arc")).toHaveTextContent("loading:false count:1");
       expect(getByLabelText("Open settings")).toBeTruthy();
     });
 

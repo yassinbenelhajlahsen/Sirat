@@ -13,7 +13,7 @@ import { BREATH_HALF_CYCLE } from "@/constants/motion";
 import { getGreeting } from "@/utils/greeting";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
-import PrayerTimesList from "../../components/PrayerTimesList";
+import PrayerArc from "@/components/PrayerArc";
 import PressableScale from "../../components/PressableScale";
 import { useDuaInteraction } from "../../hooks/useDuaInteraction";
 import { useHomePrayerTimes } from "../../hooks/useHomePrayerTimes";
@@ -157,10 +157,10 @@ export default function Home() {
           </View>
         )}
 
-        {/* Prayer list (glass container) */}
-        <GlassSurface tier="card" radius={theme.radii.cardLg} style={styles.listCard}>
-          <PrayerTimesList loading={loading} prayerTimes={prayerTimes} />
-        </GlassSurface>
+        {/* Prayer arc (owns its own glass card) */}
+        <View style={styles.arcSlot}>
+          <PrayerArc loading={loading} prayerTimes={prayerTimes} nextPrayer={nextPrayer} />
+        </View>
 
         {/* Dua section (logic unchanged) */}
         <View style={styles.duaSection} onLayout={onDuaSectionLayout}>
@@ -197,7 +197,7 @@ const createStyles = (theme: AppTheme) => {
       paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignItems: "center", justifyContent: "center",
     },
     heroBadgeText: { fontFamily: "SFProDisplay-Bold" },
-    listCard: { marginTop: spacing.lg, padding: spacing.lg, minHeight: 320, justifyContent: "center" },
+    arcSlot: { marginTop: spacing.lg },
     duaSection: { position: "relative", marginTop: spacing.lg },
   });
 };
