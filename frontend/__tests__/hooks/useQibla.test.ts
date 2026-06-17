@@ -138,4 +138,28 @@ describe("hooks/useQibla", () => {
 
     expect(mockHeadingRemove).toHaveBeenCalledTimes(1);
   });
+
+  it("computes distanceKm to the Kaaba on the happy path", async () => {
+    const { result } = renderHook(() => useQibla());
+
+    await waitFor(() => {
+      expect(result.current.distanceKm).not.toBeNull();
+    });
+
+    // New York City → Makkah great-circle ≈ 10,300 km
+    expect(result.current.distanceKm as number).toBeGreaterThan(10000);
+    expect(result.current.distanceKm as number).toBeLessThan(10600);
+  });
+
+  it("leaves distanceKm null when permission is denied", async () => {
+    mockRequestForegroundPermissionsAsync.mockResolvedValue({ status: "denied" });
+
+    const { result } = renderHook(() => useQibla());
+
+    await waitFor(() => {
+      expect(result.current.error).toBe("Location permission denied.");
+    });
+
+    expect(result.current.distanceKm).toBeNull();
+  });
 });
