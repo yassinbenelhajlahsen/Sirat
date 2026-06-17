@@ -1,120 +1,47 @@
 import Aurora from "@/components/ui/Aurora";
+import GlassSurface from "@/components/ui/GlassSurface";
+import MosqueMarker from "@/components/mosques/MosqueMarker";
+import MosqueSheet from "@/components/mosques/MosqueSheet";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { handleTabBarScroll } from "@/utils/tabBarChrome";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { useHaptics } from "@/hooks/useHaptics";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
-  FlatList,
-  InteractionManager,
   Linking,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Callout, Marker } from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import PressableScale from "../../components/PressableScale";
 import {
   getCachedMosques,
   getNearbyMosques,
   Mosque,
 } from "../../services/getNearbyMosques";
 
-type GeneratedStyles = ReturnType<typeof createStyles>;
-
-const ShimmerCard = ({ styles }: { styles: GeneratedStyles }) => {
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: 1,
-        duration: 1200,
-        useNativeDriver: true,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [shimmerAnim]);
-
-  const opacity = shimmerAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0.3, 0.6, 0.3],
-  });
-
-  return (
-    <View style={styles.animatedCard}>
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Animated.View style={[styles.shimmerIcon, { opacity }]} />
-          <Animated.View style={[styles.shimmerTitle, { opacity }]} />
-        </View>
-        <Animated.View style={[styles.shimmerAddress, { opacity }]} />
-      </View>
-    </View>
-  );
-};
-
-const SkeletonList = ({ styles }: { styles: GeneratedStyles }) => (
-  <View style={styles.list}>
-    {[0, 1, 2].map((i) => (
-      <ShimmerCard key={i} styles={styles} />
-    ))}
-  </View>
-);
-
 type Perm = "undetermined" | "denied" | "granted";
-
-function distanceKm(
-  fromLat: number,
-  fromLng: number,
-  toLat: number,
-  toLng: number,
-) {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const earthRadiusKm = 6371;
-  const dLat = toRad(toLat - fromLat);
-  const dLng = toRad(toLng - fromLng);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(fromLat)) *
-      Math.cos(toRad(toLat)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return earthRadiusKm * c;
-}
-
-function formatDistanceLabel(km: number) {
-  if (!Number.isFinite(km)) return "";
-  const miles = km * 0.621371;
-  if (miles < 0.1) return `${Math.round(km * 3280.84)} ft away`;
-  if (miles < 10) return `${miles.toFixed(1)} mi away`;
-  return `${Math.round(miles)} mi away`;
-}
 
 export default function MosqueScreen() {
   const { theme } = useTheme();
-  const { colors, spacing } = theme;
+  const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const haptic = useHaptics();
   const customMapStyle = useMemo(() => {
     if (theme.name === "light") return undefined;
     return createCustomMapStyle(colors);
   }, [theme.name, colors]);
 
-  const router = useRouter();
+  const mapRef = useRef<MapView>(null);
 
   const [permissionStatus, setPermissionStatus] =
     useState<Perm>("undetermined");
@@ -126,7 +53,13 @@ export default function MosqueScreen() {
   const [mosques, setMosques] = useState<Mosque[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchingFresh, setFetchingFresh] = useState(false);
-  const [openingMap, setOpeningMap] = useState(false);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [region, setRegion] = useState<Region | null>(null);
+  const [showSearchArea, setShowSearchArea] = useState(false);
+
+  // Rests above the floating glass tab bar.
+  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
 
   const checkStatus = async () => {
     const sOn = await Location.hasServicesEnabledAsync();
@@ -235,14 +168,47 @@ export default function MosqueScreen() {
     }
   };
 
-  const openFullMap = () => {
-    if (openingMap) return;
-    setOpeningMap(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    InteractionManager.runAfterInteractions(() => {
-      router.push("../MosqueMap");
-      setTimeout(() => setOpeningMap(false), 450);
-    });
+  const onSelectMosque = (m: Mosque) => {
+    haptic("light");
+    setSelectedId(m.id);
+    mapRef.current?.animateToRegion(
+      {
+        latitude: m.lat,
+        longitude: m.lng,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      },
+      350,
+    );
+  };
+
+  const handleSearchThisArea = async () => {
+    if (!region) return;
+    setShowSearchArea(false);
+    setFetchingFresh(true);
+    try {
+      const fresh = await getNearbyMosques(region.latitude, region.longitude);
+      setMosques(fresh);
+    } catch (e) {
+      console.error("Mosque fetch error:", e);
+      Alert.alert("Error", "Failed to load nearby mosques.");
+    } finally {
+      setFetchingFresh(false);
+    }
+  };
+
+  const recenter = () => {
+    if (!location) return;
+    haptic("light");
+    mapRef.current?.animateToRegion(
+      {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      },
+      350,
+    );
   };
 
   const needLocationGate = useMemo(() => {
@@ -291,285 +257,205 @@ export default function MosqueScreen() {
         <Aurora />
 
         <SafeAreaView style={styles.safeArea}>
-          <View style={styles.container}>
-            <View style={styles.headerSection}>
-              <Text style={styles.eyebrow}>Explore</Text>
-              <Text style={styles.title}>Nearby Mosques</Text>
-              <Text style={styles.subtitle}>
-                Enable location to discover masajid around you.
-              </Text>
-            </View>
-            <View style={styles.gateContent}>
-              {servicesOff ? (
-                <InfoBanner
-                  icon="location"
-                  title="Location Services Off"
-                  message="Location is required to show nearby mosques and center the map."
-                  actions={
-                    <View style={styles.row}>
+          <View style={styles.gateContainer}>
+            <GlassSurface tier="card" style={styles.gateCard}>
+              <View style={styles.headerSection}>
+                <Text style={styles.eyebrow}>Explore</Text>
+                <Text style={styles.title}>Nearby Mosques</Text>
+                <Text style={styles.subtitle}>
+                  Enable location to discover masajid around you.
+                </Text>
+              </View>
+              <View style={styles.gateContent}>
+                {servicesOff ? (
+                  <InfoBanner
+                    icon="location"
+                    title="Location Services Off"
+                    message="Location is required to show nearby mosques and center the map."
+                    actions={
+                      <View style={styles.row}>
+                        <TouchableOpacity
+                          style={styles.ctaPrimary}
+                          onPress={openLocationServicesHelp}
+                          accessibilityRole="button"
+                          accessibilityLabel="How to turn on location services"
+                        >
+                          <Text style={styles.ctaPrimaryText}>
+                            How to turn on
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.ctaSecondary}
+                          onPress={requestPermissionAndLoad}
+                          accessibilityRole="button"
+                          accessibilityLabel="Retry location setup"
+                        >
+                          <Text style={styles.ctaSecondaryText}>
+                            I turned it on
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    }
+                  />
+                ) : denied ? (
+                  <InfoBanner
+                    icon="location-outline"
+                    iconColor={colors.accent}
+                    title="Allow Location Access"
+                    message="Grant Sirat access to your location for accurate nearby mosque results."
+                    actions={
+                      <View style={styles.row}>
+                        <TouchableOpacity
+                          style={styles.ctaPrimary}
+                          onPress={openDeviceSettings}
+                          accessibilityRole="button"
+                          accessibilityLabel="Open device settings"
+                        >
+                          <Text style={styles.ctaPrimaryText}>
+                            Open Settings
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.ctaSecondary}
+                          onPress={requestPermissionAndLoad}
+                          accessibilityRole="button"
+                          accessibilityLabel="Retry location permission"
+                        >
+                          <Text style={styles.ctaSecondaryText}>Try again</Text>
+                        </TouchableOpacity>
+                      </View>
+                    }
+                  />
+                ) : undetermined ? (
+                  <InfoBanner
+                    icon="navigate-outline"
+                    title="We need your location"
+                    message="Tap enable to find mosques near you. You can disable anytime in Settings."
+                    actions={
                       <TouchableOpacity
                         style={styles.ctaPrimary}
-                        onPress={openLocationServicesHelp}
+                        onPress={requestPermissionAndLoad}
                         accessibilityRole="button"
-                        accessibilityLabel="How to turn on location services"
+                        accessibilityLabel="Enable location"
                       >
                         <Text style={styles.ctaPrimaryText}>
-                          How to turn on
+                          Enable Location
                         </Text>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.ctaSecondary}
-                        onPress={requestPermissionAndLoad}
-                        accessibilityRole="button"
-                        accessibilityLabel="Retry location setup"
-                      >
-                        <Text style={styles.ctaSecondaryText}>
-                          I turned it on
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  }
-                />
-              ) : denied ? (
-                <InfoBanner
-                  icon="location-outline"
-                  iconColor={colors.accent}
-                  title="Allow Location Access"
-                  message="Grant Sirat access to your location for accurate nearby mosque results."
-                  actions={
-                    <View style={styles.row}>
-                      <TouchableOpacity
-                        style={styles.ctaPrimary}
-                        onPress={openDeviceSettings}
-                        accessibilityRole="button"
-                        accessibilityLabel="Open device settings"
-                      >
-                        <Text style={styles.ctaPrimaryText}>Open Settings</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.ctaSecondary}
-                        onPress={requestPermissionAndLoad}
-                        accessibilityRole="button"
-                        accessibilityLabel="Retry location permission"
-                      >
-                        <Text style={styles.ctaSecondaryText}>Try again</Text>
-                      </TouchableOpacity>
-                    </View>
-                  }
-                />
-              ) : undetermined ? (
-                <InfoBanner
-                  icon="navigate-outline"
-                  title="We need your location"
-                  message="Tap enable to find mosques near you. You can disable anytime in Settings."
-                  actions={
-                    <TouchableOpacity
-                      style={styles.ctaPrimary}
-                      onPress={requestPermissionAndLoad}
-                      accessibilityRole="button"
-                      accessibilityLabel="Enable location"
-                    >
-                      <Text style={styles.ctaPrimaryText}>Enable Location</Text>
-                    </TouchableOpacity>
-                  }
-                />
-              ) : null}
-            </View>
+                    }
+                  />
+                ) : null}
+              </View>
+            </GlassSurface>
           </View>
         </SafeAreaView>
       </LinearGradient>
     );
   }
 
-  const renderItem = ({ item }: { item: Mosque }) => {
-    const distanceLabel = location
-      ? formatDistanceLabel(
-          distanceKm(location.latitude, location.longitude, item.lat, item.lng),
-        )
-      : null;
-
-    return (
-      <PressableScale
-        onPress={() => openDirections(item.lat, item.lng)}
-        style={styles.card}
-        accessibilityRole="button"
-        accessibilityLabel={`Open directions to ${item.name}`}
-        accessibilityHint="Opens your maps app"
-      >
-        <View style={styles.cardHeader}>
-          <FontAwesome5 name="mosque" size={22} color={colors.accent} solid />
-          <Text style={styles.name}>{item.name}</Text>
-        </View>
-        <Text style={styles.address}>{item.address}</Text>
-        <View style={styles.cardMetaRow}>
-          {distanceLabel ? (
-            <View style={styles.distancePill}>
-              <Ionicons
-                name="walk-outline"
-                size={14}
-                color={withOpacity(colors.accent, 0.95)}
-              />
-              <Text style={styles.distancePillText}>{distanceLabel}</Text>
-            </View>
-          ) : (
-            <View />
-          )}
-          <Text style={styles.cardHint}>Tap for directions</Text>
-        </View>
-      </PressableScale>
-    );
-  };
-
   const emptyNearby =
     !fetchingFresh && (mosques == null || mosques.length === 0);
-  const topMosques = mosques.slice(0, 3);
-  const previewMosques = mosques.slice(0, 12);
+
+  const initialRegion: Region | undefined = location
+    ? {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }
+    : undefined;
 
   return (
-    <LinearGradient
-      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.gradient}
-    >
-      <Aurora />
-      <View style={styles.safeArea}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentInsetAdjustmentBehavior="never"
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingTop: insets.top, paddingBottom: insets.bottom + spacing.xl * 2 },
-          ]}
-          onScroll={handleTabBarScroll}
-          scrollEventThrottle={16}
+    <View style={styles.screen}>
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFill}
+        customMapStyle={customMapStyle}
+        userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
+        showsUserLocation
+        initialRegion={initialRegion}
+        onRegionChangeComplete={(r) => {
+          setRegion(r);
+          setShowSearchArea(true);
+        }}
+      >
+        {mosques.slice(0, 10).map((m) => (
+          <MosqueMarker
+            key={m.id}
+            mosque={m}
+            selected={m.id === selectedId}
+            onPress={() => onSelectMosque(m)}
+          />
+        ))}
+      </MapView>
+
+      {showSearchArea && (
+        <View
+          style={[styles.searchAreaWrap, { top: insets.top + 12 }]}
+          pointerEvents="box-none"
         >
-          <View style={styles.container}>
-            <View style={styles.headerSection}>
-              <Text style={styles.eyebrow}>Explore</Text>
-              <Text style={styles.title}>Nearby Mosques</Text>
-              <Text style={styles.subtitle}>
-                Find a masjid near you and open directions in one tap.
-              </Text>
-            </View>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleSearchThisArea}
+            accessibilityRole="button"
+            accessibilityLabel="Search this area"
+          >
+            <GlassSurface
+              tier="chrome"
+              radius={999}
+              style={styles.searchAreaPill}
+            >
+              <Ionicons name="search" size={16} color={colors.white} />
+              <Text style={styles.searchAreaText}>Search this area</Text>
+            </GlassSurface>
+          </TouchableOpacity>
+        </View>
+      )}
 
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.header}>Nearest</Text>
-            </View>
-            {loading && mosques.length === 0 ? (
-              <SkeletonList styles={styles} />
-            ) : emptyNearby ? (
-              <View style={styles.emptyCard}>
-                <View style={styles.emptyRow}>
-                  <Ionicons name="search" size={18} color={colors.accent} />
-                  <Text style={styles.emptyTextFill}>
-                    No mosques found near your current location.
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <FlatList
-                data={topMosques}
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
-                showsVerticalScrollIndicator={false}
-                scrollEnabled={false}
-                style={styles.list}
-                contentContainerStyle={styles.listContent}
-              />
-            )}
+      {emptyNearby && (
+        <View
+          style={[styles.emptyOverlayWrap, { top: insets.top + 64 }]}
+          pointerEvents="box-none"
+        >
+          <GlassSurface tier="card" style={styles.emptyCard}>
+            <Ionicons name="search" size={18} color={colors.accent} />
+            <Text style={styles.emptyText}>
+              No mosques found near your current location.
+            </Text>
+          </GlassSurface>
+        </View>
+      )}
 
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.header}>Map Preview</Text>
-            </View>
-            {!location ? (
-              <Animated.View
-                style={[
-                  styles.mapContainer,
-                  {
-                    backgroundColor: withOpacity(colors.accent, 0.1),
-                    opacity: 0.5,
-                  },
-                ]}
-              />
-            ) : (
-              <TouchableOpacity
-                style={styles.mapContainer}
-                activeOpacity={0.94}
-                disabled={openingMap}
-                onPress={openFullMap}
-                accessibilityRole="button"
-                accessibilityLabel="Open full mosque map"
-              >
-                <MapView
-                  pointerEvents="none"
-                  style={StyleSheet.absoluteFillObject}
-                  initialRegion={{
-                    latitude: location!.latitude,
-                    longitude: location!.longitude,
-                    latitudeDelta: 0.02,
-                    longitudeDelta: 0.02,
-                  }}
-                  showsUserLocation
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                  rotateEnabled={false}
-                  pitchEnabled={false}
-                  customMapStyle={customMapStyle}
-                  userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
-                >
-                  {previewMosques.map((m) => (
-                    <Marker
-                      key={m.id}
-                      coordinate={{ latitude: m.lat, longitude: m.lng }}
-                      tracksViewChanges={false}
-                    >
-                      <View style={styles.pinContainer}>
-                        <FontAwesome5
-                          name="mosque"
-                          size={18}
-                          color={colors.primaryMuted}
-                        />
-                      </View>
+      {(loading || fetchingFresh) && (
+        <View
+          style={[styles.spinnerOverlay, { top: insets.top + 12 }]}
+          pointerEvents="none"
+        >
+          <ActivityIndicator size="small" color={colors.accent} />
+        </View>
+      )}
 
-                      <Callout tooltip>
-                        <View style={styles.callout}>
-                          <Text style={styles.calloutTitle}>{m.name}</Text>
-                          <Text style={styles.calloutAddress}>{m.address}</Text>
-                          <TouchableOpacity
-                            style={styles.directionButton}
-                            onPress={() => openDirections(m.lat, m.lng)}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Directions to ${m.name}`}
-                          >
-                            <Ionicons
-                              name="navigate"
-                              size={14}
-                              color={colors.onAccent}
-                            />
-                            <Text style={styles.directionText}>Directions</Text>
-                          </TouchableOpacity>
-                        </View>
-                      </Callout>
-                    </Marker>
-                  ))}
-                </MapView>
-                {fetchingFresh && (
-                  <View style={styles.mapSpinner}>
-                    <ActivityIndicator size="small" color={colors.accent} />
-                  </View>
-                )}
-                {openingMap && (
-                  <View style={styles.mapOpeningOverlay}>
-                    <ActivityIndicator size="small" color={colors.accent} />
-                  </View>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-        </ScrollView>
-      </View>
-    </LinearGradient>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={recenter}
+        accessibilityRole="button"
+        accessibilityLabel="Recenter map on your location"
+        style={[styles.recenterWrap, { bottom: tabBarClearance + 220 }]}
+      >
+        <GlassSurface tier="chrome" radius={999} style={styles.recenterButton}>
+          <Ionicons name="locate" size={20} color={colors.white} />
+        </GlassSurface>
+      </TouchableOpacity>
+
+      <MosqueSheet
+        mosques={mosques}
+        userLoc={location}
+        selectedId={selectedId}
+        onSelect={onSelectMosque}
+        onDirections={(m) => openDirections(m.lat, m.lng)}
+        bottomInset={tabBarClearance}
+      />
+    </View>
   );
 }
 
@@ -585,10 +471,15 @@ const createStyles = (theme: AppTheme) => {
   return StyleSheet.create({
     gradient: { flex: 1 },
     safeArea: { flex: 1, backgroundColor: "transparent" },
-    scrollContent: {
-      paddingBottom: spacing.xl + spacing.xl,
+    screen: { flex: 1, backgroundColor: colors.primary },
+    gateContainer: {
+      flex: 1,
+      padding: spacing.xl,
+      justifyContent: "center",
     },
-    container: { flex: 1, padding: spacing.xl },
+    gateCard: {
+      padding: spacing.xl,
+    },
     headerSection: {
       marginTop: spacing.xs,
       marginBottom: spacing.md,
@@ -616,15 +507,6 @@ const createStyles = (theme: AppTheme) => {
       lineHeight: 20,
       fontFamily: "SFProDisplay-Regular",
     },
-    header: {
-      color: colors.accent,
-      fontSize: typography.subtitle,
-      fontFamily: "SFProDisplay-Bold",
-      marginBottom: spacing.sm,
-      textShadowColor: withOpacity(colors.black, 0.3),
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
-    },
     banner: {
       backgroundColor: withOpacity(colors.accent, 0.18),
       borderWidth: 1,
@@ -634,7 +516,7 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "flex-start",
     },
-    gateContent: { flex: 1, marginTop: spacing.md },
+    gateContent: { marginTop: spacing.md },
     bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
     bannerTitle: {
       color: colors.accent,
@@ -670,237 +552,59 @@ const createStyles = (theme: AppTheme) => {
       alignSelf: "flex-start",
     },
     ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
-    animatedCard: { marginBottom: spacing.lg },
-    sectionHeaderRow: {
-      marginTop: spacing.sm,
-      marginBottom: spacing.sm,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    inlineAction: {
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.4),
-      borderRadius: 10,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.xs + 2,
-    },
-    inlineActionText: {
-      color: colors.accent,
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    card: {
-      backgroundColor: colors.primarySurfaceAlt,
-      borderRadius: 18,
-      paddingVertical: spacing.lg,
-      paddingHorizontal: spacing.xl,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.25),
-      shadowColor: colors.black,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 6,
-      elevation: 6,
-      marginBottom: spacing.lg,
-    },
-    cardHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.sm + 2,
-      marginBottom: spacing.sm - 2,
-    },
-    name: {
-      color: colors.white,
-      fontFamily: "SFProDisplay-Semibold",
-      fontSize: 19,
-      flexShrink: 1,
-      textShadowColor: withOpacity(colors.black, 0.25),
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
-    },
-    address: {
-      color: colors.white,
-      fontFamily: "SFProDisplay-Regular",
-      fontSize: typography.body + 1,
-      opacity: 0.85,
-      marginBottom: spacing.xs,
-      alignItems: "center",
-    },
-    cardMetaRow: {
-      marginTop: spacing.xs,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    distancePill: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.xs,
-      backgroundColor:
-        theme.name === "light"
-          ? withOpacity(colors.primarySurface, 0.65)
-          : withOpacity(colors.white, 0.08),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.25),
-      borderRadius: 999,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.xs,
-    },
-    distancePillText: {
-      color: withOpacity(colors.accent, 0.95),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    cardHint: {
-      color: withOpacity(colors.white, 0.7),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Regular",
-    },
-    mapContainer: {
-      height: 240,
-      borderRadius: 16,
-      overflow: "hidden",
-      marginTop: spacing.sm - 2,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.25),
-      shadowColor: colors.black,
-      shadowOpacity: 0.35,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 5 },
-      elevation: 8,
-      position: "relative",
-    },
-    mapHint: {
+    searchAreaWrap: {
       position: "absolute",
-      bottom: spacing.sm + 2,
-      left: spacing.sm + 2,
-      right: spacing.sm + 2,
-      borderRadius: 10,
-      backgroundColor: withOpacity(colors.black, 0.35),
-      paddingVertical: spacing.xs + 2,
-      paddingHorizontal: spacing.sm + 2,
+      left: 0,
+      right: 0,
       alignItems: "center",
     },
-    mapHintText: {
-      color: colors.white,
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    mapSpinner: {
-      position: "absolute",
-      right: spacing.sm + 2,
-      top: spacing.sm + 2,
-      backgroundColor: withOpacity(colors.black, 0.35),
-      borderRadius: 12,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.sm - 2,
-    },
-    mapOpeningOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: withOpacity(colors.black, 0.18),
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    pinContainer: {
-      backgroundColor: colors.accent,
-      borderRadius: 30,
-      padding: 5,
-      borderWidth: 2,
-      borderColor: withOpacity(colors.primaryMuted, 0.9),
-      shadowColor: colors.black,
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 2 },
-    },
-    callout: {
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      padding: spacing.sm + 2,
-      width: 200,
-      borderColor: colors.accent,
-      borderWidth: 1,
-      shadowColor: colors.black,
-      shadowOpacity: 0.4,
-      shadowRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    calloutTitle: {
-      color: colors.accent,
-      fontFamily: "SFProDisplay-Bold",
-      fontSize: 16,
-      marginBottom: spacing.xs,
-      textAlign: "center",
-    },
-    calloutAddress: {
-      color: colors.white,
-      fontFamily: "SFProDisplay-Regular",
-      fontSize: 13,
-      opacity: 0.9,
-      marginBottom: spacing.sm,
-      textAlign: "center",
-    },
-    directionButton: {
+    searchAreaPill: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: colors.accent,
-      borderRadius: 8,
-      paddingVertical: spacing.sm - 3,
-      paddingHorizontal: spacing.sm + 2,
-      justifyContent: "center",
+      gap: spacing.xs + 2,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 2,
     },
-    directionText: {
-      color: colors.onAccent,
-      fontWeight: "600",
-      marginLeft: spacing.sm - 3,
-      fontSize: 13,
-      textAlign: "center",
+    searchAreaText: {
+      color: colors.white,
+      fontSize: typography.body,
+      fontFamily: "SFProDisplay-Semibold",
+    },
+    emptyOverlayWrap: {
+      position: "absolute",
+      left: spacing.xl,
+      right: spacing.xl,
+      alignItems: "center",
     },
     emptyCard: {
-      backgroundColor: withOpacity(colors.white, 0.05),
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.25),
-      padding: spacing.lg - 2,
-      gap: 6,
-      marginBottom: spacing.md,
-    },
-    emptyRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 6,
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
     },
-    emptyTextFill: {
+    emptyText: {
       color: colors.white,
       fontSize: 15,
-      marginLeft: 10,
-      flex: 1,
+      flexShrink: 1,
     },
-    list: {
-      flexGrow: 0,
+    spinnerOverlay: {
+      position: "absolute",
+      right: spacing.lg,
+      backgroundColor: withOpacity(colors.black, 0.35),
+      borderRadius: 14,
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: spacing.sm,
     },
-    listContent: {
-      paddingBottom: 8,
+    recenterWrap: {
+      position: "absolute",
+      right: spacing.lg,
     },
-    shimmerIcon: {
-      width: 22,
-      height: 22,
-      borderRadius: 6,
-      backgroundColor: withOpacity(colors.accent, 0.25),
-    },
-    shimmerTitle: {
-      height: 18,
-      borderRadius: 8,
-      backgroundColor: withOpacity(colors.accent, 0.25),
-      flex: 1,
-    },
-    shimmerAddress: {
-      height: 14,
-      borderRadius: 6,
-      backgroundColor: withOpacity(colors.accent, 0.15),
-      width: "70%",
-      marginTop: 2,
+    recenterButton: {
+      width: 48,
+      height: 48,
+      alignItems: "center",
+      justifyContent: "center",
     },
   });
 };
