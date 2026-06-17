@@ -7,7 +7,6 @@ import GlassSurface from "@/components/ui/GlassSurface";
 import { Body, Caption, Headline, Title2 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { useHaptics } from "@/hooks/useHaptics";
 import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
 import type { PrayerTime } from "@/services/prayerTimes";
 
@@ -22,9 +21,6 @@ type DayDetailPanelProps = {
   onOpenSettings: () => void;
   nextPrayer: { label: string; time: string } | null;
   timeLeft: string;
-  isRamadan: boolean;
-  isFastMissed: boolean;
-  onToggleMissedFast: () => void;
 };
 
 export default function DayDetailPanel({
@@ -38,14 +34,10 @@ export default function DayDetailPanel({
   onOpenSettings,
   nextPrayer,
   timeLeft,
-  isRamadan,
-  isFastMissed,
-  onToggleMissedFast,
 }: DayDetailPanelProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const haptics = useHaptics();
 
   const dateLine = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
@@ -78,27 +70,6 @@ export default function DayDetailPanel({
           </GlassSurface>
         ) : null}
       </View>
-
-      {isRamadan ? (
-        <TouchableOpacity
-          onPress={() => {
-            haptics("light");
-            onToggleMissedFast();
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={isFastMissed ? "Clear missed fast" : "Mark fast as missed"}
-          style={[styles.toggle, isFastMissed ? styles.toggleOn : null]}
-        >
-          <Ionicons
-            name={isFastMissed ? "checkmark-circle" : "ellipse-outline"}
-            size={16}
-            color={isFastMissed ? colors.onAccent : colors.accent}
-          />
-          <Headline color={isFastMissed ? colors.onAccent : colors.accent}>
-            {isFastMissed ? "Marked as missed fast" : "Mark fast as missed"}
-          </Headline>
-        </TouchableOpacity>
-      ) : null}
 
       {isToday && nextPrayer ? (
         <Caption color={withOpacity(colors.white, 0.7)} style={styles.nextLine}>
@@ -186,19 +157,6 @@ const createStyles = (theme: AppTheme) => {
       maxWidth: "52%",
     },
     chipText: { flexShrink: 1 },
-    toggle: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: spacing.sm,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      borderRadius: theme.radii.row,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.4),
-      marginBottom: spacing.md,
-    },
-    toggleOn: { backgroundColor: colors.accent, borderColor: colors.accent },
     nextLine: { marginBottom: spacing.sm },
     stateCard: { padding: spacing.lg },
     stateHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },

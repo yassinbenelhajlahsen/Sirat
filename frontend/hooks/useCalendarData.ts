@@ -91,17 +91,19 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
     };
   }, [viewMonth, viewYear]);
 
+  const reloadMissedFasts = useCallback(async () => {
+    try {
+      const map = await getMissedFastDays();
+      setMissedFastsMap(map);
+    } catch (e) {
+      console.warn("Failed to reload missed fasts:", e);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        try {
-          const map = await getMissedFastDays();
-          setMissedFastsMap(map);
-        } catch (e) {
-          console.warn("Failed to reload Ramadan map on focus:", e);
-        }
-      })();
-    }, []),
+      reloadMissedFasts();
+    }, [reloadMissedFasts]),
   );
 
   const ramadanSummary = useMemo(() => {
@@ -153,5 +155,6 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
     firstMissedFastDate,
     missedDaysLabel,
     showRamadanSummary,
+    reloadMissedFasts,
   };
 }

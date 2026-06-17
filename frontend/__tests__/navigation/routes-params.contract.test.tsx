@@ -239,9 +239,11 @@ describe("route params and path wiring contract", () => {
         totalMissed: 2,
         missedDays: ["Mar 5", "Mar 6"],
       },
+      ramadanMonthActive: true,
       firstMissedFastDate,
       missedDaysLabel: "Mar 5, Mar 6",
       showRamadanSummary: true,
+      reloadMissedFasts: jest.fn(),
     });
 
     mockUseCalendarNavigationTransitions.mockReturnValue({

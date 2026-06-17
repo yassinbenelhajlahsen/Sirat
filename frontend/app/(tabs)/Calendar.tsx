@@ -68,9 +68,11 @@ export default function CalendarScreen() {
     ramadanStart,
     ramadanEnd,
     ramadanSummary,
+    ramadanMonthActive,
     firstMissedFastDate,
     missedDaysLabel,
     showRamadanSummary,
+    reloadMissedFasts,
   } = useCalendarData(viewYear, viewMonth);
 
   const {
@@ -177,6 +179,14 @@ export default function CalendarScreen() {
       setSelectedDate(firstMissedFastDate);
     }
   }, [firstMissedFastDate, haptics, setViewMonth, setViewYear, viewMonth, viewYear]);
+
+  // Mark/clear the selected day's fast, then refresh the month summary in place
+  // (the toggle no longer navigates, so nothing else would reload the summary).
+  const onToggleMissed = useCallback(async () => {
+    haptics("light");
+    await toggleMissedFast();
+    reloadMissedFasts();
+  }, [haptics, reloadMissedFasts, toggleMissedFast]);
 
   const openSettings = useCallback(async () => {
     try {
@@ -335,24 +345,54 @@ export default function CalendarScreen() {
             </Animated.View>
           )}
 
-          {showRamadanSummary && (
-            <PressableScale
-              onPress={handleRamadanSummaryPress}
-              accessibilityRole="button"
-              accessibilityLabel="Open first missed Ramadan fast date"
-              style={styles.summaryWrap}
-            >
-              <GlassSurface tier="card" radius={theme.radii.card} style={styles.summaryCard}>
-                <View style={styles.summaryTop}>
-                  <Headline color={colors.accent}>Ramadan Summary</Headline>
+          {ramadanMonthActive && (
+            <GlassSurface tier="card" radius={theme.radii.card} style={styles.ramadanCard}>
+              {showRamadanSummary ? (
+                <PressableScale
+                  onPress={handleRamadanSummaryPress}
+                  accessibilityRole="button"
+                  accessibilityLabel="Open first missed Ramadan fast date"
+                  style={styles.ramadanRow}
+                >
+                  <View style={styles.ramadanTextWrap}>
+                    <Headline color={colors.accent}>Ramadan</Headline>
+                    <Body color={colors.white}>
+                      {ramadanSummary?.totalMissed ?? 0} missed{" "}
+                      {(ramadanSummary?.totalMissed ?? 0) === 1 ? "fast" : "fasts"}
+                    </Body>
+                    {missedDaysLabel ? (
+                      <Caption color={withOpacity(colors.white, 0.85)}>{missedDaysLabel}</Caption>
+                    ) : null}
+                  </View>
                   <Ionicons name="arrow-forward-circle-outline" size={20} color={withOpacity(colors.accent, 0.95)} />
+                </PressableScale>
+              ) : (
+                <View style={styles.ramadanRow}>
+                  <Headline color={colors.accent}>Ramadan</Headline>
+                  <Body color={withOpacity(colors.white, 0.7)}>No missed fasts</Body>
                 </View>
-                <Body color={colors.white}>
-                  Missed fasts: {ramadanSummary?.totalMissed ?? 0}
-                </Body>
-                <Caption color={withOpacity(colors.white, 0.85)}>Missed days: {missedDaysLabel}</Caption>
-              </GlassSurface>
-            </PressableScale>
+              )}
+
+              {selectedDate && isRamadan ? (
+                <PressableScale
+                  onPress={onToggleMissed}
+                  accessibilityRole="button"
+                  accessibilityLabel={isFastMissed ? "Clear missed fast" : "Mark fast as missed"}
+                  style={[styles.markBtn, isFastMissed ? styles.markBtnOn : null]}
+                >
+                  <Ionicons
+                    name={isFastMissed ? "checkmark-circle" : "ellipse-outline"}
+                    size={16}
+                    color={isFastMissed ? colors.onAccent : colors.accent}
+                  />
+                  <Headline color={isFastMissed ? colors.onAccent : colors.accent}>
+                    {isFastMissed
+                      ? `Day ${selectedDate.getDate()} · marked missed`
+                      : `Mark Day ${selectedDate.getDate()} missed`}
+                  </Headline>
+                </PressableScale>
+              ) : null}
+            </GlassSurface>
           )}
 
           {selectedDate ? (
@@ -367,9 +407,6 @@ export default function CalendarScreen() {
               onOpenSettings={openSettings}
               nextPrayer={nextPrayer}
               timeLeft={timeLeft}
-              isRamadan={isRamadan}
-              isFastMissed={isFastMissed}
-              onToggleMissedFast={toggleMissedFast}
             />
           ) : (
             <View style={styles.prompt}>
@@ -452,9 +489,22 @@ const createStyles = (theme: AppTheme) => {
       borderRadius: theme.radii.pill,
       marginBottom: spacing.lg,
     },
-    summaryWrap: { marginBottom: spacing.lg },
-    summaryCard: { padding: spacing.lg },
-    summaryTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.xs },
+    ramadanCard: { padding: spacing.lg, marginBottom: spacing.lg },
+    ramadanRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    ramadanTextWrap: { flexShrink: 1, gap: 2 },
+    markBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.sm,
+      marginTop: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.lg,
+      borderRadius: theme.radii.row,
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accent, 0.4),
+    },
+    markBtnOn: { backgroundColor: colors.accent, borderColor: colors.accent },
     prompt: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.huge, gap: spacing.sm },
     promptText: { textAlign: "center", maxWidth: 240 },
   });

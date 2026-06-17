@@ -41,9 +41,6 @@ const baseProps = {
   onOpenSettings: jest.fn(),
   nextPrayer: null,
   timeLeft: "",
-  isRamadan: false,
-  isFastMissed: false,
-  onToggleMissedFast: jest.fn(),
 };
 
 describe("DayDetailPanel", () => {
@@ -60,15 +57,6 @@ describe("DayDetailPanel", () => {
   it("shows the holiday chip when a holiday is present", () => {
     const { getByText } = render(<DayDetailPanel {...baseProps} holiday="Laylat al-Mi'raj" />);
     expect(getByText("Laylat al-Mi'raj")).toBeTruthy();
-  });
-
-  it("shows the missed-fast toggle and fires it in Ramadan", () => {
-    const onToggle = jest.fn();
-    const { getByLabelText } = render(
-      <DayDetailPanel {...baseProps} isRamadan onToggleMissedFast={onToggle} />,
-    );
-    fireEvent.press(getByLabelText("Mark fast as missed"));
-    expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
   it("shows the error card with a retry action", () => {

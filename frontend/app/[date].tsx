@@ -21,7 +21,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useNextPrayer } from "@/hooks/useNextPrayer";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
-import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { dateKeyFromDate, getHolidayMapForYear } from "@/services/holidayService";
 
 export default function CalendarDetail() {
@@ -41,8 +40,6 @@ export default function CalendarDetail() {
     month,
     year,
     holiday: holidayParam,
-    ramadanStart: ramadanStartParam,
-    ramadanEnd: ramadanEndParam,
   } = useLocalSearchParams();
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -80,11 +77,6 @@ export default function CalendarDetail() {
   const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
     usePrayerTimes(selectedDate);
   const { nextPrayer, timeLeft } = useNextPrayer(selectedDate, prayerTimes, prayerTimesDateKey);
-  const { isRamadan, isFastMissed, toggleMissedFast } = useRamadanTracker(
-    selectedDate,
-    ramadanStartParam,
-    ramadanEndParam,
-  );
 
   // Glass-safe horizontal day stepping: translateX only (never opacity on glass).
   const stepDay = (deltaDays: number) => {
@@ -165,9 +157,6 @@ export default function CalendarDetail() {
           onOpenSettings={openSettings}
           nextPrayer={nextPrayer}
           timeLeft={timeLeft}
-          isRamadan={isRamadan}
-          isFastMissed={isFastMissed}
-          onToggleMissedFast={toggleMissedFast}
         />
       </Animated.View>
     </Screen>

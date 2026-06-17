@@ -655,9 +655,11 @@ const buildCalendarData = (overrides: Record<string, unknown> = {}) => ({
   ramadanStart,
   ramadanEnd,
   ramadanSummary: { totalMissed: 2, missedDays: ["Mar 5"] },
+  ramadanMonthActive: true,
   firstMissedFastDate,
   missedDaysLabel: "Mar 5",
   showRamadanSummary: true,
+  reloadMissedFasts: jest.fn(),
   ...overrides,
 });
 
