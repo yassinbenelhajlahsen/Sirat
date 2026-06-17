@@ -46,7 +46,7 @@ export default function MosqueSheet({
 
   // Shared with the chrome strip behind the floating tab bar so the bottom
   // matches the sheet in every state.
-  const animatedIndex = useSharedValue(1);
+  const animatedIndex = useSharedValue(0);
   const chromeSolid = useAnimatedStyle(() => ({
     opacity: interpolate(animatedIndex.value, [1, 2], [0, 1], Extrapolation.CLAMP),
   }));
@@ -105,7 +105,7 @@ export default function MosqueSheet({
       </View>
 
       <BottomSheet
-        index={1}
+        index={0}
         snapPoints={snapPoints}
         bottomInset={bottomInset}
         animatedIndex={animatedIndex}
