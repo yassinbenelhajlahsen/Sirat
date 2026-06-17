@@ -87,7 +87,7 @@ export default function PrayerArc({
   return (
     <GlassSurface tier="card" radius={theme.radii.cardLg} style={styles.card}>
       <Caption color={withOpacity(colors.white, 0.5)} style={styles.label}>
-        TODAY&apos;S PATH
+        TODAY&apos;S PRAYERS
       </Caption>
 
       <View style={styles.arcWrap}>
