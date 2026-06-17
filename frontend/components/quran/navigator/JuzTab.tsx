@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import { radii, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 import PressableScale from "../../PressableScale";
@@ -83,6 +83,7 @@ export default memo(JuzTab);
 
 const createStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
+  const isLight = theme.name === "light";
 
   return StyleSheet.create({
     scrollView: {
@@ -93,24 +94,19 @@ const createStyles = (theme: AppTheme) => {
       paddingBottom: 16,
       paddingTop: 20,
     },
-    heading: {
-      color: themeColors.white,
-      fontSize: 16,
-      fontWeight: "600",
-      marginBottom: 12,
-    },
     row: {
       flexDirection: "row",
       marginBottom: 12,
     },
     button: {
       flex: 1,
-      paddingVertical: 10,
+      paddingVertical: 14,
       paddingHorizontal: 14,
-      borderRadius: 12,
-      backgroundColor: themeColors.primaryDark,
+      borderRadius: radii.row,
+      borderCurve: "continuous",
+      backgroundColor: withOpacity(themeColors.white, 0.05),
       borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.25),
+      borderColor: withOpacity(themeColors.accent, 0.3),
       alignItems: "center",
       justifyContent: "center",
     },
@@ -118,8 +114,9 @@ const createStyles = (theme: AppTheme) => {
       marginRight: 12,
     },
     buttonText: {
-      color: themeColors.white,
+      color: isLight ? themeColors.offWhite : themeColors.white,
       fontWeight: "600",
+      fontSize: 14,
     },
   });
 };
