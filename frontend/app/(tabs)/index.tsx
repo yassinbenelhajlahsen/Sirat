@@ -33,7 +33,7 @@ export default function Home() {
     prayerTimes, nextPrayer, nextDayFajr, timeLeft,
     loading, refreshing, banner, locationLabel, refresh,
   } = useHomePrayerTimes();
-  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua } = useDuaInteraction();
+  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
 
   const handleSubmitDua = useCallback(async (userRequest: string) => {
@@ -175,7 +175,7 @@ export default function Home() {
         {/* Dua section (logic unchanged) */}
         <View style={styles.duaSection} onLayout={onDuaSectionLayout}>
           <Animated.View style={duaCardAnimatedStyle}>
-            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
+            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
           </Animated.View>
         </View>
       </ScrollView>

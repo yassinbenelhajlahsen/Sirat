@@ -78,8 +78,8 @@ describe("shared component UI contracts", () => {
       );
 
       expect(getByText("Anxiety")).toBeTruthy();
+      expect(getByText("Translation")).toBeTruthy();
       expect(getByText("Transliteration")).toBeTruthy();
-      expect(getByText("English Translation")).toBeTruthy();
       expect(getByText(sampleDua.arabic)).toBeTruthy();
       expect(getByText(sampleDua.reference)).toBeTruthy();
     });

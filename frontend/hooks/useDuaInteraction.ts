@@ -1,4 +1,4 @@
-import { requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
+import { getAnotherDua, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
 import { useCallback, useRef, useState } from "react";
 import { Alert, Animated, Easing } from "react-native";
 
@@ -52,11 +52,20 @@ export function useDuaInteraction() {
     runDuaTransition(null);
   }, [runDuaTransition]);
 
+  const anotherDua = useCallback(() => {
+    if (!selectedDua) return;
+    const next = getAnotherDua(selectedDua.category, selectedDua.id);
+    if (next) {
+      runDuaTransition(next);
+    }
+  }, [selectedDua, runDuaTransition]);
+
   return {
     selectedDua,
     duaLoading,
     duaSwapAnim,
     submitDua,
     closeDua,
+    anotherDua,
   };
 }
