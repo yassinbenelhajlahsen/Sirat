@@ -454,7 +454,7 @@ export default function MosqueScreen() {
         selectedId={selectedId}
         onSelect={onSelectMosque}
         onDirections={(m) => openDirections(m.lat, m.lng)}
-        tabBarClearance={tabBarClearance}
+        bottomInset={tabBarClearance}
       />
     </View>
   );

@@ -3,7 +3,6 @@ import BottomSheet, {
   type BottomSheetBackgroundProps,
 } from "@gorhom/bottom-sheet";
 import { Headline } from "@/components/ui/Text";
-import Aurora from "@/components/ui/Aurora";
 import MosqueRow from "@/components/mosques/MosqueRow";
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -15,6 +14,7 @@ import Animated, {
   Extrapolation,
   interpolate,
   useAnimatedStyle,
+  useSharedValue,
 } from "react-native-reanimated";
 
 type MosqueSheetProps = {
@@ -23,17 +23,16 @@ type MosqueSheetProps = {
   selectedId: string | null;
   onSelect: (m: Mosque) => void;
   onDirections: (m: Mosque) => void;
-  tabBarClearance: number;
+  bottomInset: number;
 };
 
-// Translucent dark at peek/half so the map reads through and it stays light and
-// unobtrusive, settling into a solid surface with a faint aurora as it is
-// dragged to full. No blur — blurring the live map underneath is too expensive.
+// Translucent dark at peek/half so the map reads through and it stays light,
+// settling to a solid surface at full. Flat colour (no blur, no aurora) so it
+// is cheap and never shows a clipped edge.
 function SheetBackground({ style, animatedIndex }: BottomSheetBackgroundProps) {
   const { theme } = useTheme();
   const { colors } = theme;
-
-  const baseStyle = useAnimatedStyle(() => ({
+  const fillStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       animatedIndex.value,
       [1, 2],
@@ -41,27 +40,15 @@ function SheetBackground({ style, animatedIndex }: BottomSheetBackgroundProps) {
       Extrapolation.CLAMP,
     ),
   }));
-  const auroraStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      animatedIndex.value,
-      [1, 2],
-      [0, 0.55],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
   return (
     <View pointerEvents="none" style={[style, styles.bg]}>
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
-          baseStyle,
+          fillStyle,
           { backgroundColor: colors.primaryDeep },
         ]}
       />
-      <Animated.View style={[StyleSheet.absoluteFill, auroraStyle]}>
-        <Aurora />
-      </Animated.View>
     </View>
   );
 }
@@ -72,18 +59,24 @@ export default function MosqueSheet({
   selectedId,
   onSelect,
   onDirections,
-  tabBarClearance,
+  bottomInset,
 }: MosqueSheetProps) {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
 
-  // The sheet fills to the bottom of the screen (so the floating tab bar sits
-  // on it, with no mismatched strip behind it). Peek is an absolute height that
-  // clears the tab bar and still shows the header + a couple of rows.
-  const snapPoints = useMemo(
-    () => [tabBarClearance + 210, "55%", "92%"],
-    [tabBarClearance],
-  );
+  const snapPoints = useMemo(() => ["18%", "50%", "92%"], []);
+
+  // Shared with the chrome strip behind the floating tab bar so the bottom
+  // matches the sheet in every state.
+  const animatedIndex = useSharedValue(1);
+  const chromeStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      animatedIndex.value,
+      [1, 2],
+      [0.82, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
   const rows = useMemo(() => {
     const r = mosques.slice(0, 10);
@@ -112,40 +105,57 @@ export default function MosqueSheet({
   }
 
   return (
-    <BottomSheet
-      index={1}
-      snapPoints={snapPoints}
-      enablePanDownToClose={false}
-      backgroundComponent={SheetBackground}
-      handleIndicatorStyle={handleStyle}
-    >
-      <BottomSheetFlatList
-        data={rows}
-        keyExtractor={(m) => m.id}
-        ListHeaderComponent={Header}
-        renderItem={({ item }) => {
-          const km = userLoc
-            ? distanceKm(userLoc.latitude, userLoc.longitude, item.lat, item.lng)
-            : null;
-          const distanceLabel = km !== null ? formatDistanceShort(km) : null;
-          return (
-            <MosqueRow
-              name={item.name}
-              address={item.address}
-              distanceLabel={distanceLabel}
-              selected={item.id === selectedId}
-              onPress={() => onSelect(item)}
-              onDirections={() => onDirections(item)}
-            />
-          );
-        }}
-        contentContainerStyle={{
-          paddingHorizontal: spacing.xl,
-          paddingBottom: tabBarClearance + spacing.md,
-          gap: spacing.md,
-        }}
+    <>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.chrome,
+          { height: bottomInset, backgroundColor: colors.primaryDeep },
+          chromeStyle,
+        ]}
       />
-    </BottomSheet>
+      <BottomSheet
+        index={1}
+        snapPoints={snapPoints}
+        bottomInset={bottomInset}
+        animatedIndex={animatedIndex}
+        enablePanDownToClose={false}
+        backgroundComponent={SheetBackground}
+        handleIndicatorStyle={handleStyle}
+      >
+        <BottomSheetFlatList
+          data={rows}
+          keyExtractor={(m) => m.id}
+          ListHeaderComponent={Header}
+          renderItem={({ item }) => {
+            const km = userLoc
+              ? distanceKm(
+                  userLoc.latitude,
+                  userLoc.longitude,
+                  item.lat,
+                  item.lng,
+                )
+              : null;
+            const distanceLabel = km !== null ? formatDistanceShort(km) : null;
+            return (
+              <MosqueRow
+                name={item.name}
+                address={item.address}
+                distanceLabel={distanceLabel}
+                selected={item.id === selectedId}
+                onPress={() => onSelect(item)}
+                onDirections={() => onDirections(item)}
+              />
+            );
+          }}
+          contentContainerStyle={{
+            paddingHorizontal: spacing.xl,
+            paddingBottom: spacing.xl,
+            gap: spacing.md,
+          }}
+        />
+      </BottomSheet>
+    </>
   );
 }
 
@@ -156,5 +166,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: withOpacity("#ffffff", 0.12),
     overflow: "hidden",
+  },
+  chrome: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });

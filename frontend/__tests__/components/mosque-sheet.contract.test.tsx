@@ -34,7 +34,7 @@ it("renders the nearby header and a row per mosque", () => {
       selectedId={null}
       onSelect={jest.fn()}
       onDirections={jest.fn()}
-      tabBarClearance={80}
+      bottomInset={80}
     />,
   );
   expect(getByText("Nearby mosques")).toBeTruthy();
