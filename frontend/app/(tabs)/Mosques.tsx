@@ -6,6 +6,7 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
@@ -448,12 +449,21 @@ export default function MosqueScreen() {
         </GlassSurface>
       </TouchableOpacity>
 
-      {/* Opaque chrome behind the floating tab bar so it sits on a continuous
+      {/* Frosted chrome behind the floating tab bar so it sits on a continuous
           surface with the sheet instead of a stray strip of map. */}
-      <View
+      <BlurView
+        intensity={36}
+        tint="dark"
         pointerEvents="none"
         style={[styles.bottomChrome, { height: tabBarClearance }]}
-      />
+      >
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: withOpacity(colors.primaryDeep, 0.5) },
+          ]}
+        />
+      </BlurView>
 
       <MosqueSheet
         mosques={mosques}
@@ -619,7 +629,7 @@ const createStyles = (theme: AppTheme) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: withOpacity(colors.primaryDeep, 0.97),
+      overflow: "hidden",
     },
   });
 };
