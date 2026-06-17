@@ -21,6 +21,10 @@ import {
   View,
 } from "react-native";
 import MapView, { Region } from "react-native-maps";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getCachedMosques,
@@ -29,6 +33,9 @@ import {
 } from "../../services/getNearbyMosques";
 
 type Perm = "undetermined" | "denied" | "granted";
+
+const RECENTER_SIZE = 48;
+const RECENTER_GAP = 12;
 
 export default function MosqueScreen() {
   const { theme } = useTheme();
@@ -60,6 +67,20 @@ export default function MosqueScreen() {
 
   // Rests above the floating glass tab bar.
   const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
+
+  // The sheet's live top edge — drives the recenter button so it sticks just
+  // above the mosque list as the sheet is dragged.
+  const sheetPosition = useSharedValue(0);
+  const recenterAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: Math.max(
+          insets.top + 8,
+          sheetPosition.value - RECENTER_SIZE - RECENTER_GAP,
+        ),
+      },
+    ],
+  }));
 
   const checkStatus = async () => {
     const sOn = await Location.hasServicesEnabledAsync();
@@ -436,17 +457,21 @@ export default function MosqueScreen() {
         </View>
       )}
 
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={recenter}
-        accessibilityRole="button"
-        accessibilityLabel="Recenter map on your location"
-        style={[styles.recenterWrap, { bottom: tabBarClearance + 220 }]}
+      <Animated.View
+        style={[styles.recenterWrap, recenterAnimatedStyle]}
+        pointerEvents="box-none"
       >
-        <GlassSurface tier="chrome" radius={999} style={styles.recenterButton}>
-          <Ionicons name="locate" size={20} color={colors.white} />
-        </GlassSurface>
-      </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={recenter}
+          accessibilityRole="button"
+          accessibilityLabel="Recenter map on your location"
+        >
+          <GlassSurface tier="chrome" radius={999} style={styles.recenterButton}>
+            <Ionicons name="locate" size={20} color={colors.white} />
+          </GlassSurface>
+        </TouchableOpacity>
+      </Animated.View>
 
       <MosqueSheet
         mosques={mosques}
@@ -455,6 +480,7 @@ export default function MosqueScreen() {
         onSelect={onSelectMosque}
         onDirections={(m) => openDirections(m.lat, m.lng)}
         bottomInset={tabBarClearance}
+        animatedPosition={sheetPosition}
       />
     </View>
   );
@@ -599,6 +625,7 @@ const createStyles = (theme: AppTheme) => {
     },
     recenterWrap: {
       position: "absolute",
+      top: 0,
       right: spacing.lg,
     },
     recenterButton: {

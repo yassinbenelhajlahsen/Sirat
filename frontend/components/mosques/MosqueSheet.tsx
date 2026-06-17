@@ -17,6 +17,7 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
+  type SharedValue,
 } from "react-native-reanimated";
 
 type MosqueSheetProps = {
@@ -26,6 +27,7 @@ type MosqueSheetProps = {
   onSelect: (m: Mosque) => void;
   onDirections: (m: Mosque) => void;
   bottomInset: number;
+  animatedPosition?: SharedValue<number>;
 };
 
 const useLiquidGlass = () =>
@@ -75,6 +77,7 @@ export default function MosqueSheet({
   onSelect,
   onDirections,
   bottomInset,
+  animatedPosition,
 }: MosqueSheetProps) {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
@@ -147,6 +150,7 @@ export default function MosqueSheet({
         snapPoints={snapPoints}
         bottomInset={bottomInset}
         animatedIndex={animatedIndex}
+        animatedPosition={animatedPosition}
         enablePanDownToClose={false}
         backgroundComponent={SheetBackground}
         handleIndicatorStyle={handleStyle}
