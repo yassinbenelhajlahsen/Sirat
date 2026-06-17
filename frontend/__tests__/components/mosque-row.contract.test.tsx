@@ -24,16 +24,15 @@ const base = {
   name: "Masjid Al-Noor",
   address: "120 Cedar St",
   distanceLabel: "0.3 mi",
-  direction: "NE",
 };
 
-it("renders name, address, and distance · direction", () => {
+it("renders name, address, and distance", () => {
   const { getByText } = render(
     <MosqueRow {...base} onPress={jest.fn()} onDirections={jest.fn()} />,
   );
   expect(getByText("Masjid Al-Noor")).toBeTruthy();
   expect(getByText("120 Cedar St")).toBeTruthy();
-  expect(getByText("0.3 mi · NE")).toBeTruthy();
+  expect(getByText("0.3 mi")).toBeTruthy();
 });
 
 it("wires row select and directions independently", () => {

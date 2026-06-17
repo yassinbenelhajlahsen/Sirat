@@ -3,7 +3,7 @@ import { Headline } from "@/components/ui/Text";
 import MosqueRow from "@/components/mosques/MosqueRow";
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { bearingDeg, cardinal, distanceKm, formatDistanceShort } from "@/utils/geo";
+import { distanceKm, formatDistanceShort } from "@/utils/geo";
 import type { Mosque } from "@/services/getNearbyMosques";
 import React, { useMemo } from "react";
 import { View } from "react-native";
@@ -82,16 +82,11 @@ export default function MosqueSheet({
             ? distanceKm(userLoc.latitude, userLoc.longitude, item.lat, item.lng)
             : null;
           const distanceLabel = km !== null ? formatDistanceShort(km) : null;
-          const direction =
-            userLoc !== null
-              ? cardinal(bearingDeg(userLoc.latitude, userLoc.longitude, item.lat, item.lng))
-              : null;
           return (
             <MosqueRow
               name={item.name}
               address={item.address}
               distanceLabel={distanceLabel}
-              direction={direction}
               selected={item.id === selectedId}
               onPress={() => onSelect(item)}
               onDirections={() => onDirections(item)}

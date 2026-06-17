@@ -10,7 +10,6 @@ type MosqueRowProps = {
   name: string;
   address: string;
   distanceLabel: string | null;
-  direction: string | null;
   selected?: boolean;
   onPress: () => void;
   onDirections: () => void;
@@ -20,7 +19,6 @@ export default function MosqueRow({
   name,
   address,
   distanceLabel,
-  direction,
   selected,
   onPress,
   onDirections,
@@ -29,7 +27,7 @@ export default function MosqueRow({
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  const meta = [distanceLabel, direction].filter(Boolean).join(" · ");
+  const meta = distanceLabel ?? "";
 
   return (
     <PressableScale
