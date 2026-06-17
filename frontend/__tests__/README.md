@@ -58,6 +58,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/ramadanTracker.test.ts`
   - `hooks/useRamadanTracker.test.ts`
   - `hooks/useCalendarData.test.ts`
+  - `components/day-detail-panel.contract.test.tsx` (calendar inline-agenda day detail — today/other-day/holiday/Ramadan/error states)
 - `force update gate testing`
   - `services/appVersion.test.ts`
   - `services/apiClient.test.ts`
@@ -88,7 +89,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `navigation/glass-tab-bar.contract.test.tsx`
 - `home prayer arc (horizontal sun path) testing`
   - `utils/prayer-arc.test.ts`
-  - `components/prayer-arc.contract.test.tsx`
+  - `components/prayer-arc.contract.test.tsx` (incl. live vs static/non-today mode)
 - `tab bar scroll-collapse testing`
   - `utils/tab-bar-chrome.test.ts`
 
