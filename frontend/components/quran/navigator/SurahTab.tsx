@@ -114,7 +114,7 @@ function SurahTab({
           </View>
           <Text style={styles.surahEnglish}>{item.englishName}</Text>
           <Text style={styles.surahMeta}>
-            Surah {item.surahNumber} · {item.ayahCount} ayāt
+            {item.ayahCount} ayāt
           </Text>
         </PressableScale>
       );

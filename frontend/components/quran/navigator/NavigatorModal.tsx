@@ -122,6 +122,7 @@ function NavigatorModal({
           </View>
           <PressableScale
             accessibilityRole="button"
+            accessibilityLabel="Close"
             onPress={onClose}
             style={styles.dismissButton}
             scaleTo={0.85}

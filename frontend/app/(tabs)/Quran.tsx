@@ -314,7 +314,6 @@ function computeBookmarkMatchScore(
 export default function QuranScreen() {
   const { theme } = useTheme();
   const themeColors = theme.colors;
-  const spacing = theme.spacing;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const haptic = useHaptics();

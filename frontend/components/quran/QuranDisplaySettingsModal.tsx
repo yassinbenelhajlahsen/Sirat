@@ -33,7 +33,6 @@ export default function QuranDisplaySettingsModal({
 }: QuranDisplaySettingsModalProps) {
   const { theme } = useTheme();
   const themeColors = theme.colors;
-  const isLight = theme.name === "light";
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { displayModes, isModeEnabled, toggleDisplayMode } =
@@ -98,6 +97,7 @@ export default function QuranDisplaySettingsModal({
           </View>
           <PressableScale
             accessibilityRole="button"
+            accessibilityLabel="Close"
             onPress={onClose}
             style={styles.dismissButton}
             scaleTo={0.85}

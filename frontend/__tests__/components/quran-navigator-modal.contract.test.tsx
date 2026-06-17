@@ -248,15 +248,11 @@ describe("NavigatorModal contract", () => {
 
   it("wires onClose to dismiss button and child tab close actions", () => {
     const props = buildProps();
-    const { getAllByRole, getByText } = render(
+    const { getByLabelText, getByText } = render(
       <NavigatorModal {...props} />
     );
 
-    // Press the X dismiss button (accessibilityRole="button" with no label text)
-    const dismissButton = getAllByRole("button").find(
-      (button) => !within(button).queryByText(/./)
-    );
-    fireEvent.press(dismissButton);
+    fireEvent.press(getByLabelText("Close"));
     fireEvent.press(getByText("Mock close from surah tab"));
     fireEvent.press(getByText("Bookmarks"));
     fireEvent.press(getByText("Mock close from bookmarks tab"));

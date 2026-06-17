@@ -34,7 +34,6 @@ export default function QuranCopySheet({
 }: QuranCopySheetProps) {
   const { theme } = useTheme();
   const themeColors = theme.colors;
-  const isLight = theme.name === "light";
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const sheetRef = useRef<BottomSheet>(null);
@@ -93,6 +92,7 @@ export default function QuranCopySheet({
           </View>
           <PressableScale
             accessibilityRole="button"
+            accessibilityLabel="Close"
             onPress={onClose}
             style={styles.dismissButton}
             scaleTo={0.85}
@@ -113,7 +113,6 @@ export default function QuranCopySheet({
               isGold={false}
               styles={styles}
               themeColors={themeColors}
-              isLight={isLight}
               onPress={() =>
                 onCopy(formatCopyText(ayah, { arabic: true, english: false, transliteration: false }))
               }
@@ -128,7 +127,6 @@ export default function QuranCopySheet({
               isGold={false}
               styles={styles}
               themeColors={themeColors}
-              isLight={isLight}
               onPress={() =>
                 onCopy(formatCopyText(ayah, { arabic: false, english: false, transliteration: true }))
               }
@@ -143,7 +141,6 @@ export default function QuranCopySheet({
               isGold={false}
               styles={styles}
               themeColors={themeColors}
-              isLight={isLight}
               onPress={() =>
                 onCopy(formatCopyText(ayah, { arabic: false, english: true, transliteration: false }))
               }
@@ -160,7 +157,6 @@ export default function QuranCopySheet({
                 isGold
                 styles={styles}
                 themeColors={themeColors}
-                isLight={isLight}
                 onPress={() =>
                   onCopy(
                     formatCopyText(ayah, {
@@ -186,7 +182,6 @@ type CopyRowProps = {
   isGold: boolean;
   styles: ReturnType<typeof createStyles>;
   themeColors: AppTheme["colors"];
-  isLight: boolean;
   onPress: () => void;
 };
 
