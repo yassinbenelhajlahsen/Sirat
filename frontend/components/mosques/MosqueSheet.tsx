@@ -9,8 +9,6 @@ import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { distanceKm, formatDistanceShort } from "@/utils/geo";
 import type { Mosque } from "@/services/getNearbyMosques";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
@@ -25,44 +23,46 @@ type MosqueSheetProps = {
   selectedId: string | null;
   onSelect: (m: Mosque) => void;
   onDirections: (m: Mosque) => void;
-  bottomInset: number;
+  tabBarClearance: number;
 };
 
-// Apple-style adaptive background: a frosted blur of the map at peek/half so it
-// stays light and unobtrusive, fading into a solid gradient + aurora (matching
-// the rest of the app) as the sheet is dragged to full.
+// Translucent dark at peek/half so the map reads through and it stays light and
+// unobtrusive, settling into a solid surface with a faint aurora as it is
+// dragged to full. No blur — blurring the live map underneath is too expensive.
 function SheetBackground({ style, animatedIndex }: BottomSheetBackgroundProps) {
   const { theme } = useTheme();
   const { colors } = theme;
 
-  const solidStyle = useAnimatedStyle(() => ({
+  const baseStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       animatedIndex.value,
       [1, 2],
-      [0, 1],
+      [0.82, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+  const auroraStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      animatedIndex.value,
+      [1, 2],
+      [0, 0.55],
       Extrapolation.CLAMP,
     ),
   }));
 
   return (
-    <Animated.View pointerEvents="none" style={[style, styles.bg]}>
-      <BlurView intensity={36} tint="dark" style={StyleSheet.absoluteFill} />
-      <View
+    <View pointerEvents="none" style={[style, styles.bg]}>
+      <Animated.View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: withOpacity(colors.primaryDeep, 0.5) },
+          baseStyle,
+          { backgroundColor: colors.primaryDeep },
         ]}
       />
-      <Animated.View style={[StyleSheet.absoluteFill, solidStyle]}>
-        <LinearGradient
-          colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
+      <Animated.View style={[StyleSheet.absoluteFill, auroraStyle]}>
         <Aurora />
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -72,12 +72,18 @@ export default function MosqueSheet({
   selectedId,
   onSelect,
   onDirections,
-  bottomInset,
+  tabBarClearance,
 }: MosqueSheetProps) {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
 
-  const snapPoints = useMemo(() => ["18%", "50%", "92%"], []);
+  // The sheet fills to the bottom of the screen (so the floating tab bar sits
+  // on it, with no mismatched strip behind it). Peek is an absolute height that
+  // clears the tab bar and still shows the header + a couple of rows.
+  const snapPoints = useMemo(
+    () => [tabBarClearance + 210, "55%", "92%"],
+    [tabBarClearance],
+  );
 
   const rows = useMemo(() => {
     const r = mosques.slice(0, 10);
@@ -109,7 +115,6 @@ export default function MosqueSheet({
     <BottomSheet
       index={1}
       snapPoints={snapPoints}
-      bottomInset={bottomInset}
       enablePanDownToClose={false}
       backgroundComponent={SheetBackground}
       handleIndicatorStyle={handleStyle}
@@ -136,7 +141,7 @@ export default function MosqueSheet({
         }}
         contentContainerStyle={{
           paddingHorizontal: spacing.xl,
-          paddingBottom: spacing.xl,
+          paddingBottom: tabBarClearance + spacing.md,
           gap: spacing.md,
         }}
       />

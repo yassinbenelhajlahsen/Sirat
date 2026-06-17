@@ -6,7 +6,6 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
@@ -449,29 +448,13 @@ export default function MosqueScreen() {
         </GlassSurface>
       </TouchableOpacity>
 
-      {/* Frosted chrome behind the floating tab bar so it sits on a continuous
-          surface with the sheet instead of a stray strip of map. */}
-      <BlurView
-        intensity={36}
-        tint="dark"
-        pointerEvents="none"
-        style={[styles.bottomChrome, { height: tabBarClearance }]}
-      >
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: withOpacity(colors.primaryDeep, 0.5) },
-          ]}
-        />
-      </BlurView>
-
       <MosqueSheet
         mosques={mosques}
         userLoc={location}
         selectedId={selectedId}
         onSelect={onSelectMosque}
         onDirections={(m) => openDirections(m.lat, m.lng)}
-        bottomInset={tabBarClearance}
+        tabBarClearance={tabBarClearance}
       />
     </View>
   );
@@ -623,13 +606,6 @@ const createStyles = (theme: AppTheme) => {
       height: 48,
       alignItems: "center",
       justifyContent: "center",
-    },
-    bottomChrome: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
-      overflow: "hidden",
     },
   });
 };

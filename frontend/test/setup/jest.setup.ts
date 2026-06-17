@@ -56,15 +56,6 @@ jest.mock(
   { virtual: true },
 );
 
-jest.mock("expo-blur", () => {
-  const React = require("react");
-  const { View } = require("react-native");
-  return {
-    BlurView: ({ children, ...props }: any) =>
-      React.createElement(View, props, children),
-  };
-});
-
 jest.mock("expo-haptics", () => ({
   selectionAsync: jest.fn(async () => {}),
   impactAsync: jest.fn(async () => {}),
