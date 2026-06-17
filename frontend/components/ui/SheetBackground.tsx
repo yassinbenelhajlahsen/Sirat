@@ -57,7 +57,12 @@ export default function SheetBackground({
         {glass ? (
           <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
         ) : (
-          <BlurView tint={blurTint} intensity={55} style={StyleSheet.absoluteFill} />
+          <BlurView
+            tint={blurTint}
+            intensity={55}
+            experimentalBlurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFill}
+          />
         )}
         <LinearGradient
           colors={[withOpacity(colors.primaryDeep, 0.65), withOpacity(colors.primary, 0.6)]}
