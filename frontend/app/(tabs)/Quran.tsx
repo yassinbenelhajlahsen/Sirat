@@ -2,6 +2,7 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useTheme } from "@/context/ThemeContext";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
+import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import {
   QuranBookmark,
   deleteBookmark,
@@ -1366,6 +1367,8 @@ export default function QuranScreen() {
               data={listData}
               showsVerticalScrollIndicator={false}
               scrollsToTop={false}
+              onScroll={handleTabBarScroll}
+              scrollEventThrottle={16}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               estimatedItemSize={ESTIMATED_ITEM_SIZE}

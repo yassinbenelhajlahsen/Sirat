@@ -1,5 +1,6 @@
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -441,6 +442,8 @@ export default function MosqueScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          onScroll={handleTabBarScroll}
+          scrollEventThrottle={16}
         >
           <View style={styles.container}>
             <View style={styles.headerSection}>
