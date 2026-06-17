@@ -5,6 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Headline, LargeTitle, Title2 } from "@/components/ui/Text";
@@ -23,8 +24,9 @@ import useModalTransition from "../../hooks/useModalTransition";
 
 export default function Home() {
   const { theme } = useTheme();
-  const { colors } = theme;
+  const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
 
   const router = useRouter();
   const {
@@ -78,12 +80,17 @@ export default function Home() {
   };
 
   return (
-    <Screen>
+    <Screen safeArea={false}>
       <ScrollView
         ref={scrollViewRef}
         onLayout={onScrollViewLayout}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.scrollContent, keyboardHeight > 0 && { paddingBottom: keyboardHeight }]}
+        contentInsetAdjustmentBehavior="never"
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + 120 },
+          keyboardHeight > 0 && { paddingBottom: keyboardHeight },
+        ]}
         onScroll={handleTabBarScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
@@ -179,7 +186,7 @@ export default function Home() {
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    scrollContent: { padding: spacing.xl, paddingBottom: 120 },
+    scrollContent: { paddingHorizontal: spacing.xl },
     bannerCard: { padding: spacing.md, marginBottom: spacing.lg },
     headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginTop: spacing.sm },
     headerText: { flex: 1, paddingRight: spacing.md },

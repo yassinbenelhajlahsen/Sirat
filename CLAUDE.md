@@ -64,7 +64,8 @@ See `AGENTS.md` for full architecture details. Key points:
 
 - **Imports:** Use `@/` path alias for all frontend imports (maps to `frontend/` root)
 - **Theming:** All themed UI must use `useTheme()` + `createStyles(theme)` factory pattern — never use static color constants
-- **Tests:** When adding/removing test suites, update `frontend/__tests__/README.md`. Frontend Jest uses `jest-silent-reporter` + `summary` reporters. Backend Jest uses `ts-jest` with ESM preset and suppresses console output during tests
+- **Safe areas:** The full-bleed gradient/`Aurora` background fills the whole screen (incl. safe areas). For **scrollable** screens, do NOT wrap the scroll view in `SafeAreaView` (it insets the scroll *frame*, so content hard-clips at the safe-area line as it scrolls). Instead make the scroll view full-bleed and apply `useSafeAreaInsets()` as padding on the content: `contentContainerStyle` `paddingTop: insets.top` / `paddingBottom: insets.bottom`, plus `contentInsetAdjustmentBehavior="never"` so iOS doesn't double the top inset. For a fixed header above the list (Quran, `[date]`), put `paddingTop: insets.top` on the header instead. **Fixed-layout** screens with no scroll container (Qibla, Calendar) keep `SafeAreaView` — there's nothing to clip. Exactly one `SafeAreaProvider`, at the root (`app/_layout.tsx`); never nest another. The shared `Screen` component takes `safeArea={false}` to opt into full-bleed.
+- **Tests:** When adding/removing test suites, update `frontend/__tests__/README.md`. Frontend Jest uses `jest-silent-reporter` + `summary` reporters. Backend Jest uses `ts-jest` with ESM preset and suppresses console output during tests. Test files that mock `react-native-safe-area-context` must include `useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 })` alongside `SafeAreaView`/`SafeAreaProvider`, or screens using the hook throw
 
 ### AsyncStorage Keys
 

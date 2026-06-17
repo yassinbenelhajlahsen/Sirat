@@ -18,7 +18,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PrayerTimesList from "../components/PrayerTimesList";
 import PressableScale from "../components/PressableScale";
 import { useNextPrayer } from "../hooks/useNextPrayer";
@@ -32,8 +32,9 @@ const screenWidth = Dimensions.get("window").width;
 
 export default function CalendarDetail() {
   const { theme } = useTheme();
-  const { colors } = theme;
+  const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
 
   const {
     date,
@@ -502,9 +503,9 @@ export default function CalendarDetail() {
       style={styles.screen}
     >
       <Aurora />
-      <SafeAreaView style={styles.screen}>
+      <View style={styles.screen}>
         {/* Top Navigation Bar - stays fixed */}
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
           <PressableScale
             onPress={animateBackToCalendar}
             style={styles.backButton}
@@ -517,7 +518,11 @@ export default function CalendarDetail() {
         {/* Content area with proper layout and swipe gesture support */}
         <ScrollView
           style={styles.screen}
-          contentContainerStyle={styles.scrollContent}
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + spacing.xxl + spacing.md },
+          ]}
           showsVerticalScrollIndicator={false}
           {...panResponderRef.current.panHandlers}
         >
@@ -698,7 +703,7 @@ export default function CalendarDetail() {
             )}
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 }

@@ -45,7 +45,7 @@ import {
   ViewToken,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PressableScale from "../../components/PressableScale";
 import NavigatorModal from "../../components/quran/navigator/NavigatorModal";
 import QuranAyahCard from "../../components/quran/QuranAyahCard";
@@ -309,7 +309,9 @@ function computeBookmarkMatchScore(
 export default function QuranScreen() {
   const { theme } = useTheme();
   const themeColors = theme.colors;
+  const spacing = theme.spacing;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
 
   const ayat = useMemo(() => Array.from(getAllAyat()), []);
   const surahs = useMemo(() => Array.from(getSurahMeta()), []);
@@ -1258,9 +1260,9 @@ export default function QuranScreen() {
       style={styles.screen}
     >
       <Aurora />
-      <SafeAreaView style={styles.screen}>
+      <View style={styles.screen}>
         <View style={styles.container}>
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
             <Text style={styles.headerEyebrow}>Recitation</Text>
             <Text
               style={[
@@ -1371,7 +1373,7 @@ export default function QuranScreen() {
               estimatedItemSize={ESTIMATED_ITEM_SIZE}
               getItemType={getItemType}
               style={styles.list}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={{ ...styles.listContent, paddingBottom: insets.bottom + 72 }}
               onLoad={handleListLoad}
               onViewableItemsChanged={handleViewableItemsChanged}
               viewabilityConfig={viewabilityConfigRef.current}
@@ -1436,7 +1438,7 @@ export default function QuranScreen() {
             onHide={() => setToastVisible(false)}
           />
         </View>
-      </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 }

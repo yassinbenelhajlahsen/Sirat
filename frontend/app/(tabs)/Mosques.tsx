@@ -23,7 +23,7 @@ import {
   View,
 } from "react-native";
 import MapView, { Callout, Marker } from "react-native-maps";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import PressableScale from "../../components/PressableScale";
 import {
   getCachedMosques,
@@ -106,8 +106,9 @@ function formatDistanceLabel(km: number) {
 
 export default function MosqueScreen() {
   const { theme } = useTheme();
-  const { colors } = theme;
+  const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
   const customMapStyle = useMemo(() => {
     if (theme.name === "light") return undefined;
     return createCustomMapStyle(colors);
@@ -432,10 +433,14 @@ export default function MosqueScreen() {
       style={styles.gradient}
     >
       <Aurora />
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: insets.top, paddingBottom: insets.bottom + spacing.xl * 2 },
+          ]}
           onScroll={handleTabBarScroll}
           scrollEventThrottle={16}
         >
@@ -563,7 +568,7 @@ export default function MosqueScreen() {
             )}
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 }

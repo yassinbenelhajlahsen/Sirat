@@ -16,10 +16,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Aurora from "@/components/ui/Aurora";
 import CitySearchModal from "@/components/CitySearchModal";
 import NotificationSettings from "@/components/NotificationSettings";
@@ -172,11 +169,12 @@ export default function Settings() {
       style={styles.screen}
     >
       <Aurora />
-      <SafeAreaView style={styles.screen}>
+      <View style={styles.screen}>
         <ScrollView
+          contentInsetAdjustmentBehavior="never"
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: footerPadding },
+            { paddingTop: insets.top + 2, paddingBottom: footerPadding },
           ]}
           showsVerticalScrollIndicator={false}
           style={styles.scrollView}
@@ -489,7 +487,7 @@ export default function Settings() {
             <VisitSiteButton />
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 }
