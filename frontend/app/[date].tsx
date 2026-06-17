@@ -1,40 +1,37 @@
-import Aurora from "@/components/ui/Aurora";
-import { withOpacity, type AppTheme } from "@/constants/theme";
-import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Platform } from "react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Linking,
   PanResponder,
-  Platform,
-  ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import PrayerTimesList from "../components/PrayerTimesList";
-import PressableScale from "../components/PressableScale";
-import { useNextPrayer } from "../hooks/useNextPrayer";
-import { usePrayerTimes } from "../hooks/usePrayerTimes";
-import { useRamadanTracker } from "../hooks/useRamadanTracker";
-import {
-  dateKeyFromDate,
-  getHolidayMapForYear,
-} from "../services/holidayService";
-const screenWidth = Dimensions.get("window").width;
+
+import DayDetailPanel from "@/components/calendar/DayDetailPanel";
+import PressableScale from "@/components/PressableScale";
+import Screen from "@/components/ui/Screen";
+import { Headline } from "@/components/ui/Text";
+import { type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useNextPrayer } from "@/hooks/useNextPrayer";
+import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { useRamadanTracker } from "@/hooks/useRamadanTracker";
+import { dateKeyFromDate, getHolidayMapForYear } from "@/services/holidayService";
 
 export default function CalendarDetail() {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const haptics = useHaptics();
+  const router = useRouter();
+  const { width } = useWindowDimensions();
 
   const {
     date,
@@ -44,263 +41,21 @@ export default function CalendarDetail() {
     ramadanStart: ramadanStartParam,
     ramadanEnd: ramadanEndParam,
   } = useLocalSearchParams();
-  const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isSmall = width < 360;
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [holiday, setHoliday] = useState<string | null>(null);
-
-  const holidayValue = typeof holidayParam === "string" ? holidayParam : null;
-  const hasHolidayParam =
-    holidayValue != null && holidayValue.trim().length > 0;
-
-  const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
-    usePrayerTimes(selectedDate);
-  const { nextPrayer, timeLeft } = useNextPrayer(
-    selectedDate,
-    prayerTimes,
-    prayerTimesDateKey,
+  const [holiday, setHoliday] = useState<string | null>(
+    typeof holidayParam === "string" && holidayParam.trim().length > 0 ? holidayParam : null,
   );
-  const { isRamadan, isFastMissed, loadingRamadan, toggleMissedFast } =
-    useRamadanTracker(selectedDate, ramadanStartParam, ramadanEndParam);
 
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const timesOpacityAnim = useRef(new Animated.Value(1)).current;
-  const timesSlideAnim = useRef(new Animated.Value(0)).current;
-
-  // keep refs for current date state so PanResponder callbacks read fresh values
   const selectedDateRef = useRef(selectedDate);
   useEffect(() => {
     selectedDateRef.current = selectedDate;
   }, [selectedDate]);
 
-  // PanResponder for horizontal swipes
-  const panResponderRef = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        Math.abs(gestureState.dx) > 8 && Math.abs(gestureState.dy) < 20,
-      onPanResponderGrant: () => {
-        // stop any ongoing animations
-        slideAnim.stopAnimation();
-        timesSlideAnim.stopAnimation();
-      },
-      onPanResponderMove: (_, gestureState) => {
-        // follow finger for date but not prayer times container
-        slideAnim.setValue(gestureState.dx);
-        timesSlideAnim.setValue(gestureState.dx);
-        // subtle fade while dragging
-        const fade =
-          1 - Math.min(Math.abs(gestureState.dx) / screenWidth, 0.25);
-        fadeAnim.setValue(fade);
-        timesOpacityAnim.setValue(fade);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        const dx = gestureState.dx;
-        const vx = gestureState.vx;
-        const threshold = Math.min(0.25 * screenWidth, 80);
-
-        const currentDate = selectedDateRef.current;
-        if (!currentDate) return;
-
-        const today = new Date();
-        const minDate = new Date(today.getFullYear(), 0);
-        const maxDate = new Date(today.getFullYear() + 1, 11, 31);
-
-        // Swipe left (next day)
-        if (dx < -threshold || (vx < -0.8 && Math.abs(dx) > 20)) {
-          const nextDate = new Date(currentDate);
-          nextDate.setDate(nextDate.getDate() + 1);
-          if (nextDate <= maxDate) {
-            // Trigger next animation
-            const offset = -screenWidth;
-            Animated.parallel([
-              Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-              Animated.timing(slideAnim, {
-                toValue: offset,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-              Animated.timing(timesOpacityAnim, {
-                toValue: 0,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-              Animated.timing(timesSlideAnim, {
-                toValue: offset,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-            ]).start(() => {
-              // Reset animation values
-              fadeAnim.setValue(0);
-              slideAnim.setValue(screenWidth);
-              timesOpacityAnim.setValue(0);
-              timesSlideAnim.setValue(screenWidth);
-
-              // Update state instead of navigating
-              setSelectedDate(nextDate);
-
-              // Animate in the new content
-              Animated.parallel([
-                Animated.timing(fadeAnim, {
-                  toValue: 1,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                  toValue: 0,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(timesOpacityAnim, {
-                  toValue: 1,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(timesSlideAnim, {
-                  toValue: 0,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-            });
-            return;
-          }
-        }
-        // Swipe right (previous day)
-        else if (dx > threshold || (vx > 0.8 && Math.abs(dx) > 20)) {
-          const prevDate = new Date(currentDate);
-          prevDate.setDate(prevDate.getDate() - 1);
-          if (prevDate >= minDate) {
-            // Trigger prev animation
-            const offset = screenWidth;
-            Animated.parallel([
-              Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-              Animated.timing(slideAnim, {
-                toValue: offset,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-              Animated.timing(timesOpacityAnim, {
-                toValue: 0,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-              Animated.timing(timesSlideAnim, {
-                toValue: offset,
-                duration: 120,
-                useNativeDriver: true,
-              }),
-            ]).start(() => {
-              // Reset animation values
-              fadeAnim.setValue(0);
-              slideAnim.setValue(-screenWidth);
-              timesOpacityAnim.setValue(0);
-              timesSlideAnim.setValue(-screenWidth);
-
-              // Update state instead of navigating
-              setSelectedDate(prevDate);
-
-              // Animate in the new content
-              Animated.parallel([
-                Animated.timing(fadeAnim, {
-                  toValue: 1,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(slideAnim, {
-                  toValue: 0,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(timesOpacityAnim, {
-                  toValue: 1,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(timesSlideAnim, {
-                  toValue: 0,
-                  duration: 200,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-            });
-            return;
-          }
-        }
-
-        // Snap back to center
-        Animated.parallel([
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(timesSlideAnim, {
-            toValue: 0,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 160,
-            useNativeDriver: true,
-          }),
-          Animated.timing(timesOpacityAnim, {
-            toValue: 1,
-            duration: 160,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      },
-      onPanResponderTerminate: () => {
-        // Snap back
-        Animated.parallel([
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(timesSlideAnim, {
-            toValue: 0,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(timesOpacityAnim, {
-            toValue: 1,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      },
-    }),
-  );
+  const slide = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (typeof date === "string") {
-      setSelectedDate(new Date(decodeURIComponent(date)));
-    }
-
-    // Seed once on entry, never lock it
-    if (hasHolidayParam && holidayValue) {
-      setHoliday(holidayValue);
-    }
+    if (typeof date === "string") setSelectedDate(new Date(decodeURIComponent(date)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
 
@@ -308,761 +63,116 @@ export default function CalendarDetail() {
     let mounted = true;
     (async () => {
       if (!selectedDate) return;
-
       try {
         const map = await getHolidayMapForYear(selectedDate.getFullYear());
-        const key = dateKeyFromDate(selectedDate);
-        const computed = map[key] ?? null;
-        if (mounted) setHoliday(computed);
+        if (mounted) setHoliday(map[dateKeyFromDate(selectedDate)] ?? null);
       } catch (e) {
         console.warn("Failed to resolve holiday:", e);
       }
     })();
-
     return () => {
       mounted = false;
     };
   }, [selectedDate]);
 
-  const today = new Date();
-  const isToday = selectedDate?.toDateString() === today.toDateString();
+  const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
+    usePrayerTimes(selectedDate);
+  const { nextPrayer, timeLeft } = useNextPrayer(selectedDate, prayerTimes, prayerTimesDateKey);
+  const { isRamadan, isFastMissed, toggleMissedFast } = useRamadanTracker(
+    selectedDate,
+    ramadanStartParam,
+    ramadanEndParam,
+  );
 
-  if (!selectedDate) return null;
-  const displayDateLine = new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(selectedDate);
-
-  const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(selectedDate);
-
-  const minDate = new Date(today.getFullYear(), 0);
-  const maxDate = new Date(today.getFullYear() + 1, 11, 31);
-  const prevDate = new Date(selectedDate);
-  prevDate.setDate(prevDate.getDate() - 1);
-  const nextDate = new Date(selectedDate);
-  nextDate.setDate(nextDate.getDate() + 1);
-  const isPrevDisabled = prevDate < minDate;
-  const isNextDisabled = nextDate > maxDate;
-
-  // Transition when changing day
-  const animateDateChange = (
-    direction: "next" | "prev",
-    daysOffset: number,
-  ) => {
-    const offset = direction === "next" ? -screenWidth : screenWidth;
-    Animated.parallel([
-      // Animate date text
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: offset,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      // Animate only the times, not the whole prayer times content
-      Animated.timing(timesOpacityAnim, {
-        toValue: 0,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      Animated.timing(timesSlideAnim, {
-        toValue: offset,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      const newDate = new Date(selectedDate);
-      newDate.setDate(newDate.getDate() + daysOffset);
-
-      // Reset animation values
-      fadeAnim.setValue(0);
-      slideAnim.setValue(direction === "next" ? screenWidth : -screenWidth);
-      timesOpacityAnim.setValue(0);
-      timesSlideAnim.setValue(
-        direction === "next" ? screenWidth : -screenWidth,
-      );
-
-      // Update state instead of navigating
-      setSelectedDate(newDate);
-
-      // Animate in the new content
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(timesOpacityAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(timesSlideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
+  // Glass-safe horizontal day stepping: translateX only (never opacity on glass).
+  const stepDay = (deltaDays: number) => {
+    const current = selectedDateRef.current;
+    if (!current) return;
+    const next = new Date(current);
+    next.setDate(next.getDate() + deltaDays);
+    const dir = deltaDays > 0 ? -1 : 1;
+    Animated.timing(slide, { toValue: dir * width, duration: 130, useNativeDriver: true }).start(() => {
+      setSelectedDate(next);
+      slide.setValue(-dir * width);
+      Animated.timing(slide, { toValue: 0, duration: 200, useNativeDriver: true }).start();
     });
+    haptics("selection");
   };
 
-  // Smooth fade when going Back to Calendar
-  const animateBackToCalendar = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 180,
-      useNativeDriver: true,
-    }).start(() => {
-      router.replace(`/Calendar?month=${month}&year=${year}`);
-    });
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 8 && Math.abs(g.dy) < 20,
+      onPanResponderMove: (_, g) => slide.setValue(g.dx),
+      onPanResponderRelease: (_, g) => {
+        const threshold = Math.min(0.25 * width, 80);
+        if (g.dx < -threshold || (g.vx < -0.8 && Math.abs(g.dx) > 20)) stepDay(1);
+        else if (g.dx > threshold || (g.vx > 0.8 && Math.abs(g.dx) > 20)) stepDay(-1);
+        else Animated.timing(slide, { toValue: 0, duration: 160, useNativeDriver: true }).start();
+      },
+      onPanResponderTerminate: () =>
+        Animated.timing(slide, { toValue: 0, duration: 160, useNativeDriver: true }).start(),
+    }),
+  ).current;
+
+  const goBack = () => {
+    haptics("selection");
+    router.replace(`/Calendar?month=${month}&year=${year}`);
   };
-
-  const formatShort = (d: Date) =>
-    d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-  const handleRetry = retry;
 
   const openSettings = async () => {
     try {
-      if (Platform.OS === "ios") {
-        await Linking.openURL("app-settings:");
-      } else {
-        await Linking.openSettings();
-      }
+      if (Platform.OS === "ios") await Linking.openURL("app-settings:");
+      else await Linking.openSettings();
     } catch {}
   };
 
-  const ErrorBox = () =>
-    !error ? null : (
-      <View style={styles.errorCard}>
-        <View style={styles.errorHeader}>
-          <Ionicons name="alert-circle" size={20} color={colors.accent} />
-          <Text style={styles.errorTitle}>Problem loading prayer times</Text>
-        </View>
-        <Text style={styles.errorMessage}>{error.message}</Text>
-
-        <View style={styles.errorActions}>
-          <TouchableOpacity
-            onPress={handleRetry}
-            style={styles.retryButton}
-            accessibilityRole="button"
-            accessibilityLabel="Retry loading prayer times"
-          >
-            <Text style={styles.retryButtonText}>Try again</Text>
-          </TouchableOpacity>
-
-          {error.code === "PERMISSION" && (
-            <TouchableOpacity
-              onPress={openSettings}
-              style={styles.settingsButton}
-              accessibilityRole="button"
-              accessibilityLabel="Open app settings"
-            >
-              <Text style={styles.settingsButtonText}>Open Settings</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    );
-
-  const EmptyBox = () => (
-    <View style={styles.emptyCard}>
-      <Text style={styles.emptyText}>
-        No prayer times available for this date.
-      </Text>
-      <TouchableOpacity
-        onPress={handleRetry}
-        style={styles.emptyRetryButton}
-        accessibilityRole="button"
-        accessibilityLabel="Retry loading prayer times"
-      >
-        <Text style={styles.emptyRetryButtonText}>Try again</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  if (!selectedDate) return null;
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   return (
-    <LinearGradient
-      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.screen}
-    >
-      <Aurora />
-      <View style={styles.screen}>
-        {/* Top Navigation Bar - stays fixed */}
-        <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-          <PressableScale
-            onPress={animateBackToCalendar}
-            style={styles.backButton}
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.accent} />
-            <Text style={styles.backButtonText}>Calendar</Text>
-          </PressableScale>
-        </View>
-
-        {/* Content area with proper layout and swipe gesture support */}
-        <ScrollView
-          style={styles.screen}
-          contentInsetAdjustmentBehavior="never"
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + spacing.xxl + spacing.md },
-          ]}
-          showsVerticalScrollIndicator={false}
-          {...panResponderRef.current.panHandlers}
-        >
-          {/* Static Prev / Next Row (no animation) */}
-          <View style={styles.dayNavRow}>
-            {/* Prev */}
-            <PressableScale
-              onPress={() => !isPrevDisabled && animateDateChange("prev", -1)}
-              disabled={isPrevDisabled}
-              style={[
-                styles.dayNavButton,
-                isPrevDisabled ? styles.dayNavButtonDisabled : null,
-              ]}
-            >
-              <View
-                style={[
-                  styles.dayNavIconWrap,
-                  isPrevDisabled ? styles.dayNavIconWrapDisabled : null,
-                ]}
-              >
-                <Ionicons
-                  name="chevron-back"
-                  size={20}
-                  color={
-                    isPrevDisabled
-                      ? withOpacity(colors.accent, 0.3)
-                      : colors.accent
-                  }
-                />
-              </View>
-              <Text
-                style={[
-                  styles.dayNavLabel,
-                  isPrevDisabled ? styles.dayNavLabelDisabled : null,
-                ]}
-              >
-                Prev
-              </Text>
-              {!isPrevDisabled && (
-                <Text style={styles.dayNavHint}>{formatShort(prevDate)}</Text>
-              )}
-            </PressableScale>
-            <View style={styles.dateHeroWrap}>
-              {/* Animated Date Info (only this slides) */}
-              <Animated.View
-                style={[
-                  styles.dateHero,
-                  {
-                    opacity: fadeAnim,
-                    transform: [{ translateX: slideAnim }],
-                  },
-                ]}
-              >
-                <Text
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.72}
-                  style={[
-                    styles.dateHeroTitle,
-                    isSmall ? styles.dateHeroTitleSmall : null,
-                  ]}
-                >
-                  {displayDateLine}
-                </Text>
-                <Text style={styles.dateHeroHijri}>{islamicDate}</Text>
-              </Animated.View>
-            </View>
-            {/* Next */}
-            <PressableScale
-              onPress={() => !isNextDisabled && animateDateChange("next", 1)}
-              disabled={isNextDisabled}
-              style={[
-                styles.dayNavButton,
-                isNextDisabled ? styles.dayNavButtonDisabled : null,
-              ]}
-            >
-              <View
-                style={[
-                  styles.dayNavIconWrap,
-                  isNextDisabled ? styles.dayNavIconWrapDisabled : null,
-                ]}
-              >
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={
-                    isNextDisabled
-                      ? withOpacity(colors.accent, 0.3)
-                      : colors.accent
-                  }
-                />
-              </View>
-              <Text
-                style={[
-                  styles.dayNavLabel,
-                  isNextDisabled ? styles.dayNavLabelDisabled : null,
-                ]}
-              >
-                Next
-              </Text>
-              {!isNextDisabled && (
-                <Text style={styles.dayNavHint}>{formatShort(nextDate)}</Text>
-              )}
-            </PressableScale>
-          </View>
-
-          {/* Holiday Box (static) */}
-          {holiday && (
-            <View style={styles.holidayCard}>
-              <Text style={styles.holidayTitle}>Islamic Holiday</Text>
-              <Text style={styles.holidayText}>{holiday}</Text>
-            </View>
-          )}
-
-          {/* Ramadan Tracker Card */}
-          {isRamadan && !loadingRamadan && (
-            <View style={styles.ramadanCard}>
-              <Text style={styles.ramadanTitle}>Ramadan Tracker</Text>
-              <Text style={styles.ramadanStatusText}>
-                {isFastMissed
-                  ? "This date is marked as a missed fast."
-                  : "This date is not marked as missed."}
-              </Text>
-
-              <PressableScale
-                onPress={toggleMissedFast}
-                style={[
-                  styles.ramadanToggleButton,
-                  isFastMissed ? styles.ramadanToggleButtonActive : null,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.ramadanToggleText,
-                    isFastMissed ? styles.ramadanToggleTextActive : null,
-                  ]}
-                >
-                  {isFastMissed ? "Clear Missed Fast" : "Mark Fast as Missed"}
-                </Text>
-              </PressableScale>
-            </View>
-          )}
-
-          {/* Section title (static) */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionEyebrow}>Schedule</Text>
-            <Text style={styles.sectionTitle}>Prayer Times</Text>
-          </View>
-
-          {isToday && nextPrayer && !error && (
-            <View style={styles.nextPrayerContainer}>
-              <View style={styles.nextPrayerCard}>
-                <Text style={styles.nextPrayerLabel}>Next Prayer</Text>
-                <View style={styles.nextPrayerRow}>
-                  <Text style={styles.nextPrayerName}>{nextPrayer.label}</Text>
-                  <Text style={styles.nextPrayerTime}>{nextPrayer.time}</Text>
-                </View>
-                <Text style={styles.nextPrayerCountdown}>
-                  Starts in {timeLeft}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* Prayer times container – always mounted and height locked */}
-          <View style={styles.prayerListCard}>
-            {error ? (
-              <ErrorBox />
-            ) : !loading && prayerTimes.length === 0 ? (
-              <EmptyBox />
-            ) : (
-              <PrayerTimesList
-                loading={loading}
-                prayerTimes={prayerTimes}
-                timeOpacity={timesOpacityAnim}
-                timeSlide={timesSlideAnim}
-              />
-            )}
-          </View>
-        </ScrollView>
+    <Screen safeArea={false}>
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+        <PressableScale onPress={goBack} accessibilityRole="button" style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={22} color={colors.accent} />
+          <Headline color={colors.accent}>Calendar</Headline>
+        </PressableScale>
       </View>
-    </LinearGradient>
+
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.content,
+          {
+            paddingBottom: insets.bottom + spacing.xxl,
+            transform: [{ translateX: slide }],
+          },
+        ]}
+      >
+        <DayDetailPanel
+          date={selectedDate}
+          isToday={isToday}
+          holiday={holiday}
+          loading={loading}
+          prayerTimes={prayerTimes}
+          error={error}
+          onRetry={retry}
+          onOpenSettings={openSettings}
+          nextPrayer={nextPrayer}
+          timeLeft={timeLeft}
+          isRamadan={isRamadan}
+          isFastMissed={isFastMissed}
+          onToggleMissedFast={toggleMissedFast}
+        />
+      </Animated.View>
+    </Screen>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing, typography } = theme;
-  const isLight = theme.name === "light";
-
+  const { spacing } = theme;
   return StyleSheet.create({
-    screen: { flex: 1 },
-    topBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: spacing.sm,
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.sm,
-    },
-    backButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: spacing.xs + 2,
-      paddingHorizontal: spacing.sm + 2,
-      borderRadius: 10,
-    },
-    backButtonText: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Medium",
-      marginLeft: 2,
-    },
-    scrollContent: {
-      padding: spacing.xl,
-      paddingBottom: spacing.xxl + spacing.md,
-    },
-    dayNavRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: spacing.lg,
-      gap: spacing.sm + 2,
-    },
-    dayNavButton: {
-      flex: 0.85,
-      alignItems: "center",
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.sm + 2,
-    },
-    dayNavButtonDisabled: {
-      opacity: 0.7,
-    },
-    dayNavIconWrap: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
-      backgroundColor: withOpacity(colors.accent, 0.12),
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: spacing.xs + 2,
-    },
-    dayNavIconWrapDisabled: {
-      backgroundColor: withOpacity(colors.accent, 0.05),
-    },
-    dayNavLabel: {
-      color: colors.white,
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Medium",
-      marginBottom: 2,
-    },
-    dayNavLabelDisabled: {
-      color: withOpacity(colors.white, 0.3),
-    },
-    dayNavHint: {
-      color: withOpacity(colors.white, 0.6),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Regular",
-    },
-    dateHeroWrap: {
-      flex: 2.3,
-      minWidth: 0,
-      justifyContent: "center",
-    },
-    dateHero: {
-      alignItems: "center",
-      paddingVertical: spacing.md + 2,
-      paddingHorizontal: spacing.md + 2,
-      borderRadius: 16,
-      shadowColor: colors.accent,
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 3,
-    },
-    dateHeroTitle: {
-      color: colors.white,
-      fontSize: typography.subtitle,
-      lineHeight: 22,
-      textAlign: "center",
-      fontFamily: "SFProDisplay-Bold",
-      letterSpacing: 0.4,
-      marginBottom: spacing.xs + 2,
-      width: "100%",
-    },
-    dateHeroTitleSmall: {
-      fontSize: typography.bodyLg,
-    },
-    dateHeroHijri: {
-      color: colors.accent,
-      fontSize: typography.body,
-      textAlign: "center",
-      fontFamily: "SFProDisplay-Medium",
-      letterSpacing: 0.3,
-    },
-    holidayCard: {
-      backgroundColor: colors.primarySurface,
-      borderRadius: 12,
-      padding: spacing.lg - 2,
-      marginBottom: spacing.lg,
-      borderWidth: 2,
-      borderColor: colors.accent,
-      shadowColor: colors.accent,
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-    holidayTitle: {
-      color: withOpacity(colors.white, 0.9),
-      fontSize: typography.caption,
-      letterSpacing: 1,
-      textTransform: "uppercase",
-      fontFamily: "SFProDisplay-Semibold",
-      marginBottom: spacing.xs,
-      textAlign: "center",
-    },
-    holidayText: {
-      color: colors.accent,
-      fontSize: typography.subtitle,
-      textAlign: "center",
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    ramadanCard: {
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : withOpacity(colors.black, 0.2),
-      borderRadius: isLight ? 16 : 12,
-      padding: spacing.lg - 2,
-      marginBottom: spacing.lg,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.35)
-        : withOpacity(colors.white, 0.08),
-      shadowColor: colors.primaryDark,
-      shadowOpacity: isLight ? 0.22 : 0,
-      shadowRadius: isLight ? 20 : 0,
-      shadowOffset: { width: 0, height: isLight ? 10 : 0 },
-      elevation: isLight ? 4 : 0,
-    },
-    ramadanTitle: {
-      color: colors.white,
-      fontSize: typography.subtitle,
-      fontFamily: "SFProDisplay-Semibold",
-      textAlign: "center",
-    },
-    ramadanStatusText: {
-      color: withOpacity(colors.white, 0.82),
-      fontSize: typography.body,
-      textAlign: "center",
-      fontFamily: "SFProDisplay-Regular",
-      marginTop: spacing.xs + 2,
-      marginBottom: spacing.md,
-    },
-    ramadanToggleButton: {
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : colors.primaryDark,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      borderRadius: 10,
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.35)
-        : withOpacity(colors.white, 0.08),
-      shadowColor: isLight
-        ? colors.primaryDark
-        : withOpacity(colors.black, 0.3),
-      shadowOpacity: isLight ? 0.22 : 0.2,
-      shadowRadius: isLight ? 20 : 8,
-      shadowOffset: { width: 0, height: isLight ? 10 : 6 },
-      elevation: 4,
-    },
-    ramadanToggleButtonActive: {
-      backgroundColor: isLight ? "#DABA69" : colors.accent,
-      borderColor: withOpacity(colors.accent, 0.8),
-      shadowColor: colors.accent,
-      shadowOpacity: 0.45,
-      shadowRadius: 12,
-      elevation: 8,
-    },
-    ramadanToggleText: {
-      color: isLight ? colors.accent : colors.white,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    ramadanToggleTextActive: {
-      color: colors.onAccent,
-    },
-    sectionHeader: {
-      alignItems: "center",
-      marginBottom: spacing.sm + 2,
-    },
-    sectionEyebrow: {
-      color: withOpacity(colors.accent, 0.92),
-      fontSize: typography.caption,
-      letterSpacing: 1,
-      textTransform: "uppercase",
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    sectionTitle: {
-      color: colors.white,
-      fontSize: typography.title,
-      marginTop: spacing.xs,
-      fontFamily: "SFProDisplay-Bold",
-    },
-    prayerListCard: {
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : withOpacity(colors.black, 0.2),
-      borderRadius: 18,
-      padding: spacing.xl,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.35)
-        : withOpacity(colors.white, 0.08),
-      shadowColor: colors.primaryDark,
-      shadowOpacity: isLight ? 0.22 : 0.25,
-      shadowRadius: isLight ? 20 : 24,
-      shadowOffset: { width: 0, height: isLight ? 10 : 16 },
-      elevation: isLight ? 4 : 6,
-      overflow: "hidden",
-    },
-    errorCard: {
-      backgroundColor: colors.primarySurface,
-      borderRadius: 12,
-      padding: spacing.lg - 2,
-      marginBottom: spacing.lg - 2,
-      borderWidth: 2,
-      borderColor: colors.accent,
-    },
-    errorHeader: { flexDirection: "row", alignItems: "center" },
-    errorTitle: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      marginLeft: spacing.sm,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    errorMessage: {
-      color: colors.white,
-      marginTop: spacing.sm,
-      lineHeight: 20,
-    },
-    errorActions: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: spacing.md,
-    },
-    retryButton: {
-      backgroundColor: colors.accent,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg - 2,
-      borderRadius: 8,
-      marginRight: spacing.sm + 2,
-    },
-    retryButtonText: {
-      color: colors.onAccent,
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    settingsButton: {
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg - 2,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.accent,
-    },
-    settingsButtonText: {
-      color: colors.accent,
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    emptyCard: {
-      backgroundColor: colors.primarySurface,
-      borderRadius: 12,
-      padding: spacing.lg,
-      borderWidth: 2,
-      borderColor: colors.primarySurface,
-    },
-    emptyText: {
-      color: colors.white,
-      textAlign: "center",
-    },
-    emptyRetryButton: {
-      alignSelf: "center",
-      marginTop: spacing.sm + 2,
-      backgroundColor: colors.accent,
-      paddingVertical: spacing.sm - 2,
-      paddingHorizontal: spacing.md,
-      borderRadius: 8,
-    },
-    emptyRetryButtonText: {
-      color: colors.onAccent,
-      fontWeight: "600",
-    },
-    nextPrayerContainer: {
-      marginBottom: spacing.md,
-      alignItems: "center",
-    },
-    nextPrayerCard: {
-      width: "100%",
-      backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.3),
-      borderRadius: 16,
-      paddingVertical: spacing.md + 2,
-      paddingHorizontal: spacing.lg,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.35),
-      shadowColor: colors.primaryDark,
-      shadowOpacity: 0.22,
-      shadowRadius: 20,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 4,
-    },
-    nextPrayerLabel: {
-      color: withOpacity(colors.accent, 0.95),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-      letterSpacing: 0.7,
-      textTransform: "uppercase",
-    },
-    nextPrayerRow: {
-      marginTop: spacing.xs,
-      flexDirection: "row",
-      alignItems: "flex-end",
-      justifyContent: "space-between",
-    },
-    nextPrayerName: {
-      color: colors.white,
-      fontSize: typography.title,
-      fontFamily: "SFProDisplay-Bold",
-    },
-    nextPrayerTime: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Bold",
-    },
-    nextPrayerCountdown: {
-      marginTop: spacing.xs,
-      color: withOpacity(colors.white, 0.9),
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Semibold",
-    },
+    topBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.xl, marginBottom: spacing.sm },
+    backBtn: { flexDirection: "row", alignItems: "center", gap: 2, paddingVertical: spacing.xs + 2 },
+    content: { flex: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
   });
 };
