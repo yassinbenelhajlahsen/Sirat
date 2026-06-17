@@ -55,7 +55,10 @@ export function QuranMiniPlayer({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const insets = useSafeAreaInsets();
-  const TAB_BAR_GAP = 64;
+  // Tab bar sits at bottom: Math.max(insets.bottom, 14) + 6 with height 64.
+  // Its top edge is at Math.max(insets.bottom, 14) + 70 from the screen bottom.
+  // Add an 8px gap so the mini player clears it cleanly.
+  const TAB_BAR_CLEARANCE = Math.max(insets.bottom, 14) + 78;
   const [duration, setDuration] = useState(playbackDuration);
   const [position, setPosition] = useState(playbackPosition);
   const router = useRouter();
@@ -195,7 +198,7 @@ export function QuranMiniPlayer({
         styles.wrapper,
         style,
         {
-          marginBottom: (insets.bottom > 0 ? insets.bottom : 12) + TAB_BAR_GAP,
+          marginBottom: TAB_BAR_CLEARANCE,
         },
       ]}
     >
@@ -263,7 +266,7 @@ const createStyles = (theme: AppTheme) => {
       position: "absolute",
       left: 16,
       right: 16,
-      bottom: -12,
+      bottom: 0,
       shadowColor: themeColors.black,
       shadowOpacity: 0.24,
       shadowRadius: 14,

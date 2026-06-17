@@ -29,8 +29,6 @@ const DISPLAY_MODE_OPTIONS: readonly {
   { mode: "transliteration", label: "Transliteration" },
 ];
 
-const SNAP_POINTS = ["55%"];
-
 export default function QuranDisplaySettingsModal({
   visible,
   onClose,
@@ -87,8 +85,7 @@ export default function QuranDisplaySettingsModal({
     <BottomSheet
       ref={sheetRef}
       index={0}
-      snapPoints={SNAP_POINTS}
-      enableDynamicSizing={false}
+      enableDynamicSizing
       enablePanDownToClose
       backgroundComponent={DisplaySettingsSheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}

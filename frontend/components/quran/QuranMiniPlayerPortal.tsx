@@ -71,7 +71,7 @@ export function QuranMiniPlayerPortal() {
 
 const styles = StyleSheet.create({
   tabPosition: {
-    bottom: 106,
+    bottom: 0,
   },
 });
 

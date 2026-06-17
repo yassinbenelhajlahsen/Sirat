@@ -1,7 +1,9 @@
+import { BlurView } from "expo-blur";
 import { ReactNode } from "react";
-import { Platform, StyleProp, View, ViewProps, ViewStyle } from "react-native";
+import { Platform, StyleProp, StyleSheet, View, ViewProps, ViewStyle } from "react-native";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 
+import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 type Tier = "chrome" | "card" | "row";
@@ -46,9 +48,22 @@ export default function GlassSurface({
     );
   }
 
+  const blurIntensity = tier === "chrome" ? 55 : 40;
+  const blurTint = theme.name === "light" ? "light" : "dark";
+  const tintBase = m.solid;
+
   return (
-    <View style={[shared, { backgroundColor: m.solid }, style]} {...rest}>
+    <BlurView
+      tint={blurTint}
+      intensity={blurIntensity}
+      style={[shared, style]}
+      {...rest}
+    >
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: withOpacity(tintBase, 0.15) }]}
+      />
       {children}
-    </View>
+    </BlurView>
   );
 }

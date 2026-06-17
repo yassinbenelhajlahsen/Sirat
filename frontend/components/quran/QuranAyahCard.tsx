@@ -136,13 +136,6 @@ function QuranAyahCard({
               textBreakStrategy="highQuality"
             >
               {ayah.arabicText}
-              <Text
-                style={styles.ayahMarker}
-                testID="ayah-number-marker"
-                allowFontScaling={false}
-              >
-                {` \u{FD3E}${ayah.ayahNumber}\u{FD3F}`}
-              </Text>
             </Text>
           ) : null}
           {shouldShowTransliteration ? (
@@ -193,14 +186,6 @@ const createStyles = (theme: AppTheme) => {
     ayahCardPressed: {
       transform: [{ scale: 0.985 }],
       opacity: 0.95,
-    },
-
-    /* INLINE AYAH NUMBER MARKER */
-    ayahMarker: {
-      color: themeColors.accent,
-      fontSize: 16,
-      textAlign: "right",
-      writingDirection: "rtl",
     },
 
     /* BOOKMARK BADGE */

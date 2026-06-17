@@ -1,3 +1,4 @@
+import { BlurView } from "expo-blur";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { Platform, StyleSheet, View } from "react-native";
@@ -44,6 +45,8 @@ export default function SheetBackground({
     ),
   }));
 
+  const blurTint = theme.name === "light" ? "light" : "dark";
+
   if (solid) {
     return (
       <View
@@ -51,15 +54,17 @@ export default function SheetBackground({
         pointerEvents="none"
         style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
       >
+        {glass ? (
+          <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
+        ) : (
+          <BlurView tint={blurTint} intensity={55} style={StyleSheet.absoluteFill} />
+        )}
         <LinearGradient
-          colors={[colors.primaryDeep, colors.primary]}
+          colors={[withOpacity(colors.primaryDeep, 0.65), withOpacity(colors.primary, 0.6)]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        {glass ? (
-          <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
-        ) : null}
       </View>
     );
   }

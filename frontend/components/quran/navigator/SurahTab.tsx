@@ -202,6 +202,7 @@ function SurahTab({
             )
           : null
       }
+      style={styles.list}
       contentContainerStyle={styles.listContent}
       columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
       showsVerticalScrollIndicator={false}
@@ -219,9 +220,12 @@ const createStyles = (theme: AppTheme) => {
   const mat = theme.materials.row;
 
   return StyleSheet.create({
+    list: {
+      flex: 1,
+    },
     listContent: {
       paddingHorizontal: 20,
-      paddingBottom: 18,
+      paddingBottom: 32,
       paddingTop: 8,
     },
     columnWrapper: {

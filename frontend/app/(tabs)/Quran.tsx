@@ -683,10 +683,18 @@ export default function QuranScreen() {
     [juzFirstItemIndex, scrollToAyahIndex, scrollToItemIndex],
   );
 
+  const closeAllSheets = useCallback(() => {
+    setNavigatorOpen(false);
+    setDisplaySettingsOpen(false);
+    setCopySheetAyah(null);
+    setBookmarkModalContext(null);
+  }, []);
+
   const openNavigator = useCallback((tab: NavigatorInitialTab = "surah") => {
+    closeAllSheets();
     setNavigatorInitialTab(tab);
     setNavigatorOpen(true);
-  }, []);
+  }, [closeAllSheets]);
 
   const viewabilityConfigRef = useRef({
     itemVisiblePercentThreshold: 1,
@@ -1123,23 +1131,24 @@ export default function QuranScreen() {
     (ayah: NormalizedAyah, ayahGlobalIndex: number, ayahKey: string) => {
       const existing = bookmarkMap.get(ayahKey);
       if (existing) {
-        setBookmarkModalContext(null);
         openNavigator("bookmarks");
         return;
       }
+      closeAllSheets();
       setBookmarkModalContext({
         ayah,
         ayahGlobalIndex,
         bookmark: existing,
       });
     },
-    [bookmarkMap, openNavigator],
+    [bookmarkMap, openNavigator, closeAllSheets],
   );
 
   const handleAyahLongPress = useCallback((ayah: NormalizedAyah) => {
     haptic("light");
+    closeAllSheets();
     setCopySheetAyah(ayah);
-  }, [haptic]);
+  }, [haptic, closeAllSheets]);
 
   const handleCopy = useCallback((text: string) => {
     Clipboard.setString(text);
@@ -1314,7 +1323,7 @@ export default function QuranScreen() {
               <PressableScale style={styles.ctrl} onPress={() => openNavigator("surah")} accessibilityRole="button" accessibilityLabel="Navigate">
                 <Ionicons name="search" size={18} color={themeColors.white} />
               </PressableScale>
-              <PressableScale style={styles.ctrl} onPress={() => setDisplaySettingsOpen(true)} accessibilityRole="button" accessibilityLabel="Display settings">
+              <PressableScale style={styles.ctrl} onPress={() => { closeAllSheets(); setDisplaySettingsOpen(true); }} accessibilityRole="button" accessibilityLabel="Display settings">
                 <Text style={styles.aa}>Aa</Text>
               </PressableScale>
             </View>

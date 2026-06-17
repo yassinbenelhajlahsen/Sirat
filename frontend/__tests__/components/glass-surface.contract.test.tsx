@@ -22,15 +22,13 @@ describe("GlassSurface", () => {
     expect(getByTestId("surface")).toBeTruthy();
   });
 
-  it("falls back to a solid surface when the glass API is unavailable", () => {
+  it("falls back to a frosted surface when the glass API is unavailable", () => {
     mockApiAvailable.mockReturnValue(false);
-    const { getByTestId } = render(
+    const { getByTestId, getByText } = render(
       <GlassSurface tier="card" testID="surface-fallback"><Text>hi</Text></GlassSurface>,
     );
-    const node = getByTestId("surface-fallback");
-    const flat = Array.isArray(node.props.style)
-      ? Object.assign({}, ...node.props.style)
-      : node.props.style;
-    expect(flat.backgroundColor).toBeTruthy();
+    // The fallback renders a BlurView (mocked as View) that wraps a tint overlay + children.
+    expect(getByTestId("surface-fallback")).toBeTruthy();
+    expect(getByText("hi")).toBeTruthy();
   });
 });

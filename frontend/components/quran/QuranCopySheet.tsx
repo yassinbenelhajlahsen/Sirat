@@ -25,8 +25,6 @@ type QuranCopySheetProps = {
   onClose: () => void;
 };
 
-const SNAP_POINTS = ["40%"];
-
 export default function QuranCopySheet({
   visible,
   ayah,
@@ -82,7 +80,7 @@ export default function QuranCopySheet({
     <BottomSheet
       ref={sheetRef}
       index={0}
-      snapPoints={SNAP_POINTS}
+      enableDynamicSizing
       enablePanDownToClose
       backgroundComponent={CopySheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}
