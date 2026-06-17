@@ -8,8 +8,10 @@ import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { distanceKm, formatDistanceShort } from "@/utils/geo";
 import type { Mosque } from "@/services/getNearbyMosques";
+import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -26,29 +28,42 @@ type MosqueSheetProps = {
   bottomInset: number;
 };
 
-// Translucent dark at peek/half so the map reads through and it stays light,
-// settling to a solid surface at full. Flat colour (no blur, no aurora) so it
-// is cheap and never shows a clipped edge.
+const useLiquidGlass = () =>
+  Platform.OS === "ios" && isGlassEffectAPIAvailable();
+
+// Real iOS 26 liquid glass over the map at peek/half (translucent fallback
+// elsewhere), with a solid vertical gradient that fades in toward full. Only
+// the gradient overlay animates — never the glass — so the material keeps
+// rendering (animating a GlassView's opacity stops it drawing).
 function SheetBackground({ style, animatedIndex }: BottomSheetBackgroundProps) {
   const { theme } = useTheme();
   const { colors } = theme;
-  const fillStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      animatedIndex.value,
-      [1, 2],
-      [0.82, 1],
-      Extrapolation.CLAMP,
-    ),
+  const glass = useLiquidGlass();
+
+  const solidStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [1, 2], [0, 1], Extrapolation.CLAMP),
   }));
+
   return (
     <View pointerEvents="none" style={[style, styles.bg]}>
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          fillStyle,
-          { backgroundColor: colors.primaryDeep },
-        ]}
-      />
+      {glass ? (
+        <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
+      ) : (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: withOpacity(colors.primaryDeep, 0.82) },
+          ]}
+        />
+      )}
+      <Animated.View style={[StyleSheet.absoluteFill, solidStyle]}>
+        <LinearGradient
+          colors={[colors.primaryDeep, colors.primary]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
     </View>
   );
 }
@@ -63,19 +78,15 @@ export default function MosqueSheet({
 }: MosqueSheetProps) {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
+  const glass = useLiquidGlass();
 
   const snapPoints = useMemo(() => ["18%", "50%", "92%"], []);
 
   // Shared with the chrome strip behind the floating tab bar so the bottom
   // matches the sheet in every state.
   const animatedIndex = useSharedValue(1);
-  const chromeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      animatedIndex.value,
-      [1, 2],
-      [0.82, 1],
-      Extrapolation.CLAMP,
-    ),
+  const chromeSolid = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedIndex.value, [1, 2], [0, 1], Extrapolation.CLAMP),
   }));
 
   const rows = useMemo(() => {
@@ -106,14 +117,31 @@ export default function MosqueSheet({
 
   return (
     <>
-      <Animated.View
+      {/* Chrome behind the floating tab bar — same glass + solid-fade as the
+          sheet so the bottom reads as one continuous surface. */}
+      <View
         pointerEvents="none"
-        style={[
-          styles.chrome,
-          { height: bottomInset, backgroundColor: colors.primaryDeep },
-          chromeStyle,
-        ]}
-      />
+        style={[styles.chrome, { height: bottomInset }]}
+      >
+        {glass ? (
+          <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
+        ) : (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: withOpacity(colors.primaryDeep, 0.82) },
+            ]}
+          />
+        )}
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            chromeSolid,
+            { backgroundColor: colors.primary },
+          ]}
+        />
+      </View>
+
       <BottomSheet
         index={1}
         snapPoints={snapPoints}
@@ -172,5 +200,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    overflow: "hidden",
   },
 });
