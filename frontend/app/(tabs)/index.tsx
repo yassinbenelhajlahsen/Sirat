@@ -11,6 +11,7 @@ import { Caption, Headline, LargeTitle, Title2 } from "@/components/ui/Text";
 import Screen from "@/components/ui/Screen";
 import { BREATH_HALF_CYCLE } from "@/constants/motion";
 import { getGreeting } from "@/utils/greeting";
+import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
 import PrayerArc from "@/components/PrayerArc";
@@ -83,6 +84,8 @@ export default function Home() {
         onLayout={onScrollViewLayout}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.scrollContent, keyboardHeight > 0 && { paddingBottom: keyboardHeight }]}
+        onScroll={handleTabBarScroll}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} title="Refreshing…" titleColor={colors.accent} />

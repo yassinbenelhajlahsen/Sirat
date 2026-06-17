@@ -85,6 +85,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `home prayer arc (horizontal sun path) testing`
   - `utils/prayer-arc.test.ts`
   - `components/prayer-arc.contract.test.tsx`
+- `tab bar scroll-collapse testing`
+  - `utils/tab-bar-chrome.test.ts`
 
 ## Run Tests
 

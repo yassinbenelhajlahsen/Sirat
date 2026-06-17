@@ -1,3 +1,4 @@
+import GlassSurface from "@/components/ui/GlassSurface";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { Dua } from "@/services/duaService";
@@ -28,7 +29,7 @@ function DuaResultCard({ dua, onClose}: DuaResultCardProps) {
 
 
   return (
-    <View style={styles.card}>
+    <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
           <View style={styles.categoryBadge}>
@@ -98,7 +99,7 @@ function DuaResultCard({ dua, onClose}: DuaResultCardProps) {
 
         </View>
       </ScrollView>
-    </View>
+    </GlassSurface>
   );
 }
 
@@ -109,15 +110,7 @@ const createStyles = (theme: AppTheme) => {
   return StyleSheet.create({
     card: {
       marginTop: spacing.lg,
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : withOpacity(colors.black, 0.22),
-      borderRadius: 18,
       padding: spacing.xl,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.35)
-        : withOpacity(colors.white, 0.1),
       shadowColor: colors.primaryDark,
       shadowOpacity: isLight ? 0.22 : 0.28,
       shadowRadius: 20,
@@ -160,7 +153,9 @@ const createStyles = (theme: AppTheme) => {
     arabicContainer: {
       marginBottom: spacing.lg,
       alignItems: "center",
-      backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.24),
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurfaceAlt, 0.4)
+        : withOpacity(colors.white, 0.05),
       borderRadius: 14,
       borderWidth: 1,
       borderColor: withOpacity(colors.accent, 0.22),
@@ -178,14 +173,14 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: spacing.md,
       backgroundColor: isLight
         ? withOpacity(colors.primarySurfaceAlt, 0.24)
-        : withOpacity(colors.black, 0.26),
+        : withOpacity(colors.white, 0.05),
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.md,
       borderRadius: 12,
       borderWidth: 1,
       borderColor: isLight
         ? withOpacity(colors.accent, 0.2)
-        : withOpacity(colors.white, 0.14),
+        : withOpacity(colors.white, 0.12),
     },
     sectionLabel: {
       color: withOpacity(colors.white, 0.65),
@@ -210,7 +205,7 @@ const createStyles = (theme: AppTheme) => {
       width: "100%",
       backgroundColor: isLight
         ? withOpacity(colors.primarySurfaceAlt, 0.24)
-        : withOpacity(colors.black, 0.2),
+        : withOpacity(colors.white, 0.05),
       borderRadius: 10,
       borderWidth: 1,
       borderColor: isLight
@@ -241,7 +236,7 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: (theme.name === "light") ? "#DABA69" : colors.accent,
+      backgroundColor: colors.accent,
       borderRadius: 11,
       paddingVertical: spacing.sm + 3,
       borderWidth: 1,

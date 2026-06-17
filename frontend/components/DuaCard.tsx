@@ -1,3 +1,4 @@
+import GlassSurface from "@/components/ui/GlassSurface";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -42,7 +43,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   };
 
   return (
-    <View style={styles.card}>
+    <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
       <View style={styles.badgeRow}>
         <View style={styles.badge}>
           <Ionicons name="sparkles-outline" size={12} color={colors.accent} />
@@ -116,7 +117,7 @@ accessibilityLabel="Dua request input"
           </>
         )}
       </PressableScale>
-    </View>
+    </GlassSurface>
   );
 }
 
@@ -127,15 +128,7 @@ const createStyles = (theme: AppTheme) => {
   return StyleSheet.create({
     card: {
       marginTop: spacing.xl,
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : withOpacity(colors.black, 0.22),
-      borderRadius: 18,
       padding: spacing.xl,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.35)
-        : withOpacity(colors.white, 0.1),
       shadowColor: colors.primaryDark,
       shadowOpacity: isLight ? 0.22 : 0.28,
       shadowRadius: 20,
@@ -181,7 +174,7 @@ const createStyles = (theme: AppTheme) => {
     inputShell: {
       backgroundColor: isLight
         ? withOpacity(colors.primarySurface, 0.65)
-        : withOpacity(colors.black, 0.3),
+        : withOpacity(colors.white, 0.06),
       borderRadius: 12,
       borderWidth: 1,
       borderColor: isLight
@@ -221,8 +214,8 @@ const createStyles = (theme: AppTheme) => {
       color: withOpacity(colors.accent, 0.95),
     },
     submitButton: {
-      backgroundColor: (theme.name === "light") ? "#DABA69" : colors.accent,
-      borderRadius: 10,
+      backgroundColor: colors.accent,
+      borderRadius: 12,
       paddingVertical: spacing.md,
       alignItems: "center",
       justifyContent: "center",
