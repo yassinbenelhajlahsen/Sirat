@@ -26,8 +26,7 @@ export default function TabLayout() {
                 {
                   translateX: current.progress.interpolate({
                     inputRange: [-1, 0, 1],
-                    // flip sign if slide direction feels reversed
-                    outputRange: [SCREEN_W, 0, -SCREEN_W],
+                    outputRange: [-SCREEN_W, 0, SCREEN_W],
                   }),
                 },
               ],

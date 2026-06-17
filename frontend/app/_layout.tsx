@@ -392,7 +392,10 @@ function RootLayoutContent() {
                   name="MosqueMap"
                   options={{ animation: "fade", animationDuration: 300 }}
                 />
-                <Stack.Screen name="Settings" options={{ presentation: "modal", headerShown: false }} />
+                <Stack.Screen
+                  name="Settings"
+                  options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
+                />
               </Stack>
             </NavThemeProvider>
             <QuranMiniPlayerPortal />
