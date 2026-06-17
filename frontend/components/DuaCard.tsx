@@ -39,21 +39,24 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   const hasInput = userInput.trim().length > 0;
   const disabled = loading || !hasInput;
 
-  const handleSubmit = async () => {
-    if (!userInput.trim()) {
-      Alert.alert("Please describe what you need help with");
-      return;
-    }
-
+  const submitRequest = async (request: string) => {
     haptic("medium");
 
     try {
-      await onSubmit(userInput);
+      await onSubmit(request);
       setUserInput("");
       Keyboard.dismiss();
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to find a dua");
     }
+  };
+
+  const handleSubmit = () => {
+    if (!userInput.trim()) {
+      Alert.alert("Please describe what you need help with");
+      return;
+    }
+    submitRequest(userInput);
   };
 
   return (
@@ -68,13 +71,11 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
         {QUICK_PROMPTS.map((prompt) => (
           <PressableScale
             key={prompt.label}
-            onPress={() => {
-              haptic("light");
-              setUserInput(prompt.text);
-            }}
+            disabled={loading}
+            onPress={() => submitRequest(prompt.text)}
             accessibilityRole="button"
-            accessibilityLabel={`Use ${prompt.label} prompt`}
-            style={styles.chip}
+            accessibilityLabel={`Ask for a ${prompt.label} dua`}
+            style={[styles.chip, loading ? styles.chipDisabled : undefined]}
           >
             <Caption color={withOpacity(colors.white, 0.82)}>{prompt.label}</Caption>
           </PressableScale>
@@ -165,17 +166,21 @@ const createStyles = (theme: AppTheme) => {
     },
     chipsRow: {
       flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 7,
+      gap: 8,
       marginTop: spacing.md,
     },
     chip: {
+      flex: 1,
+      alignItems: "center",
       backgroundColor: withOpacity(colors.white, 0.06),
       borderWidth: 1,
       borderColor: withOpacity(colors.white, 0.12),
       borderRadius: 999,
-      paddingVertical: 6,
+      paddingVertical: 8,
       paddingHorizontal: 11,
+    },
+    chipDisabled: {
+      opacity: 0.5,
     },
     inputShell: {
       marginTop: spacing.md,
