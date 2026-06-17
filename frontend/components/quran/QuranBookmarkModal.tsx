@@ -1,6 +1,6 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import SheetBackground from "@/components/ui/SheetBackground";
 import { withOpacity, type AppTheme } from "@/constants/theme";
@@ -156,7 +156,7 @@ function QuranBookmarkModal({
 
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>Bookmark Name</Text>
-          <TextInput
+          <BottomSheetTextInput
             style={styles.input}
             placeholder={defaultTitleFallback || "Bookmark title"}
             placeholderTextColor={withOpacity(theme.colors.white, 0.45)}
@@ -169,7 +169,7 @@ function QuranBookmarkModal({
 
         <View style={styles.fieldGroup}>
           <Text style={styles.fieldLabel}>Notes</Text>
-          <TextInput
+          <BottomSheetTextInput
             style={[styles.input, styles.multilineInput]}
             placeholder="Add an optional note"
             placeholderTextColor={withOpacity(theme.colors.white, 0.45)}

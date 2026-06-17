@@ -105,7 +105,7 @@ afterEach(() => {
 // embed the sheet can be rendered and queried.
 jest.mock("@gorhom/bottom-sheet", () => {
   const React = require("react");
-  const { View, FlatList } = require("react-native");
+  const { View, FlatList, TextInput } = require("react-native");
   const Passthrough = ({ children, ...props }: any) =>
     React.createElement(View, props, children);
   return {
@@ -127,6 +127,7 @@ jest.mock("@gorhom/bottom-sheet", () => {
           : null,
         React.createElement(FlatList, props),
       ),
+    BottomSheetTextInput: TextInput,
     useBottomSheet: () => ({
       snapToIndex: jest.fn(),
       expand: jest.fn(),
