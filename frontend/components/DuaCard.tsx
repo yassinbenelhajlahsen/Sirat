@@ -1,6 +1,8 @@
 import GlassSurface from "@/components/ui/GlassSurface";
+import { Caption, Subhead, Title2 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useHaptics } from "@/hooks/useHaptics";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -19,19 +21,31 @@ interface DuaCardProps {
   loading?: boolean;
 }
 
+const QUICK_PROMPTS = [
+  { label: "Anxiety", text: "I'm feeling anxious" },
+  { label: "Gratitude", text: "I want to express gratitude" },
+  { label: "Guidance", text: "I'm seeking guidance" },
+];
+
 function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
+  const haptic = useHaptics();
 
   const [userInput, setUserInput] = React.useState("");
+  const [focused, setFocused] = React.useState(false);
   const charactersLeft = 150 - userInput.length;
+  const hasInput = userInput.trim().length > 0;
+  const disabled = loading || !hasInput;
 
   const handleSubmit = async () => {
     if (!userInput.trim()) {
       Alert.alert("Please describe what you need help with");
       return;
     }
+
+    haptic("medium");
 
     try {
       await onSubmit(userInput);
@@ -44,76 +58,82 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
 
   return (
     <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <View style={styles.badgeRow}>
-        <View style={styles.badge}>
-          <Ionicons name="sparkles-outline" size={12} color={colors.accent} />
-          <Text style={styles.badgeText}>
-            Personalized
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.title}>
-        Ask for a Dua
-      </Text>
-
-      <Text style={styles.description}>
+      <Title2 style={styles.title}>Ask for a Dua</Title2>
+      <Subhead color={withOpacity(colors.white, 0.7)} style={styles.description}>
         Describe what you need help with, and we will find the perfect dua for
         you.
-      </Text>
+      </Subhead>
 
-      <View style={styles.inputShell}>
+      <View style={styles.chipsRow}>
+        {QUICK_PROMPTS.map((prompt) => (
+          <PressableScale
+            key={prompt.label}
+            onPress={() => {
+              haptic("light");
+              setUserInput(prompt.text);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={`Use ${prompt.label} prompt`}
+            style={styles.chip}
+          >
+            <Caption color={withOpacity(colors.white, 0.82)}>{prompt.label}</Caption>
+          </PressableScale>
+        ))}
+      </View>
+
+      <View style={[styles.inputShell, (focused || hasInput) && styles.inputShellActive]}>
         <TextInput
           placeholder="e.g., I'm anxious about an exam"
-          placeholderTextColor={colors.grayMuted}
+          placeholderTextColor={withOpacity(colors.white, 0.4)}
           value={userInput}
           onChangeText={setUserInput}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           multiline
           returnKeyType="done"
           blurOnSubmit={true}
           onSubmitEditing={handleSubmit}
           maxLength={150}
           editable={!loading}
-accessibilityLabel="Dua request input"
+          accessibilityLabel="Dua request input"
           accessibilityHint="Describe what you need help with"
           style={styles.input}
         />
 
         <View style={styles.metaRow}>
-          <Text
-            style={[
-              styles.characterCount,
-              charactersLeft <= 15 ? styles.characterCountWarning : undefined,
-            ]}
+          <Caption
+            color={charactersLeft <= 15 ? colors.accent : withOpacity(colors.white, 0.4)}
+            style={styles.characterCount}
           >
             {charactersLeft}
-          </Text>
+          </Caption>
         </View>
       </View>
 
       <PressableScale
-        disabled={loading || !userInput.trim()}
+        disabled={disabled}
         onPress={handleSubmit}
         accessibilityRole="button"
         accessibilityLabel={loading ? "Finding dua" : "Find dua"}
-        style={[
-          styles.submitButton,
-          loading ? styles.submitButtonDisabled : undefined,
-        ]}
+        style={[styles.submitButton, disabled ? styles.submitButtonDisabled : undefined]}
       >
         {loading ? (
           <>
-            <ActivityIndicator color={colors.onAccent} size="small" />
-            <Text style={styles.submitTextLoading}>
+            <ActivityIndicator color={withOpacity(colors.white, 0.5)} size="small" />
+            <Text style={[styles.submitText, styles.submitTextDisabled, styles.submitTextLoading]}>
               Finding...
             </Text>
           </>
         ) : (
           <>
-            <Text style={styles.submitText}>
+            <Text style={[styles.submitText, disabled ? styles.submitTextDisabled : undefined]}>
               Find Dua
             </Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.onAccent} />
+            <Ionicons
+              name="arrow-forward"
+              size={16}
+              color={disabled ? withOpacity(colors.white, 0.35) : colors.onAccent}
+            />
           </>
         )}
       </PressableScale>
@@ -137,52 +157,45 @@ const createStyles = (theme: AppTheme) => {
       position: "relative",
       zIndex: 1,
     },
-    badgeRow: {
-      flexDirection: "row",
-      marginBottom: spacing.sm,
-    },
-    badge: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: withOpacity(colors.accent, 0.1),
-      borderColor: withOpacity(colors.accent, 0.32),
-      borderWidth: 1,
-      borderRadius: 999,
-      paddingVertical: 4,
-      paddingHorizontal: 9,
-    },
-    badgeText: {
-      marginLeft: 5,
-      color: withOpacity(colors.accent, 0.92),
-      fontSize: 11,
-      fontFamily: "SFProDisplay-Semibold",
-      letterSpacing: 0.4,
-      textTransform: "uppercase",
-    },
     title: {
-      color: colors.accent,
-      fontSize: typography.subtitle,
-      fontFamily: "SFProDisplay-Semibold",
-      marginBottom: spacing.sm,
+      letterSpacing: -0.4,
     },
     description: {
-      color: withOpacity(colors.white, 0.78),
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Regular",
-      marginBottom: spacing.md,
+      marginTop: spacing.xs,
+    },
+    chipsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 7,
+      marginTop: spacing.md,
+    },
+    chip: {
+      backgroundColor: withOpacity(colors.white, 0.06),
+      borderWidth: 1,
+      borderColor: withOpacity(colors.white, 0.12),
+      borderRadius: 999,
+      paddingVertical: 6,
+      paddingHorizontal: 11,
     },
     inputShell: {
+      marginTop: spacing.md,
       backgroundColor: isLight
         ? withOpacity(colors.primarySurface, 0.65)
-        : withOpacity(colors.white, 0.06),
-      borderRadius: 12,
+        : withOpacity(colors.white, 0.05),
+      borderRadius: 14,
       borderWidth: 1,
       borderColor: isLight
         ? withOpacity(colors.accent, 0.22)
-        : withOpacity(colors.white, 0.14),
+        : withOpacity(colors.white, 0.12),
       paddingHorizontal: spacing.md,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
+    },
+    inputShellActive: {
+      borderColor: withOpacity(colors.accent, 0.45),
+      backgroundColor: isLight
+        ? withOpacity(colors.primarySurface, 0.8)
+        : withOpacity(colors.white, 0.07),
     },
     input: {
       color: colors.white,
@@ -190,7 +203,7 @@ const createStyles = (theme: AppTheme) => {
       fontSize: typography.bodyLg,
       fontFamily: "SFProDisplay-Regular",
       marginBottom: spacing.sm,
-      minHeight: 64,
+      minHeight: 56,
       textAlignVertical: "top",
     },
     metaRow: {
@@ -198,24 +211,14 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       justifyContent: "flex-end",
     },
-    inputHint: {
-      color: withOpacity(colors.white, 0.62),
-      fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
-    },
     characterCount: {
-      color: withOpacity(colors.white, 0.65),
-      fontSize: 12,
       fontFamily: "SFProDisplay-Semibold",
       minWidth: 28,
       textAlign: "right",
     },
-    characterCountWarning: {
-      color: withOpacity(colors.accent, 0.95),
-    },
     submitButton: {
       backgroundColor: colors.accent,
-      borderRadius: 12,
+      borderRadius: 14,
       paddingVertical: spacing.md,
       alignItems: "center",
       justifyContent: "center",
@@ -228,19 +231,24 @@ const createStyles = (theme: AppTheme) => {
       elevation: 4,
     },
     submitButtonDisabled: {
-      backgroundColor: withOpacity(colors.accent, 0.5),
+      backgroundColor: withOpacity(colors.white, 0.07),
+      borderWidth: 1,
+      borderColor: withOpacity(colors.white, 0.1),
+      shadowOpacity: 0,
+      elevation: 0,
     },
     submitText: {
       color: colors.onAccent,
-      fontSize: typography.subtitle,
+      fontSize: typography.bodyLg,
       fontFamily: "SFProDisplay-Bold",
       marginRight: 6,
     },
     submitTextLoading: {
-      color: colors.onAccent,
-      fontSize: typography.subtitle,
-      fontFamily: "SFProDisplay-Bold",
       marginLeft: spacing.sm,
+      marginRight: 0,
+    },
+    submitTextDisabled: {
+      color: withOpacity(colors.white, 0.35),
     },
   });
 };
