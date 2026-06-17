@@ -317,22 +317,16 @@ describe("route params and path wiring contract", () => {
     expect(lastArg?.toISOString()).toBe(expectedIso);
   });
 
-  it("pushes /[date] with first missed fast params from Ramadan summary", () => {
+  it("selects the first missed fast date inline from the Ramadan summary", () => {
     const { getByLabelText } = render(<CalendarScreen />);
 
     fireEvent.press(getByLabelText("Open first missed Ramadan fast date"));
 
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/[date]",
-      params: {
-        date: firstMissedFastDate.toISOString(),
-        month: "2",
-        year: "2026",
-        holiday: "",
-        ramadanStart: ramadanStart.toISOString(),
-        ramadanEnd: ramadanEnd.toISOString(),
-      },
-    });
+    expect(mockPush).not.toHaveBeenCalled();
+    const calls = mockUsePrayerTimes.mock.calls;
+    const lastArg = calls[calls.length - 1][0] as Date | null;
+    // firstMissedFastDate (2026-03-05) is in the viewed month (March) → selected directly.
+    expect(lastArg?.toISOString()).toBe(firstMissedFastDate.toISOString());
   });
 
   it("decodes [date] param and replaces back to Calendar with month/year query", async () => {
