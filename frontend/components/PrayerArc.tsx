@@ -84,7 +84,7 @@ export default function PrayerArc({
     );
     loop.start();
     return () => loop.stop();
-  }, [breath]);
+  }, [breath, live]);
   const breathScale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
 
   return (
