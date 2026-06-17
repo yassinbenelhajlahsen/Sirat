@@ -43,7 +43,7 @@ Selected from three candidates (bottom sheet over the grid · inline agenda · s
 | 03 | Prayer display | **`PrayerArc` everywhere** for one consistent shell. **Live** (sun/moon marker, gold progress arc, breathing "next" ring) only when the selected day is **today**. Any other day renders the **static** shell: arc curve + neutral prayer markers + the six times, no live layer. |
 | 04 | Month switcher | Bare `‹ Mon Year ›` text + chevrons, **no pill/border**, tucked top-right on the title line. Abbreviated month (e.g. `Dec 2026`). Frees vertical space for the panel. |
 | 05 | Default selection | On open (and when swiping to a month that contains today) **auto-select today** and show its panel. When viewing a month with **no** today, show the "tap a day to see prayer times & events" prompt. |
-| 06 | Ramadan | Per-day "mark/clear missed fast" toggle lives in the day panel. The month-level **Ramadan Summary** pins to the **top of the day panel** when the viewed month overlaps Ramadan (relocated from the old footer). |
+| 06 | Ramadan | A single month-level **Ramadan card** pins to the top of the day panel in any Ramadan month (`ramadanMonthActive`): it shows the month summary (missed-fast count, tap-to-jump to first missed) **and** a Mark/Unmark control for the currently selected day. The per-day toggle is **not** in the day detail. Toggling calls `reloadMissedFasts()` so the summary updates in place (no month switch needed). |
 | 07 | Grid height | **Always reserve 6 week-rows** (render the full matrix incl. blank trailing cells). Constant grid height → the divider + day panel never shift when month row-counts differ (4 / 5 / 6). Day cells keep a fixed size; short months show blank space at the grid's bottom. |
 | 08 | `/[date]` route | **Kept**, glass-restyled. Still reached from Home (`index.tsx`) and the Ramadan-summary deep link path. It and the inline panel **share** the same day-detail components (no duplication). |
 | 09 | Skin | Adopt the glass system: `Screen` / `GlassSurface` (tiers) / typed `Text` / `useHaptics` / `constants/motion` presets / `theme.radii`/`materials`/`type` + refreshed palette. Replace all flat `black@22%` cards and ad-hoc `typography`/`fontFamily` usage. |
@@ -55,7 +55,7 @@ Selected from three candidates (bottom sheet over the grid · inline agenda · s
 Extract the day's content into a reusable component (working name **`DayDetailPanel`**, `components/calendar/`):
 
 - **Props:** `date: Date`, `isToday: boolean`, `holiday: string | null`, plus the data/handlers it needs (prayer times + loading/error, `nextPrayer`, ramadan tracker state + toggle). Keep it presentational; data comes from hooks in the host.
-- **Renders, top-to-bottom:** (optional) Ramadan **summary** card → day title + Hijri date + holiday chip row → (optional) per-day Ramadan **toggle** → **PrayerArc** (live or static) → error / empty states.
+- **Renders, top-to-bottom:** day title + Hijri date + holiday chip row → (optional) next-prayer line → **PrayerArc** (live or static) → error / empty states. (The Ramadan card is rendered by `Calendar.tsx` at month level, not by this component.)
 - **Consumers:**
   - **`Calendar.tsx`** — rendered inline beneath the grid for the selected day.
   - **`[date].tsx`** — rendered inside the existing standalone route (glass back header retained; the route keeps its own day Prev/Next swiper for the Home/deep-link entry, restyled — see §7).
@@ -88,12 +88,12 @@ The host passes `live={isToday}`. (`prayerStates`/`sunMarker` already degrade wh
 
 | State | Day panel shows |
 |-------|-----------------|
-| **Today selected** | Live `PrayerArc` (sun on arc, gold progress, breathing next-ring), holiday chip if any, Ramadan toggle if in Ramadan. |
-| **Other day selected** | Static `PrayerArc` (no live layer), holiday chip if any, Ramadan toggle if in Ramadan. |
+| **Today selected** | Live `PrayerArc` (sun on arc, gold progress, breathing next-ring), holiday chip if any. |
+| **Other day selected** | Static `PrayerArc` (no live layer), holiday chip if any. |
 | **No day selected** | Centered prompt: *"Tap any day to see its prayer times & events."* (Only occurs when viewing a month with no today, or before first selection.) |
 | **Loading** | `PrayerArc` skeleton / existing loading affordance for the selected day. |
 | **Error** | Glass error card with Retry (and Open-Settings when permission-related), restyled from the current `ErrorBox`. |
-| **Ramadan month** | Ramadan **Summary** card pinned at the top of the panel; tapping it selects the first missed-fast date inline (navigating the grid to that month if needed). |
+| **Ramadan month** | Month-level Ramadan card at the top of the panel: summary (tap to jump to first missed) + Mark/Unmark control for the selected day. Toggling refreshes the summary in place via `reloadMissedFasts()`. |
 
 ## 6. Navigation / route changes
 
