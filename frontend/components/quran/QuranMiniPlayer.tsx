@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import GlassSurface from "@/components/ui/GlassSurface";
 import PressableScale from "../PressableScale";
 
 const PROGRESS_POLL_INTERVAL_MS = 500;
@@ -204,7 +205,7 @@ export function QuranMiniPlayer({
         accessibilityLabel="Open Quran screen"
         accessibilityHint="Navigates back to the Quran tab"
       >
-        <View style={styles.innerContainer}>
+        <GlassSurface tier="chrome" radius={theme.radii.cardLg} style={styles.innerContainer}>
           <View style={styles.textSection}>
             <Text
               style={styles.surahName}
@@ -241,7 +242,7 @@ export function QuranMiniPlayer({
               />
             </Pressable>
           </View>
-        </View>
+        </GlassSurface>
       </PressableScale>
       <View style={styles.progressTrack}>
         <Animated.View
@@ -274,15 +275,6 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       justifyContent: "space-between",
       padding: 14,
-      borderRadius: 20,
-      backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.16),
-      shadowColor: themeColors.black,
-      shadowOpacity: 0.32,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 14,
     },
     textSection: {
       flex: 1,
@@ -319,6 +311,11 @@ const createStyles = (theme: AppTheme) => {
     playButton: {
       backgroundColor: themeColors.accent,
       borderColor: withOpacity(themeColors.accent, 0.85),
+      shadowColor: withOpacity(themeColors.accent, 0.4),
+      shadowOpacity: 1,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 6,
     },
     progressTrack: {
       height: 4,
