@@ -1,5 +1,5 @@
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
-import { Caption, Headline } from "@/components/ui/Text";
+import { Headline } from "@/components/ui/Text";
 import MosqueRow from "@/components/mosques/MosqueRow";
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -42,17 +42,12 @@ export default function MosqueSheet({
     return r;
   }, [mosques, userLoc]);
 
-  const minDistanceKm = useMemo(() => {
-    if (!userLoc || rows.length === 0) return null;
-    return distanceKm(userLoc.latitude, userLoc.longitude, rows[0].lat, rows[0].lng);
-  }, [rows, userLoc]);
-
   const bgStyle = {
-    backgroundColor: theme.materials.chrome.fill,
+    backgroundColor: withOpacity(colors.primaryDeep, 0.97),
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
-    borderWidth: 1,
-    borderColor: theme.materials.chrome.border,
+    borderTopWidth: 1,
+    borderColor: withOpacity(colors.white, 0.12),
   };
 
   const handleStyle = {
@@ -61,7 +56,7 @@ export default function MosqueSheet({
   };
 
   function Header() {
-    const title = rows.length === 0 ? "No mosques nearby" : `Neaby mosques`;
+    const title = rows.length === 0 ? "No mosques nearby" : "Nearby mosques";
     return (
       <View style={{ paddingVertical: spacing.lg, gap: spacing.xs }}>
         <Headline color={colors.white}>{title}</Headline>

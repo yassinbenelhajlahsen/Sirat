@@ -37,7 +37,7 @@ it("renders the nearby header and a row per mosque", () => {
       bottomInset={80}
     />,
   );
-  expect(getByText("Neaby mosques")).toBeTruthy();
+  expect(getByText("Nearby mosques")).toBeTruthy();
   expect(getByText("Masjid Al-Noor")).toBeTruthy();
   expect(getByText("Islamic Center")).toBeTruthy();
 });

@@ -385,6 +385,7 @@ export default function MosqueScreen() {
             mosque={m}
             selected={m.id === selectedId}
             onPress={() => onSelectMosque(m)}
+            onDirections={() => openDirections(m.lat, m.lng)}
           />
         ))}
       </MapView>
@@ -446,6 +447,13 @@ export default function MosqueScreen() {
           <Ionicons name="locate" size={20} color={colors.white} />
         </GlassSurface>
       </TouchableOpacity>
+
+      {/* Opaque chrome behind the floating tab bar so it sits on a continuous
+          surface with the sheet instead of a stray strip of map. */}
+      <View
+        pointerEvents="none"
+        style={[styles.bottomChrome, { height: tabBarClearance }]}
+      />
 
       <MosqueSheet
         mosques={mosques}
@@ -605,6 +613,13 @@ const createStyles = (theme: AppTheme) => {
       height: 48,
       alignItems: "center",
       justifyContent: "center",
+    },
+    bottomChrome: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: withOpacity(colors.primaryDeep, 0.97),
     },
   });
 };
