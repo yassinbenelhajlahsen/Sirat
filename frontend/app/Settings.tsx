@@ -457,6 +457,7 @@ const createStyles = (theme: AppTheme) => {
       fontFamily: "SFProDisplay-Semibold",
       letterSpacing: 1,
       textTransform: "uppercase",
+      marginTop: 10,
     },
     title: {
       color: themeColors.white,
