@@ -51,7 +51,7 @@ describe("QuranAyahCard contract", () => {
   });
 
   it("renders surah header, ayah content, and bookmark state", () => {
-    const { getByText } = render(
+    const { getByText, getByTestId } = render(
       <QuranAyahCard
         ayah={ayah}
         isSurahStart
@@ -63,7 +63,7 @@ describe("QuranAyahCard contract", () => {
 
     expect(getByText("سُورَةُ البَقَرَةِ")).toBeTruthy();
     expect(getByText("The Cow")).toBeTruthy();
-    expect(getByText("2:255")).toBeTruthy();
+    expect(getByTestId("ayah-number-marker")).toHaveTextContent(/255/);
     expect(getByText(ayah.arabicText)).toBeTruthy();
     expect(getByText(ayah.transliteration as string)).toBeTruthy();
     expect(getByText(ayah.englishText)).toBeTruthy();
