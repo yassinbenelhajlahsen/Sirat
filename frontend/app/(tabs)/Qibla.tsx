@@ -303,7 +303,7 @@ export default function Qibla() {
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing, typography } = theme;
+  const { colors, spacing } = theme;
 
   return StyleSheet.create({
     container: { flex: 1, padding: spacing.xl },

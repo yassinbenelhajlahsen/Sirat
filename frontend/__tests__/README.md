@@ -44,6 +44,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useDuaInteraction.test.ts`
 - `location heavy features testing`
   - `hooks/useQibla.test.ts`
+  - `components/compass-dial.contract.test.tsx` (CompassDial contract — bearing/distance readout, cardinals, aligned swap)
   - `services/getNearbyMosques.test.ts`
   - `services/getNearbyMosques.cache.test.ts`
   - `utils/geo.test.ts`

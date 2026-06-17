@@ -42,9 +42,7 @@ export const SETTINGS_CHANGED_EVENT = "settingsChanged";
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
 async function preloadImages() {
-  await Asset.loadAsync([
-    require("../assets/images/qibla-compass-svgrepo-com.png"),
-  ]);
+  await Asset.loadAsync([]);
 }
 
 // Safe JSON parse helper
