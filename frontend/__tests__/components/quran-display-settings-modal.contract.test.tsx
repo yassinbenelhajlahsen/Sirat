@@ -1,8 +1,6 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { Modal } from "react-native";
 
 import QuranDisplaySettingsModal from "@/components/quran/QuranDisplaySettingsModal";
-import useModalTransition from "@/hooks/useModalTransition";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
 
 jest.mock("@/context/ThemeContext", () => {
@@ -28,37 +26,16 @@ jest.mock("@/components/PressableScale", () => {
   );
 });
 
-jest.mock("@/hooks/useModalTransition", () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
-
 jest.mock("@/hooks/useQuranDisplayModes", () => ({
   useQuranDisplayModes: jest.fn(),
 }));
 
-const mockUseModalTransition = useModalTransition as jest.MockedFunction<
-  typeof useModalTransition
->;
 const mockUseQuranDisplayModes = useQuranDisplayModes as jest.MockedFunction<
   typeof useQuranDisplayModes
 >;
 
 describe("QuranDisplaySettingsModal contract", () => {
-  beforeEach(() => {
-    mockUseModalTransition.mockReturnValue({
-      shouldRender: true,
-      overlayAnimatedStyle: {},
-      cardAnimatedStyle: {},
-    } as any);
-  });
-
-  it("returns null when transition keeps the modal hidden", () => {
-    mockUseModalTransition.mockReturnValue({
-      shouldRender: false,
-      overlayAnimatedStyle: {},
-      cardAnimatedStyle: {},
-    } as any);
+  it("returns null when visible is false", () => {
     mockUseQuranDisplayModes.mockReturnValue({
       displayModes: ["arabic", "english"],
       isModeEnabled: (mode: string) => mode === "arabic" || mode === "english",
@@ -66,7 +43,7 @@ describe("QuranDisplaySettingsModal contract", () => {
     } as any);
 
     const { queryByText } = render(
-      <QuranDisplaySettingsModal visible onClose={jest.fn()} />
+      <QuranDisplaySettingsModal visible={false} onClose={jest.fn()} />
     );
 
     expect(queryByText("Display Text")).toBeNull();
@@ -81,7 +58,7 @@ describe("QuranDisplaySettingsModal contract", () => {
       toggleDisplayMode,
     } as any);
 
-    const { UNSAFE_getByType, getAllByRole, getByText } = render(
+    const { getAllByRole, getByText, getByAccessibilityHint } = render(
       <QuranDisplaySettingsModal visible onClose={onClose} />
     );
 
@@ -107,9 +84,11 @@ describe("QuranDisplaySettingsModal contract", () => {
     });
 
     fireEvent.press(getByText("Transliteration"));
-    fireEvent(UNSAFE_getByType(Modal), "onRequestClose");
 
     expect(toggleDisplayMode).toHaveBeenCalledWith("transliteration");
+
+    const dismissButton = getAllByRole("button")[0];
+    fireEvent.press(dismissButton);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

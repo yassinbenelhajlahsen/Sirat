@@ -1,17 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo } from "react";
-import {
-  Animated,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import SheetBackground from "@/components/ui/SheetBackground";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import useModalTransition from "@/hooks/useModalTransition";
 import { formatCopyText } from "@/services/quranCopyText";
 import { NormalizedAyah } from "@/services/quranData";
 
@@ -27,6 +21,8 @@ type QuranCopySheetProps = {
   onClose: () => void;
 };
 
+const SNAP_POINTS = ["40%"];
+
 export default function QuranCopySheet({
   visible,
   ayah,
@@ -41,111 +37,145 @@ export default function QuranCopySheet({
   const isLight = theme.name === "light";
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { shouldRender, overlayAnimatedStyle, cardAnimatedStyle } =
-    useModalTransition(visible);
+  const sheetRef = useRef<BottomSheet>(null);
+  const previousVisibleRef = useRef(visible);
+
+  useEffect(() => {
+    if (visible && !previousVisibleRef.current) {
+      sheetRef.current?.snapToIndex(0);
+    } else if (!visible && previousVisibleRef.current) {
+      sheetRef.current?.close();
+    }
+    previousVisibleRef.current = visible;
+  }, [visible]);
+
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        onClose();
+      }
+    },
+    [onClose],
+  );
+
+  const handleIndicatorStyle = useMemo(
+    () => ({
+      backgroundColor: withOpacity(themeColors.white, 0.3),
+      width: 38,
+    }),
+    [themeColors.white],
+  );
 
   const enabledCount = [showArabic, showEnglish, showTransliteration].filter(Boolean).length;
   const showCopyAll = enabledCount > 1;
 
-  if (!shouldRender || !ayah) {
+  if (!visible || !ayah) {
     return null;
   }
 
   const title = `${ayah.surahNameEn} ${ayah.surahNumber}:${ayah.ayahNumber}`;
 
   return (
-    <Modal
-      animationType="none"
-      transparent
-      visible={shouldRender}
-      onRequestClose={onClose}
+    <BottomSheet
+      ref={sheetRef}
+      index={0}
+      snapPoints={SNAP_POINTS}
+      enablePanDownToClose
+      backgroundComponent={SheetBackground}
+      handleIndicatorStyle={handleIndicatorStyle}
+      onChange={handleSheetChange}
     >
-      <Animated.View style={[styles.overlay, overlayAnimatedStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <Animated.View style={[styles.card, cardAnimatedStyle]}>
-          <View style={styles.handle} />
-          <View style={styles.headerRow}>
+      <BottomSheetView style={styles.content}>
+        <View style={styles.headerRow}>
+          <View>
             <Text style={styles.title}>{title}</Text>
-            <PressableScale
-              accessibilityRole="button"
-              onPress={onClose}
-              style={styles.dismissButton}
-              scaleTo={0.85}
-            >
-              <Ionicons
-                name="close"
-                size={18}
-                color={isLight ? themeColors.offWhite : themeColors.white}
-              />
-            </PressableScale>
+            <Text style={styles.subtitle}>Copy ayah text</Text>
           </View>
-          <Text style={styles.subtitle}>Copy ayah text</Text>
+          <PressableScale
+            accessibilityRole="button"
+            onPress={onClose}
+            style={styles.dismissButton}
+            scaleTo={0.85}
+          >
+            <View style={styles.dismissIcon}>
+              <View style={[styles.dismissLine, styles.dismissLineFirst]} />
+              <View style={[styles.dismissLine, styles.dismissLineSecond]} />
+            </View>
+          </PressableScale>
+        </View>
 
-          <View style={styles.optionList}>
-            {showArabic ? (
+        <View style={styles.optionList}>
+          {showArabic ? (
+            <CopyRow
+              icon="copy-outline"
+              label="Copy Arabic"
+              isLast={!showTransliteration && !showEnglish && !showCopyAll}
+              isGold={false}
+              styles={styles}
+              themeColors={themeColors}
+              isLight={isLight}
+              onPress={() =>
+                onCopy(formatCopyText(ayah, { arabic: true, english: false, transliteration: false }))
+              }
+            />
+          ) : null}
+
+          {showTransliteration ? (
+            <CopyRow
+              icon="copy-outline"
+              label="Copy Transliteration"
+              isLast={!showEnglish && !showCopyAll}
+              isGold={false}
+              styles={styles}
+              themeColors={themeColors}
+              isLight={isLight}
+              onPress={() =>
+                onCopy(formatCopyText(ayah, { arabic: false, english: false, transliteration: true }))
+              }
+            />
+          ) : null}
+
+          {showEnglish ? (
+            <CopyRow
+              icon="copy-outline"
+              label="Copy English"
+              isLast={!showCopyAll}
+              isGold={false}
+              styles={styles}
+              themeColors={themeColors}
+              isLight={isLight}
+              onPress={() =>
+                onCopy(formatCopyText(ayah, { arabic: false, english: true, transliteration: false }))
+              }
+            />
+          ) : null}
+
+          {showCopyAll ? (
+            <>
+              <View style={styles.divider} />
               <CopyRow
-                icon="copy-outline"
-                label="Copy Arabic"
-                isLast={!showTransliteration && !showEnglish && !showCopyAll}
+                icon="documents-outline"
+                label="Copy All"
+                isLast
+                isGold
                 styles={styles}
                 themeColors={themeColors}
+                isLight={isLight}
                 onPress={() =>
-                  onCopy(formatCopyText(ayah, { arabic: true, english: false, transliteration: false }))
+                  onCopy(
+                    formatCopyText(ayah, {
+                      arabic: showArabic,
+                      english: showEnglish,
+                      transliteration: showTransliteration,
+                    }),
+                  )
                 }
               />
-            ) : null}
-
-            {showTransliteration ? (
-              <CopyRow
-                icon="copy-outline"
-                label="Copy Transliteration"
-                isLast={!showEnglish && !showCopyAll}
-                styles={styles}
-                themeColors={themeColors}
-                onPress={() =>
-                  onCopy(formatCopyText(ayah, { arabic: false, english: false, transliteration: true }))
-                }
-              />
-            ) : null}
-
-            {showEnglish ? (
-              <CopyRow
-                icon="copy-outline"
-                label="Copy English"
-                isLast={!showCopyAll}
-                styles={styles}
-                themeColors={themeColors}
-                onPress={() =>
-                  onCopy(formatCopyText(ayah, { arabic: false, english: true, transliteration: false }))
-                }
-              />
-            ) : null}
-
-            {showCopyAll ? (
-              <>
-                <View style={styles.divider} />
-                <CopyRow
-                  icon="documents-outline"
-                  label="Copy All"
-                  isLast
-                  styles={styles}
-                  themeColors={themeColors}
-                  onPress={() =>
-                    onCopy(
-                      formatCopyText(ayah, {
-                        arabic: showArabic,
-                        english: showEnglish,
-                        transliteration: showTransliteration,
-                      }),
-                    )
-                  }
-                />
-              </>
-            ) : null}
-          </View>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+            </>
+          ) : null}
+        </View>
+      </BottomSheetView>
+    </BottomSheet>
   );
 }
 
@@ -153,12 +183,15 @@ type CopyRowProps = {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   isLast: boolean;
+  isGold: boolean;
   styles: ReturnType<typeof createStyles>;
   themeColors: AppTheme["colors"];
+  isLight: boolean;
   onPress: () => void;
 };
 
-function CopyRow({ icon, label, isLast, styles, themeColors, onPress }: CopyRowProps) {
+function CopyRow({ icon, label, isLast, isGold, styles, themeColors, onPress }: CopyRowProps) {
+  const labelColor = isGold ? themeColors.accent : themeColors.white;
   return (
     <Pressable
       accessibilityRole="button"
@@ -170,7 +203,7 @@ function CopyRow({ icon, label, isLast, styles, themeColors, onPress }: CopyRowP
       ]}
     >
       <Ionicons name={icon} size={20} color={themeColors.accent} style={styles.optionIcon} />
-      <Text style={styles.optionLabel}>{label}</Text>
+      <Text style={[styles.optionLabel, { color: labelColor }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -180,56 +213,60 @@ const createStyles = (theme: AppTheme) => {
   const isLight = theme.name === "light";
 
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.black, 0.28)
-        : withOpacity(themeColors.black, 0.5),
-      justifyContent: "flex-end",
-    },
-    card: {
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primaryLift, 0.98)
-        : withOpacity(themeColors.primaryDeep, 0.97),
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
+    content: {
       paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 36,
-    },
-    handle: {
-      width: 36,
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.grayDark, 0.2)
-        : withOpacity(themeColors.white, 0.2),
-      alignSelf: "center",
-      marginBottom: 16,
+      paddingBottom: 24,
     },
     headerRow: {
       flexDirection: "row",
-      alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 4,
+      alignItems: "flex-start",
+      paddingTop: 18,
+      marginBottom: 16,
     },
     title: {
       color: isLight ? themeColors.offWhite : themeColors.white,
       fontSize: 17,
       fontWeight: "700",
     },
-    dismissButton: {
-      width: 32,
-      height: 32,
-      alignItems: "center",
-      justifyContent: "center",
-    },
     subtitle: {
+      marginTop: 4,
       color: isLight
         ? withOpacity(themeColors.grayDark, 0.95)
         : withOpacity(themeColors.white, 0.6),
-      fontSize: 13,
-      marginBottom: 14,
+      fontSize: 12,
+      letterSpacing: 0.3,
+    },
+    dismissButton: {
+      padding: 8,
+      marginTop: -2,
+      borderRadius: 999,
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurfaceAlt, 0.55)
+        : withOpacity(themeColors.white, 0.08),
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.7)
+        : withOpacity(themeColors.white, 0.12),
+    },
+    dismissIcon: {
+      width: 18,
+      height: 18,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dismissLine: {
+      position: "absolute",
+      width: 18,
+      height: 2,
+      backgroundColor: isLight ? themeColors.offWhite : themeColors.white,
+      borderRadius: 999,
+    },
+    dismissLineFirst: {
+      transform: [{ rotate: "45deg" }],
+    },
+    dismissLineSecond: {
+      transform: [{ rotate: "-45deg" }],
     },
     optionList: {
       marginTop: 4,
