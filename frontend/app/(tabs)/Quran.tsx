@@ -1,4 +1,6 @@
 import Aurora from "@/components/ui/Aurora";
+import GlassSurface from "@/components/ui/GlassSurface";
+import { Caption, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useTheme } from "@/context/ThemeContext";
@@ -43,7 +45,6 @@ import {
   Text,
   View,
   ViewToken,
-  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PressableScale from "../../components/PressableScale";
@@ -95,6 +96,7 @@ type QuranJuzSearchResult = {
 type NavigatorInitialTab = "goto" | "bookmarks";
 
 const ESTIMATED_ITEM_SIZE = 260;
+const HEADER_HEIGHT = 64;
 
 function normalizeArabicDigits(value: string): string {
   return value
@@ -315,9 +317,6 @@ export default function QuranScreen() {
 
   const ayat = useMemo(() => Array.from(getAllAyat()), []);
   const surahs = useMemo(() => Array.from(getSurahMeta()), []);
-  const { width } = useWindowDimensions();
-  const isSmall = width < 360;
-
   const { listData, ayahToItemIndex, juzFirstItemIndex, surahMap } =
     useMemo(() => {
       const metaBySurah = new Map<number, NormalizedSurahMeta>();
@@ -1262,103 +1261,42 @@ export default function QuranScreen() {
       <Aurora />
       <View style={styles.screen}>
         <View style={styles.container}>
-          <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-            <Text style={styles.headerEyebrow}>Recitation</Text>
-            <Text
-              style={[
-                styles.headerTitle,
-                {
-                  fontSize: isSmall ? 32 : 38,
-                  fontFamily: "SFProDisplay-Bold",
-                },
-              ]}
-            >
-              Quran
-            </Text>
-            <View
-              style={[
-                styles.headerSubsection,
-                isSmall ? styles.headerSubsectionCompact : null,
-              ]}
-            >
-              <View style={styles.headerDetails}>
-                <Text style={styles.headerSurahEnglish}>
-                  {currentSurahMeta?.englishName ?? ""}
-                </Text>
-                <Text style={styles.headerSurahArabic}>
-                  {currentSurahMeta?.arabicName ?? ""}
-                </Text>
-                <Text style={styles.headerMeta}>
-                  Ayah {currentAyah.ayahNumber} • Juz {currentAyah.juzNumber}
-                </Text>
+          <GlassSurface tier="chrome" radius={0} style={[styles.headerBar, { paddingTop: insets.top + 10 }]}>
+            <View style={styles.headerText}>
+              <View style={styles.headerTitleRow}>
+                <Headline color={themeColors.white}>{currentSurahMeta?.englishName ?? ""}</Headline>
+                <Text style={styles.headerArabic}>{currentSurahMeta?.arabicName ?? ""}</Text>
               </View>
-              <View
-                style={[
-                  styles.headerActions,
-                  isSmall ? styles.headerActionsCompact : null,
-                ]}
-              >
-                <View style={styles.capsuleBar}>
-                  {!offlinePillVisible ? (
-                    <PressableScale
-                      style={[
-                        styles.capsulePrimary,
-                        isAudioLoading && styles.audioButtonDisabled,
-                      ]}
-                      onPress={handleAudioButtonPress}
-                      onLongPress={stopAudio}
-                      disabled={isAudioLoading}
-                      accessibilityRole="button"
-                      accessibilityLabel={audioAccessibilityLabel}
-                      hitSlop={8}
-                    >
-                      <Ionicons
-                        name={audioIconName}
-                        size={18}
-                        color={themeColors.white}
-                        style={styles.audioIcon}
-                      />
-                    </PressableScale>
-                  ) : (
-                    <View
-                      style={[
-                        styles.capsulePrimary,
-                        styles.audioButtonDisabled,
-                        styles.audioOfflinePill,
-                      ]}
-                      accessibilityRole="text"
-                    >
-                      <Ionicons
-                        name="cloud-offline-outline"
-                        size={18}
-                        color={themeColors.white}
-                      />
-                      <Text style={styles.audioOfflineText}>Offline</Text>
-                    </View>
-                  )}
-                  <PressableScale
-                    style={[styles.capsulePrimary, styles.capsuleGap]}
-                    onPress={() => openNavigator("goto")}
-                    accessibilityRole="button"
-                  >
-                    <Text style={styles.jumpButtonText}>Navigate</Text>
-                  </PressableScale>
-                  <PressableScale
-                    style={[styles.capsulePrimary, styles.capsuleGap]}
-                    onPress={() => setDisplaySettingsOpen(true)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Display settings"
-                  >
-                    <Ionicons
-                      name="settings-outline"
-                      size={18}
-                      color={themeColors.white}
-                    />
-                  </PressableScale>
-                </View>
-              </View>
+              <Caption color={themeColors.accent}>
+                Ayah {currentAyah.ayahNumber} · Juzʾ {currentAyah.juzNumber}
+              </Caption>
             </View>
-          </View>
+            <View style={styles.headerActions}>
+              {offlinePillVisible ? (
+                <View style={[styles.ctrl, styles.ctrlOffline]} accessibilityRole="text">
+                  <Ionicons name="cloud-offline-outline" size={18} color={themeColors.white} />
+                </View>
+              ) : (
+                <PressableScale
+                  style={[styles.ctrl, styles.ctrlPlay, isAudioLoading && styles.ctrlDisabled]}
+                  onPress={handleAudioButtonPress}
+                  onLongPress={stopAudio}
+                  disabled={isAudioLoading}
+                  accessibilityRole="button"
+                  accessibilityLabel={audioAccessibilityLabel}
+                  hitSlop={8}
+                >
+                  <Ionicons name={audioIconName} size={18} color={themeColors.onAccent} />
+                </PressableScale>
+              )}
+              <PressableScale style={styles.ctrl} onPress={() => openNavigator("goto")} accessibilityRole="button" accessibilityLabel="Navigate">
+                <Ionicons name="search" size={18} color={themeColors.white} />
+              </PressableScale>
+              <PressableScale style={styles.ctrl} onPress={() => setDisplaySettingsOpen(true)} accessibilityRole="button" accessibilityLabel="Display settings">
+                <Text style={styles.aa}>Aa</Text>
+              </PressableScale>
+            </View>
+          </GlassSurface>
 
           {listReady ? (
             <FlashList
@@ -1373,7 +1311,8 @@ export default function QuranScreen() {
               estimatedItemSize={ESTIMATED_ITEM_SIZE}
               getItemType={getItemType}
               style={styles.list}
-              contentContainerStyle={{ ...styles.listContent, paddingBottom: insets.bottom + 72 }}
+              contentContainerStyle={{ ...styles.listContent, paddingTop: HEADER_HEIGHT + insets.top, paddingBottom: insets.bottom + 72 }}
+              contentInsetAdjustmentBehavior="never"
               onLoad={handleListLoad}
               onViewableItemsChanged={handleViewableItemsChanged}
               viewabilityConfig={viewabilityConfigRef.current}
@@ -1445,7 +1384,7 @@ export default function QuranScreen() {
 
 const createStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
-  const { spacing, typography } = theme;
+  const { spacing, radii } = theme;
 
   return StyleSheet.create({
     screen: { flex: 1 },
@@ -1453,145 +1392,26 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
       backgroundColor: "transparent",
     },
-    header: {
-      marginTop: spacing.xs,
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm + 2,
-      marginBottom: spacing.md,
+    headerBar: {
+      position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
+      flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+      paddingHorizontal: spacing.lg, paddingBottom: spacing.md,
+      borderBottomWidth: 1, borderColor: withOpacity(themeColors.white, 0.12),
     },
-    headerEyebrow: {
-      color: withOpacity(themeColors.accent, 0.9),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-      textTransform: "uppercase",
-      letterSpacing: 1,
+    headerText: {
+      flex: 1,
     },
-    headerTitle: {
-      color: themeColors.white,
-      marginTop: spacing.xs,
-      marginBottom: spacing.sm,
+    headerTitleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
+    headerArabic: { fontFamily: "SFProDisplay-Semibold", fontSize: 16, color: themeColors.accent },
+    headerActions: { flexDirection: "row", gap: spacing.sm },
+    ctrl: {
+      width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.white, 0.1), borderWidth: 1, borderColor: withOpacity(themeColors.white, 0.18),
     },
-    headerSubsection: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      justifyContent: "space-between",
-    },
-    headerSubsectionCompact: {
-      flexDirection: "column",
-      alignItems: "stretch",
-      gap: spacing.sm,
-    },
-    headerDetails: {
-      flexShrink: 1,
-    },
-    headerActions: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginLeft: spacing.sm,
-    },
-    headerActionsCompact: {
-      marginLeft: 0,
-    },
-    capsuleBar: {
-      marginTop: 15,
-      flexDirection: "row",
-      alignItems: "center",
-      borderRadius: 999,
-      padding: 5,
-      maxWidth: "100%",
-    },
-    capsulePrimary: {
-      backgroundColor: withOpacity(themeColors.white, 0.08),
-      borderRadius: 999,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.28),
-      minHeight: 40,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    capsuleSecondary: {
-      borderRadius: 999,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.5),
-      backgroundColor: withOpacity(themeColors.accent, 0.18),
-    },
-    capsuleUtility: {
-      borderRadius: 999,
-      padding: 10,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.4),
-      backgroundColor: withOpacity(themeColors.accent, 0.14),
-    },
-    capsuleGap: {
-      marginLeft: 8,
-    },
-    headerSurahEnglish: {
-      color: themeColors.white,
-      fontSize: typography.subtitle,
-      fontWeight: "600",
-    },
-    headerSurahArabic: {
-      color: themeColors.accent,
-      fontSize: 20,
-      marginTop: 2,
-      marginBottom: 4,
-      textAlign: "left",
-    },
-    headerMeta: {
-      color: themeColors.white,
-      fontSize: typography.caption,
-      opacity: 0.88,
-      fontFamily: "SFProDisplay-Semibold",
-      marginTop: spacing.xs,
-    },
-    audioButton: {
-      backgroundColor: themeColors.accent,
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    audioButtonDisabled: {
-      opacity: 0.6,
-    },
-    audioIcon: {
-      alignSelf: "center",
-    },
-    audioOfflinePill: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    audioOfflineText: {
-      color: withOpacity(themeColors.white, 0.9),
-      fontWeight: "600",
-      fontSize: typography.caption,
-      marginLeft: spacing.sm - 2,
-    },
-    jumpButton: {
-      backgroundColor: themeColors.accent,
-      borderRadius: 20,
-      paddingHorizontal: spacing.lg + 2,
-      paddingVertical: spacing.sm,
-      marginLeft: spacing.md,
-    },
-    settingsButton: {
-      backgroundColor: themeColors.accent,
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      marginLeft: spacing.md,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    jumpButtonText: {
-      color: themeColors.white,
-      fontWeight: "600",
-      fontSize: typography.body,
-    },
+    ctrlPlay: { backgroundColor: themeColors.accent, borderColor: themeColors.accent },
+    ctrlOffline: { backgroundColor: withOpacity(themeColors.white, 0.08) },
+    ctrlDisabled: { opacity: 0.5 },
+    aa: { fontFamily: "SFProDisplay-Bold", fontSize: 14, color: themeColors.white },
     list: {
       flex: 1,
     },

@@ -812,7 +812,7 @@ describe("Screen contracts", () => {
     it("renders quran header and list contract", async () => {
       const { getByText, getByTestId } = render(<QuranScreen />);
 
-      expect(getByText("Quran")).toBeTruthy();
+      expect(getByText("Al-Fatihah")).toBeTruthy();
 
       await waitFor(() => {
         expect(getByTestId("flash-list-mock")).toHaveTextContent("items:2");
