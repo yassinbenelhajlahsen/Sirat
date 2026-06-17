@@ -55,8 +55,13 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
     outputRange: [0, indicatorWidth],
   });
 
-  const categoryLabel =
-    dua.category.charAt(0).toUpperCase() + dua.category.slice(1);
+  // Category values are snake_case keys (e.g. "after_prayer", "drinking_water").
+  // Render them as title-cased words so the underscore never reaches the UI.
+  const categoryLabel = dua.category
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
   const fullText = `${dua.arabic}\n\n${dua.transliteration}\n\n${dua.english}\n\n— ${dua.reference}`;
 
   const handleShare = async () => {
