@@ -15,7 +15,10 @@ jest.mock("@expo/vector-icons", () => {
 });
 jest.mock("@/components/PressableScale", () => {
   const { Pressable } = require("react-native");
-  return ({ children, ...p }: any) => <Pressable {...p}>{children}</Pressable>;
+  function PressableScale({ children, ...p }: any) {
+    return <Pressable {...p}>{children}</Pressable>;
+  }
+  return PressableScale;
 });
 
 const mosques: Mosque[] = [
@@ -23,7 +26,7 @@ const mosques: Mosque[] = [
   { id: "2", name: "Islamic Center", address: "88 Maple Ave", lat: 41.90, lng: -87.64 },
 ];
 
-it("renders the nearby count header and a row per mosque", () => {
+it("renders the nearby header and a row per mosque", () => {
   const { getByText } = render(
     <MosqueSheet
       mosques={mosques}
@@ -34,7 +37,7 @@ it("renders the nearby count header and a row per mosque", () => {
       bottomInset={80}
     />,
   );
-  expect(getByText("2 mosques nearby")).toBeTruthy();
+  expect(getByText("Neaby mosques")).toBeTruthy();
   expect(getByText("Masjid Al-Noor")).toBeTruthy();
   expect(getByText("Islamic Center")).toBeTruthy();
 });

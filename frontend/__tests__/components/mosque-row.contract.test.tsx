@@ -14,7 +14,10 @@ jest.mock("@expo/vector-icons", () => {
 });
 jest.mock("@/components/PressableScale", () => {
   const { Pressable } = require("react-native");
-  return ({ children, ...p }: any) => <Pressable {...p}>{children}</Pressable>;
+  function PressableScale({ children, ...p }: any) {
+    return <Pressable {...p}>{children}</Pressable>;
+  }
+  return PressableScale;
 });
 
 const base = {

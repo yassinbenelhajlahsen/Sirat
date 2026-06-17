@@ -391,10 +391,6 @@ function RootLayoutContent() {
               >
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
-                  name="MosqueMap"
-                  options={{ animation: "fade", animationDuration: 300 }}
-                />
-                <Stack.Screen
                   name="Settings"
                   options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
                 />

@@ -46,9 +46,11 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useQibla.test.ts`
   - `services/getNearbyMosques.test.ts`
   - `services/getNearbyMosques.cache.test.ts`
-  - `screens/nearby-mosques.contract.test.tsx`
+  - `utils/geo.test.ts`
+  - `components/mosque-row.contract.test.tsx`
+  - `components/mosque-sheet.contract.test.tsx`
+  - `screens/nearby-mosques.contract.test.tsx` (updated: map-first bottom-sheet screen)
   - `flows/nearby-mosques-refresh.flow.test.tsx`
-  - `flows/nearby-list-to-map.flow.test.tsx`
 - `holiday ramadan calendar data integrity testing`
   - `services/holidayService.test.ts`
   - `services/ramadanTracker.test.ts`
@@ -67,14 +69,13 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `navigation/navigation-contracts.test.tsx`
   - `navigation/tabs-layout.contract.test.tsx`
   - `navigation/root-layout-navigation.contract.test.tsx`
-  - `navigation/routes-params.contract.test.tsx`
+  - `navigation/routes-params.contract.test.tsx` (trimmed: removed retired MosqueMap route assertion)
 - `end to end like user flows testing`
   - `flows/home-settings-refresh.flow.test.tsx`
   - `flows/dua-request-history.flow.test.tsx`
   - `flows/quran-display-mode.flow.test.tsx`
   - `flows/calendar-missed-fast.flow.test.tsx`
   - `flows/nearby-mosques-refresh.flow.test.tsx`
-  - `flows/nearby-list-to-map.flow.test.tsx`
 - `visual refresh foundations (Plan 1) testing`
   - `utils/greeting.test.ts`
   - `constants/motion.test.ts`

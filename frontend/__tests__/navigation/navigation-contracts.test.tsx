@@ -246,7 +246,7 @@ describe("navigation contracts", () => {
     ]);
   });
 
-  it("registers tabs and MosqueMap routes in the root stack", async () => {
+  it("registers tabs and Settings routes in the root stack", async () => {
     const expoRouter = jest.requireMock("expo-router") as {
       Stack: jest.Mock & { Screen: jest.Mock };
     };
@@ -272,17 +272,8 @@ describe("navigation contracts", () => {
     const routeNames = Array.from(
       new Set(registrations.map((registration) => registration.name)),
     );
-    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "MosqueMap"]));
-
-    const mosqueMap = registrations.find(
-      (registration) => registration.name === "MosqueMap",
-    );
-    expect(mosqueMap.options).toEqual(
-      expect.objectContaining({
-        animation: "fade",
-        animationDuration: 300,
-      }),
-    );
+    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "Settings"]));
+    expect(routeNames).not.toContain("MosqueMap");
   });
 
   it("decodes [date] param and routes back to Calendar with month/year query", async () => {

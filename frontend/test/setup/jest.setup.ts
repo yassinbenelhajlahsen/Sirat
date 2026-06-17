@@ -110,9 +110,9 @@ jest.mock("@gorhom/bottom-sheet", () => {
     React.createElement(View, props, children);
   return {
     __esModule: true,
-    default: React.forwardRef(({ children, ...props }: any, _ref: any) =>
-      React.createElement(View, props, children),
-    ),
+    default: React.forwardRef(function BottomSheet({ children, ...props }: any, _ref: any) {
+      return React.createElement(View, props, children);
+    }),
     BottomSheetView: Passthrough,
     BottomSheetFlatList: ({ ListHeaderComponent, ...props }: any) =>
       React.createElement(

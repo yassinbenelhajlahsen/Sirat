@@ -22,10 +22,9 @@ export function QuranMiniPlayerPortal() {
   } = useQuranAudioController();
 
   const pathname = usePathname();
-  const hideOnMap = pathname?.startsWith("/MosqueMap");
 
   const { shouldRender, cardAnimatedStyle } = useModalTransition(
-    Boolean(miniPlayerVisible && !hideOnMap),
+    Boolean(miniPlayerVisible),
   );
 
   const isTabRoute = pathname?.startsWith("/(tabs)");
@@ -40,7 +39,7 @@ export function QuranMiniPlayerPortal() {
     }
   }, [currentSurahMeta, miniPlayerVisible, shouldRender]);
 
-  if (hideOnMap || !shouldRender) {
+  if (!shouldRender) {
     return null;
   }
 
@@ -55,7 +54,7 @@ export function QuranMiniPlayerPortal() {
         isPlaying={isPlaying}
         playbackDuration={playbackDuration}
         playbackPosition={playbackPosition}
-        visible={miniPlayerVisible && !hideOnMap}
+        visible={miniPlayerVisible}
         onPlay={playCurrentSurah}
         onPause={pauseAudio}
         onStop={stopPlaybackSession}

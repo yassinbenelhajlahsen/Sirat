@@ -362,14 +362,4 @@ describe("route params and path wiring contract", () => {
     expect(mockReplace).toHaveBeenCalledWith("/Calendar?month=2&year=2026");
   });
 
-  it("wires map preview press to ../MosqueMap", async () => {
-    const { getByLabelText } = render(<MosqueScreen />);
-
-    const openMapButton = await waitFor(() =>
-      getByLabelText("Open full mosque map"),
-    );
-    fireEvent.press(openMapButton);
-
-    expect(mockPush).toHaveBeenCalledWith("../MosqueMap");
-  });
 });

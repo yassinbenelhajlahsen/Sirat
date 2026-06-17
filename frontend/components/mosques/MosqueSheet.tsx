@@ -61,15 +61,10 @@ export default function MosqueSheet({
   };
 
   function Header() {
-    const title = rows.length === 0 ? "No mosques nearby" : `${rows.length} mosques nearby`;
+    const title = rows.length === 0 ? "No mosques nearby" : `Neaby mosques`;
     return (
       <View style={{ paddingVertical: spacing.lg, gap: spacing.xs }}>
         <Headline color={colors.white}>{title}</Headline>
-        {userLoc && minDistanceKm !== null && rows.length > 0 && (
-          <Caption color={withOpacity(colors.white, 0.5)}>
-            {`Nearest ${formatDistanceShort(minDistanceKm)}`}
-          </Caption>
-        )}
       </View>
     );
   }
