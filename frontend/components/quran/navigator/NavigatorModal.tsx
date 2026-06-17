@@ -1,15 +1,16 @@
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Modal, StyleSheet, Text, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { StyleSheet, Text, View } from "react-native";
 
+import SheetBackground from "@/components/ui/SheetBackground";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import useModalTransition from "@/hooks/useModalTransition";
 import { QuranBookmark } from "@/services/quranBookmarks";
 import { NormalizedSurahMeta } from "@/services/quranData";
 
 import PressableScale from "../../PressableScale";
 import BookmarksTab, { BookmarkNavigatorItem } from "./BookmarksTab";
+import JuzTab from "./JuzTab";
 import NavigatorTabs, { NavigatorTabKey } from "./NavigatorTabs";
 import SurahTab, {
   QuranAyahSearchResult,
@@ -37,9 +38,11 @@ type QuranNavigatorModalProps = {
   onClose: () => void;
 };
 
+const SNAP_POINTS = ["90%"];
+
 function NavigatorModal({
   visible,
-  initialTab = "goto",
+  initialTab = "surah",
   surahs,
   filteredSurahs,
   ayahSearchResults,
@@ -60,15 +63,16 @@ function NavigatorModal({
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>("goto");
-  const { shouldRender, overlayAnimatedStyle, cardAnimatedStyle } =
-    useModalTransition(visible);
-
+  const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>("surah");
+  const sheetRef = useRef<BottomSheet>(null);
   const previousVisibleRef = useRef(visible);
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
       setSelectedTab(initialTab);
+      sheetRef.current?.snapToIndex(0);
+    } else if (!visible && previousVisibleRef.current) {
+      sheetRef.current?.close();
     }
     previousVisibleRef.current = visible;
   }, [initialTab, visible]);
@@ -77,95 +81,112 @@ function NavigatorModal({
     setSelectedTab(tab);
   }, []);
 
-  if (!shouldRender) {
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        onClose();
+      }
+    },
+    [onClose],
+  );
+
+  const handleIndicatorStyle = useMemo(
+    () => ({
+      backgroundColor: withOpacity(theme.colors.white, 0.3),
+      width: 38,
+    }),
+    [theme.colors.white],
+  );
+
+  if (!visible) {
     return null;
   }
 
   return (
-    <Modal
-      animationType="none"
-      transparent
-      visible={shouldRender}
-      onRequestClose={onClose}
+    <BottomSheet
+      ref={sheetRef}
+      index={0}
+      snapPoints={SNAP_POINTS}
+      enablePanDownToClose
+      backgroundComponent={SheetBackground}
+      handleIndicatorStyle={handleIndicatorStyle}
+      onChange={handleSheetChange}
     >
-      <GestureHandlerRootView style={StyleSheet.absoluteFill}>
-        <Animated.View style={[styles.modalOverlay, overlayAnimatedStyle]}>
-          <Animated.View style={[styles.modalCard, cardAnimatedStyle]}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalTitle}>Navigation</Text>
-                <Text style={styles.modalSubtitle}>
-                  Jump by surah, ayah, juz, or bookmark
-                </Text>
-              </View>
-              <PressableScale
-                accessibilityRole="button"
-                onPress={onClose}
-                style={styles.dismissButton}
-                scaleTo={0.85}
-              >
-                <View style={styles.dismissIcon}>
-                  <View style={[styles.dismissLine, styles.dismissLineFirst]} />
-                  <View
-                    style={[styles.dismissLine, styles.dismissLineSecond]}
-                  />
-                </View>
-              </PressableScale>
+      <BottomSheetView style={styles.content}>
+        <View style={styles.modalHeader}>
+          <View>
+            <Text style={styles.modalTitle}>Navigation</Text>
+            <Text style={styles.modalSubtitle}>
+              Jump by surah, ayah, juz, or bookmark
+            </Text>
+          </View>
+          <PressableScale
+            accessibilityRole="button"
+            onPress={onClose}
+            style={styles.dismissButton}
+            scaleTo={0.85}
+          >
+            <View style={styles.dismissIcon}>
+              <View style={[styles.dismissLine, styles.dismissLineFirst]} />
+              <View style={[styles.dismissLine, styles.dismissLineSecond]} />
             </View>
+          </PressableScale>
+        </View>
 
-            <NavigatorTabs
-              selectedTab={selectedTab}
-              onSelectTab={handleSelectTab}
+        <NavigatorTabs selectedTab={selectedTab} onSelectTab={handleSelectTab} />
+
+        <View style={styles.tabContentContainer}>
+          <View
+            style={[
+              styles.tabPanel,
+              selectedTab === "surah" ? styles.tabPanelActive : styles.tabPanelInactive,
+            ]}
+            pointerEvents={selectedTab === "surah" ? "auto" : "none"}
+          >
+            <SurahTab
+              surahs={surahs}
+              filteredSurahs={filteredSurahs}
+              ayahSearchResults={ayahSearchResults}
+              juzSearchResult={juzSearchResult}
+              surahSearchQuery={surahSearchQuery}
+              onSurahSearchQueryChange={onSurahSearchQueryChange}
+              onSelectSurah={onSelectSurah}
+              onSelectAyah={onSelectAyah}
+              onSelectJuz={onSelectJuz}
+              onClose={onClose}
             />
+          </View>
 
-            <View style={styles.tabContentContainer}>
-              <View
-                style={[
-                  styles.tabPanel,
-                  selectedTab === "bookmarks"
-                    ? styles.tabPanelActive
-                    : styles.tabPanelInactive,
-                ]}
-                pointerEvents={selectedTab === "bookmarks" ? "auto" : "none"}
-              >
-                <BookmarksTab
-                  bookmarks={bookmarks}
-                  filteredBookmarks={filteredBookmarks}
-                  bookmarkSearchQuery={bookmarkSearchQuery}
-                  onBookmarkSearchQueryChange={onBookmarkSearchQueryChange}
-                  onSelectBookmark={onSelectBookmark}
-                  onDeleteBookmark={onDeleteBookmark}
-                  onClose={onClose}
-                />
-              </View>
+          <View
+            style={[
+              styles.tabPanel,
+              selectedTab === "juz" ? styles.tabPanelActive : styles.tabPanelInactive,
+            ]}
+            pointerEvents={selectedTab === "juz" ? "auto" : "none"}
+          >
+            <JuzTab onSelectJuz={onSelectJuz} onClose={onClose} />
+          </View>
 
-              <View
-                style={[
-                  styles.tabPanel,
-                  selectedTab === "goto"
-                    ? styles.tabPanelActive
-                    : styles.tabPanelInactive,
-                ]}
-                pointerEvents={selectedTab === "goto" ? "auto" : "none"}
-              >
-                <SurahTab
-                  surahs={surahs}
-                  filteredSurahs={filteredSurahs}
-                  ayahSearchResults={ayahSearchResults}
-                  juzSearchResult={juzSearchResult}
-                  surahSearchQuery={surahSearchQuery}
-                  onSurahSearchQueryChange={onSurahSearchQueryChange}
-                  onSelectSurah={onSelectSurah}
-                  onSelectAyah={onSelectAyah}
-                  onSelectJuz={onSelectJuz}
-                  onClose={onClose}
-                />
-              </View>
-            </View>
-          </Animated.View>
-        </Animated.View>
-      </GestureHandlerRootView>
-    </Modal>
+          <View
+            style={[
+              styles.tabPanel,
+              selectedTab === "bookmarks" ? styles.tabPanelActive : styles.tabPanelInactive,
+            ]}
+            pointerEvents={selectedTab === "bookmarks" ? "auto" : "none"}
+          >
+            <BookmarksTab
+              bookmarks={bookmarks}
+              filteredBookmarks={filteredBookmarks}
+              bookmarkSearchQuery={bookmarkSearchQuery}
+              onBookmarkSearchQueryChange={onBookmarkSearchQueryChange}
+              onSelectBookmark={onSelectBookmark}
+              onDeleteBookmark={onDeleteBookmark}
+              onClose={onClose}
+            />
+          </View>
+        </View>
+      </BottomSheetView>
+    </BottomSheet>
   );
 }
 
@@ -177,31 +198,9 @@ const createStyles = (theme: AppTheme) => {
   const isLight = theme.name === "light";
 
   return StyleSheet.create({
-    modalOverlay: {
+    content: {
       flex: 1,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.black, 0.32)
-        : withOpacity(themeColors.black, 0.62),
-      justifyContent: "center",
-      padding: 18,
-    },
-    modalCard: {
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primaryLift, 0.98)
-        : withOpacity(themeColors.primaryDeep, 0.97),
-      borderRadius: 24,
       paddingBottom: 12,
-      minHeight: 680,
-      maxHeight: "74%",
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.75)
-        : withOpacity(themeColors.accent, 0.38),
-      shadowColor: themeColors.black,
-      shadowOpacity: 0.3,
-      shadowRadius: 24,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 16,
     },
     modalHeader: {
       paddingHorizontal: 20,

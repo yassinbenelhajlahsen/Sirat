@@ -93,7 +93,7 @@ type QuranJuzSearchResult = {
   juzNumber: number;
 };
 
-type NavigatorInitialTab = "goto" | "bookmarks";
+type NavigatorInitialTab = "surah" | "juz" | "bookmarks";
 
 const ESTIMATED_ITEM_SIZE = 260;
 const HEADER_HEIGHT = 64;
@@ -374,7 +374,7 @@ export default function QuranScreen() {
 
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   const [navigatorInitialTab, setNavigatorInitialTab] =
-    useState<NavigatorInitialTab>("goto");
+    useState<NavigatorInitialTab>("surah");
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
   const [copySheetAyah, setCopySheetAyah] = useState<NormalizedAyah | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
@@ -679,7 +679,7 @@ export default function QuranScreen() {
     [juzFirstItemIndex, scrollToAyahIndex, scrollToItemIndex],
   );
 
-  const openNavigator = useCallback((tab: NavigatorInitialTab = "goto") => {
+  const openNavigator = useCallback((tab: NavigatorInitialTab = "surah") => {
     setNavigatorInitialTab(tab);
     setNavigatorOpen(true);
   }, []);
@@ -1289,7 +1289,7 @@ export default function QuranScreen() {
                   <Ionicons name={audioIconName} size={18} color={themeColors.onAccent} />
                 </PressableScale>
               )}
-              <PressableScale style={styles.ctrl} onPress={() => openNavigator("goto")} accessibilityRole="button" accessibilityLabel="Navigate">
+              <PressableScale style={styles.ctrl} onPress={() => openNavigator("surah")} accessibilityRole="button" accessibilityLabel="Navigate">
                 <Ionicons name="search" size={18} color={themeColors.white} />
               </PressableScale>
               <PressableScale style={styles.ctrl} onPress={() => setDisplaySettingsOpen(true)} accessibilityRole="button" accessibilityLabel="Display settings">

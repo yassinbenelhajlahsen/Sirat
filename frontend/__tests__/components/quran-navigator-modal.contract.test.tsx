@@ -1,10 +1,8 @@
 import { fireEvent, render, within } from "@testing-library/react-native";
-import { Modal } from "react-native";
 
 import NavigatorModal, {
   QuranNavigatorModalProps,
 } from "@/components/quran/navigator/NavigatorModal";
-import useModalTransition from "@/hooks/useModalTransition";
 
 jest.mock("@/context/ThemeContext", () => {
   const { defaultTheme } = jest.requireActual("@/constants/theme");
@@ -12,11 +10,6 @@ jest.mock("@/context/ThemeContext", () => {
     useTheme: () => ({ theme: defaultTheme, isHydrated: true }),
   };
 });
-
-jest.mock("@/hooks/useModalTransition", () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
 
 jest.mock("@/components/PressableScale", () => {
   const { Pressable } = require("react-native");
@@ -27,15 +20,9 @@ jest.mock("@/components/PressableScale", () => {
   );
 });
 
-jest.mock("react-native-gesture-handler", () => {
+jest.mock("@/components/ui/SheetBackground", () => {
   const { View } = require("react-native");
-  return {
-    GestureHandlerRootView: ({ children, ...props }: any) => (
-      <View {...props}>
-        {children}
-      </View>
-    ),
-  };
+  return ({ style }: any) => <View style={style} />;
 });
 
 jest.mock("@/components/quran/navigator/SurahTab", () => {
@@ -70,6 +57,23 @@ jest.mock("@/components/quran/navigator/SurahTab", () => {
         </Pressable>
         <Pressable accessibilityRole="button" onPress={onClose}>
           <Text>Mock close from surah tab</Text>
+        </Pressable>
+      </View>
+    );
+  };
+});
+
+jest.mock("@/components/quran/navigator/JuzTab", () => {
+  const { Pressable, Text, View } = require("react-native");
+  return function JuzTabMock({ onSelectJuz, onClose }: any) {
+    return (
+      <View>
+        <Text>JuzTabMock</Text>
+        <Pressable accessibilityRole="button" onPress={() => onSelectJuz(15)}>
+          <Text>Mock select juz from juz tab</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={onClose}>
+          <Text>Mock close from juz tab</Text>
         </Pressable>
       </View>
     );
@@ -124,10 +128,6 @@ jest.mock("@/components/quran/navigator/BookmarksTab", () => {
   };
 });
 
-const mockUseModalTransition = useModalTransition as jest.MockedFunction<
-  typeof useModalTransition
->;
-
 function buildProps(
   overrides: Partial<QuranNavigatorModalProps> = {}
 ): QuranNavigatorModalProps {
@@ -159,7 +159,7 @@ function buildProps(
 
   return {
     visible: true,
-    initialTab: "goto",
+    initialTab: "surah",
     surahs: [sampleSurah],
     filteredSurahs: [sampleSurah],
     ayahSearchResults: [
@@ -188,22 +188,10 @@ function buildProps(
 }
 
 describe("NavigatorModal contract", () => {
-  beforeEach(() => {
-    mockUseModalTransition.mockReturnValue({
-      shouldRender: true,
-      overlayAnimatedStyle: {},
-      cardAnimatedStyle: {},
-    } as any);
-  });
-
-  it("returns null when transition keeps the modal hidden", () => {
-    mockUseModalTransition.mockReturnValue({
-      shouldRender: false,
-      overlayAnimatedStyle: {},
-      cardAnimatedStyle: {},
-    } as any);
-
-    const { queryByText } = render(<NavigatorModal {...buildProps()} />);
+  it("returns null when visible is false", () => {
+    const { queryByText } = render(
+      <NavigatorModal {...buildProps({ visible: false })} />
+    );
 
     expect(queryByText("Navigation")).toBeNull();
   });
@@ -218,12 +206,12 @@ describe("NavigatorModal contract", () => {
       getAllByRole("button").find((button) =>
         within(button).queryByText(label)
       );
-    const goToTab = findTabButton("Go To");
+    const surahTab = findTabButton("Sūrah");
 
     expect(getByText("Navigation")).toBeTruthy();
     expect(getByText("Jump by surah, ayah, juz, or bookmark")).toBeTruthy();
-    expect(goToTab).toBeTruthy();
-    expect(goToTab.props.accessibilityState).toEqual({ selected: true });
+    expect(surahTab).toBeTruthy();
+    expect(surahTab.props.accessibilityState).toEqual({ selected: true });
 
     fireEvent.changeText(getByLabelText("Surah search input"), "2:255");
     fireEvent.press(getByText("Mock select surah"));
@@ -258,13 +246,17 @@ describe("NavigatorModal contract", () => {
     );
   });
 
-  it("wires onClose to modal request-close and child tab close actions", () => {
+  it("wires onClose to dismiss button and child tab close actions", () => {
     const props = buildProps();
-    const { UNSAFE_getByType, getByText } = render(
+    const { getAllByRole, getByText } = render(
       <NavigatorModal {...props} />
     );
 
-    fireEvent(UNSAFE_getByType(Modal), "onRequestClose");
+    // Press the X dismiss button (accessibilityRole="button" with no label text)
+    const dismissButton = getAllByRole("button").find(
+      (button) => !within(button).queryByText(/./)
+    );
+    fireEvent.press(dismissButton);
     fireEvent.press(getByText("Mock close from surah tab"));
     fireEvent.press(getByText("Bookmarks"));
     fireEvent.press(getByText("Mock close from bookmarks tab"));
