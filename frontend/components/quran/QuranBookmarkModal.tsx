@@ -8,6 +8,10 @@ import { useTheme } from "@/context/ThemeContext";
 import { NormalizedAyah } from "@/services/quranData";
 import PressableScale from "../PressableScale";
 
+function BookmarkSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
+  return <SheetBackground {...p} solid />;
+}
+
 export type QuranBookmarkModalPayload = {
   title: string;
   note: string;
@@ -120,7 +124,7 @@ function QuranBookmarkModal({
       enablePanDownToClose
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
-      backgroundComponent={SheetBackground}
+      backgroundComponent={BookmarkSheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}
       onChange={handleSheetChange}
     >

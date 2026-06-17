@@ -11,6 +11,10 @@ import { NormalizedAyah } from "@/services/quranData";
 
 import PressableScale from "../PressableScale";
 
+function CopySheetBackground(p: Parameters<typeof SheetBackground>[0]) {
+  return <SheetBackground {...p} solid />;
+}
+
 type QuranCopySheetProps = {
   visible: boolean;
   ayah: NormalizedAyah | null;
@@ -80,7 +84,7 @@ export default function QuranCopySheet({
       index={0}
       snapPoints={SNAP_POINTS}
       enablePanDownToClose
-      backgroundComponent={SheetBackground}
+      backgroundComponent={CopySheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}
       onChange={handleSheetChange}
     >

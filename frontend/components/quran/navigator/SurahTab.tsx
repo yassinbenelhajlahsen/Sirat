@@ -1,11 +1,10 @@
+import { BottomSheetFlatList, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo } from "react";
 import {
-  FlatList,
   InteractionManager,
   ListRenderItem,
   StyleSheet,
   Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -134,7 +133,7 @@ function SurahTab({
 
   const listHeaderComponent = (
     <View style={styles.headerContainer}>
-      <TextInput
+      <BottomSheetTextInput
         style={styles.searchInput}
         placeholder="Search verses or 2:255"
         placeholderTextColor={
@@ -187,7 +186,7 @@ function SurahTab({
   );
 
   return (
-    <FlatList
+    <BottomSheetFlatList
       data={data as readonly SurahItem[]}
       extraData={numColumns}
       renderItem={renderItem}

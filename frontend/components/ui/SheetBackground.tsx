@@ -14,17 +14,22 @@ import { useTheme } from "@/context/ThemeContext";
 type Props = BottomSheetBackgroundProps & {
   testID?: string;
   fadeToSolidFrom?: number;
+  solid?: boolean;
 };
 
 // Real iOS 26 liquid glass over the map at peek/half (translucent fallback
 // elsewhere), with a solid vertical gradient that fades in toward full. Only
 // the gradient overlay animates — never the glass — so the material keeps
 // rendering (animating a GlassView's opacity stops it drawing).
+//
+// When `solid` is true (Quran sheets), an always-opaque gradient is shown
+// regardless of snap position. The glass sheen is layered on top on iOS 26.
 export default function SheetBackground({
   style,
   animatedIndex,
   testID,
   fadeToSolidFrom = 1,
+  solid = false,
 }: Props) {
   const { theme } = useTheme();
   const colors = theme.colors;
@@ -38,6 +43,26 @@ export default function SheetBackground({
       Extrapolation.CLAMP,
     ),
   }));
+
+  if (solid) {
+    return (
+      <View
+        testID={testID}
+        pointerEvents="none"
+        style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+      >
+        <LinearGradient
+          colors={[colors.primaryDeep, colors.primary]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        {glass ? (
+          <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <View

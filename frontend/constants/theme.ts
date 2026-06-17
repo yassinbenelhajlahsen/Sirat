@@ -88,16 +88,18 @@ export function withOpacity(hexColor: string, alpha: number): string {
   return `rgba(${red},${green},${blue},${alpha})`;
 }
 
-export type GlassTier = { fill: string; border: string; blur: number };
+export type GlassTier = { fill: string; border: string; blur: number; solid: string };
 export type Materials = { chrome: GlassTier; card: GlassTier; row: GlassTier };
 
 export function buildMaterials(colors: AppColors, isLight: boolean): Materials {
   // On dark themes glass is a light film; on light themes a dark tint.
   const tintBase = isLight ? colors.black : colors.white;
+  // Opaque fallback surfaces — used when real glass is unavailable (Expo Go, Android).
+  const solidBase = isLight ? colors.primaryLift : colors.primarySurface;
   return {
-    chrome: { fill: withOpacity(tintBase, isLight ? 0.06 : 0.1), border: withOpacity(tintBase, isLight ? 0.1 : 0.18), blur: 26 },
-    card:   { fill: withOpacity(tintBase, isLight ? 0.05 : 0.07), border: withOpacity(tintBase, isLight ? 0.08 : 0.13), blur: 18 },
-    row:    { fill: withOpacity(tintBase, isLight ? 0.04 : 0.05), border: withOpacity(tintBase, isLight ? 0.07 : 0.09), blur: 0 },
+    chrome: { fill: withOpacity(tintBase, isLight ? 0.06 : 0.1), border: withOpacity(tintBase, isLight ? 0.1 : 0.18), blur: 26, solid: withOpacity(solidBase, isLight ? 0.97 : 0.95) },
+    card:   { fill: withOpacity(tintBase, isLight ? 0.05 : 0.07), border: withOpacity(tintBase, isLight ? 0.08 : 0.13), blur: 18, solid: withOpacity(solidBase, isLight ? 0.96 : 0.92) },
+    row:    { fill: withOpacity(tintBase, isLight ? 0.04 : 0.05), border: withOpacity(tintBase, isLight ? 0.07 : 0.09), blur: 0,  solid: withOpacity(solidBase, isLight ? 0.93 : 0.86) },
   };
 }
 

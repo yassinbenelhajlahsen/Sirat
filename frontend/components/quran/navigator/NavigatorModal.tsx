@@ -17,6 +17,11 @@ import SurahTab, {
   QuranJuzSearchResult,
 } from "./SurahTab";
 
+// Stable module-level backgroundComponent — avoids recreating on each render.
+function NavigatorSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
+  return <SheetBackground {...p} solid />;
+}
+
 type QuranNavigatorModalProps = {
   visible: boolean;
   initialTab?: NavigatorTabKey;
@@ -108,7 +113,7 @@ function NavigatorModal({
       index={0}
       snapPoints={SNAP_POINTS}
       enablePanDownToClose
-      backgroundComponent={SheetBackground}
+      backgroundComponent={NavigatorSheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}
       onChange={handleSheetChange}
     >

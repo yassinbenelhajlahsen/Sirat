@@ -1,14 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
   InteractionManager,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -219,15 +218,18 @@ function BookmarksTab({
   }, [bookmarks, filteredBookmarks, trimmedQuery]);
 
   return (
-    <ScrollView
+    <BottomSheetScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[
+        styles.contentContainer,
+        !hasBookmarks && styles.contentContainerEmpty,
+      ]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
       {hasBookmarks ? (
         <View>
-          <TextInput
+          <BottomSheetTextInput
             style={styles.searchInput}
             placeholder="Search bookmarks..."
             placeholderTextColor={
@@ -263,7 +265,7 @@ function BookmarksTab({
           Double tap an Ayah to make your first bookmark.
         </Text>
       )}
-    </ScrollView>
+    </BottomSheetScrollView>
   );
 }
 
@@ -278,9 +280,13 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
     },
     contentContainer: {
+      flexGrow: 1,
       paddingHorizontal: 20,
       paddingBottom: 18,
       paddingTop: 8,
+    },
+    contentContainerEmpty: {
+      justifyContent: "center",
     },
     searchInput: {
       paddingHorizontal: 16,

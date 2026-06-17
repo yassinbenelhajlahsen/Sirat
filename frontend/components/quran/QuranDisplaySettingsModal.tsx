@@ -11,6 +11,10 @@ import { QuranDisplayMode } from "@/services/quranDisplayModes";
 
 import PressableScale from "../PressableScale";
 
+function DisplaySettingsSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
+  return <SheetBackground {...p} solid />;
+}
+
 type QuranDisplaySettingsModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -25,7 +29,7 @@ const DISPLAY_MODE_OPTIONS: readonly {
   { mode: "transliteration", label: "Transliteration" },
 ];
 
-const SNAP_POINTS = ["40%"];
+const SNAP_POINTS = ["55%"];
 
 export default function QuranDisplaySettingsModal({
   visible,
@@ -84,8 +88,9 @@ export default function QuranDisplaySettingsModal({
       ref={sheetRef}
       index={0}
       snapPoints={SNAP_POINTS}
+      enableDynamicSizing={false}
       enablePanDownToClose
-      backgroundComponent={SheetBackground}
+      backgroundComponent={DisplaySettingsSheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}
       onChange={handleSheetChange}
     >

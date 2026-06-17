@@ -1,7 +1,7 @@
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo } from "react";
 import {
   InteractionManager,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -52,7 +52,7 @@ function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
   );
 
   return (
-    <ScrollView
+    <BottomSheetScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
@@ -75,7 +75,7 @@ function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
           </View>
         ))}
       </View>
-    </ScrollView>
+    </BottomSheetScrollView>
   );
 }
 

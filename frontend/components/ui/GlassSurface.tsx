@@ -47,7 +47,7 @@ export default function GlassSurface({
   }
 
   return (
-    <View style={[shared, { backgroundColor: m.fill }, style]} {...rest}>
+    <View style={[shared, { backgroundColor: m.solid }, style]} {...rest}>
       {children}
     </View>
   );
