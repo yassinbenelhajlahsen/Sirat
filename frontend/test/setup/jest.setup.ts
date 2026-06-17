@@ -1,3 +1,4 @@
+require("react-native-gesture-handler/jestSetup");
 import "@testing-library/jest-native/extend-expect";
 
 declare global {
@@ -98,4 +99,39 @@ afterEach(() => {
   ) {
     jest.useRealTimers();
   }
+});
+
+// @gorhom/bottom-sheet renders as plain views/list in tests so screens that
+// embed the sheet can be rendered and queried.
+jest.mock("@gorhom/bottom-sheet", () => {
+  const React = require("react");
+  const { View, FlatList } = require("react-native");
+  const Passthrough = ({ children, ...props }: any) =>
+    React.createElement(View, props, children);
+  return {
+    __esModule: true,
+    default: React.forwardRef(({ children, ...props }: any, _ref: any) =>
+      React.createElement(View, props, children),
+    ),
+    BottomSheetView: Passthrough,
+    BottomSheetFlatList: ({ ListHeaderComponent, ...props }: any) =>
+      React.createElement(
+        View,
+        null,
+        ListHeaderComponent
+          ? React.createElement(
+              typeof ListHeaderComponent === "function"
+                ? ListHeaderComponent
+                : () => ListHeaderComponent,
+            )
+          : null,
+        React.createElement(FlatList, props),
+      ),
+    useBottomSheet: () => ({
+      snapToIndex: jest.fn(),
+      expand: jest.fn(),
+      collapse: jest.fn(),
+      close: jest.fn(),
+    }),
+  };
 });

@@ -9,6 +9,7 @@ import * as Updates from "expo-updates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, DeviceEventEmitter, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
@@ -371,6 +372,7 @@ function RootLayoutContent() {
   const splashReady = appReady;
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <PortalProvider>
         {/* Always render app content so it mounts and loads data while splash is visible */}
@@ -453,5 +455,6 @@ function RootLayoutContent() {
         />
       </PortalProvider>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
