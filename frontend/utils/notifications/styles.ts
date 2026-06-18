@@ -39,7 +39,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     masterControl: { flexDirection: "row", alignItems: "center", gap: 4 },
     masterStatus: { fontSize: 14, fontFamily: "SFProDisplay-Semibold" },
-    reveal: { paddingHorizontal: 14, paddingBottom: 14, overflow: "hidden" },
+    reveal: { paddingHorizontal: 14, overflow: "hidden" },
     revealDivider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: withOpacity(themeColors.white, 0.08),
@@ -110,6 +110,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     soundCard: {
       marginTop: 14,
+      marginBottom: 14,
       borderRadius: 12,
       borderWidth: 2,
       paddingVertical: 16,
@@ -189,12 +190,6 @@ export const getNotificationStyles = (theme: AppTheme) => {
       marginLeft: 8,
       fontSize: 13,
       fontFamily: "SFProDisplay-Semibold",
-    },
-    androidNote: {
-      marginTop: 10,
-      marginHorizontal: 20,
-      fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
     },
   });
 };
