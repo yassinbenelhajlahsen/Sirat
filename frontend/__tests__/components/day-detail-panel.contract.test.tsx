@@ -13,6 +13,7 @@ jest.mock("expo-glass-effect", () => {
   return {
     GlassView: ({ children, ...p }: any) => React.createElement(View, p, children),
     isGlassEffectAPIAvailable: () => false,
+    isLiquidGlassAvailable: () => false,
   };
 });
 

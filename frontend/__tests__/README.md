@@ -92,6 +92,14 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/prayer-arc.contract.test.tsx` (incl. live vs static/non-today mode)
 - `tab bar scroll-collapse testing`
   - `utils/tab-bar-chrome.test.ts`
+- `settings liquid-glass redesign testing`
+  - `utils/appLinks.test.ts` — About-row link/share/version helpers
+  - `components/settings-section.test.tsx` — SettingsSection group rendering
+  - `components/settings-row.test.tsx` — SettingsRow press/haptic/disabled behavior
+  - `components/theme-picker.test.tsx` — ThemePicker selection + active state
+  - `components/picker-dialog.test.tsx` — shared glass picker (search/select/checkmark)
+  - `screens/notification-settings.contract.test.tsx` — now asserts a **button** master row (press), not a Switch
+  - `screens/screen-contracts.test.tsx` — dropdown-picker and CitySearchModal mocks removed; city-search-modal.contract.test.tsx suite deleted
 
 ## Run Tests
 
