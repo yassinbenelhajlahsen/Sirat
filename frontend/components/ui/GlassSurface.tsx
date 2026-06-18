@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Platform, StyleProp, View, ViewProps, ViewStyle } from "react-native";
-import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 
 import { useTheme } from "@/context/ThemeContext";
 
@@ -24,7 +24,7 @@ export default function GlassSurface({
   const m = theme.materials[tier];
   const r = radius ?? theme.radii.card;
 
-  const useGlass = Platform.OS === "ios" && isGlassEffectAPIAvailable();
+  const useGlass = Platform.OS === "ios" && isLiquidGlassAvailable();
 
   const shared: ViewStyle = {
     borderRadius: r,

@@ -1,5 +1,5 @@
 import { BlurView } from "expo-blur";
-import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
@@ -34,7 +34,7 @@ export default function SheetBackground({
 }: Props) {
   const { theme } = useTheme();
   const colors = theme.colors;
-  const glass = Platform.OS === "ios" && isGlassEffectAPIAvailable();
+  const glass = Platform.OS === "ios" && isLiquidGlassAvailable();
 
   const solidStyle = useAnimatedStyle(() => ({
     opacity: interpolate(

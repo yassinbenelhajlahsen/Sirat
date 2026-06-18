@@ -8,7 +8,7 @@ import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { distanceKm, formatDistanceShort } from "@/utils/geo";
 import type { Mosque } from "@/services/getNearbyMosques";
-import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import React, { useMemo } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
@@ -40,7 +40,7 @@ export default function MosqueSheet({
 }: MosqueSheetProps) {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
-  const glass = Platform.OS === "ios" && isGlassEffectAPIAvailable();
+  const glass = Platform.OS === "ios" && isLiquidGlassAvailable();
 
   const snapPoints = useMemo(() => ["18%", "50%", "92%"], []);
 

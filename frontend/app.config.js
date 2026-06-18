@@ -27,9 +27,6 @@ export default {
         NSUserNotificationsUsageDescription:
           "Sirat sends prayer time reminders and notifications you enable in the app settings.",
         UIBackgroundModes: ["audio"],
-        // Opt out of the blanket iOS 26 Liquid Glass auto-restyle while we migrate
-        // screen-by-screen; glass is applied deliberately via expo-glass-effect.
-        UIDesignRequiresCompatibility: true,
       },
     },
     plugins: [

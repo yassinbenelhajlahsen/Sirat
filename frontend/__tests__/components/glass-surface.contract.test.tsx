@@ -7,10 +7,10 @@ jest.mock("@/context/ThemeContext", () => {
   return { useTheme: () => ({ theme: defaultTheme }) };
 });
 
-import { isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
 import GlassSurface from "@/components/ui/GlassSurface";
 
-const mockApiAvailable = isGlassEffectAPIAvailable as jest.Mock;
+const mockApiAvailable = isLiquidGlassAvailable as jest.Mock;
 
 describe("GlassSurface", () => {
   it("renders children and uses the glass node when the API is available", () => {
