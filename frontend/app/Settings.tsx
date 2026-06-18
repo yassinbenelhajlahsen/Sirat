@@ -103,7 +103,7 @@ export default function Settings() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + spacing.sm,
+            paddingTop: insets.top + spacing.xs,
             paddingBottom: insets.bottom + spacing.xxxl,
           },
         ]}
@@ -257,7 +257,7 @@ const createStyles = (theme: AppTheme) => {
       borderRadius: 999,
       backgroundColor: withOpacity(colors.white, 0.28),
       alignSelf: "center",
-      marginTop: spacing.sm,
+      marginTop: spacing.xs,
       marginBottom: spacing.md,
     },
     header: {
