@@ -514,13 +514,13 @@ const createStyles = (theme: AppTheme) => {
     eyebrow: {
       color: withOpacity(colors.accent, 0.9),
       fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       textTransform: "uppercase",
       letterSpacing: 1,
     },
     title: {
       color: colors.white,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700",
       fontSize: 34,
       marginTop: spacing.xs,
       textShadowColor: withOpacity(colors.black, 0.4),
@@ -532,7 +532,7 @@ const createStyles = (theme: AppTheme) => {
       color: withOpacity(colors.white, 0.9),
       fontSize: typography.body,
       lineHeight: 20,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
     banner: {
       backgroundColor: withOpacity(colors.accent, 0.18),
@@ -548,7 +548,7 @@ const createStyles = (theme: AppTheme) => {
     bannerTitle: {
       color: colors.accent,
       fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     bannerText: {
       color: colors.white,
@@ -595,7 +595,7 @@ const createStyles = (theme: AppTheme) => {
     searchAreaText: {
       color: colors.white,
       fontSize: typography.body,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     emptyOverlayWrap: {
       position: "absolute",

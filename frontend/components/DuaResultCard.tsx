@@ -228,7 +228,7 @@ const createStyles = (theme: AppTheme) => {
     eyebrow: {
       letterSpacing: 1.6,
       textTransform: "uppercase",
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     closeButton: {
       width: 30,
@@ -266,7 +266,7 @@ const createStyles = (theme: AppTheme) => {
     arabicText: {
       color: colors.accent,
       fontSize: 26,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700",
       textAlign: "center",
       lineHeight: 44,
     },
@@ -298,7 +298,7 @@ const createStyles = (theme: AppTheme) => {
     },
     segmentText: {
       fontSize: 12,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       color: withOpacity(colors.white, 0.6),
     },
     segmentTextActive: {
@@ -307,7 +307,7 @@ const createStyles = (theme: AppTheme) => {
     bodyValue: {
       color: colors.white,
       fontSize: 15,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       lineHeight: 22,
       marginBottom: spacing.md,
     },
@@ -321,12 +321,12 @@ const createStyles = (theme: AppTheme) => {
     referenceLabel: {
       color: withOpacity(colors.white, 0.5),
       fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
     referenceValue: {
       color: withOpacity(colors.accent, 0.9),
       fontSize: 12,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     actions: {
       flexDirection: "row",
@@ -356,7 +356,7 @@ const createStyles = (theme: AppTheme) => {
     actionLabel: {
       color: withOpacity(colors.white, 0.85),
       fontSize: 13,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700",
     },
     actionLabelPrimary: {
       color: colors.onAccent,
@@ -375,7 +375,7 @@ const createStyles = (theme: AppTheme) => {
     anotherText: {
       color: withOpacity(colors.white, 0.78),
       fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
   });
 };

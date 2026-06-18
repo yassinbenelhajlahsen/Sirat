@@ -333,7 +333,7 @@ const createStyles = (theme: AppTheme) => {
     appName: {
       color: themeColors.accent,
       fontSize: 64,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700",
       marginBottom: 8,
       letterSpacing: 1,
       paddingHorizontal: 8,
@@ -347,7 +347,7 @@ const createStyles = (theme: AppTheme) => {
       color: themeColors.white,
       opacity: 0.9,
       fontSize: 17, // iOS standard body size
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       letterSpacing: 0.3,
       textShadowColor: withOpacity(themeColors.black, 0.15),
       textShadowOffset: { width: 0, height: 1 },
@@ -400,7 +400,7 @@ const createStyles = (theme: AppTheme) => {
       color: themeColors.accent,
       fontSize: 16,
       textAlign: "center",
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       lineHeight: 24,
       letterSpacing: 0.2,
     },
@@ -409,7 +409,7 @@ const createStyles = (theme: AppTheme) => {
       color: withOpacity(themeColors.white, 0.7),
       fontSize: 12,
       textAlign: "center",
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       letterSpacing: 0.5,
       textTransform: "uppercase",
     },
@@ -420,7 +420,7 @@ const createStyles = (theme: AppTheme) => {
     loadingText: {
       color: withOpacity(themeColors.accent, 0.8),
       fontSize: 15,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       letterSpacing: 0.3,
     },
   });

@@ -206,7 +206,7 @@ const createStyles = (theme: AppTheme) => {
       backgroundColor: colors.accent, borderRadius: theme.radii.pill,
       paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignItems: "center", justifyContent: "center",
     },
-    heroBadgeText: { fontFamily: "SFProDisplay-Bold" },
+    heroBadgeText: { fontWeight: "700" },
     arcSlot: { marginTop: spacing.lg },
     duaSection: { position: "relative", marginTop: spacing.lg },
   });

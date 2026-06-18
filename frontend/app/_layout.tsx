@@ -167,9 +167,6 @@ function RootLayoutContent() {
     : LAUNCH_BACKGROUND_COLOR;
 
   const [fontsLoaded] = useFonts({
-    "SFProDisplay-Bold": require("../assets/fonts/SF-Pro-Display-Bold.otf"),
-    "SFProDisplay-Regular": require("../assets/fonts/SF-Pro-Display-Regular.otf"),
-    "SFProDisplay-Semibold": require("../assets/fonts/SF-Pro-Display-Semibold.otf"),
     ...Ionicons.font,
   });
 

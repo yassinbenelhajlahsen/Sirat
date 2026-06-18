@@ -282,7 +282,7 @@ const createStyles = (theme: AppTheme) => {
     displayModeLabel: {
       color: isLight ? themeColors.offWhite : themeColors.white,
       fontSize: 15,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
     displayModeLabelDisabled: {
       opacity: 0.9,

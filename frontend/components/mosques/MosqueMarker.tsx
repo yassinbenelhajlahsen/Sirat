@@ -87,14 +87,14 @@ const createStyles = (theme: AppTheme) => {
     },
     calloutTitle: {
       color: colors.accent,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700",
       fontSize: 15,
       textAlign: "center",
       marginBottom: 2,
     },
     calloutAddress: {
       color: withOpacity(colors.white, 0.85),
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       fontSize: 12,
       textAlign: "center",
       marginBottom: spacing.sm,
@@ -110,7 +110,7 @@ const createStyles = (theme: AppTheme) => {
     },
     directionsText: {
       color: colors.onAccent,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       fontSize: 12,
     },
   });

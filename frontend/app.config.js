@@ -37,7 +37,7 @@ export default {
         "expo-notifications",
         {
           sounds: [
-            "./assets/sounds/adhan.wav",
+            "./assets/sounds/adhan.caf",
           ],
         },
       ],

@@ -1439,7 +1439,7 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
     },
     headerTitleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
-    headerArabic: { fontFamily: "SFProDisplay-Semibold", fontSize: 16, color: themeColors.accent },
+    headerArabic: { fontWeight: "600", fontSize: 16, color: themeColors.accent },
     headerActions: { flexDirection: "row", gap: spacing.sm },
     ctrl: {
       width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center",
@@ -1448,7 +1448,7 @@ const createStyles = (theme: AppTheme) => {
     ctrlPlay: { backgroundColor: themeColors.accent, borderColor: themeColors.accent },
     ctrlOffline: { backgroundColor: withOpacity(themeColors.white, 0.08) },
     ctrlDisabled: { opacity: 0.5 },
-    aa: { fontFamily: "SFProDisplay-Bold", fontSize: 14, color: themeColors.white },
+    aa: { fontWeight: "700", fontSize: 14, color: themeColors.white },
     list: {
       flex: 1,
     },

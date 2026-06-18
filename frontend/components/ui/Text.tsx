@@ -15,7 +15,7 @@ export function AppText({ variant, color, style, ...rest }: AppTextProps) {
     <RNText
       allowFontScaling={false}
       style={[
-        { fontSize: t.fontSize, lineHeight: t.lineHeight, fontFamily: t.fontFamily, color: color ?? theme.colors.white },
+        { fontSize: t.fontSize, lineHeight: t.lineHeight, fontWeight: t.fontWeight, color: color ?? theme.colors.white },
         style,
       ]}
       {...rest}

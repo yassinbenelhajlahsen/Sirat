@@ -54,20 +54,20 @@ export type TypeStyleName =
 export type TypeStyle = {
   fontSize: number;
   lineHeight: number;
-  fontFamily: "SFProDisplay-Regular" | "SFProDisplay-Semibold" | "SFProDisplay-Bold";
+  fontWeight: "400" | "600" | "700";
 };
 
 export const type: Record<TypeStyleName, TypeStyle> = {
-  largeTitle: { fontSize: 34, lineHeight: 41, fontFamily: "SFProDisplay-Bold" },
-  title1: { fontSize: 28, lineHeight: 34, fontFamily: "SFProDisplay-Bold" },
-  title2: { fontSize: 22, lineHeight: 28, fontFamily: "SFProDisplay-Bold" },
-  title3: { fontSize: 20, lineHeight: 25, fontFamily: "SFProDisplay-Semibold" },
-  headline: { fontSize: 17, lineHeight: 22, fontFamily: "SFProDisplay-Semibold" },
-  body: { fontSize: 17, lineHeight: 24, fontFamily: "SFProDisplay-Regular" },
-  callout: { fontSize: 16, lineHeight: 21, fontFamily: "SFProDisplay-Regular" },
-  subhead: { fontSize: 15, lineHeight: 20, fontFamily: "SFProDisplay-Regular" },
-  footnote: { fontSize: 13, lineHeight: 18, fontFamily: "SFProDisplay-Regular" },
-  caption: { fontSize: 12, lineHeight: 16, fontFamily: "SFProDisplay-Regular" },
+  largeTitle: { fontSize: 34, lineHeight: 41, fontWeight: "700" },
+  title1: { fontSize: 28, lineHeight: 34, fontWeight: "700" },
+  title2: { fontSize: 22, lineHeight: 28, fontWeight: "700" },
+  title3: { fontSize: 20, lineHeight: 25, fontWeight: "600" },
+  headline: { fontSize: 17, lineHeight: 22, fontWeight: "600" },
+  body: { fontSize: 17, lineHeight: 24, fontWeight: "400" },
+  callout: { fontSize: 16, lineHeight: 21, fontWeight: "400" },
+  subhead: { fontSize: 15, lineHeight: 20, fontWeight: "400" },
+  footnote: { fontSize: 13, lineHeight: 18, fontWeight: "400" },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: "400" },
 };
 
 export function withOpacity(hexColor: string, alpha: number): string {

@@ -206,7 +206,7 @@ const createStyles = (theme: AppTheme) => {
       color: colors.white,
       padding: 0,
       fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       marginBottom: spacing.sm,
       minHeight: 56,
       textAlignVertical: "top",
@@ -217,7 +217,7 @@ const createStyles = (theme: AppTheme) => {
       justifyContent: "flex-end",
     },
     characterCount: {
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       minWidth: 28,
       textAlign: "right",
     },
@@ -245,7 +245,7 @@ const createStyles = (theme: AppTheme) => {
     submitText: {
       color: colors.onAccent,
       fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700",
       marginRight: 6,
     },
     submitTextLoading: {

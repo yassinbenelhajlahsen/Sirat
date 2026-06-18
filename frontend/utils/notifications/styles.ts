@@ -31,14 +31,14 @@ export const getNotificationStyles = (theme: AppTheme) => {
       backgroundColor: withOpacity(themeColors.accent, 0.14),
     },
     masterText: { flex: 1, minWidth: 0 },
-    masterTitle: { fontSize: 16, fontFamily: "SFProDisplay-Semibold" },
+    masterTitle: { fontSize: 16, fontWeight: "600" },
     masterSubtitle: {
       fontSize: 12,
       marginTop: 2,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
     masterControl: { flexDirection: "row", alignItems: "center", gap: 4 },
-    masterStatus: { fontSize: 14, fontFamily: "SFProDisplay-Semibold" },
+    masterStatus: { fontSize: 14, fontWeight: "600" },
     reveal: { paddingHorizontal: 14, overflow: "hidden" },
     revealDivider: {
       height: StyleSheet.hairlineWidth,
@@ -50,13 +50,13 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     prayerSectionTitle: {
       fontSize: 14,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     prayerSectionDescription: {
       fontSize: 12,
       lineHeight: 17,
       marginTop: 3,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
     rowWrapper: {
       marginBottom: 12,
@@ -84,7 +84,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     rowLabel: {
       color: withOpacity(themeColors.white, 0.9),
       fontSize: 16,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       letterSpacing: 0.2,
     },
     rowLabelDisabled: {
@@ -105,7 +105,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     rowIndicatorText: {
       marginLeft: 8,
       fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       color: withOpacity(themeColors.white, 0.85),
     },
     soundCard: {
@@ -125,12 +125,12 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     soundSectionTitle: {
       fontSize: 16,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       color: themeColors.white,
     },
     soundSectionSubtitle: {
       fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       marginTop: 6,
       color: withOpacity(themeColors.white, 0.75),
     },
@@ -151,7 +151,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     soundSegmentLabel: {
       fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     soundSegmentHighlight: {
       position: "absolute",
@@ -172,7 +172,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     soundDescriptionText: {
       fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       lineHeight: 18,
       color: withOpacity(themeColors.white, 0.85),
     },
@@ -189,7 +189,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     soundPreviewText: {
       marginLeft: 8,
       fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
   });
 };

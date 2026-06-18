@@ -223,7 +223,7 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
       color: colors.white,
       fontSize: 15,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       paddingVertical: 4,
     },
     list: { flexGrow: 0 },

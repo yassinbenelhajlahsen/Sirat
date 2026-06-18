@@ -276,6 +276,6 @@ const createStyles = (theme: AppTheme) => {
     row: { flexDirection: "row", marginTop: spacing.xs },
     col: { flex: 1, alignItems: "center", gap: 2 },
     name: { fontSize: 11 },
-    time: { fontFamily: "SFProDisplay-Bold", fontSize: 12 },
+    time: { fontWeight: "700", fontSize: 12 },
   });
 };

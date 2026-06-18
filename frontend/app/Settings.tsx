@@ -273,7 +273,7 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       justifyContent: "center",
     },
-    applyText: { fontFamily: "SFProDisplay-Bold" },
+    applyText: { fontWeight: "700" },
     version: { textAlign: "center", marginTop: spacing.xl },
   });
 };

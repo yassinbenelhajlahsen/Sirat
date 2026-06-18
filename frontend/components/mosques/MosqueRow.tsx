@@ -111,7 +111,7 @@ const createStyles = (theme: AppTheme) => {
       backgroundColor: colors.accent,
     },
     chipLabel: {
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     } as any,
   });
 };
