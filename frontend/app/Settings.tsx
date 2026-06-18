@@ -103,7 +103,7 @@ export default function Settings() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + spacing.xs,
+            paddingTop: spacing.sm,
             paddingBottom: insets.bottom + spacing.xxxl,
           },
         ]}
