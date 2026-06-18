@@ -61,8 +61,8 @@ export function QuranMiniPlayerPortal() {
         onNavigateToSurah={requestCurrentSurahFocus}
         style={
           isTabRoute
-            ? [styles.tabPosition, cardAnimatedStyle]
-            : cardAnimatedStyle
+            ? [styles.tabPosition, cardAnimatedStyle, { opacity: 1 }]
+            : [cardAnimatedStyle, { opacity: 1 }]
         }
       />
     </View>
