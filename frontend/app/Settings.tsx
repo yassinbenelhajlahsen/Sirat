@@ -1,28 +1,32 @@
-import { withOpacity, type AppTheme, type ThemeName } from "@/constants/theme";
-import { useTheme } from "@/context/ThemeContext";
-import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, useState } from "react";
-import {
-  Alert,
-  Animated,
-  ImageStyle,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-  useWindowDimensions,
-} from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
+import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Aurora from "@/components/ui/Aurora";
-import CitySearchModal from "@/components/CitySearchModal";
+
+import GlassSurface from "@/components/ui/GlassSurface";
+import Screen from "@/components/ui/Screen";
+import { Caption, Footnote, LargeTitle } from "@/components/ui/Text";
+import PressableScale from "@/components/PressableScale";
 import NotificationSettings from "@/components/NotificationSettings";
+import SettingsSection from "@/components/settings/SettingsSection";
+import SettingsRow from "@/components/settings/SettingsRow";
+import ThemePicker from "@/components/settings/ThemePicker";
+import PickerDialog from "@/components/settings/PickerDialog";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import { useHaptics } from "@/hooks/useHaptics";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
-import { useSettingsDropdowns } from "@/hooks/useSettingsDropdowns";
 import { useSettingsPermissions } from "@/hooks/useSettingsPermissions";
+import CALCULATION_METHODS from "@/utils/calculationMethods";
+import {
+  getAppVersion,
+  openPrivacy,
+  openWebsite,
+  rateApp,
+  sendFeedback,
+  shareApp,
+} from "@/utils/appLinks";
 import {
   alternateIconsSupported,
   applyIconForTheme,
@@ -30,16 +34,18 @@ import {
   iconNameForTheme,
 } from "@/services/appIcon";
 
+const METHOD_ITEMS = CALCULATION_METHODS.map((m) => ({
+  label: m.name,
+  value: m.id,
+}));
+
 export default function Settings() {
-  const { theme, themeName, setTheme } = useTheme();
-  const themeColors = theme.colors;
+  const { theme, themeName } = useTheme();
+  const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const isSmall = width < 360;
-
-  const footerPadding = insets.bottom + 24;
+  const router = useRouter();
+  const haptics = useHaptics();
 
   const {
     useLocation,
@@ -53,45 +59,11 @@ export default function Settings() {
     selectCityByKey,
   } = usePrayerSettingsState();
   const { permissionStatus, notifStatus, handleLocationToggle } =
-    useSettingsPermissions({
-      useLocation,
-      setUseLocation,
-    });
-  const {
-    methodOpen,
-    setMethodOpen,
-    methodItems,
-    setMethodItems,
-    themeOpen,
-    setThemeOpen,
-    themeItems,
-    setThemeItems,
-    methodScaleStyle,
-    themeScaleStyle,
-    locationAnim,
-    toggleScale,
-  } = useSettingsDropdowns(useLocation);
+    useSettingsPermissions({ useLocation, setUseLocation });
 
-  const handleToggle = async (val: boolean) => {
-    Animated.sequence([
-      Animated.timing(toggleScale, {
-        toValue: 0.96,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-      Animated.timing(toggleScale, {
-        toValue: 1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  const [methodModalVisible, setMethodModalVisible] = useState(false);
 
-    await handleLocationToggle(val);
-  };
-
-  // App-icon-per-theme: never auto-swaps (iOS forces a confirmation alert on
-  // every change). Instead an inline option appears when the live Home Screen
-  // icon doesn't match the selected theme, and only an explicit tap applies it.
+  // App-icon-per-theme: only offered when the live icon doesn't match the theme.
   const [iconSupported] = useState(alternateIconsSupported);
   const [activeIcon, setActiveIcon] = useState<string | null>(getActiveIconName);
   const [applyingIcon, setApplyingIcon] = useState(false);
@@ -113,580 +85,195 @@ export default function Settings() {
     }
   };
 
-  const cityModalColors = useMemo(
-    () =>
-      themeName === "light"
-        ? {
-            bg: withOpacity(themeColors.black, 0.28),
-            card: withOpacity(themeColors.primaryLift, 0.98),
-            cardAlt: withOpacity(themeColors.primarySurfaceAlt, 0.46),
-            text: themeColors.offWhite,
-            accent: themeColors.primaryBorder,
-            divider: withOpacity(themeColors.primaryBorder, 0.45),
-            placeholder: withOpacity(themeColors.grayDark, 0.92),
-          }
-        : undefined,
-    [themeColors, themeName],
-  );
-
-  const VisitSiteButton = () => (
-    <Pressable
-      accessibilityRole="link"
-      accessible
-      accessibilityLabel="Open Sirat website"
-      accessibilityHint="Opens the Sirat website in your browser"
-      onPress={() => Linking.openURL("https://sirat.dev").catch(() => {})}
-      android_ripple={{
-        color: withOpacity(themeColors.white, 0.06),
-        borderless: false,
-      }}
-      style={({ pressed }) => [
-        styles.visitSiteButton,
-        {
-          backgroundColor: pressed
-            ? withOpacity(themeColors.white, 0.04)
-            : withOpacity(themeColors.primaryDeep, 0.4),
-          transform: [{ scale: pressed ? 0.985 : 1 }],
-        },
-      ]}
-    >
-      <View style={styles.visitSiteRow}>
-        <Text style={styles.visitSiteText}>Visit our site</Text>
-        <Text style={styles.visitSiteArrow}>↗</Text>
-      </View>
-    </Pressable>
-  );
+  const methodLabel =
+    CALCULATION_METHODS.find((m) => m.id === method)?.name ?? "Auto";
+  const cityLabel = city
+    ? `${city.name}${city.country ? ", " + city.country : ""}`
+    : "Select city";
+  const locationSubtitle =
+    permissionStatus === "granted"
+      ? "Using live location. Turn this off to choose a fixed city."
+      : "Enable to use your current location. Turn off for manual city mode.";
 
   return (
-    <LinearGradient
-      colors={[
-        themeColors.primaryDeep,
-        themeColors.primary,
-        themeColors.primaryLift,
-      ]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.screen}
-    >
-      <Aurora />
-      <View style={styles.screen}>
-        <ScrollView
-          contentInsetAdjustmentBehavior="never"
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingTop: insets.top + 2, paddingBottom: footerPadding },
-          ]}
-          showsVerticalScrollIndicator={false}
-          style={styles.scrollView}
-        >
-          {/* Title */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.eyebrow}>Preferences</Text>
-            <Text
-              accessibilityRole="header"
-              style={[styles.title, isSmall ? styles.titleSmall : undefined]}
-            >
-              Settings
-            </Text>
-            <Text style={styles.titleSubtitle}>
-              Manage prayer calculations, location behavior, and reminder
-              preferences.
-            </Text>
+    <Screen safeArea={false}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: insets.top + spacing.sm,
+            paddingBottom: insets.bottom + spacing.xxxl,
+          },
+        ]}
+      >
+        <View style={styles.grabber} />
+
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerText}>
+            <Caption color={withOpacity(colors.accent, 0.95)} style={styles.eyebrow}>
+              PREFERENCES
+            </Caption>
+            <LargeTitle>Settings</LargeTitle>
           </View>
-          <View
-            style={[
-              styles.sectionHeaderBlock,
-              useLocation ? styles.sectionHeaderBlockTight : undefined,
-            ]}
+          <PressableScale
+            onPress={() => {
+              haptics("selection");
+              router.back();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Close settings"
           >
-            <Text style={styles.sectionGroupTitle}>Appearance</Text>
-            <Text style={styles.sectionGroupDescription}>
-              Choose your app theme.
-            </Text>
-          </View>
+            <GlassSurface tier="chrome" radius={22} style={styles.closeChip}>
+              <Ionicons name="close" size={20} color={withOpacity(colors.white, 0.85)} />
+            </GlassSurface>
+          </PressableScale>
+        </View>
 
-          <View style={[styles.sectionTop, styles.appearanceDropdownSection]}>
-            <Animated.View
-              style={themeScaleStyle}
-            >
-              <DropDownPicker
-                open={themeOpen}
-                value={themeName}
-                items={themeItems}
-                zIndex={3200}
-                zIndexInverse={800}
-                setOpen={setThemeOpen}
-                setItems={setThemeItems}
-                setValue={(valueOrUpdater) => {
-                  const nextValue =
-                    typeof valueOrUpdater === "function"
-                      ? valueOrUpdater(themeName)
-                      : valueOrUpdater;
-                  if (!nextValue || nextValue === themeName) return;
-                  void setTheme(nextValue as ThemeName);
-                }}
-                onOpen={() => setMethodOpen(false)}
-                style={{
-                  backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
-                  borderColor: withOpacity(themeColors.accent, 0.4),
-                  minHeight: 50,
-                  borderRadius: 12,
-                  marginBottom: themeOpen ? 12 : 0,
-                }}
-                dropDownContainerStyle={{
-                  backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
-                  borderColor: withOpacity(themeColors.accent, 0.4),
-                  borderRadius: 12,
-                  zIndex: 2900,
-                }}
-                textStyle={{
-                  color: themeColors.white,
-                  fontSize: 16,
-                  fontFamily: "SFProDisplay-Semibold",
-                }}
-                arrowIconStyle={{ tintColor: themeColors.accent } as ImageStyle}
-                selectedItemLabelStyle={{
-                  color: themeColors.accent,
-                  fontFamily: "SFProDisplay-Bold",
-                }}
-                listItemLabelStyle={{
-                  color: themeColors.white,
-                  fontFamily: "SFProDisplay-Regular",
-                }}
-                listMode="SCROLLVIEW"
-                placeholderStyle={{
-                  color: themeColors.grayMedium,
-                  fontFamily: "SFProDisplay-Regular",
-                }}
-                showTickIcon
-                tickIconStyle={
-                  {
-                    tintColor: themeColors.accent,
-                  } as ImageStyle
-                }
-              />
-            </Animated.View>
-          </View>
-
-          {/* Opt-in: match the Home Screen icon to the selected theme. Shown
-              only when they differ; tapping triggers iOS's one-time alert. */}
+        {/* Appearance */}
+        <SettingsSection label="Appearance">
+          <ThemePicker />
           {iconNeedsMatch ? (
-            <View style={styles.iconMatchSection}>
-              <Pressable
-                onPress={handleMatchIcon}
-                disabled={applyingIcon}
-                accessibilityRole="button"
-                accessibilityLabel="Match app icon to theme"
-                accessibilityHint="Updates the Home Screen app icon to match the selected theme. iOS will ask you to confirm."
-                style={({ pressed }) => [
-                  styles.iconMatchRow,
-                  {
-                    opacity: applyingIcon ? 0.6 : 1,
-                    transform: [{ scale: pressed ? 0.99 : 1 }],
-                  },
-                ]}
-              >
-                <View style={styles.iconMatchTextBlock}>
-                  <Text style={styles.iconMatchTitle}>
-                    Match app icon to theme
-                  </Text>
-                  <Text style={styles.iconMatchSubtitle}>
-                    Update your Home Screen icon to fit this theme. iOS will ask
-                    you to confirm.
-                  </Text>
-                </View>
-                <Text style={styles.iconMatchAction}>
+            <SettingsRow
+              icon="phone-portrait-outline"
+              title="Match app icon to theme"
+              subtitle="Update your Home Screen icon to fit this theme."
+              onPress={handleMatchIcon}
+              disabled={applyingIcon}
+              accessibilityLabel="Match app icon to theme"
+              trailing={
+                <Caption color={colors.accent} style={styles.applyText}>
                   {applyingIcon ? "…" : "Apply"}
-                </Text>
-              </Pressable>
-            </View>
+                </Caption>
+              }
+            />
           ) : null}
+        </SettingsSection>
 
-          <View style={styles.sectionHeaderBlock}>
-            <Text style={styles.sectionGroupTitle}>Prayer Times</Text>
-            <Text style={styles.sectionGroupDescription}>
-              Configure how daily timings are calculated and whether your city
-              or device location is used.
-            </Text>
-          </View>
-
-          {/* Calculation Method */}
-          <View style={styles.sectionTop}>
-            <Text style={styles.sectionTitle}>Calculation Method</Text>
-            <Text style={styles.sectionDescription}>
-              Select the authority used to compute prayer schedules.
-            </Text>
-            <Animated.View
-              style={methodScaleStyle}
-            >
-              <DropDownPicker
-                open={methodOpen}
-                value={method}
-                items={methodItems}
-                setOpen={setMethodOpen}
-                setValue={setMethod}
-                setItems={setMethodItems}
-                onOpen={() => setThemeOpen(false)}
-                style={{
-                  backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
-                  borderColor: withOpacity(themeColors.accent, 0.4),
-                  minHeight: 50,
-                  borderRadius: 12,
-                  marginBottom: methodOpen ? 12 : 0,
-                }}
-                dropDownContainerStyle={{
-                  backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
-                  borderColor: withOpacity(themeColors.accent, 0.4),
-                  borderRadius: 12,
-                  zIndex: 3000,
-                }}
-                textStyle={{
-                  color: themeColors.white,
-                  fontSize: 16,
-                  fontFamily: "SFProDisplay-Semibold",
-                }}
-                arrowIconStyle={{ tintColor: themeColors.accent } as ImageStyle}
-                selectedItemLabelStyle={{
-                  color: themeColors.accent,
-                  fontFamily: "SFProDisplay-Bold",
-                }}
-                listItemLabelStyle={{
-                  color: themeColors.white,
-                  fontFamily: "SFProDisplay-Regular",
-                }}
-                listMode="SCROLLVIEW"
-                placeholder="Select calculation method"
-                placeholderStyle={{
-                  color: themeColors.grayMedium,
-                  fontFamily: "SFProDisplay-Regular",
-                }}
-                showTickIcon
-                tickIconStyle={
-                  {
-                    tintColor: themeColors.accent,
-                  } as ImageStyle
-                }
-              />
-            </Animated.View>
-          </View>
-
-          {/* Location toggle */}
-          <Animated.View
-            style={[
-              styles.section,
-              {
-                marginTop: 18,
-                transform: [{ scale: toggleScale }],
-              },
-            ]}
-          >
-            <View style={styles.rowBetween}>
-              <View style={styles.rowTextBlock}>
-                <Text
-                  style={[
-                    styles.rowTitle,
-                    isSmall ? styles.rowTitleSmall : undefined,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Use My Location
-                </Text>
-                <Text
-                  style={[
-                    styles.rowSubtitle,
-                    isSmall ? styles.rowSubtitleSmall : undefined,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {permissionStatus === "granted"
-                    ? "Using live location. Turn this off to choose a fixed city."
-                    : "Enable to use your current location. Turn off for manual city mode."}
-                </Text>
-              </View>
-
-              <View style={styles.switchWrap}>
-                <Switch
-                  accessibilityLabel="Use my location"
-                  value={useLocation}
-                  onValueChange={handleToggle}
-                  trackColor={{
-                    false: themeColors.grayDark,
-                    true:
-                      theme.name === "light" ? "#DABA69" : themeColors.accent,
-                  }}
-                  thumbColor={useLocation ? "#FFFFFF" : themeColors.grayMuted}
-                />
-              </View>
-            </View>
-          </Animated.View>
-
-          {/* Manual city selector */}
-          <Animated.View
-            pointerEvents={useLocation ? "none" : "auto"}
-            accessibilityElementsHidden={useLocation}
-            style={[
-              styles.section,
-              {
-                marginTop: useLocation ? 10 : 18,
-                opacity: locationAnim,
-                transform: [
-                  {
-                    translateY: locationAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [6, 0],
-                    }),
-                  },
-                ],
-                maxHeight: locationAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 170],
-                }),
-                overflow: "hidden",
-              },
-            ]}
-          >
-            <Text style={styles.sectionTitle}>Manual City</Text>
-            <Text style={styles.sectionDescription}>
-              Used when location is disabled for a stable prayer schedule.
-            </Text>
-
-            <Pressable
-              onPress={() => setCityModalVisible(true)}
-              accessibilityRole="button"
-              style={styles.cityButton}
-            >
-              <Text style={styles.cityButtonText}>
-                {city
-                  ? `${city.name}${city.country ? ", " + city.country : ""}`
-                  : "Select City"}
-              </Text>
-            </Pressable>
-          </Animated.View>
-
-          {/* City search modal */}
-          <CitySearchModal
-            visible={cityModalVisible}
-            onClose={() => setCityModalVisible(false)}
-            onSelectKey={selectCityByKey}
-            items={cityItems}
-            colors={cityModalColors}
+        {/* Prayer Times */}
+        <SettingsSection label="Prayer Times">
+          <SettingsRow
+            first
+            icon="compass-outline"
+            title="Calculation Method"
+            value={methodLabel}
+            showChevron
+            onPress={() => {
+              haptics("selection");
+              setMethodModalVisible(true);
+            }}
           />
+          <SettingsRow
+            icon="location-outline"
+            title="Use my location"
+            subtitle={locationSubtitle}
+            trailing={
+              <Switch
+                accessibilityLabel="Use my location"
+                value={useLocation}
+                onValueChange={(val) => {
+                  haptics("light");
+                  void handleLocationToggle(val);
+                }}
+                trackColor={{
+                  false: colors.grayDark,
+                  true: theme.name === "light" ? "#DABA69" : colors.accent,
+                }}
+                thumbColor={useLocation ? "#FFFFFF" : colors.grayMuted}
+              />
+            }
+          />
+          {!useLocation ? (
+            <SettingsRow
+              icon="business-outline"
+              title="Manual city"
+              value={cityLabel}
+              showChevron
+              onPress={() => {
+                haptics("selection");
+                setCityModalVisible(true);
+              }}
+            />
+          ) : null}
+        </SettingsSection>
 
-          {/* Notifications section: the master toggle mirrors OS and opens Settings on press */}
-          <NotificationSettings notifStatus={notifStatus} />
+        {/* Notifications — owns its own section label + glass card (Task 6) */}
+        <NotificationSettings notifStatus={notifStatus} />
 
-          <View style={styles.sectionHeaderBlock}>
-            <Text style={styles.sectionGroupTitle}>About</Text>
-            <Text style={styles.sectionGroupDescription}>
-              Learn more about Sirat and access external resources.
-            </Text>
-          </View>
+        {/* About */}
+        <SettingsSection label="About">
+          <SettingsRow first icon="star-outline" title="Rate Sirat" showChevron onPress={rateApp} />
+          <SettingsRow icon="share-outline" title="Share Sirat" showChevron onPress={shareApp} />
+          <SettingsRow icon="shield-checkmark-outline" title="Privacy Policy" showChevron onPress={openPrivacy} />
+          <SettingsRow icon="mail-outline" title="Send Feedback" showChevron onPress={sendFeedback} />
+          <SettingsRow
+            icon="globe-outline"
+            title="Visit website"
+            value="sirat.dev"
+            showChevron
+            onPress={openWebsite}
+          />
+        </SettingsSection>
 
-          {/* Visit site button */}
-          <View style={styles.footer}>
-            <VisitSiteButton />
-          </View>
-        </ScrollView>
-      </View>
-    </LinearGradient>
+        <Footnote color={withOpacity(colors.white, 0.4)} style={styles.version}>
+          Sirat {getAppVersion()}
+        </Footnote>
+      </ScrollView>
+
+      <PickerDialog
+        visible={methodModalVisible}
+        title="Calculation Method"
+        subtitle="Authority used to compute prayer schedules."
+        items={METHOD_ITEMS}
+        selected={method}
+        onSelect={(value) => {
+          setMethod(value);
+          setMethodModalVisible(false);
+        }}
+        onClose={() => setMethodModalVisible(false)}
+      />
+      <PickerDialog
+        visible={cityModalVisible}
+        searchable
+        title="Select city"
+        subtitle="Search from the supported cities list."
+        items={cityItems}
+        onSelect={(value) => selectCityByKey(value)}
+        onClose={() => setCityModalVisible(false)}
+      />
+    </Screen>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
-  const themeColors = theme.colors;
-  const isLight = theme.name === "light";
-
+  const { colors, spacing } = theme;
   return StyleSheet.create({
-    screen: { flex: 1 },
-    scrollView: { zIndex: 0 },
-    scrollContent: { paddingTop: 2 },
-    titleContainer: { paddingTop: 10, paddingHorizontal: 20 },
-    eyebrow: {
-      color: withOpacity(themeColors.accent, 0.9),
-      fontSize: 12,
-      fontFamily: "SFProDisplay-Semibold",
-      letterSpacing: 1,
-      textTransform: "uppercase",
-      marginTop: 10,
+    content: { paddingHorizontal: spacing.xl },
+    grabber: {
+      width: 38,
+      height: 5,
+      borderRadius: 999,
+      backgroundColor: withOpacity(colors.white, 0.28),
+      alignSelf: "center",
+      marginTop: spacing.sm,
+      marginBottom: spacing.md,
     },
-    title: {
-      color: themeColors.white,
-      fontFamily: "SFProDisplay-Bold",
-      fontSize: 38,
-      marginTop: 2,
-    },
-    titleSmall: { fontSize: 34 },
-    titleSubtitle: {
-      color: withOpacity(themeColors.white, 0.85),
-      fontSize: 14,
-      fontFamily: "SFProDisplay-Regular",
-      marginTop: 6,
-      lineHeight: 20,
-    },
-    sectionHeaderBlock: {
-      paddingHorizontal: 20,
-      marginTop: 20,
-    },
-    sectionGroupTitle: {
-      color: themeColors.accent,
-      fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
-      textTransform: "uppercase",
-      letterSpacing: 0.9,
-    },
-    sectionGroupDescription: {
-      color: withOpacity(themeColors.white, 0.72),
-      fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
-      marginTop: 4,
-      lineHeight: 18,
-    },
-    sectionTop: {
-      paddingHorizontal: 20,
-      paddingTop: 14,
-      zIndex: 2000,
-    },
-    appearanceDropdownSection: {
-      zIndex: 3000,
-      elevation: 12,
-    },
-    iconMatchSection: {
-      paddingHorizontal: 20,
-      marginTop: 12,
-      zIndex: 1,
-    },
-    iconMatchRow: {
+    header: {
       flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primarySurface, 0.9)
-        : withOpacity(themeColors.primaryDeep, 0.4),
-      borderColor: withOpacity(themeColors.accent, 0.4),
-      borderWidth: 1,
-      borderRadius: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-    },
-    iconMatchTextBlock: { flex: 1, paddingRight: 12 },
-    iconMatchTitle: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 15,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    iconMatchSubtitle: {
-      color: withOpacity(
-        isLight ? themeColors.offWhite : themeColors.white,
-        0.72,
-      ),
-      fontSize: 12,
-      marginTop: 2,
-      fontFamily: "SFProDisplay-Regular",
-      lineHeight: 16,
-    },
-    iconMatchAction: {
-      color: themeColors.accent,
-      fontSize: 15,
-      fontFamily: "SFProDisplay-Bold",
-    },
-    section: {
-      paddingHorizontal: 20,
-    },
-    sectionHeaderBlockTight: {
-      marginTop: 10,
-    },
-    sectionTitle: {
-      color: themeColors.white,
-      fontSize: 16,
-      marginBottom: 4,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    sectionDescription: {
-      color: withOpacity(themeColors.white, 0.74),
-      fontSize: 12,
-      marginBottom: 10,
-      fontFamily: "SFProDisplay-Regular",
-      lineHeight: 17,
-    },
-    rowBetween: {
-      flexDirection: "row",
-      alignItems: "center",
+      alignItems: "flex-start",
       justifyContent: "space-between",
     },
-    rowTextBlock: { flex: 1, paddingRight: 12 },
-    rowTitle: {
-      color: themeColors.white,
-      fontSize: 16,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    rowTitleSmall: { fontSize: 15 },
-    rowSubtitle: {
-      color: themeColors.white,
-      opacity: 0.8,
-      fontSize: 13,
-      marginTop: 2,
-    },
-    rowSubtitleSmall: { fontSize: 12 },
-    switchWrap: { marginLeft: 8 },
-    cityButton: {
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primarySurface, 0.9)
-        : withOpacity(themeColors.primaryDeep, 0.4),
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.85)
-        : withOpacity(themeColors.accent, 0.4),
-      borderWidth: 1,
-      borderRadius: 12,
-      paddingVertical: 14,
-      paddingHorizontal: 14,
-    },
-    cityButtonText: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 15,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    footer: {
-      paddingHorizontal: 16,
-      marginTop: 10,
-      alignItems: "center",
-    },
-    visitSiteButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      borderRadius: 14,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.06),
-      shadowColor: themeColors.black,
-      shadowOpacity: 0.12,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 6,
-      width: "100%",
-      maxWidth: 520,
-    },
-    visitSiteRow: {
-      flex: 1,
-      flexDirection: "row",
+    headerText: { flex: 1, paddingRight: spacing.md },
+    eyebrow: { letterSpacing: 1.4, marginBottom: spacing.xs },
+    closeChip: {
+      width: 40,
+      height: 40,
       alignItems: "center",
       justifyContent: "center",
     },
-    visitSiteText: {
-      color: themeColors.white,
-      fontSize: 14,
-      lineHeight: 20,
-      fontFamily: "SFProDisplay-Semibold",
-      letterSpacing: 0.2,
-      marginRight: 8,
-    },
-    visitSiteArrow: {
-      color: themeColors.accent,
-      fontSize: 14,
-      lineHeight: 20,
-      fontFamily: "SFProDisplay-Semibold",
-      opacity: 0.95,
-    },
+    applyText: { fontFamily: "SFProDisplay-Bold" },
+    version: { textAlign: "center", marginTop: spacing.xl },
   });
 };

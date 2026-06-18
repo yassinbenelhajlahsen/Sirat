@@ -69,19 +69,6 @@ jest.mock("@react-navigation/bottom-tabs", () => ({
   useBottomTabBarHeight: jest.fn(() => 0),
 }));
 
-jest.mock("react-native-dropdown-picker", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
-
-  return function DropDownPickerMock({
-    value,
-  }: {
-    value?: string | number | null;
-  }) {
-    return <Text testID="dropdown-picker">{String(value ?? "")}</Text>;
-  };
-});
-
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: jest.fn(),
 }));
@@ -107,9 +94,10 @@ jest.mock("@/hooks/useSettingsPermissions", () => ({
   useSettingsPermissions: jest.fn(),
 }));
 
-jest.mock("@/hooks/useSettingsDropdowns", () => ({
-  useSettingsDropdowns: jest.fn(),
-}));
+jest.mock("@/components/settings/PickerDialog", () => {
+  const { View } = require("react-native");
+  return { __esModule: true, default: () => <View /> };
+});
 
 jest.mock("@/hooks/useQuranDisplayModes", () => ({
   useQuranDisplayModes: jest.fn(),
@@ -340,15 +328,6 @@ jest.mock("@/components/PressableScale", () => {
   };
 });
 
-jest.mock("@/components/CitySearchModal", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
-
-  return function CitySearchModalMock({ visible }: { visible: boolean }) {
-    return <Text>CitySearchModal:{visible ? "open" : "closed"}</Text>;
-  };
-});
-
 jest.mock("@/components/NotificationSettings", () => {
   const React = require("react");
   const { Text } = require("react-native");
@@ -420,7 +399,6 @@ import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
 import { useKeyboardAutoScroll } from "@/hooks/useKeyboardAutoScroll";
 import useModalTransition from "@/hooks/useModalTransition";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
-import { useSettingsDropdowns } from "@/hooks/useSettingsDropdowns";
 import { useSettingsPermissions } from "@/hooks/useSettingsPermissions";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
@@ -456,8 +434,6 @@ const mockUsePrayerSettingsState =
   usePrayerSettingsState as jest.MockedFunction<typeof usePrayerSettingsState>;
 const mockUseSettingsPermissions =
   useSettingsPermissions as jest.MockedFunction<typeof useSettingsPermissions>;
-const mockUseSettingsDropdowns =
-  useSettingsDropdowns as jest.MockedFunction<typeof useSettingsDropdowns>;
 const mockUseQuranAudioController =
   useQuranAudioController as jest.MockedFunction<typeof useQuranAudioController>;
 const mockUseQuranDisplayModes =
@@ -591,22 +567,6 @@ const buildPermissionsState = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const buildDropdownState = (overrides: Record<string, unknown> = {}) => ({
-  methodOpen: false,
-  setMethodOpen: jest.fn(),
-  methodItems: [{ label: "MWL", value: 2 }],
-  setMethodItems: jest.fn(),
-  themeOpen: false,
-  setThemeOpen: jest.fn(),
-  themeItems: [{ label: "Default", value: "default" }],
-  setThemeItems: jest.fn(),
-  methodScaleStyle: {},
-  themeScaleStyle: {},
-  locationAnim: new Animated.Value(1),
-  toggleScale: new Animated.Value(1),
-  ...overrides,
-});
-
 const buildAudioController = (overrides: Record<string, unknown> = {}) => ({
   isPlaying: false,
   isAudioLoading: false,
@@ -690,6 +650,7 @@ describe("Screen contracts", () => {
 
     mockUseRouter.mockReturnValue({
       push: mockPush,
+      back: jest.fn(),
     } as any);
     mockUseLocalSearchParams.mockReturnValue({
       month: "2",
@@ -719,7 +680,6 @@ describe("Screen contracts", () => {
       buildPrayerSettingsState() as any,
     );
     mockUseSettingsPermissions.mockReturnValue(buildPermissionsState() as any);
-    mockUseSettingsDropdowns.mockReturnValue(buildDropdownState() as any);
 
     mockUseQuranAudioController.mockReturnValue(buildAudioController() as any);
     mockUseQuranDisplayModes.mockReturnValue({
