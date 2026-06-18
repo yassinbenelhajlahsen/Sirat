@@ -25,6 +25,9 @@ export default function GlassSurface({
   const r = radius ?? theme.radii.card;
 
   const useGlass = Platform.OS === "ios" && isLiquidGlassAvailable();
+  // The light theme's cream canvas makes the frosted "regular" material read as a
+  // grey panel, so the light theme uses the more transparent "clear" glass.
+  const isLight = theme.name === "light";
 
   const shared: ViewStyle = {
     borderRadius: r,
@@ -37,7 +40,9 @@ export default function GlassSurface({
   if (useGlass) {
     return (
       <GlassView
-        glassEffectStyle={tier === "chrome" ? "clear" : "regular"}
+        key={theme.name}
+        glassEffectStyle={tier === "chrome" || isLight ? "clear" : "regular"}
+        colorScheme={isLight ? "light" : "dark"}
         style={[shared, style]}
         {...rest}
       >

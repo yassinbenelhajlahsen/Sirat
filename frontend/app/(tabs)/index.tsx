@@ -131,7 +131,7 @@ export default function Home() {
         {(loading || shouldRenderPrayerSummary || hasPrayerSummary) && (
           <View style={styles.heroSlot}>
             {shouldRenderPrayerSummary ? (
-              <Animated.View style={prayerSummaryAnimatedStyle}>
+              <Animated.View style={[prayerSummaryAnimatedStyle, { opacity: 1 }]}>
                 {nextPrayer ? (
                   <GlassSurface tier="card" radius={theme.radii.heroLg} style={styles.heroCard}>
                     <View style={styles.heroTextCol}>
