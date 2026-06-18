@@ -6,39 +6,44 @@ export const getNotificationStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
 
   return StyleSheet.create({
-    sectionHeader: {
-      paddingHorizontal: 20,
-      marginTop: 18,
+    section: { marginTop: theme.spacing.xl },
+    sectionLabel: {
+      letterSpacing: 1,
+      marginLeft: theme.spacing.xs,
+      marginBottom: theme.spacing.sm,
+    },
+    card: { overflow: "hidden" },
+    masterRow: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
+      gap: 12,
       minHeight: 56,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
     },
-    headerTextBlock: {
-      flexShrink: 1,
-      paddingRight: 12,
+    masterIcon: {
+      width: 30,
+      height: 30,
+      borderRadius: 9,
+      borderCurve: "continuous",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.accent, 0.14),
     },
-    headerEyebrow: {
-      color: withOpacity(themeColors.accent, 0.9),
-      fontSize: 11,
-      fontFamily: "SFProDisplay-Semibold",
-      textTransform: "uppercase",
-      letterSpacing: 0.9,
-    },
-    headerTitle: {
-      fontSize: 16,
-      fontFamily: "SFProDisplay-Semibold",
-      marginTop: 1,
-    },
-    headerSubtitle: {
+    masterText: { flex: 1, minWidth: 0 },
+    masterTitle: { fontSize: 16, fontFamily: "SFProDisplay-Semibold" },
+    masterSubtitle: {
       fontSize: 12,
       marginTop: 2,
       fontFamily: "SFProDisplay-Regular",
     },
-    cardContainer: {
-      marginTop: 14,
-      marginHorizontal: 20,
-      paddingBottom: 4,
+    masterControl: { flexDirection: "row", alignItems: "center", gap: 4 },
+    masterStatus: { fontSize: 14, fontFamily: "SFProDisplay-Semibold" },
+    reveal: { paddingHorizontal: 14, paddingBottom: 14, overflow: "hidden" },
+    revealDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(themeColors.white, 0.08),
+      marginBottom: 14,
     },
     prayerSectionHeader: {
       marginBottom: 10,

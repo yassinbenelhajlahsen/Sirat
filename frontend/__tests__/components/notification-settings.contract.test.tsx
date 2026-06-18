@@ -126,7 +126,7 @@ describe("NotificationSettings contract", () => {
     expect(queryByLabelText("Open system settings to change notifications")).toBeNull();
   });
 
-  it("opens OS settings when the master toggle is used", async () => {
+  it("opens OS settings when the master row is pressed", async () => {
     const openSettingsSpy = jest
       .spyOn(Linking, "openSettings")
       .mockResolvedValueOnce(undefined);
@@ -134,10 +134,8 @@ describe("NotificationSettings contract", () => {
       <NotificationSettings notifStatus="granted" />
     );
 
-    fireEvent(
-      getByLabelText("Open system settings to change notifications"),
-      "valueChange",
-      false
+    fireEvent.press(
+      getByLabelText("Open system settings to change notifications")
     );
 
     expect(pulseHeader).toHaveBeenCalledTimes(1);
