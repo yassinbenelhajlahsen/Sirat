@@ -15,7 +15,7 @@ export default {
     platforms: ["ios", "android"],
     ios: {
       userInterfaceStyle: "dark",
-      supportsTablet: true,
+      supportsTablet: false,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
       buildNumber: "1.0.6",
       teamId: "5AN795CL7Z",
