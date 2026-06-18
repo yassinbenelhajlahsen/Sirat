@@ -965,7 +965,7 @@ export default function PickerDialog<T extends string | number>({
   onClose,
 }: Props<T>) {
   const { theme } = useTheme();
-  const { colors, spacing } = theme;
+  const { colors } = theme;
   const haptics = useHaptics();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const bottomInset = useKeyboardInset();
@@ -977,6 +977,13 @@ export default function PickerDialog<T extends string | number>({
   useEffect(() => {
     if (!visible) setQuery("");
   }, [visible]);
+
+  useEffect(() => {
+    if (visible && searchable) {
+      const id = setTimeout(() => inputRef.current?.focus(), 80);
+      return () => clearTimeout(id);
+    }
+  }, [visible, searchable]);
 
   const filtered = useMemo(() => {
     const q = debounced.trim().toLowerCase();
@@ -1150,8 +1157,8 @@ git commit -m "feat(settings): add shared glass PickerDialog"
 - Modify: `frontend/__tests__/components/notification-settings.contract.test.tsx`
 
 **Interfaces:**
-- Consumes: `GlassSurface`, the existing notification hooks (unchanged).
-- Produces: same default export `NotificationSettings`; master control becomes a `Pressable` button row (was a `Switch`).
+- Consumes: `GlassSurface`, `Caption`, the existing notification hooks (unchanged).
+- Produces: same default export `NotificationSettings`, now rendering its own `NOTIFICATIONS` section label + a `GlassSurface` card with the master row and reveal content inside (so the Settings screen does not add a separate label). Master control becomes a `Pressable` button row (was a `Switch`).
 
 - [ ] **Step 1: Update the contract test for the reframed master row (failing)**
 
@@ -1180,116 +1187,442 @@ In `frontend/__tests__/components/notification-settings.contract.test.tsx`, repl
 Run: `npm test -- --runTestsByPath __tests__/components/notification-settings.contract.test.tsx -t "opens OS settings"`
 Expected: FAIL — `fireEvent.press` finds the element but the current `Switch` only handles `valueChange`, so `pulseHeader`/`openSettings` are not called.
 
-- [ ] **Step 3: Reframe the master control in `NotificationSettings.tsx`**
+- [ ] **Step 3: Rewrite `NotificationSettings.tsx` as a labeled glass card**
 
-Replace the master `Switch` block (the `{!loaded ? <ActivityIndicator/> : <Switch .../>}` inside the header `Animated.View`) with a pressable status row. Find this JSX:
-
-```tsx
-        {!loaded ? (
-          <ActivityIndicator size="small" color={accentColor} />
-        ) : (
-          <Switch
-            value={enabled}
-            onValueChange={async () => {
-              // Do not flip locally. Always guide user to system settings.
-              pulseHeader();
-              try {
-                await Linking.openSettings();
-              } catch {
-                // ignore
-              }
-            }}
-            trackColor={{
-              false: themeColors.grayDark,
-              true: theme.name === "light" ? "#DABA69" : themeColors.accent,
-            }}
-            thumbColor={enabled ? "#FFFFFF" : themeColors.grayMuted}
-            ios_backgroundColor={dividerColor}
-            accessibilityLabel="Open system settings to change notifications"
-          />
-        )}
-```
-
-Replace it with:
+Replace the entire file with the following. Only the outer structure changes — a `NOTIFICATIONS` section label + a `GlassSurface` card wrapping the reframed master row and the reveal content. The prayer-alert rows and the Adhan sound card are byte-for-byte the existing behavior; all notification hooks/logic are unchanged.
 
 ```tsx
-        {!loaded ? (
-          <ActivityIndicator size="small" color={accentColor} />
-        ) : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open system settings to change notifications"
-            onPress={async () => {
-              pulseHeader();
-              try {
-                await Linking.openSettings();
-              } catch {
-                // ignore
-              }
-            }}
-            style={({ pressed }) => [
-              styles.masterControl,
-              { opacity: pressed ? 0.85 : 1 },
-            ]}
-          >
-            <Text style={[styles.masterStatus, { color: withOpacity(textColor, 0.6) }]}>
-              {enabled ? "On" : "Off"}
+// frontend/components/NotificationSettings.tsx
+import { withOpacity } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import { Ionicons } from "@expo/vector-icons";
+import { useCallback, useMemo } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Linking,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
+
+import GlassSurface from "@/components/ui/GlassSurface";
+import { Caption } from "@/components/ui/Text";
+import { useAdhanPreview } from "../hooks/useAdhanPreview";
+import { useNotificationPanelAnimation } from "../hooks/useNotificationPanelAnimation";
+import { useNotificationPreferences } from "../hooks/useNotificationPreferences";
+import { useNotificationSegmentLayout } from "../hooks/useNotificationSegmentLayout";
+import {
+  PRAYERS,
+  SOUND_OPTIONS,
+  SOUND_SEGMENT_GAP,
+  type PrayerKey,
+  type SoundMode,
+} from "../utils/notifications/constants";
+import { getNotificationStyles } from "../utils/notifications/styles";
+
+export { NOTIF_PREFS_UPDATED_EVENT } from "../utils/notifications/constants";
+
+type Props = {
+  // From Settings.tsx: "granted" | "denied" | null
+  notifStatus?: string | null;
+};
+
+export default function NotificationSettings({ notifStatus }: Props) {
+  const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const styles = useMemo(() => getNotificationStyles(theme), [theme]);
+
+  const textColor = themeColors.white;
+  const accentColor = themeColors.accent;
+  const dividerColor = withOpacity(themeColors.white, 0.08);
+  const pillOffBgColor = withOpacity(themeColors.white, 0.04);
+  const rowOnBgColor = withOpacity(themeColors.accent, 0.18);
+  const rowOnBorderColor = withOpacity(themeColors.accent, 0.75);
+  const rowOffBgColor = withOpacity(themeColors.white, 0.03);
+  const rowOffBorderColor = withOpacity(themeColors.white, 0.12);
+  const rowOffTextColor = withOpacity(themeColors.white, 0.65);
+  const rowDisabledTextColor = withOpacity(themeColors.white, 0.4);
+
+  const {
+    loaded,
+    enabled,
+    prefs,
+    soundMode,
+    setPrayerPreference,
+    updateSoundMode,
+  } = useNotificationPreferences({ notifStatus });
+
+  const { previewing, handlePreviewPress, stopPreview } =
+    useAdhanPreview(enabled);
+
+  const {
+    headerScale,
+    bellAnimations,
+    contentOpacity,
+    contentTranslateY,
+    contentMaxHeight,
+    contentScale,
+    soundIndicator,
+    pulseHeader,
+    pulsePrayer,
+  } = useNotificationPanelAnimation({ loaded, enabled, soundMode });
+
+  const { segmentWidth, indicatorTranslateX, onLayout } =
+    useNotificationSegmentLayout({
+      soundIndicator,
+      optionCount: SOUND_OPTIONS.length,
+      gap: SOUND_SEGMENT_GAP,
+    });
+
+  const togglePrayer = useCallback(
+    (k: PrayerKey) => {
+      pulsePrayer(k);
+      void setPrayerPreference(k, !prefs[k]);
+    },
+    [prefs, pulsePrayer, setPrayerPreference],
+  );
+
+  const handleSoundModeChange = useCallback(
+    async (nextMode: SoundMode) => {
+      if (nextMode === soundMode) return;
+      await stopPreview();
+      await updateSoundMode(nextMode);
+    },
+    [soundMode, stopPreview, updateSoundMode],
+  );
+
+  const selectedSoundOption =
+    SOUND_OPTIONS.find((option) => option.id === soundMode) ?? SOUND_OPTIONS[0];
+
+  return (
+    <View style={styles.section}>
+      <Caption color={withOpacity(accentColor, 0.95)} style={styles.sectionLabel}>
+        NOTIFICATIONS
+      </Caption>
+      <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
+        {/* Master row: status mirror that routes to System Settings */}
+        <Animated.View
+          style={[styles.masterRow, { transform: [{ scale: headerScale }] }]}
+        >
+          <View style={styles.masterIcon}>
+            <Ionicons name="notifications-outline" size={17} color={accentColor} />
+          </View>
+          <View style={styles.masterText}>
+            <Text style={[styles.masterTitle, { color: textColor }]}>
+              Notifications
             </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={18}
-              color={withOpacity(textColor, 0.4)}
-            />
-          </Pressable>
-        )}
+            <Text
+              style={[styles.masterSubtitle, { color: withOpacity(textColor, 0.55) }]}
+            >
+              Managed in System Settings.
+            </Text>
+          </View>
+          {!loaded ? (
+            <ActivityIndicator size="small" color={accentColor} />
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open system settings to change notifications"
+              onPress={async () => {
+                pulseHeader();
+                try {
+                  await Linking.openSettings();
+                } catch {
+                  // ignore
+                }
+              }}
+              style={({ pressed }) => [
+                styles.masterControl,
+                { opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Text
+                style={[styles.masterStatus, { color: withOpacity(textColor, 0.6) }]}
+              >
+                {enabled ? "On" : "Off"}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={withOpacity(textColor, 0.4)}
+              />
+            </Pressable>
+          )}
+        </Animated.View>
+
+        {/* Reveal: kept mounted so close animates out smoothly */}
+        <Animated.View
+          pointerEvents={enabled ? "auto" : "none"}
+          accessibilityElementsHidden={!enabled}
+          style={[
+            styles.reveal,
+            {
+              opacity: contentOpacity,
+              transform: [
+                { translateY: contentTranslateY },
+                { scale: contentScale },
+              ],
+              maxHeight: contentMaxHeight,
+            },
+          ]}
+        >
+          <View style={styles.revealDivider} />
+          <View style={styles.prayerSectionHeader}>
+            <Text style={[styles.prayerSectionTitle, { color: textColor }]}>
+              Prayer Alerts
+            </Text>
+            <Text
+              style={[
+                styles.prayerSectionDescription,
+                { color: withOpacity(textColor, 0.72) },
+              ]}
+            >
+              Tap a row to enable or disable reminders for each prayer.
+            </Text>
+          </View>
+          {PRAYERS.map((p) => {
+            const isOn = prefs[p];
+            const anim = bellAnimations[p];
+            const labelColor = !enabled
+              ? rowDisabledTextColor
+              : isOn
+                ? textColor
+                : rowOffTextColor;
+            const indicatorColor = !enabled
+              ? withOpacity(textColor, 0.35)
+              : isOn
+                ? accentColor
+                : rowOffTextColor;
+            const cardBg = !enabled
+              ? pillOffBgColor
+              : isOn
+                ? rowOnBgColor
+                : rowOffBgColor;
+            const cardBorder = !enabled
+              ? dividerColor
+              : isOn
+                ? rowOnBorderColor
+                : rowOffBorderColor;
+
+            return (
+              <Animated.View
+                key={p}
+                style={[
+                  styles.rowWrapper,
+                  { transform: [{ scale: anim }], opacity: enabled ? 1 : 0.55 },
+                ]}
+              >
+                <Pressable
+                  onPress={() => {
+                    if (!enabled) return;
+                    togglePrayer(p);
+                  }}
+                  disabled={!enabled}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: isOn, disabled: !enabled }}
+                  accessibilityLabel={`${p} alert`}
+                  style={({ pressed }) => [
+                    styles.rowBase,
+                    styles.rowSurface,
+                    { backgroundColor: cardBg, borderColor: cardBorder },
+                    isOn && enabled ? styles.rowActive : undefined,
+                    pressed && enabled ? styles.rowPressed : undefined,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.rowLabel,
+                      { color: labelColor },
+                      !enabled ? styles.rowLabelDisabled : undefined,
+                    ]}
+                  >
+                    {p}
+                  </Text>
+                  <View style={styles.rowIndicator}>
+                    <Ionicons
+                      name={isOn ? "notifications" : "notifications-off-outline"}
+                      size={18}
+                      color={indicatorColor}
+                    />
+                    <Text
+                      style={[styles.rowIndicatorText, { color: indicatorColor }]}
+                    >
+                      {isOn ? "On" : "Off"}
+                    </Text>
+                  </View>
+                </Pressable>
+              </Animated.View>
+            );
+          })}
+          <View style={[styles.soundCard, { opacity: enabled ? 1 : 0.55 }]}>
+            <Text
+              style={[styles.soundSectionTitle, { color: textColor }]}
+              accessibilityRole="header"
+            >
+              Adhan sound
+            </Text>
+            <Text
+              style={[
+                styles.soundSectionSubtitle,
+                { color: withOpacity(textColor, 0.75) },
+              ]}
+            >
+              Choose the alert sound for prayer reminders.
+            </Text>
+
+            <View style={styles.soundSegmentRow} onLayout={onLayout}>
+              {segmentWidth != null && indicatorTranslateX != null && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.soundSegmentHighlight,
+                    {
+                      width: segmentWidth,
+                      transform: [{ translateX: indicatorTranslateX }],
+                      backgroundColor: accentColor,
+                      borderColor: accentColor,
+                    },
+                  ]}
+                />
+              )}
+              {SOUND_OPTIONS.map((option, idx) => {
+                const selected = soundMode === option.id;
+                return (
+                  <Pressable
+                    key={option.id}
+                    disabled={!enabled}
+                    onPress={() => handleSoundModeChange(option.id)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`${option.label} sound option`}
+                    style={({ pressed }) => [
+                      styles.soundSegment,
+                      {
+                        marginRight:
+                          idx === SOUND_OPTIONS.length - 1 ? 0 : SOUND_SEGMENT_GAP,
+                        backgroundColor: selected ? "transparent" : pillOffBgColor,
+                        borderColor: selected ? "transparent" : dividerColor,
+                        opacity: pressed ? 0.9 : 1,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.soundSegmentLabel,
+                        { color: selected ? themeColors.onAccent : textColor },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {selectedSoundOption.description && (
+              <View
+                style={[
+                  styles.soundDescriptionBox,
+                  {
+                    borderColor: dividerColor,
+                    backgroundColor: withOpacity(textColor, 0.05),
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.soundDescriptionText,
+                    { color: withOpacity(textColor, 0.85) },
+                  ]}
+                >
+                  {selectedSoundOption.description}
+                </Text>
+                {selectedSoundOption.id === "adhan" && (
+                  <Pressable
+                    disabled={!enabled}
+                    onPress={() =>
+                      enabled && handlePreviewPress(selectedSoundOption.id)
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`Preview ${selectedSoundOption.label}`}
+                    style={({ pressed }) => [
+                      styles.soundPreviewButton,
+                      {
+                        backgroundColor: pressed
+                          ? withOpacity(accentColor, 0.2)
+                          : withOpacity(accentColor, 0.12),
+                        borderColor: accentColor,
+                        opacity: pressed ? 0.95 : 1,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={previewing === "adhan" ? "pause" : "play"}
+                      size={16}
+                      color={accentColor}
+                    />
+                    <Text style={[styles.soundPreviewText, { color: accentColor }]}>
+                      {previewing === "adhan" ? "Stop preview" : "Play preview"}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      </GlassSurface>
+    </View>
+  );
+}
 ```
 
-Then update the header subtitle copy so the row reads as managed externally — change:
+- [ ] **Step 4: Update `utils/notifications/styles.ts`**
 
-```tsx
-            Controlled by your system settings.
-```
-to:
-```tsx
-            Managed in System Settings.
-```
-
-(`Pressable`, `Text`, and `Ionicons` are already imported; `Switch` import can be removed if now unused — verify and remove from the import list.)
-
-- [ ] **Step 4: Add the master-row styles + glass grouping in `utils/notifications/styles.ts`**
-
-Add these two styles to the `StyleSheet.create({ ... })` object (anywhere in the map):
+In `getNotificationStyles(theme)` (where `themeColors = theme.colors` is already in scope), **delete** the now-unused header styles: `sectionHeader`, `headerTextBlock`, `headerEyebrow`, `headerTitle`, `headerSubtitle`, and `cardContainer`. **Add** the following styles to the `StyleSheet.create({ ... })` map. Keep every other existing style (`prayerSectionHeader`, `rowWrapper`, `rowBase`, `rowSurface`, `rowLabel`, `soundCard`, the sound styles, etc.) unchanged.
 
 ```ts
-    masterControl: {
+    section: { marginTop: theme.spacing.xl },
+    sectionLabel: {
+      letterSpacing: 1,
+      marginLeft: theme.spacing.xs,
+      marginBottom: theme.spacing.sm,
+    },
+    card: { overflow: "hidden" },
+    masterRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
+      gap: 12,
+      minHeight: 56,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
     },
-    masterStatus: {
-      fontSize: 14,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-```
-
-Then group the block as a glass card to match the other sections. In `NotificationSettings.tsx`, wrap the existing inner content of the reveal `Animated.View` (the `prayerSectionHeader` + prayer rows + `soundCard`) so the section reads as one card. Minimal approach that preserves the reveal animation: change the `cardContainer` style to carry the glass look by setting its background/border to the card material. Replace the `cardContainer` style with:
-
-```ts
-    cardContainer: {
-      marginTop: 14,
-      marginHorizontal: 20,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-      borderRadius: theme.radii.card,
+    masterIcon: {
+      width: 30,
+      height: 30,
+      borderRadius: 9,
       borderCurve: "continuous",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.materials.card.border,
-      backgroundColor: theme.materials.card.fill,
-      overflow: "hidden",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.accent, 0.14),
+    },
+    masterText: { flex: 1, minWidth: 0 },
+    masterTitle: { fontSize: 16, fontFamily: "SFProDisplay-Semibold" },
+    masterSubtitle: {
+      fontSize: 12,
+      marginTop: 2,
+      fontFamily: "SFProDisplay-Regular",
+    },
+    masterControl: { flexDirection: "row", alignItems: "center", gap: 4 },
+    masterStatus: { fontSize: 14, fontFamily: "SFProDisplay-Semibold" },
+    reveal: { paddingHorizontal: 14, paddingBottom: 14, overflow: "hidden" },
+    revealDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(themeColors.white, 0.08),
+      marginBottom: 14,
     },
 ```
 
-(This keeps the `maxHeight` reveal animation intact — it animates the wrapper's height, not a `GlassView` opacity — while giving the grouped-card appearance consistent with `SettingsSection`.)
+(The `maxHeight` reveal animation is preserved — it animates the wrapper's height, not a `GlassView` opacity — and the whole block now reads as one labeled glass card consistent with `SettingsSection`.)
 
 - [ ] **Step 5: Run the notification contract suite**
 
@@ -1602,13 +1935,8 @@ export default function Settings() {
           ) : null}
         </SettingsSection>
 
-        {/* Notifications (owns its own glass card) */}
-        <View style={styles.notifSlot}>
-          <Caption color={withOpacity(colors.accent, 0.95)} style={styles.notifLabel}>
-            NOTIFICATIONS
-          </Caption>
-          <NotificationSettings notifStatus={notifStatus} />
-        </View>
+        {/* Notifications — owns its own section label + glass card (Task 6) */}
+        <NotificationSettings notifStatus={notifStatus} />
 
         {/* About */}
         <SettingsSection label="About">
@@ -1682,8 +2010,6 @@ const createStyles = (theme: AppTheme) => {
       justifyContent: "center",
     },
     applyText: { fontFamily: "SFProDisplay-Bold" },
-    notifSlot: { marginTop: spacing.xl },
-    notifLabel: { letterSpacing: 1, marginLeft: spacing.xs, marginBottom: spacing.sm },
     version: { textAlign: "center", marginTop: spacing.xl },
   });
 };
