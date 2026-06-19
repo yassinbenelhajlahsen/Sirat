@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 import PressableScale from "@/components/PressableScale";
+import HabitChecklist from "@/components/tracking/HabitChecklist";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import GlassSurface from "@/components/ui/GlassSurface";
 import Screen from "@/components/ui/Screen";
@@ -23,6 +24,8 @@ import { Body, Caption, Headline, LargeTitle } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useHabitLog } from "@/hooks/useHabitLog";
+import { useHabits } from "@/hooks/useHabits";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useCalendarNavigationTransitions } from "@/hooks/useCalendarNavigationTransitions";
 import { useCalendarViewState } from "@/hooks/useCalendarViewState";
@@ -219,6 +222,8 @@ export default function CalendarScreen() {
 
   const selectedDayKey = selectedDate ? dateKeyFromDate(selectedDate) : "";
   const { statuses, setStatus, clearStatus } = usePrayerLog(selectedDayKey);
+  const { habits } = useHabits();
+  const { done: habitDone, toggle: toggleHabit } = useHabitLog(selectedDayKey);
   const [prayerSheet, setPrayerSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
   return (
@@ -423,20 +428,24 @@ export default function CalendarScreen() {
           )}
 
           {selectedDate ? (
-            <DayDetailPanel
-              date={selectedDate}
-              isToday={selectedIsToday}
-              holiday={selectedHoliday}
-              loading={loading}
-              prayerTimes={prayerTimes}
-              error={error}
-              onRetry={retry}
-              onOpenSettings={openSettings}
-              nextPrayer={nextPrayer}
-              timeLeft={timeLeft}
-              statuses={statuses}
-              onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
-            />
+            <>
+              <DayDetailPanel
+                date={selectedDate}
+                isToday={selectedIsToday}
+                holiday={selectedHoliday}
+                loading={loading}
+                prayerTimes={prayerTimes}
+                error={error}
+                onRetry={retry}
+                onOpenSettings={openSettings}
+                nextPrayer={nextPrayer}
+                timeLeft={timeLeft}
+                statuses={statuses}
+                onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
+              />
+              <View style={{ height: spacing.lg }} />
+              <HabitChecklist habits={habits} done={habitDone} onToggle={toggleHabit} />
+            </>
           ) : (
             <View style={styles.prompt}>
               <Ionicons name="calendar-outline" size={30} color={withOpacity(colors.accent, 0.6)} />
