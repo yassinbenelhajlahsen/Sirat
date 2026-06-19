@@ -4,7 +4,7 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Portal } from "@gorhom/portal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaFrame } from "react-native-safe-area-context";
 
 import PressableScale from "@/components/PressableScale";
 import SheetBackground from "@/components/ui/SheetBackground";
@@ -27,6 +27,8 @@ type Props = {
   onClose: () => void;
 };
 
+const SNAP_POINTS = ["40%"];
+
 const OPTIONS: { status: PrayerStatus; label: string; token: keyof AppTheme["colors"] }[] = [
   { status: "prayed", label: "Prayed", token: "accentSecondary" },
   { status: "late", label: "Late", token: "accent" },
@@ -45,7 +47,13 @@ export default function PrayerLogSheet({
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
+  const frame = useSafeAreaFrame();
+  const contentMaxHeight = Math.round(frame.height * 0.4);
+
+  const handleIndicatorStyle = useMemo(
+    () => ({ backgroundColor: withOpacity(colors.white, 0.3), width: 38 }),
+    [colors.white],
+  );
 
   const [mounted, setMounted] = useState(visible);
   const sheetRef = useRef<BottomSheet>(null);
@@ -76,21 +84,19 @@ export default function PrayerLogSheet({
 
   if (!mounted) return null;
 
-  // Clear the floating glass tab bar so the sheet's content isn't hidden behind
-  // it (mirrors QuranCopySheet): safe-area inset + tab bar offset + pill + gap.
-  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
-
   return (
     <Portal>
       <BottomSheet
         ref={sheetRef}
         index={0}
-        enableDynamicSizing
+        snapPoints={SNAP_POINTS}
+        enableDynamicSizing={false}
         enablePanDownToClose
         backgroundComponent={LogSheetBackground}
+        handleIndicatorStyle={handleIndicatorStyle}
         onChange={handleSheetChange}
       >
-        <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 8 }]}>
+        <BottomSheetView style={[styles.body, { maxHeight: contentMaxHeight }]}>
         <Title3 style={styles.title}>Log {prayerLabel}</Title3>
         {OPTIONS.map((opt) => {
           const active = currentStatus === opt.status;
@@ -127,7 +133,7 @@ export default function PrayerLogSheet({
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, gap: spacing.sm },
+    body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, gap: spacing.sm, paddingBottom: 24 },
     title: { marginBottom: spacing.sm },
     row: {
       flexDirection: "row",
