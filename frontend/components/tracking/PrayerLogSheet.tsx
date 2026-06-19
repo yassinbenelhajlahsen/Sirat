@@ -1,6 +1,7 @@
 // frontend/components/tracking/PrayerLogSheet.tsx
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { Portal } from "@gorhom/portal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -75,16 +76,21 @@ export default function PrayerLogSheet({
 
   if (!mounted) return null;
 
+  // Clear the floating glass tab bar so the sheet's content isn't hidden behind
+  // it (mirrors QuranCopySheet): safe-area inset + tab bar offset + pill + gap.
+  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
+
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      enableDynamicSizing
-      enablePanDownToClose
-      backgroundComponent={LogSheetBackground}
-      onChange={handleSheetChange}
-    >
-      <BottomSheetView style={[styles.body, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
+    <Portal>
+      <BottomSheet
+        ref={sheetRef}
+        index={0}
+        enableDynamicSizing
+        enablePanDownToClose
+        backgroundComponent={LogSheetBackground}
+        onChange={handleSheetChange}
+      >
+        <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 8 }]}>
         <Title3 style={styles.title}>Log {prayerLabel}</Title3>
         {OPTIONS.map((opt) => {
           const active = currentStatus === opt.status;
@@ -112,8 +118,9 @@ export default function PrayerLogSheet({
             </View>
           </PressableScale>
         ) : null}
-      </BottomSheetView>
-    </BottomSheet>
+        </BottomSheetView>
+      </BottomSheet>
+    </Portal>
   );
 }
 
