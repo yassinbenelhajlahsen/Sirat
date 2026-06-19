@@ -26,12 +26,11 @@ const createStyles = (theme: AppTheme) => {
     late: { backgroundColor: colors.accent },
     missed: { backgroundColor: colors.danger },
     loggable: {
-      width: 9,
-      height: 9,
+      width: 8,
+      height: 8,
       borderRadius: 999,
       borderWidth: 1.5,
-      borderStyle: "dashed",
-      borderColor: withOpacity(colors.white, 0.5),
+      borderColor: withOpacity(colors.white, 0.45),
     },
     upcoming: {
       width: 6,
