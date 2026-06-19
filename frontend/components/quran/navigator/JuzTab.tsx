@@ -91,7 +91,7 @@ const createStyles = (theme: AppTheme) => {
     },
     contentContainer: {
       paddingHorizontal: 20,
-      paddingBottom: 16,
+      paddingBottom: 24,
       paddingTop: 20,
     },
     row: {

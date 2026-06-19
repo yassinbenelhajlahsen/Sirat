@@ -21,7 +21,6 @@ import PressableScale from "../../PressableScale";
 export type BookmarkNavigatorItem = {
   bookmark: QuranBookmark;
   title: string;
-  note?: string;
   surahEnglish: string;
   surahArabic: string;
 };
@@ -186,9 +185,6 @@ const BookmarkRow = memo(function BookmarkRow({
                 {item.bookmark.surahNumber}:{item.bookmark.ayahNumber}
                 {item.surahArabic ? ` · ${item.surahArabic}` : ""}
               </Text>
-              {item.note ? (
-                <Text style={styles.bookmarkNote}>{item.note}</Text>
-              ) : null}
             </View>
           </View>
         </PressableScale>
@@ -282,7 +278,7 @@ const createStyles = (theme: AppTheme) => {
     contentContainer: {
       flexGrow: 1,
       paddingHorizontal: 20,
-      paddingBottom: 18,
+      paddingBottom: 24,
       paddingTop: 8,
     },
     contentContainerEmpty: {
@@ -350,13 +346,6 @@ const createStyles = (theme: AppTheme) => {
       color: themeColors.accent,
       fontSize: 12,
       marginBottom: 2,
-    },
-    bookmarkNote: {
-      color: isLight
-        ? withOpacity(themeColors.offWhite, 0.86)
-        : withOpacity(themeColors.white, 0.65),
-      fontSize: 12,
-      marginTop: 2,
     },
     bookmarkEmptyText: {
       color: isLight

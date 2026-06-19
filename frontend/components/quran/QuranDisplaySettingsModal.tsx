@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaFrame } from "react-native-safe-area-context";
 
 import SheetBackground from "@/components/ui/SheetBackground";
 import { withOpacity, type AppTheme } from "@/constants/theme";
@@ -42,9 +43,24 @@ export default function QuranDisplaySettingsModal({
   const { displayModes, isModeEnabled, toggleDisplayMode } =
     useQuranDisplayModes();
   const selectedDisplayModeCount = displayModes.length;
+  const frame = useSafeAreaFrame();
+  // gorhom 5.2 + reanimated 4 doesn't bound the sheet content to the snap
+  // height, so cap it to the snap fraction of the real window. Matches
+  // SNAP_POINTS ("40%"). See components/quran/navigator/NavigatorModal.tsx.
+  const contentMaxHeight = Math.round(frame.height * 0.4);
 
+  // Stays mounted through the close animation; only unmounts once the sheet
+  // reports it has fully closed (onChange === -1), so closing animates instead
+  // of snapping shut.
+  const [mounted, setMounted] = useState(visible);
   const sheetRef = useRef<BottomSheet>(null);
   const previousVisibleRef = useRef(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
@@ -58,6 +74,7 @@ export default function QuranDisplaySettingsModal({
   const handleSheetChange = useCallback(
     (index: number) => {
       if (index === -1) {
+        setMounted(false);
         onClose();
       }
     },
@@ -79,7 +96,7 @@ export default function QuranDisplaySettingsModal({
     [toggleDisplayMode],
   );
 
-  if (!visible) {
+  if (!mounted) {
     return null;
   }
 
@@ -94,7 +111,7 @@ export default function QuranDisplaySettingsModal({
       handleIndicatorStyle={handleIndicatorStyle}
       onChange={handleSheetChange}
     >
-      <BottomSheetView style={styles.content}>
+      <BottomSheetView style={[styles.content, { maxHeight: contentMaxHeight }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.title}>Display Text</Text>

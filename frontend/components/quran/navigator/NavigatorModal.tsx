@@ -1,6 +1,9 @@
 import BottomSheet from "@gorhom/bottom-sheet";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
+import { LinearGradient } from "expo-linear-gradient";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaFrame, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SheetBackground from "@/components/ui/SheetBackground";
 import { withOpacity, type AppTheme } from "@/constants/theme";
@@ -67,10 +70,36 @@ function NavigatorModal({
 }: QuranNavigatorModalProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const frame = useSafeAreaFrame();
+  const glass = Platform.OS === "ios" && isLiquidGlassAvailable();
+
+  // gorhom 5.2 + reanimated 4 fails to bound this sheet's content to the snap
+  // height, so the content View (flex:1) grows to its children and the
+  // BottomSheetFlatList lays out at full content height with no scroll
+  // viewport — the last rows fall off-screen. Cap the content host to the snap
+  // height (computed from the real, correct window frame) so the list is
+  // bounded and scrolls normally. Matches SNAP_POINTS ("78%").
+  const contentMaxHeight = Math.round(frame.height * 0.78);
+
+  // Lift the sheet above the floating glass tab bar so its last rows aren't
+  // trapped behind the pill. Mirrors GlassTabBar's layout: bottom offset +
+  // pill height + gap. See app/(tabs)/Mosques.tsx.
+  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
 
   const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>("surah");
+  // Stays mounted through the close animation; only unmounts once the sheet
+  // reports it has fully closed (onChange === -1), so closing animates instead
+  // of snapping shut.
+  const [mounted, setMounted] = useState(visible);
   const sheetRef = useRef<BottomSheet>(null);
   const previousVisibleRef = useRef(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
@@ -89,6 +118,7 @@ function NavigatorModal({
   const handleSheetChange = useCallback(
     (index: number) => {
       if (index === -1) {
+        setMounted(false);
         onClose();
       }
     },
@@ -103,75 +133,111 @@ function NavigatorModal({
     [theme.colors.white],
   );
 
-  if (!visible) {
+  if (!mounted) {
     return null;
   }
 
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      snapPoints={SNAP_POINTS}
-      enableDynamicSizing={false}
-      enablePanDownToClose
-      backgroundComponent={NavigatorSheetBackground}
-      handleIndicatorStyle={handleIndicatorStyle}
-      onChange={handleSheetChange}
-    >
-      <View style={styles.content}>
-        <View style={styles.modalHeader}>
-          <View>
-            <Text style={styles.modalTitle}>Navigation</Text>
-            <Text style={styles.modalSubtitle}>
-              Jump by surah, ayah, juz, or bookmark
-            </Text>
-          </View>
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            onPress={onClose}
-            style={styles.dismissButton}
-            scaleTo={0.85}
-          >
-            <View style={styles.dismissIcon}>
-              <View style={[styles.dismissLine, styles.dismissLineFirst]} />
-              <View style={[styles.dismissLine, styles.dismissLineSecond]} />
-            </View>
-          </PressableScale>
-        </View>
-
-        <NavigatorTabs selectedTab={selectedTab} onSelectTab={handleSelectTab} />
-
-        <View style={styles.tabContentContainer}>
-          {selectedTab === "surah" ? (
-            <SurahTab
-              surahs={surahs}
-              filteredSurahs={filteredSurahs}
-              ayahSearchResults={ayahSearchResults}
-              juzSearchResult={juzSearchResult}
-              surahSearchQuery={surahSearchQuery}
-              onSurahSearchQueryChange={onSurahSearchQueryChange}
-              onSelectSurah={onSelectSurah}
-              onSelectAyah={onSelectAyah}
-              onSelectJuz={onSelectJuz}
-              onClose={onClose}
-            />
-          ) : selectedTab === "juz" ? (
-            <JuzTab onSelectJuz={onSelectJuz} onClose={onClose} />
-          ) : (
-            <BookmarksTab
-              bookmarks={bookmarks}
-              filteredBookmarks={filteredBookmarks}
-              bookmarkSearchQuery={bookmarkSearchQuery}
-              onBookmarkSearchQueryChange={onBookmarkSearchQueryChange}
-              onSelectBookmark={onSelectBookmark}
-              onDeleteBookmark={onDeleteBookmark}
-              onClose={onClose}
-            />
-          )}
-        </View>
+    <>
+      {/* Chrome behind the floating tab bar — matches the sheet's solid glass
+          so the lifted bottom edge reads as one continuous surface. */}
+      <View
+        pointerEvents="none"
+        style={[styles.chrome, { height: tabBarClearance }]}
+      >
+        {glass ? (
+          <GlassView
+            glassEffectStyle="regular"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: withOpacity(theme.colors.primaryDeep, 0.82) },
+            ]}
+          />
+        )}
+        <LinearGradient
+          colors={[
+            withOpacity(theme.colors.primaryDeep, 0.65),
+            withOpacity(theme.colors.primary, 0.6),
+          ]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
       </View>
-    </BottomSheet>
+
+      <BottomSheet
+        ref={sheetRef}
+        index={0}
+        snapPoints={SNAP_POINTS}
+        bottomInset={tabBarClearance}
+        enableDynamicSizing={false}
+        enablePanDownToClose
+        backgroundComponent={NavigatorSheetBackground}
+        handleIndicatorStyle={handleIndicatorStyle}
+        onChange={handleSheetChange}
+      >
+        <View style={[styles.content, { maxHeight: contentMaxHeight }]}>
+          <View style={styles.modalHeader}>
+            <View>
+              <Text style={styles.modalTitle}>Navigation</Text>
+              <Text style={styles.modalSubtitle}>
+                Jump by surah, ayah, juz, or bookmark
+              </Text>
+            </View>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              onPress={onClose}
+              style={styles.dismissButton}
+              scaleTo={0.85}
+            >
+              <View style={styles.dismissIcon}>
+                <View style={[styles.dismissLine, styles.dismissLineFirst]} />
+                <View style={[styles.dismissLine, styles.dismissLineSecond]} />
+              </View>
+            </PressableScale>
+          </View>
+
+          <NavigatorTabs
+            selectedTab={selectedTab}
+            onSelectTab={handleSelectTab}
+          />
+
+          <View style={styles.tabContentContainer}>
+            {selectedTab === "surah" ? (
+              <SurahTab
+                surahs={surahs}
+                filteredSurahs={filteredSurahs}
+                ayahSearchResults={ayahSearchResults}
+                juzSearchResult={juzSearchResult}
+                surahSearchQuery={surahSearchQuery}
+                onSurahSearchQueryChange={onSurahSearchQueryChange}
+                onSelectSurah={onSelectSurah}
+                onSelectAyah={onSelectAyah}
+                onSelectJuz={onSelectJuz}
+                onClose={onClose}
+              />
+            ) : selectedTab === "juz" ? (
+              <JuzTab onSelectJuz={onSelectJuz} onClose={onClose} />
+            ) : (
+              <BookmarksTab
+                bookmarks={bookmarks}
+                filteredBookmarks={filteredBookmarks}
+                bookmarkSearchQuery={bookmarkSearchQuery}
+                onBookmarkSearchQueryChange={onBookmarkSearchQueryChange}
+                onSelectBookmark={onSelectBookmark}
+                onDeleteBookmark={onDeleteBookmark}
+                onClose={onClose}
+              />
+            )}
+          </View>
+        </View>
+      </BottomSheet>
+    </>
   );
 }
 
@@ -183,6 +249,13 @@ const createStyles = (theme: AppTheme) => {
   const isLight = theme.name === "light";
 
   return StyleSheet.create({
+    chrome: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: "hidden",
+    },
     content: {
       flex: 1,
       paddingBottom: 12,

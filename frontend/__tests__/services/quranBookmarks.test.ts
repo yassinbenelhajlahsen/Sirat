@@ -23,7 +23,6 @@ describe("quranBookmarks", () => {
           ayahNumber: "255",
           ayahGlobalIndex: "42",
           title: "  Ayatul Kursi  ",
-          note: 123,
           createdAt: 100,
           updatedAt: 300,
         },
@@ -51,7 +50,6 @@ describe("quranBookmarks", () => {
           ayahNumber: 58,
           ayahGlobalIndex: 99,
           title: "Salam",
-          note: "note",
           createdAt: 100,
           updatedAt: 200,
         },
@@ -67,7 +65,6 @@ describe("quranBookmarks", () => {
       ayahNumber: 255,
       ayahGlobalIndex: 42,
       title: "Ayatul Kursi",
-      note: undefined,
       createdAt: 100,
       updatedAt: 300,
     });
@@ -77,7 +74,6 @@ describe("quranBookmarks", () => {
       ayahNumber: 58,
       ayahGlobalIndex: 99,
       title: "Salam",
-      note: "note",
       createdAt: 100,
       updatedAt: 200,
     });
@@ -95,7 +91,6 @@ describe("quranBookmarks", () => {
           ayahNumber: 10,
           ayahGlobalIndex: 20,
           title: "Old",
-          note: "keep",
           createdAt: 1_000,
           updatedAt: 2_000,
         },
@@ -107,7 +102,6 @@ describe("quranBookmarks", () => {
       ayahNumber: 10,
       ayahGlobalIndex: 21,
       title: "  Updated title  ",
-      note: "   ",
     });
 
     expect(next).toHaveLength(1);
@@ -117,7 +111,6 @@ describe("quranBookmarks", () => {
       ayahNumber: 10,
       ayahGlobalIndex: 21,
       title: "Updated title",
-      note: undefined,
       createdAt: 1_000,
       updatedAt: 10_000,
     });

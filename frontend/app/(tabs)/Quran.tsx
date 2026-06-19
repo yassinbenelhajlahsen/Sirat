@@ -282,7 +282,6 @@ function computeSurahSearchScore(
 type BookmarkListItem = {
   bookmark: QuranBookmark;
   title: string;
-  note: string;
   surahEnglish: string;
   surahArabic: string;
 };
@@ -293,7 +292,6 @@ function computeBookmarkMatchScore(
 ): number {
   const fields = [
     item.title,
-    item.note,
     item.surahEnglish,
     item.surahArabic,
     String(item.bookmark.surahNumber),
@@ -886,7 +884,6 @@ export default function QuranScreen() {
       return {
         bookmark,
         title: bookmark.title,
-        note: bookmark.note ?? "",
         surahEnglish: surahMeta?.englishName ?? bookmark.title,
         surahArabic: surahMeta?.arabicName ?? "",
       };
@@ -1209,7 +1206,7 @@ export default function QuranScreen() {
   const keyExtractor = useCallback((item: QuranListItem) => item.key, []);
 
   const handleBookmarkSubmit = useCallback(
-    async ({ title, note }: QuranBookmarkModalPayload) => {
+    async ({ title }: QuranBookmarkModalPayload) => {
       if (!bookmarkModalContext) {
         return;
       }
@@ -1221,7 +1218,6 @@ export default function QuranScreen() {
           ayahNumber: bookmarkModalContext.ayah.ayahNumber,
           ayahGlobalIndex: bookmarkModalContext.ayahGlobalIndex,
           title,
-          note,
         });
         setBookmarks(updated);
         setBookmarkModalContext(null);
@@ -1275,7 +1271,6 @@ export default function QuranScreen() {
   const isBookmarkModalVisible = Boolean(bookmarkModalContext);
   const bookmarkModalAyah = bookmarkModalContext?.ayah ?? null;
   const bookmarkModalInitialTitle = bookmarkModalContext?.bookmark?.title;
-  const bookmarkModalInitialNote = bookmarkModalContext?.bookmark?.note ?? "";
 
   return (
     <LinearGradient
@@ -1388,7 +1383,6 @@ export default function QuranScreen() {
             visible={isBookmarkModalVisible}
             ayah={bookmarkModalAyah}
             initialTitle={bookmarkModalInitialTitle}
-            initialNote={bookmarkModalInitialNote}
             onSubmit={handleBookmarkSubmit}
             onClose={handleBookmarkModalClose}
             isSubmitting={bookmarkSaving}

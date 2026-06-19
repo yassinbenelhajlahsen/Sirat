@@ -1,4 +1,7 @@
-import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetTextInput,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -14,26 +17,21 @@ function BookmarkSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
 
 export type QuranBookmarkModalPayload = {
   title: string;
-  note: string;
 };
 
 type QuranBookmarkModalProps = {
   visible: boolean;
   ayah: NormalizedAyah | null;
   initialTitle?: string;
-  initialNote?: string;
   onSubmit: (payload: QuranBookmarkModalPayload) => void;
   onClose: () => void;
   isSubmitting?: boolean;
 };
 
-const SNAP_POINTS = ["55%"];
-
 function QuranBookmarkModal({
   visible,
   ayah,
   initialTitle,
-  initialNote,
   onSubmit,
   onClose,
   isSubmitting = false,
@@ -42,10 +40,19 @@ function QuranBookmarkModal({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [title, setTitle] = useState(initialTitle ?? "");
-  const [note, setNote] = useState(initialNote ?? "");
 
+  // Stays mounted through the close animation; only unmounts once the sheet
+  // reports it has fully closed (onChange === -1), so closing animates instead
+  // of snapping shut.
+  const [mounted, setMounted] = useState(visible);
   const sheetRef = useRef<BottomSheet>(null);
   const previousVisibleRef = useRef(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
@@ -61,8 +68,7 @@ function QuranBookmarkModal({
       return;
     }
     setTitle(initialTitle ?? "");
-    setNote(initialNote ?? "");
-  }, [initialNote, initialTitle, visible]);
+  }, [initialTitle, visible]);
 
   const ayahLabel = useMemo(() => {
     if (!ayah) {
@@ -82,7 +88,6 @@ function QuranBookmarkModal({
   }, [ayah]);
 
   const trimmedTitle = title.trim() || defaultTitleFallback;
-  const trimmedNote = note.trim();
   const isDoneDisabled = !trimmedTitle || isSubmitting;
 
   const handleSubmit = () => {
@@ -91,13 +96,13 @@ function QuranBookmarkModal({
     }
     onSubmit({
       title: trimmedTitle,
-      note: trimmedNote,
     });
   };
 
   const handleSheetChange = useCallback(
     (index: number) => {
       if (index === -1) {
+        setMounted(false);
         onClose();
       }
     },
@@ -112,7 +117,7 @@ function QuranBookmarkModal({
     [theme.colors.white],
   );
 
-  if (!visible) {
+  if (!mounted) {
     return null;
   }
 
@@ -120,7 +125,7 @@ function QuranBookmarkModal({
     <BottomSheet
       ref={sheetRef}
       index={0}
-      snapPoints={SNAP_POINTS}
+      enableDynamicSizing
       enablePanDownToClose
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
@@ -172,27 +177,9 @@ function QuranBookmarkModal({
           />
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Notes</Text>
-          <BottomSheetTextInput
-            style={[styles.input, styles.multilineInput]}
-            placeholder="Add an optional note"
-            placeholderTextColor={withOpacity(theme.colors.white, 0.45)}
-            value={note}
-            onChangeText={setNote}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            editable={!isSubmitting}
-          />
-        </View>
-
         <PressableScale
           accessibilityRole="button"
-          style={[
-            styles.submitButton,
-            isDoneDisabled && styles.submitDisabled,
-          ]}
+          style={[styles.submitButton, isDoneDisabled && styles.submitDisabled]}
           onPress={handleSubmit}
           disabled={isDoneDisabled}
         >
@@ -298,9 +285,6 @@ const createStyles = (theme: AppTheme) => {
       fontSize: 15,
       borderWidth: 1,
       borderColor: withOpacity(themeColors.white, 0.16),
-    },
-    multilineInput: {
-      minHeight: 110,
     },
     submitButton: {
       backgroundColor: themeColors.accent,

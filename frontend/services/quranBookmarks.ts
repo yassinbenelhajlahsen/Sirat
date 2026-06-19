@@ -8,7 +8,6 @@ export type QuranBookmark = {
   ayahNumber: number;
   ayahGlobalIndex: number;
   title: string;
-  note?: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -19,7 +18,6 @@ export type UpsertBookmarkInput = {
   ayahNumber: number;
   ayahGlobalIndex: number;
   title: string;
-  note?: string;
 };
 
 type StoredBookmark = {
@@ -28,7 +26,6 @@ type StoredBookmark = {
   ayahNumber?: unknown;
   ayahGlobalIndex?: unknown;
   title?: unknown;
-  note?: unknown;
   createdAt?: unknown;
   updatedAt?: unknown;
 };
@@ -70,7 +67,6 @@ function sanitizeBookmark(entry: StoredBookmark): QuranBookmark | null {
     ayahNumber,
     ayahGlobalIndex,
     title,
-    note: typeof entry.note === "string" ? entry.note : undefined,
     createdAt,
     updatedAt,
   };
@@ -118,7 +114,6 @@ export async function upsertBookmark(
   const existing = await getBookmarks();
   const now = Date.now();
   const normalizedTitle = payload.title.trim();
-  const normalizedNote = payload.note?.trim() ?? "";
 
   if (!normalizedTitle) {
     return existing;
@@ -145,7 +140,6 @@ export async function upsertBookmark(
       ayahNumber: payload.ayahNumber,
       ayahGlobalIndex: payload.ayahGlobalIndex,
       title: normalizedTitle,
-      note: normalizedNote || undefined,
       updatedAt: now,
     };
     nextBookmarks = [
@@ -160,7 +154,6 @@ export async function upsertBookmark(
       ayahNumber: payload.ayahNumber,
       ayahGlobalIndex: payload.ayahGlobalIndex,
       title: normalizedTitle,
-      note: normalizedNote || undefined,
       createdAt: now,
       updatedAt: now,
     };
