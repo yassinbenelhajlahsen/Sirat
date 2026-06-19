@@ -16,6 +16,7 @@ describe("tracking/stats prayer", () => {
   it("addDaysKey shifts a local date key", () => {
     expect(addDaysKey("2026-06-19", -1)).toBe("2026-06-18");
     expect(addDaysKey("2026-03-01", -1)).toBe("2026-02-28");
+    expect(addDaysKey("2026-01-01", -1)).toBe("2025-12-31");
   });
 
   it("isDayComplete requires all five non-missed", () => {
@@ -23,6 +24,7 @@ describe("tracking/stats prayer", () => {
     expect(isDayComplete({ ...full("prayed"), isha: "missed" })).toBe(false);
     expect(isDayComplete({ fajr: "prayed" })).toBe(false);
     expect(isDayComplete(undefined)).toBe(false);
+    expect(isDayComplete(full("late"))).toBe(true);
   });
 
   it("prayerStreak counts back, late still counts, missed breaks", () => {
@@ -45,6 +47,10 @@ describe("tracking/stats prayer", () => {
     expect(prayerStreak(days, "2026-06-19")).toBe(2);
   });
 
+  it("prayerStreak returns zero for empty log", () => {
+    expect(prayerStreak({}, "2026-06-19")).toBe(0);
+  });
+
   it("monthlyCompletion is fraction of non-missed logged slots", () => {
     const days = {
       "2026-06-01": full("prayed"),
@@ -54,6 +60,12 @@ describe("tracking/stats prayer", () => {
     expect(r.overall).toBeCloseTo(9 / 10, 5);
     expect(r.byPrayer.isha).toBeCloseTo(1 / 2, 5);
     expect(r.byPrayer.fajr).toBeCloseTo(2 / 2, 5);
+  });
+
+  it("monthlyCompletion returns zero for empty log", () => {
+    const r = monthlyCompletion({}, 2026, 5);
+    expect(r.overall).toBe(0);
+    expect(r.byPrayer).toEqual({ fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 });
   });
 
   it("qadaCount totals missed prayers", () => {
