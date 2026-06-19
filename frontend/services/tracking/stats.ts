@@ -1,5 +1,5 @@
 import { PRAYER_NAMES } from "./types";
-import type { PrayerLog, PrayerName, PrayerStatus } from "./types";
+import type { Habit, PrayerLog, PrayerName, PrayerStatus } from "./types";
 
 type DayStatuses = Partial<Record<PrayerName, PrayerStatus>>;
 type StatusesByDay = Record<string, DayStatuses>;
@@ -91,4 +91,57 @@ export function unwrapPrayerLog(log: PrayerLog): StatusesByDay {
     out[dateKey] = unwrapped;
   }
   return out;
+}
+
+/** Sunday-started week label "YYYY-MM-DD" derived from the week's Sunday date key. */
+export function weekKey(dateKey: string): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const sunday = new Date(date);
+  sunday.setDate(date.getDate() - date.getDay()); // back up to Sunday
+  return `${sunday.getFullYear()}-${String(sunday.getMonth() + 1).padStart(2, "0")}-${String(
+    sunday.getDate(),
+  ).padStart(2, "0")}`;
+}
+
+export function habitStreak(
+  habit: Pick<Habit, "frequency">,
+  doneByDay: Record<string, Record<string, boolean>>,
+  habitId: string,
+  todayKey: string,
+): number {
+  const isDone = (dateKey: string): boolean =>
+    doneByDay[dateKey]?.[habitId] === true;
+
+  if (habit.frequency.type === "daily") {
+    let streak = 0;
+    let cursor = isDone(todayKey) ? todayKey : addDaysKey(todayKey, -1);
+    while (isDone(cursor)) {
+      streak += 1;
+      cursor = addDaysKey(cursor, -1);
+    }
+    return streak;
+  }
+
+  // weekly: count done-days per week, walk back over consecutive weeks meeting target.
+  const target = habit.frequency.timesPerWeek;
+  const perWeek = new Map<string, number>();
+  for (const [dateKey, habits] of Object.entries(doneByDay)) {
+    if (habits[habitId] === true) {
+      const wk = weekKey(dateKey);
+      perWeek.set(wk, (perWeek.get(wk) ?? 0) + 1);
+    }
+  }
+  const currentWeek = weekKey(todayKey);
+  let streak = 0;
+  // If current week hasn't hit target yet, don't penalize — start from last week.
+  let cursorSunday =
+    (perWeek.get(currentWeek) ?? 0) >= target
+      ? currentWeek
+      : addDaysKey(currentWeek, -7);
+  while ((perWeek.get(cursorSunday) ?? 0) >= target) {
+    streak += 1;
+    cursorSunday = addDaysKey(cursorSunday, -7);
+  }
+  return streak;
 }
