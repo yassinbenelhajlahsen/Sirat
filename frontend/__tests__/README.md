@@ -102,6 +102,16 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/notification-settings.contract.test.tsx` — now asserts a **button** master row (press), not a Switch
   - `screens/screen-contracts.test.tsx` — dropdown-picker and CitySearchModal mocks removed; city-search-modal.contract.test.tsx suite deleted
 
+- `tracking data layer (Plan 1) testing`
+  - `services/tracking/util.test.ts` — date key utilities
+  - `services/tracking/prayerLog.test.ts` — prayer status CRUD + events + preload
+  - `services/tracking/habits.test.ts` — habit definition CRUD + reorder + tombstone
+  - `services/tracking/habitLog.test.ts` — habit completion CRUD + events + preload
+  - `services/tracking/stats.prayer.test.ts` — prayer streak, monthly completion, qada count
+  - `services/tracking/stats.habit.test.ts` — daily + weekly habit streaks
+  - `services/tracking/merge.test.ts` — LWW merge for prayer log, habits, habit log
+  - `services/tracking/facades.test.ts` — prayerTracker + habitTracker barrel re-exports
+
 ## Run Tests
 
 From `frontend/`:

@@ -21,6 +21,8 @@ import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
+import { preloadPrayerLog } from "@/services/prayerTracker";
+import { preloadHabitLog } from "@/services/habitTracker";
 import { PortalProvider } from "@gorhom/portal";
 import { NotificationService } from "../services/notificationService";
 import ForceUpdateGate from "@/components/ForceUpdateGate";
@@ -132,6 +134,8 @@ type InitialSyncDeps = {
   preloadQuranData: () => Promise<void>;
   preloadQuranDisplayModes: () => Promise<void>;
   preloadImages: () => Promise<void>;
+  preloadPrayerLog: () => Promise<void>;
+  preloadHabitLog: () => Promise<void>;
 };
 
 export async function runInitialAppSync(
@@ -141,6 +145,8 @@ export async function runInitialAppSync(
     preloadQuranData,
     preloadQuranDisplayModes,
     preloadImages,
+    preloadPrayerLog,
+    preloadHabitLog,
   },
 ) {
   await Promise.all([
@@ -149,6 +155,8 @@ export async function runInitialAppSync(
     deps.preloadQuranData(),
     deps.preloadQuranDisplayModes(),
     deps.preloadImages(),
+    deps.preloadPrayerLog(),
+    deps.preloadHabitLog(),
   ]);
 }
 

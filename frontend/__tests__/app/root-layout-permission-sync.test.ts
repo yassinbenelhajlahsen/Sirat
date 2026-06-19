@@ -25,6 +25,8 @@ jest.mock("@/context/ThemeContext", () => ({
 }));
 jest.mock("@/services/quranData", () => ({ preloadQuranData: jest.fn(async () => {}) }));
 jest.mock("@/services/quranDisplayModes", () => ({ preloadQuranDisplayModes: jest.fn(async () => {}) }));
+jest.mock("@/services/prayerTracker", () => ({ preloadPrayerLog: jest.fn(async () => {}) }));
+jest.mock("@/services/habitTracker", () => ({ preloadHabitLog: jest.fn(async () => {}) }));
 jest.mock("@/components/SplashScreen", () => "SplashScreen");
 jest.mock("@/components/UpdateModal", () => "UpdateModal");
 jest.mock("@/components/quran/QuranMiniPlayerPortal", () => ({ QuranMiniPlayerPortal: () => null }));
@@ -64,6 +66,8 @@ describe("Root layout initial sync ordering", () => {
     const quran = deferred();
     const displayModes = deferred();
     const images = deferred();
+    const prayerLog = deferred();
+    const habitLog = deferred();
 
     const deps = {
       syncLocationPermissionToSettings: jest.fn(() => loc.promise),
@@ -71,6 +75,8 @@ describe("Root layout initial sync ordering", () => {
       preloadQuranData: jest.fn(() => quran.promise),
       preloadQuranDisplayModes: jest.fn(() => displayModes.promise),
       preloadImages: jest.fn(() => images.promise),
+      preloadPrayerLog: jest.fn(() => prayerLog.promise),
+      preloadHabitLog: jest.fn(() => habitLog.promise),
     };
 
     let finished = false;
@@ -83,15 +89,19 @@ describe("Root layout initial sync ordering", () => {
     expect(deps.preloadQuranData).toHaveBeenCalledTimes(1);
     expect(deps.preloadQuranDisplayModes).toHaveBeenCalledTimes(1);
     expect(deps.preloadImages).toHaveBeenCalledTimes(1);
+    expect(deps.preloadPrayerLog).toHaveBeenCalledTimes(1);
+    expect(deps.preloadHabitLog).toHaveBeenCalledTimes(1);
 
     loc.resolve();
     notif.resolve();
     quran.resolve();
     displayModes.resolve();
+    images.resolve();
+    prayerLog.resolve();
     await Promise.resolve();
     expect(finished).toBe(false);
 
-    images.resolve();
+    habitLog.resolve();
     await runPromise;
     expect(finished).toBe(true);
   });
