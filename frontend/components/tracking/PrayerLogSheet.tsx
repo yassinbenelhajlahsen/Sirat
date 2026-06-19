@@ -1,7 +1,6 @@
 // frontend/components/tracking/PrayerLogSheet.tsx
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { Portal } from "@gorhom/portal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
@@ -85,48 +84,46 @@ export default function PrayerLogSheet({
   if (!mounted) return null;
 
   return (
-    <Portal>
-      <BottomSheet
-        ref={sheetRef}
-        index={0}
-        snapPoints={SNAP_POINTS}
-        enableDynamicSizing={false}
-        enablePanDownToClose
-        backgroundComponent={LogSheetBackground}
-        handleIndicatorStyle={handleIndicatorStyle}
-        onChange={handleSheetChange}
-      >
-        <BottomSheetView style={[styles.body, { maxHeight: contentMaxHeight }]}>
-        <Title3 style={styles.title}>Log {prayerLabel}</Title3>
-        {OPTIONS.map((opt) => {
-          const active = currentStatus === opt.status;
-          const color = colors[opt.token];
-          return (
-            <PressableScale
-              key={opt.status}
-              onPress={() => prayerName && onSelect(opt.status)}
-              accessibilityRole="button"
-              accessibilityLabel={`Mark ${prayerLabel} ${opt.label}`}
-            >
-              <View style={[styles.row, active && { borderColor: withOpacity(color, 0.5) }]}>
-                <View style={[styles.swatch, { backgroundColor: color }]} />
-                <Headline style={styles.rowLabel}>{opt.label}</Headline>
-                {active ? <Ionicons name="checkmark" size={18} color={color} /> : null}
-              </View>
-            </PressableScale>
-          );
-        })}
-        {currentStatus ? (
-          <PressableScale onPress={onClear} accessibilityRole="button" accessibilityLabel="Clear log">
-            <View style={styles.clearRow}>
-              <Ionicons name="close-circle-outline" size={18} color={withOpacity(colors.white, 0.7)} />
-              <Headline color={withOpacity(colors.white, 0.7)} style={styles.rowLabel}>Clear</Headline>
+    <BottomSheet
+      ref={sheetRef}
+      index={0}
+      snapPoints={SNAP_POINTS}
+      enableDynamicSizing={false}
+      enablePanDownToClose
+      backgroundComponent={LogSheetBackground}
+      handleIndicatorStyle={handleIndicatorStyle}
+      onChange={handleSheetChange}
+    >
+      <BottomSheetView style={[styles.body, { maxHeight: contentMaxHeight }]}>
+      <Title3 style={styles.title}>Log {prayerLabel}</Title3>
+      {OPTIONS.map((opt) => {
+        const active = currentStatus === opt.status;
+        const color = colors[opt.token];
+        return (
+          <PressableScale
+            key={opt.status}
+            onPress={() => prayerName && onSelect(opt.status)}
+            accessibilityRole="button"
+            accessibilityLabel={`Mark ${prayerLabel} ${opt.label}`}
+          >
+            <View style={[styles.row, active && { borderColor: withOpacity(color, 0.5) }]}>
+              <View style={[styles.swatch, { backgroundColor: color }]} />
+              <Headline style={styles.rowLabel}>{opt.label}</Headline>
+              {active ? <Ionicons name="checkmark" size={18} color={color} /> : null}
             </View>
           </PressableScale>
-        ) : null}
-        </BottomSheetView>
-      </BottomSheet>
-    </Portal>
+        );
+      })}
+      {currentStatus ? (
+        <PressableScale onPress={onClear} accessibilityRole="button" accessibilityLabel="Clear log">
+          <View style={styles.clearRow}>
+            <Ionicons name="close-circle-outline" size={18} color={withOpacity(colors.white, 0.7)} />
+            <Headline color={withOpacity(colors.white, 0.7)} style={styles.rowLabel}>Clear</Headline>
+          </View>
+        </PressableScale>
+      ) : null}
+      </BottomSheetView>
+    </BottomSheet>
   );
 }
 

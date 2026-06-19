@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 import PressableScale from "@/components/PressableScale";
+import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import GlassSurface from "@/components/ui/GlassSurface";
 import Screen from "@/components/ui/Screen";
 import { Body, Caption, Headline, LargeTitle } from "@/components/ui/Text";
@@ -26,9 +27,11 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 import { useCalendarNavigationTransitions } from "@/hooks/useCalendarNavigationTransitions";
 import { useCalendarViewState } from "@/hooks/useCalendarViewState";
 import { useNextPrayer } from "@/hooks/useNextPrayer";
+import { usePrayerLog } from "@/hooks/usePrayerLog";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { dateKeyFromDate } from "@/services/holidayService";
+import type { PrayerName } from "@/services/prayerTracker";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -213,6 +216,10 @@ export default function CalendarScreen() {
       else await Linking.openSettings();
     } catch {}
   }, []);
+
+  const selectedDayKey = selectedDate ? dateKeyFromDate(selectedDate) : "";
+  const { statuses, setStatus, clearStatus } = usePrayerLog(selectedDayKey);
+  const [prayerSheet, setPrayerSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
   return (
     <Screen>
@@ -426,6 +433,8 @@ export default function CalendarScreen() {
               onOpenSettings={openSettings}
               nextPrayer={nextPrayer}
               timeLeft={timeLeft}
+              statuses={statuses}
+              onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
             />
           ) : (
             <View style={styles.prompt}>
@@ -437,6 +446,15 @@ export default function CalendarScreen() {
           )}
         </ScrollView>
       </View>
+      <PrayerLogSheet
+        visible={prayerSheet !== null}
+        prayerName={prayerSheet?.name ?? null}
+        prayerLabel={prayerSheet?.label ?? ""}
+        currentStatus={prayerSheet ? statuses[prayerSheet.name] : undefined}
+        onSelect={(s) => { if (prayerSheet) setStatus(prayerSheet.name, s); setPrayerSheet(null); }}
+        onClear={() => { if (prayerSheet) clearStatus(prayerSheet.name); setPrayerSheet(null); }}
+        onClose={() => setPrayerSheet(null)}
+      />
     </Screen>
   );
 }
