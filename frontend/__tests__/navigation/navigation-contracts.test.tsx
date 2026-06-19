@@ -145,7 +145,6 @@ jest.mock("../../services/holidayService", () => ({
 
 import TabLayout from "@/app/(tabs)/_layout";
 import RootLayout from "@/app/_layout";
-import CalendarDetail from "@/app/[date]";
 
 describe("navigation contracts", () => {
   let appStateListenerSpy: jest.SpyInstance;
@@ -269,29 +268,5 @@ describe("navigation contracts", () => {
     );
     expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "Settings"]));
     expect(routeNames).not.toContain("MosqueMap");
-  });
-
-  it("decodes [date] param and routes back to Calendar with month/year query", async () => {
-    mockLocalSearchParams = {
-      date: encodeURIComponent("2026-03-22T00:00:00.000Z"),
-      month: "2",
-      year: "2026",
-      holiday: "",
-      ramadanStart: "2026-03-01T00:00:00.000Z",
-      ramadanEnd: "2026-03-30T00:00:00.000Z",
-    };
-
-    const { getByText } = render(<CalendarDetail />);
-
-    await waitFor(() => {
-      expect(mockUsePrayerTimes).toHaveBeenCalled();
-    });
-
-    const lastArg =
-      mockUsePrayerTimes.mock.calls[mockUsePrayerTimes.mock.calls.length - 1]?.[0];
-    expect(lastArg?.toISOString()).toBe("2026-03-22T00:00:00.000Z");
-
-    fireEvent.press(getByText("Calendar"));
-    expect(mockReplace).toHaveBeenCalledWith("/Calendar?month=2&year=2026");
   });
 });

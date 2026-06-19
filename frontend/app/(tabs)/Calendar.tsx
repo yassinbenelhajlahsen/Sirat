@@ -39,7 +39,7 @@ export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const haptics = useHaptics();
 
-  const { month, year } = useLocalSearchParams();
+  const { month, year, date } = useLocalSearchParams();
   const { width } = useWindowDimensions();
   const isSmall = width < 360;
 
@@ -119,6 +119,25 @@ export default function CalendarScreen() {
     // `today` is a fresh Date each render; intentionally keyed on the month only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMonth, viewYear]);
+
+  // Pre-select a day requested via the `date` param (e.g. "Finished all
+  // prayers!" on Home → tomorrow). Bring its month into view if needed and let
+  // the selection-resolving effect above consume the pending pick.
+  useEffect(() => {
+    if (typeof date !== "string") return;
+    const target = new Date(decodeURIComponent(date));
+    if (isNaN(target.getTime())) return;
+    const m = target.getMonth();
+    const y = target.getFullYear();
+    if (m !== viewMonthRef.current || y !== viewYearRef.current) {
+      pendingSelectRef.current = target;
+      setViewYear(y);
+      setViewMonth(m);
+    } else {
+      setSelectedDate(target);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
 
   const ramadanParam = useMemo(
     () => ({

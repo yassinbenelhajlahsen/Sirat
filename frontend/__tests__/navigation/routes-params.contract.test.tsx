@@ -140,7 +140,6 @@ jest.mock("../../services/getNearbyMosques", () => ({
 
 import CalendarScreen from "@/app/(tabs)/Calendar";
 import MosqueScreen from "@/app/(tabs)/Mosques";
-import CalendarDetail from "@/app/[date]";
 
 describe("route params and path wiring contract", () => {
   const ramadanStart = new Date("2026-03-01T00:00:00.000Z");
@@ -325,28 +324,20 @@ describe("route params and path wiring contract", () => {
     expect(lastArg?.toISOString()).toBe(firstMissedFastDate.toISOString());
   });
 
-  it("decodes [date] param and replaces back to Calendar with month/year query", async () => {
+  it("pre-selects the day passed via the `date` param (e.g. tomorrow from Home)", async () => {
     mockLocalSearchParams = {
       date: encodeURIComponent("2026-03-22T00:00:00.000Z"),
       month: "2",
       year: "2026",
-      holiday: "",
-      ramadanStart: ramadanStart.toISOString(),
-      ramadanEnd: ramadanEnd.toISOString(),
     };
 
-    const { getByText } = render(<CalendarDetail />);
+    render(<CalendarScreen />);
 
     await waitFor(() => {
-      expect(mockUsePrayerTimes).toHaveBeenLastCalledWith(expect.any(Date));
+      const calls = mockUsePrayerTimes.mock.calls;
+      const lastArg = calls[calls.length - 1][0] as Date | null;
+      expect(lastArg?.toISOString()).toBe("2026-03-22T00:00:00.000Z");
     });
-
-    const lastPrayerTimesArg =
-      mockUsePrayerTimes.mock.calls[mockUsePrayerTimes.mock.calls.length - 1][0];
-    expect(lastPrayerTimesArg.toISOString()).toBe("2026-03-22T00:00:00.000Z");
-
-    fireEvent.press(getByText("Calendar"));
-    expect(mockReplace).toHaveBeenCalledWith("/Calendar?month=2&year=2026");
   });
 
 });

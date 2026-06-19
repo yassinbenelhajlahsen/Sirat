@@ -756,7 +756,7 @@ describe("Screen contracts", () => {
       expect(mockPush).toHaveBeenCalledWith("/Settings");
     });
 
-    it("navigates to tomorrow prayer details from the completion branch", () => {
+    it("navigates to the calendar with tomorrow selected from the completion branch", () => {
       mockUseHomePrayerTimes.mockReturnValue(
         buildHomePrayerState({
           nextPrayer: null,
@@ -773,7 +773,7 @@ describe("Screen contracts", () => {
         pathname: string;
         params: Record<string, string>;
       };
-      expect(pushPayload.pathname).toBe("../[date]");
+      expect(pushPayload.pathname).toBe("/Calendar");
       expect(pushPayload.params).toEqual(
         expect.objectContaining({
           date: expect.any(String),
