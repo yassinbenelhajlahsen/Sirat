@@ -129,6 +129,10 @@ jest.mock("@/hooks/useRamadanTracker", () => ({
   useRamadanTracker: jest.fn(),
 }));
 
+jest.mock("@/hooks/usePrayerLog", () => ({
+  usePrayerLog: jest.fn(),
+}));
+
 jest.mock("@/context/QuranAudioProvider", () => ({
   useQuranAudioController: jest.fn(),
 }));
@@ -409,6 +413,7 @@ import { useCalendarViewState } from "@/hooks/useCalendarViewState";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
 import { useNextPrayer } from "@/hooks/useNextPrayer";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
+import { usePrayerLog } from "@/hooks/usePrayerLog";
 import { deleteBookmark, getBookmarkKey, getBookmarks, upsertBookmark } from "@/services/quranBookmarks";
 import { getAllAyat, getAyatIndexForSurahAndAyah, getSurahMeta } from "@/services/quranData";
 import { getCachedMosques, getNearbyMosques } from "@/services/getNearbyMosques";
@@ -453,6 +458,7 @@ const mockUseCalendarSummaryTransition =
 const mockUsePrayerTimes = usePrayerTimes as jest.MockedFunction<typeof usePrayerTimes>;
 const mockUseNextPrayer = useNextPrayer as jest.MockedFunction<typeof useNextPrayer>;
 const mockUseRamadanTracker = useRamadanTracker as jest.MockedFunction<typeof useRamadanTracker>;
+const mockUsePrayerLog = usePrayerLog as jest.MockedFunction<typeof usePrayerLog>;
 
 const mockGetAllAyat = getAllAyat as jest.MockedFunction<typeof getAllAyat>;
 const mockGetSurahMeta = getSurahMeta as jest.MockedFunction<typeof getSurahMeta>;
@@ -720,6 +726,11 @@ describe("Screen contracts", () => {
       isFastMissed: false,
       loadingRamadan: false,
       toggleMissedFast: jest.fn(),
+    } as any);
+    mockUsePrayerLog.mockReturnValue({
+      statuses: {},
+      setStatus: jest.fn(),
+      clearStatus: jest.fn(),
     } as any);
     mockDateKeyFromDate.mockImplementation((date: Date) =>
       date.toISOString().slice(0, 10),
