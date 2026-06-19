@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -16,11 +16,15 @@ import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
 import PrayerArc from "@/components/PrayerArc";
+import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import PressableScale from "../../components/PressableScale";
 import { useDuaInteraction } from "../../hooks/useDuaInteraction";
 import { useHomePrayerTimes } from "../../hooks/useHomePrayerTimes";
 import { useKeyboardAutoScroll } from "../../hooks/useKeyboardAutoScroll";
 import useModalTransition from "../../hooks/useModalTransition";
+import { usePrayerLog } from "@/hooks/usePrayerLog";
+import { dateKeyFromDate } from "@/services/holidayService";
+import type { PrayerName } from "@/services/prayerTracker";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -48,6 +52,10 @@ export default function Home() {
   const onRefresh = async () => { await refresh(); };
 
   const today = new Date();
+  const todayKey = dateKeyFromDate(today);
+  const { statuses, setStatus, clearStatus } = usePrayerLog(todayKey);
+  const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
+
   const greeting = getGreeting(today);
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric", month: "long", year: "numeric",
@@ -169,7 +177,14 @@ export default function Home() {
 
         {/* Prayer arc (owns its own glass card) */}
         <View style={styles.arcSlot}>
-          <PrayerArc loading={loading} prayerTimes={prayerTimes} nextPrayer={nextPrayer} />
+          <PrayerArc
+            loading={loading}
+            prayerTimes={prayerTimes}
+            nextPrayer={nextPrayer}
+            logging
+            statuses={statuses}
+            onPressPrayer={(name, label) => setSheet({ name, label })}
+          />
         </View>
 
         {/* Dua section (logic unchanged) */}
@@ -179,6 +194,15 @@ export default function Home() {
           </Animated.View>
         </View>
       </ScrollView>
+      <PrayerLogSheet
+        visible={sheet !== null}
+        prayerName={sheet?.name ?? null}
+        prayerLabel={sheet?.label ?? ""}
+        currentStatus={sheet ? statuses[sheet.name] : undefined}
+        onSelect={(s) => { if (sheet) setStatus(sheet.name, s); setSheet(null); }}
+        onClear={() => { if (sheet) clearStatus(sheet.name); setSheet(null); }}
+        onClose={() => setSheet(null)}
+      />
     </Screen>
   );
 }
