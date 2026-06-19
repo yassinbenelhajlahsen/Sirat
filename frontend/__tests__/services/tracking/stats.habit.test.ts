@@ -21,34 +21,54 @@ describe("tracking/stats habit", () => {
     expect(habitStreak({ frequency: { type: "daily" } }, done, "h1", "2026-06-19")).toBe(2);
   });
 
-  it("weekly streak counts weeks meeting the target", () => {
-    // target 3x/week. Two full prior weeks meet it; current week has 1 so far (not penalized).
+});
+
+// Helper: weekday index of a YYYY-MM-DD key
+const dow = (key: string) => {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay();
+};
+
+describe("habitStreak (weekday weekly)", () => {
+  // June 2026: 1=Mon, 4=Thu, 8=Mon, 11=Thu, 15=Mon, 18=Thu ...
+  const mondaysThursdays = { frequency: { type: "weekly" as const, days: [1, 4] } };
+
+  it("counts consecutive scheduled occurrences done, ending today", () => {
     const done = {
-      // week of Jun 14-20 (current, today=Jun19): 1 done
-      "2026-06-15": { h1: true },
-      // week of Jun 7-13: 3 done
-      "2026-06-08": { h1: true }, "2026-06-09": { h1: true }, "2026-06-10": { h1: true },
-      // week of May 31-Jun 6: 3 done
-      "2026-06-01": { h1: true }, "2026-06-02": { h1: true }, "2026-06-03": { h1: true },
+      "2026-06-08": { h: true }, // Mon
+      "2026-06-11": { h: true }, // Thu
+      "2026-06-15": { h: true }, // Mon
     };
-    expect(
-      habitStreak({ frequency: { type: "weekly", timesPerWeek: 3 } }, done, "h1", "2026-06-19"),
-    ).toBe(2);
+    // today = Mon 2026-06-15 (done) -> streak 3
+    expect(habitStreak(mondaysThursdays, done, "h", "2026-06-15")).toBe(3);
   });
 
-  it("weekly streak stops at a gap week", () => {
-    // target 3x/week. Current week meets target, previous week is a gap (only 1 done),
-    // so streak should be 1 (current week only).
+  it("today scheduled but not done does not break the prior run", () => {
     const done = {
-      // week of Jun 14-20 (current, today=Jun19): 3 done ✓
-      "2026-06-14": { h1: true }, "2026-06-15": { h1: true }, "2026-06-16": { h1: true },
-      // week of Jun 7-13: 1 done ✗ (gap, breaks the streak)
-      "2026-06-10": { h1: true },
-      // week of May 31-Jun 6: 3 done (not counted because gap already broke it)
-      "2026-06-01": { h1: true }, "2026-06-02": { h1: true }, "2026-06-03": { h1: true },
+      "2026-06-08": { h: true }, // Mon
+      "2026-06-11": { h: true }, // Thu
     };
-    expect(
-      habitStreak({ frequency: { type: "weekly", timesPerWeek: 3 } }, done, "h1", "2026-06-19"),
-    ).toBe(1);
+    // today = Mon 2026-06-15 (NOT done) -> measured from Thu 06-11 -> streak 2
+    expect(habitStreak(mondaysThursdays, done, "h", "2026-06-15")).toBe(2);
+  });
+
+  it("a missed scheduled occurrence breaks the streak", () => {
+    const done = {
+      "2026-06-08": { h: true }, // Mon
+      // 2026-06-11 Thu missed
+      "2026-06-15": { h: true }, // Mon (today, done)
+    };
+    expect(habitStreak(mondaysThursdays, done, "h", "2026-06-15")).toBe(1);
+  });
+
+  it("empty days yields zero", () => {
+    expect(habitStreak({ frequency: { type: "weekly", days: [] } }, {}, "h", "2026-06-15")).toBe(0);
+  });
+
+  it("ignores done marks on non-scheduled days", () => {
+    // sanity: a Wednesday done mark must not count for a Mon/Thu habit
+    expect(dow("2026-06-17")).toBe(3); // Wed
+    const done = { "2026-06-17": { h: true } };
+    expect(habitStreak(mondaysThursdays, done, "h", "2026-06-18")).toBe(0); // Thu today, not done
   });
 });

@@ -62,10 +62,10 @@ describe("tracking/habits", () => {
     const h = await svc.createHabit({ name: "A", icon: "i", frequency: { type: "daily" } });
     jest.spyOn(Date, "now").mockReturnValue(1700000050000);
 
-    await svc.updateHabit(h.id, { name: "A2", frequency: { type: "weekly", timesPerWeek: 3 } });
+    await svc.updateHabit(h.id, { name: "A2", frequency: { type: "weekly", days: [1, 4] } });
     const updated = (await svc.getActiveHabits())[0];
     expect(updated.name).toBe("A2");
-    expect(updated.frequency).toEqual({ type: "weekly", timesPerWeek: 3 });
+    expect(updated.frequency).toEqual({ type: "weekly", days: [1, 4] });
     expect(updated.updatedAt).toBe(1700000050000);
   });
 });
