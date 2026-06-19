@@ -119,6 +119,20 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/PrayerArc.logging.test.tsx` — PrayerArc logging mode (status dots, tap-to-log, Sunrise excluded)
   - `screens/home-prayer-logging.test.tsx` — logging a prayer from the Home arc persists
   - `components/calendar/DayDetailPanel.logging.test.tsx` — logging a prayer for a past date in the Calendar detail
+- `tracker screen + habits UI (Phase 3) testing`
+  - `components/ui/DisplayNumber.test.tsx` — display-numeral font/style (`DISPLAY_FONT_FAMILY`, size/weight variants)
+  - `services/tracking/stats.phase3.test.ts` — `unwrapHabitLog` habit-log unwrapping, `monthDailyScores` daily completion scoring
+  - `hooks/useHabits.test.ts` — habit definition CRUD, reorder, archive/delete, `HABITS_UPDATED` event
+  - `hooks/useHabitLog.test.ts` — habit completion toggle, `HABIT_LOG_UPDATED` event, preload
+  - `hooks/useTrackingStats.test.ts` — `TrackingStats` shape: prayer streak, monthly %, qada, per-habit streaks
+  - `components/tracking/StatCards.test.tsx` — StreakHero + QadaCard stat card rendering
+  - `components/tracking/CompletionRings.test.tsx` — animated completion ring display
+  - `components/tracking/MonthHeatmap.test.tsx` — monthly prayer completion heatmap grid
+  - `components/tracking/HabitRow.test.tsx` — habit list row: label, frequency badge, streak chip, check/uncheck
+  - `components/tracking/HabitEditor.test.tsx` — habit create/edit sheet: name, frequency, icon picker
+  - `components/tracking/HabitChecklist.test.tsx` — per-day habit checklist (Calendar integration)
+  - `screens/Tracker.test.tsx` — Tracker screen contract: Overview section + Habits section, add-habit flow
+  - `screens/home-tracker-affordance.test.tsx` — Home streak chip + "View tracker & habits" affordance
 
 ## Run Tests
 

@@ -93,7 +93,7 @@ export default function Tracker() {
 
         {habits.length === 0 ? (
           <Caption color={withOpacity(colors.white, 0.6)} style={styles.empty}>
-            No habits yet. Tap "New habit" to start.
+            No habits yet. Tap &quot;New habit&quot; to start.
           </Caption>
         ) : (
           <View style={styles.habitList}>
