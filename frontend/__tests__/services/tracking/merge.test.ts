@@ -38,4 +38,27 @@ describe("tracking/merge", () => {
     expect(merged[0].name).toBe("A2");
     expect(merged[0].deletedAt).toBe(20);
   });
+
+  it("mergePrayerLogs on equal updatedAt keeps local value", () => {
+    const local = { "2026-06-19": { fajr: { value: "prayed" as const, updatedAt: 10 } } };
+    const remote = { "2026-06-19": { fajr: { value: "late" as const, updatedAt: 10 } } };
+    expect(mergePrayerLogs(local, remote)["2026-06-19"].fajr).toEqual({ value: "prayed", updatedAt: 10 });
+  });
+
+  it("mergePrayerLogs when local is newer keeps local", () => {
+    const local = { "2026-06-19": { fajr: { value: "prayed" as const, updatedAt: 30 } } };
+    const remote = { "2026-06-19": { fajr: { value: "late" as const, updatedAt: 20 } } };
+    expect(mergePrayerLogs(local, remote)["2026-06-19"].fajr).toEqual({ value: "prayed", updatedAt: 30 });
+  });
+
+  it("mergeHabits retains a local-only habit", () => {
+    const localHabit: Habit = {
+      id: "h1", name: "Local Only", icon: "leaf", frequency: { type: "daily" },
+      order: 0, archived: false, createdAtKey: "2026-06-01", updatedAt: 5,
+    };
+    const merged = mergeHabits([localHabit], []);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].id).toBe("h1");
+    expect(merged[0].name).toBe("Local Only");
+  });
 });
