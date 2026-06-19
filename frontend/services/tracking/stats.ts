@@ -1,5 +1,5 @@
 import { PRAYER_NAMES } from "./types";
-import type { Habit, PrayerLog, PrayerName, PrayerStatus } from "./types";
+import type { Habit, HabitLog, PrayerLog, PrayerName, PrayerStatus } from "./types";
 
 type DayStatuses = Partial<Record<PrayerName, PrayerStatus>>;
 type StatusesByDay = Record<string, DayStatuses>;
@@ -144,4 +144,43 @@ export function habitStreak(
     cursorSunday = addDaysKey(cursorSunday, -7);
   }
   return streak;
+}
+
+export function unwrapHabitLog(
+  log: HabitLog,
+): Record<string, Record<string, boolean>> {
+  const out: Record<string, Record<string, boolean>> = {};
+  for (const [dateKey, day] of Object.entries(log)) {
+    const unwrapped: Record<string, boolean> = {};
+    for (const habitId of Object.keys(day)) {
+      unwrapped[habitId] = day[habitId].value;
+    }
+    out[dateKey] = unwrapped;
+  }
+  return out;
+}
+
+/** Per-day non-missed prayer fraction (0..1) for each day of the month; index 0 = day 1. */
+export function monthDailyScores(
+  statusesByDay: Record<string, Partial<Record<PrayerName, PrayerStatus>>>,
+  year: number,
+  monthIndex0: number,
+): number[] {
+  const daysInMonth = new Date(year, monthIndex0 + 1, 0).getDate();
+  const scores: number[] = [];
+  for (let d = 1; d <= daysInMonth; d += 1) {
+    const key = `${year}-${String(monthIndex0 + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const day = statusesByDay[key];
+    if (!day) {
+      scores.push(0);
+      continue;
+    }
+    let ok = 0;
+    for (const p of PRAYER_NAMES) {
+      const s = day[p];
+      if (s != null && s !== "missed") ok += 1;
+    }
+    scores.push(ok / PRAYER_NAMES.length);
+  }
+  return scores;
 }
