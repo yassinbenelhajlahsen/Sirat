@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useSafeAreaFrame } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import PressableScale from "@/components/PressableScale";
 import SheetBackground from "@/components/ui/SheetBackground";
@@ -26,8 +26,6 @@ type Props = {
   onClose: () => void;
 };
 
-const SNAP_POINTS = ["40%"];
-
 const OPTIONS: { status: PrayerStatus; label: string; token: keyof AppTheme["colors"] }[] = [
   { status: "prayed", label: "Prayed", token: "accentSecondary" },
   { status: "late", label: "Late", token: "accent" },
@@ -46,8 +44,9 @@ export default function PrayerLogSheet({
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const frame = useSafeAreaFrame();
-  const contentMaxHeight = Math.round(frame.height * 0.4);
+  const insets = useSafeAreaInsets();
+  // Mirrors GlassTabBar's layout: bottom offset + pill height + gap.
+  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
 
   const handleIndicatorStyle = useMemo(
     () => ({ backgroundColor: withOpacity(colors.white, 0.3), width: 38 }),
@@ -87,14 +86,13 @@ export default function PrayerLogSheet({
     <BottomSheet
       ref={sheetRef}
       index={0}
-      snapPoints={SNAP_POINTS}
-      enableDynamicSizing={false}
+      enableDynamicSizing
       enablePanDownToClose
       backgroundComponent={LogSheetBackground}
       handleIndicatorStyle={handleIndicatorStyle}
       onChange={handleSheetChange}
     >
-      <BottomSheetView style={[styles.body, { maxHeight: contentMaxHeight }]}>
+      <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 16 }]}>
       <Title3 style={styles.title}>Log {prayerLabel}</Title3>
       {OPTIONS.map((opt) => {
         const active = currentStatus === opt.status;
@@ -130,7 +128,7 @@ export default function PrayerLogSheet({
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, gap: spacing.sm, paddingBottom: 24 },
+    body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, gap: spacing.sm },
     title: { marginBottom: spacing.sm },
     row: {
       flexDirection: "row",
