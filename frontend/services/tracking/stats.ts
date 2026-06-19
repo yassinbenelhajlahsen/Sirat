@@ -126,8 +126,8 @@ export function habitStreak(
   // weekly: count done-days per week, walk back over consecutive weeks meeting target.
   const target = habit.frequency.timesPerWeek;
   const perWeek = new Map<string, number>();
-  for (const [dateKey, habits] of Object.entries(doneByDay)) {
-    if (habits[habitId] === true) {
+  for (const [dateKey, dayRecord] of Object.entries(doneByDay)) {
+    if (dayRecord[habitId] === true) {
       const wk = weekKey(dateKey);
       perWeek.set(wk, (perWeek.get(wk) ?? 0) + 1);
     }
