@@ -140,6 +140,22 @@ jest.mock("@/hooks/usePrayerLog", () => ({
   usePrayerLog: jest.fn(),
 }));
 
+jest.mock("@/hooks/useHabits", () => ({
+  useHabits: jest.fn(() => ({
+    habits: [],
+    create: jest.fn(),
+    update: jest.fn(),
+    archive: jest.fn(),
+    remove: jest.fn(),
+    reorder: jest.fn(),
+  })),
+}));
+
+jest.mock("@/hooks/useHabitLog", () => ({
+  useHabitLog: jest.fn(() => ({ done: {}, toggle: jest.fn() })),
+  useHabitLogAll: jest.fn(() => ({})),
+}));
+
 jest.mock("@/hooks/useTrackingStats", () => ({
   useTrackingStats: jest.fn(() => ({
     streak: 0,
