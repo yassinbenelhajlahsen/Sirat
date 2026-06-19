@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sirat · Phase 3 — Tracker visual companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primaryDeep:#0B1810; --primary:#102A1C; --primaryLift:#15402A;
+    --surface:rgba(255,255,255,.05); --surfaceBorder:rgba(255,255,255,.09);
+    --card:rgba(255,255,255,.07); --cardBorder:rgba(255,255,255,.13);
+    --gold:#E8C77A; --emerald:#3FB984; --danger:#ff7070;
+    --white:#F4F1E8; --dim:rgba(244,241,232,.62); --faint:rgba(244,241,232,.40);
+    --onAccent:#0f1f16;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--white);
+    background:
+      radial-gradient(900px 500px at 12% -5%, rgba(63,185,132,.16), transparent 60%),
+      radial-gradient(700px 480px at 95% 8%, rgba(232,199,122,.12), transparent 55%),
+      linear-gradient(150deg,var(--primaryDeep),var(--primary) 55%,var(--primaryLift));
+    background-attachment:fixed;
+    min-height:100vh; padding:40px 20px 80px;
+  }
+  .wrap{max-width:1140px;margin:0 auto}
+  h1{font-size:26px;font-weight:700;letter-spacing:.2px}
+  .sub{color:var(--dim);margin-top:6px;font-size:14px;line-height:1.5;max-width:680px}
+  .eyebrow{color:var(--gold);font-size:11px;letter-spacing:1.6px;text-transform:uppercase;font-weight:700}
+  section{margin-top:46px}
+  .secHead{font-size:18px;font-weight:700;margin:0 0 4px}
+  .secNote{color:var(--dim);font-size:13px;margin-bottom:20px}
+
+  /* font option grid */
+  .fontGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:920px){.fontGrid{grid-template-columns:1fr}}
+  .fcard{
+    background:var(--card);border:1px solid var(--cardBorder);border-radius:22px;
+    padding:22px;position:relative;overflow:hidden;
+  }
+  .fcard::after{content:"";position:absolute;inset:0;border-radius:22px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);pointer-events:none}
+  .pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;
+    padding:4px 10px;border-radius:999px;background:rgba(232,199,122,.16);color:var(--gold);margin-bottom:14px}
+  .rec{background:rgba(63,185,132,.18);color:var(--emerald)}
+  .fname{font-size:13px;color:var(--dim);margin-top:2px}
+  .fdesc{font-size:12.5px;color:var(--dim);line-height:1.5;margin-top:16px}
+
+  /* hero numeral */
+  .hero{display:flex;align-items:center;gap:16px;margin-top:6px}
+  .flame{font-size:30px;filter:drop-shadow(0 2px 6px rgba(232,199,122,.45))}
+  .num{line-height:.9;font-variant-numeric:tabular-nums;
+    background:linear-gradient(180deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .heroNum{font-size:74px}
+  .heroLbl{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);font-weight:700;margin-top:6px}
+
+  /* rings row */
+  .rings{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap}
+  .ring{width:62px;text-align:center}
+  .ring svg{display:block;margin:0 auto}
+  .ringPct{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+  .ringName{font-size:10px;color:var(--dim);margin-top:4px;letter-spacing:.4px}
+
+  .f-fraunces .num,.f-fraunces .ringPct,.f-fraunces .qnum{font-family:"Fraunces",serif}
+  .f-bricolage .num,.f-bricolage .ringPct,.f-bricolage .qnum{font-family:"Bricolage Grotesque",sans-serif}
+  .f-sora .num,.f-sora .ringPct,.f-sora .qnum{font-family:"Sora",sans-serif}
+  .f-fraunces .num,.f-bricolage .num{font-weight:700}
+  .qrow{display:flex;align-items:baseline;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--surfaceBorder)}
+  .qnum{font-size:30px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+  .qlbl{font-size:12px;color:var(--dim)}
+
+  /* habit ux */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:920px){.twocol{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--cardBorder);border-radius:22px;padding:22px}
+  .panelTitle{font-weight:700;font-size:15px;margin-bottom:2px}
+  .panelTag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle}
+  .tagRec{background:rgba(63,185,132,.18);color:var(--emerald)}
+  .tagAlt{background:rgba(232,199,122,.16);color:var(--gold)}
+  .panelNote{font-size:12.5px;color:var(--dim);line-height:1.5;margin:10px 0 18px}
+  .hrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--surfaceBorder);
+    border-radius:14px;padding:13px 14px;margin-bottom:10px;position:relative}
+  .hicon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    background:rgba(63,185,132,.14);font-size:17px}
+  .hmeta{flex:1;min-width:0}
+  .hname{font-weight:600;font-size:14.5px}
+  .hfreq{font-size:11px;color:var(--dim);margin-top:2px}
+  .badge{font-size:10px;color:var(--gold);background:rgba(232,199,122,.14);padding:2px 7px;border-radius:999px}
+  .streakmini{font-size:12px;color:var(--gold);font-weight:700;white-space:nowrap}
+  .iconbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--surfaceBorder);
+    display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:14px;background:transparent}
+  .stack{display:flex;flex-direction:column;gap:3px}
+  .ministep{width:26px;height:18px;border-radius:6px;border:1px solid var(--surfaceBorder);
+    display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;line-height:1}
+  .swipeWrap{position:relative;border-radius:14px;overflow:hidden;margin-bottom:10px}
+  .swipeAction{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;
+    padding-right:18px;background:linear-gradient(90deg,transparent,rgba(232,199,122,.22));color:var(--gold);font-weight:700;font-size:13px}
+  .swipeFront{transform:translateX(-46px)}
+  .drag{color:var(--faint);font-size:16px;cursor:grab}
+  .hint{font-size:11px;color:var(--faint);margin-top:4px}
+  .addRow{display:flex;align-items:center;gap:10px;justify-content:center;
+    border:1.5px dashed var(--surfaceBorder);border-radius:14px;padding:13px;color:var(--gold);font-weight:600;font-size:14px;margin-top:4px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px}
+  .lg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--dim)}
+  .dot{width:10px;height:10px;border-radius:999px}
+  .foot{margin-top:48px;color:var(--faint);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Sirat · Prayer &amp; Habit Tracking — Phase 3</p>
+  <h1>Two decisions before I write the plan</h1>
+  <p class="sub">Rendered in the app's real deep-green / gold / emerald theme. The numerals below use the <b>actual</b> webfonts so you can judge them. Tell me which font and which habit-list interaction, and I'll lock them into the implementation plan.</p>
+
+  <!-- ============ DECISION 1: FONT ============ -->
+  <section>
+    <p class="eyebrow">Decision 1</p>
+    <h2 class="secHead">Display font — used only for big stat numerals</h2>
+    <p class="secNote">Streak count · per-prayer ring % · qada count. Everything else stays on the system font.</p>
+
+    <div class="fontGrid">
+      <!-- Fraunces -->
+      <div class="fcard f-fraunces">
+        <span class="pill rec">Recommended</span>
+        <div class="hero">
+          <span class="flame">🔥</span>
+          <div><div class="num heroNum">12</div><div class="heroLbl">Day streak</div></div>
+        </div>
+        <div class="rings">
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#3FB984" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="20" transform="rotate(-90 27 27)"/></svg><div class="ringPct">86%</div><div class="ringName">Fajr</div></div>
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#3FB984" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="4" transform="rotate(-90 27 27)"/></svg><div class="ringPct">97%</div><div class="ringName">Dhuhr</div></div>
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#E8C77A" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="48" transform="rotate(-90 27 27)"/></svg><div class="ringPct">65%</div><div class="ringName">Asr</div></div>
+        </div>
+        <div class="qrow"><span class="qnum">7</span><span class="qlbl">prayers to make up (qada)</span></div>
+        <div class="fname">Fraunces · high-contrast serif</div>
+        <p class="fdesc">Editorial, soulful, premium. Most character of the three — pairs with the warm gold and the Islamic/elegant tone. Tabular figures keep the rings aligned.</p>
+      </div>
+
+      <!-- Bricolage -->
+      <div class="fcard f-bricolage">
+        <span class="pill">Option B</span>
+        <div class="hero">
+          <span class="flame">🔥</span>
+          <div><div class="num heroNum">12</div><div class="heroLbl">Day streak</div></div>
+        </div>
+        <div class="rings">
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#3FB984" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="20" transform="rotate(-90 27 27)"/></svg><div class="ringPct">86%</div><div class="ringName">Fajr</div></div>
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#3FB984" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="4" transform="rotate(-90 27 27)"/></svg><div class="ringPct">97%</div><div class="ringName">Dhuhr</div></div>
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#E8C77A" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="48" transform="rotate(-90 27 27)"/></svg><div class="ringPct">65%</div><div class="ringName">Asr</div></div>
+        </div>
+        <div class="qrow"><span class="qnum">7</span><span class="qlbl">prayers to make up (qada)</span></div>
+        <div class="fname">Bricolage Grotesque · display sans</div>
+        <p class="fdesc">Modern, friendly-distinctive. Geometric with quirks — contemporary without a serif. Good middle ground if a serif feels too formal.</p>
+      </div>
+
+      <!-- Sora -->
+      <div class="fcard f-sora">
+        <span class="pill">Option C</span>
+        <div class="hero">
+          <span class="flame">🔥</span>
+          <div><div class="num heroNum">12</div><div class="heroLbl">Day streak</div></div>
+        </div>
+        <div class="rings">
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#3FB984" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="20" transform="rotate(-90 27 27)"/></svg><div class="ringPct">86%</div><div class="ringName">Fajr</div></div>
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#3FB984" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="4" transform="rotate(-90 27 27)"/></svg><div class="ringPct">97%</div><div class="ringName">Dhuhr</div></div>
+          <div class="ring"><svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="#E8C77A" stroke-width="5" stroke-linecap="round" stroke-dasharray="138" stroke-dashoffset="48" transform="rotate(-90 27 27)"/></svg><div class="ringPct">65%</div><div class="ringName">Asr</div></div>
+        </div>
+        <div class="qrow"><span class="qnum">7</span><span class="qlbl">prayers to make up (qada)</span></div>
+        <div class="fname">Sora · geometric sans</div>
+        <p class="fdesc">Clean, calm, techy. Most neutral — maximally legible numerals, least personality. Safest, least memorable.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DECISION 2: HABIT LIST UX ============ -->
+  <section>
+    <p class="eyebrow">Decision 2</p>
+    <h2 class="secHead">Habit list interaction — reorder &amp; archive</h2>
+    <p class="secNote">No drag-list library is installed, and the app has no gesture-driven lists today.</p>
+
+    <div class="twocol">
+      <!-- Simple controls -->
+      <div class="panel">
+        <div><span class="panelTitle">Simple controls</span><span class="panelTag tagRec">Recommended</span></div>
+        <p class="panelNote">Reorder with up/down chevrons, archive with a row button. No new gesture code, matches the rest of the app, far less to test. (YAGNI.)</p>
+
+        <div class="hrow">
+          <div class="hicon">📖</div>
+          <div class="hmeta"><div class="hname">Read Qur'an</div><div class="hfreq"><span class="badge">Daily</span></div></div>
+          <span class="streakmini">🔥 5</span>
+          <div class="stack"><div class="ministep">▲</div><div class="ministep">▼</div></div>
+          <div class="iconbtn">⋯</div>
+        </div>
+        <div class="hrow">
+          <div class="hicon">🤲</div>
+          <div class="hmeta"><div class="hname">Morning adhkar</div><div class="hfreq"><span class="badge">Daily</span></div></div>
+          <span class="streakmini">🔥 12</span>
+          <div class="stack"><div class="ministep">▲</div><div class="ministep">▼</div></div>
+          <div class="iconbtn">⋯</div>
+        </div>
+        <div class="hrow">
+          <div class="hicon">🌙</div>
+          <div class="hmeta"><div class="hname">Tahajjud</div><div class="hfreq"><span class="badge">3× / week</span></div></div>
+          <span class="streakmini">🔥 2</span>
+          <div class="stack"><div class="ministep">▲</div><div class="ministep">▼</div></div>
+          <div class="iconbtn">⋯</div>
+        </div>
+        <div class="addRow">＋ New habit</div>
+        <p class="hint">⋯ opens edit / archive / delete · ▲▼ moves the row</p>
+      </div>
+
+      <!-- Gesture -->
+      <div class="panel">
+        <div><span class="panelTitle">Gesture drag + swipe</span><span class="panelTag tagAlt">More polish · more code</span></div>
+        <p class="panelNote">Long-press to drag-reorder, swipe-left to archive. Hand-rolled with reanimated + gesture-handler (already deps). More moving parts and more tests/edge cases.</p>
+
+        <div class="hrow">
+          <span class="drag">⠿</span>
+          <div class="hicon">📖</div>
+          <div class="hmeta"><div class="hname">Read Qur'an</div><div class="hfreq"><span class="badge">Daily</span></div></div>
+          <span class="streakmini">🔥 5</span>
+        </div>
+        <div class="swipeWrap">
+          <div class="swipeAction">Archive</div>
+          <div class="hrow swipeFront" style="margin-bottom:0">
+            <span class="drag">⠿</span>
+            <div class="hicon">🤲</div>
+            <div class="hmeta"><div class="hname">Morning adhkar</div><div class="hfreq"><span class="badge">Daily</span></div></div>
+            <span class="streakmini">🔥 12</span>
+          </div>
+        </div>
+        <div class="hrow">
+          <span class="drag">⠿</span>
+          <div class="hicon">🌙</div>
+          <div class="hmeta"><div class="hname">Tahajjud</div><div class="hfreq"><span class="badge">3× / week</span></div></div>
+          <span class="streakmini">🔥 2</span>
+        </div>
+        <div class="addRow">＋ New habit</div>
+        <p class="hint">⠿ long-press to drag · swipe a row left to reveal Archive</p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="lg"><span class="dot" style="background:var(--emerald)"></span> Prayed / on-track</div>
+      <div class="lg"><span class="dot" style="background:var(--gold)"></span> Late / partial</div>
+      <div class="lg"><span class="dot" style="background:var(--danger)"></span> Missed</div>
+      <div class="lg">🔥 streak flame is the only emoji in the app; all other icons are Ionicons</div>
+    </div>
+  </section>
+
+  <p class="foot">Mock only — fonts loaded from Google Fonts (Fraunces / Bricolage Grotesque / Sora, all SIL OFL). Icons here are placeholders; the app uses Ionicons.</p>
+</div>
+</body>
+</html>
