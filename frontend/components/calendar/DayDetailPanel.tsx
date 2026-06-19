@@ -1,13 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 import PrayerArc from "@/components/PrayerArc";
+import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Body, Caption, Headline, Title2 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { usePrayerLog } from "@/hooks/usePrayerLog";
 import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
+import type { PrayerName } from "@/services/prayerTracker";
+import { dateKeyFromDate } from "@/services/holidayService";
 import type { PrayerTime } from "@/services/prayerTimes";
 
 type DayDetailPanelProps = {
@@ -38,6 +42,10 @@ export default function DayDetailPanel({
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const dayKey = dateKeyFromDate(date);
+  const { statuses, setStatus, clearStatus } = usePrayerLog(dayKey);
+  const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
   const dateLine = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
@@ -130,8 +138,20 @@ export default function DayDetailPanel({
           prayerTimes={prayerTimes}
           nextPrayer={isToday ? nextPrayer : null}
           live={isToday}
+          logging
+          statuses={statuses}
+          onPressPrayer={(name, label) => setSheet({ name, label })}
         />
       )}
+      <PrayerLogSheet
+        visible={sheet !== null}
+        prayerName={sheet?.name ?? null}
+        prayerLabel={sheet?.label ?? ""}
+        currentStatus={sheet ? statuses[sheet.name] : undefined}
+        onSelect={(s) => { if (sheet) setStatus(sheet.name, s); setSheet(null); }}
+        onClear={() => { if (sheet) clearStatus(sheet.name); setSheet(null); }}
+        onClose={() => setSheet(null)}
+      />
     </View>
   );
 }
