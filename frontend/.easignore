@@ -1,0 +1,5 @@
+__tests__/
+.planning/
+*.test.ts
+*.test.tsx
+*.md
