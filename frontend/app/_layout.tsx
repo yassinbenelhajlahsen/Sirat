@@ -399,6 +399,7 @@ function RootLayoutContent() {
                   name="Settings"
                   options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
                 />
+                <Stack.Screen name="Tracker" options={{ animation: "slide_from_right" }} />
               </Stack>
             </NavThemeProvider>
             <QuranMiniPlayerPortal />
