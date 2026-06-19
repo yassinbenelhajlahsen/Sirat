@@ -1,7 +1,7 @@
 // frontend/components/tracking/PrayerLogSheet.tsx
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -48,25 +48,41 @@ export default function PrayerLogSheet({
 
   const [mounted, setMounted] = useState(visible);
   const sheetRef = useRef<BottomSheet>(null);
+  const previousVisibleRef = useRef(visible);
 
   useEffect(() => {
     if (visible) setMounted(true);
   }, [visible]);
+
+  useEffect(() => {
+    if (visible && !previousVisibleRef.current) {
+      sheetRef.current?.snapToIndex(0);
+    } else if (!visible && previousVisibleRef.current) {
+      sheetRef.current?.close();
+    }
+    previousVisibleRef.current = visible;
+  }, [visible]);
+
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        setMounted(false);
+        onClose();
+      }
+    },
+    [onClose],
+  );
 
   if (!mounted) return null;
 
   return (
     <BottomSheet
       ref={sheetRef}
-      index={visible ? 0 : -1}
-      snapPoints={undefined}
+      index={0}
       enableDynamicSizing
       enablePanDownToClose
-      onClose={onClose}
-      onChange={(i) => {
-        if (i === -1) setMounted(false);
-      }}
       backgroundComponent={LogSheetBackground}
+      onChange={handleSheetChange}
     >
       <BottomSheetView style={[styles.body, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
         <Title3 style={styles.title}>Log {prayerLabel}</Title3>
