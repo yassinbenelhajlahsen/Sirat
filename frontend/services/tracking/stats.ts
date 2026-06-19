@@ -123,25 +123,32 @@ export function habitStreak(
     return streak;
   }
 
-  // weekly: count done-days per week, walk back over consecutive weeks meeting target.
-  const target = habit.frequency.timesPerWeek;
-  const perWeek = new Map<string, number>();
-  for (const [dateKey, dayRecord] of Object.entries(doneByDay)) {
-    if (dayRecord[habitId] === true) {
-      const wk = weekKey(dateKey);
-      perWeek.set(wk, (perWeek.get(wk) ?? 0) + 1);
-    }
-  }
-  const currentWeek = weekKey(todayKey);
+  // weekly: walk backward over the habit's scheduled weekdays, counting
+  // consecutive completed scheduled occurrences. An in-progress today
+  // (scheduled but not yet done) is not counted and does not break the run.
+  const days = habit.frequency.days;
+  if (days.length === 0) return 0;
+  const scheduled = new Set(days);
+  const weekdayOf = (dateKey: string): number => {
+    const [y, m, d] = dateKey.split("-").map(Number);
+    return new Date(y, m - 1, d).getDay();
+  };
+  const prevScheduled = (dateKey: string): string => {
+    let cursor = addDaysKey(dateKey, -1);
+    while (!scheduled.has(weekdayOf(cursor))) cursor = addDaysKey(cursor, -1);
+    return cursor;
+  };
+
+  // Find the most recent scheduled day on or before today.
+  let cursor = todayKey;
+  while (!scheduled.has(weekdayOf(cursor))) cursor = addDaysKey(cursor, -1);
+  // If that day is today and not done yet, start from the previous occurrence.
+  if (cursor === todayKey && !isDone(cursor)) cursor = prevScheduled(cursor);
+
   let streak = 0;
-  // If current week hasn't hit target yet, don't penalize — start from last week.
-  let cursorSunday =
-    (perWeek.get(currentWeek) ?? 0) >= target
-      ? currentWeek
-      : addDaysKey(currentWeek, -7);
-  while ((perWeek.get(cursorSunday) ?? 0) >= target) {
+  while (isDone(cursor)) {
     streak += 1;
-    cursorSunday = addDaysKey(cursorSunday, -7);
+    cursor = prevScheduled(cursor);
   }
   return streak;
 }
