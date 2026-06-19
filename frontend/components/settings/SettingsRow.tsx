@@ -45,7 +45,9 @@ export default function SettingsRow({
         <Ionicons name={icon} size={17} color={colors.accent} />
       </View>
       <View style={styles.textBlock}>
-        <Body color={colors.white}>{title}</Body>
+        <Body color={colors.white} numberOfLines={1}>
+          {title}
+        </Body>
         {subtitle ? (
           <Footnote color={withOpacity(colors.white, 0.55)} style={styles.subtitle}>
             {subtitle}
