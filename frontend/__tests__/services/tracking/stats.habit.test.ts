@@ -35,4 +35,20 @@ describe("tracking/stats habit", () => {
       habitStreak({ frequency: { type: "weekly", timesPerWeek: 3 } }, done, "h1", "2026-06-19"),
     ).toBe(2);
   });
+
+  it("weekly streak stops at a gap week", () => {
+    // target 3x/week. Current week meets target, previous week is a gap (only 1 done),
+    // so streak should be 1 (current week only).
+    const done = {
+      // week of Jun 14-20 (current, today=Jun19): 3 done ✓
+      "2026-06-14": { h1: true }, "2026-06-15": { h1: true }, "2026-06-16": { h1: true },
+      // week of Jun 7-13: 1 done ✗ (gap, breaks the streak)
+      "2026-06-10": { h1: true },
+      // week of May 31-Jun 6: 3 done (not counted because gap already broke it)
+      "2026-06-01": { h1: true }, "2026-06-02": { h1: true }, "2026-06-03": { h1: true },
+    };
+    expect(
+      habitStreak({ frequency: { type: "weekly", timesPerWeek: 3 } }, done, "h1", "2026-06-19"),
+    ).toBe(1);
+  });
 });
