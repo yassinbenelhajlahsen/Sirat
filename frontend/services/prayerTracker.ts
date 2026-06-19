@@ -6,6 +6,7 @@ export {
   monthlyCompletion,
   qadaCount,
   unwrapPrayerLog,
+  monthDailyScores,
 } from "./tracking/stats";
 export type { PrayerName, PrayerStatus, PrayerLog, Cell } from "./tracking/types";
 export { PRAYER_NAMES } from "./tracking/types";
