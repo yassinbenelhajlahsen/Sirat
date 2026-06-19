@@ -97,8 +97,13 @@ habitTracker.ts         # Facade re-exporting habits + habitLog + stats
 type PrayerName = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
 type PrayerStatus = "prayed" | "late" | "missed";
 
+// Every synced value is wrapped in a cell carrying a last-modified stamp so
+// cloud sync (future) can resolve multi-device conflicts with last-write-wins.
+// updatedAt is epoch-ms (Date.now()).
+type Cell<T> = { value: T; updatedAt: number };
+
 // Per-day prayer log. Key by local date "YYYY-MM-DD" (matches existing dateKey()).
-type PrayerLog = Record<string /*dateKey*/, Partial<Record<PrayerName, PrayerStatus>>>;
+type PrayerLog = Record<string /*dateKey*/, Partial<Record<PrayerName, Cell<PrayerStatus>>>>;
 
 type HabitFrequency =
   | { type: "daily" }
@@ -111,16 +116,21 @@ type Habit = {
   frequency: HabitFrequency;
   reminder?: { enabled: boolean; time?: string /*HH:mm*/ };
   order: number;
-  archived: boolean;
-  createdAtKey: string;  // dateKey of creation
+  archived: boolean;       // soft delete; syncs as a normal field flip
+  createdAtKey: string;    // dateKey of creation
+  updatedAt: number;       // epoch-ms; bumped on any edit, for LWW merge
+  deletedAt?: number;      // tombstone; set on hard delete so the removal propagates
 };
 
-// Per-day habit completion. dateKey -> habitId -> done.
-type HabitLog = Record<string /*dateKey*/, Record<string /*habitId*/, boolean>>;
+// Per-day habit completion. dateKey -> habitId -> done cell.
+type HabitLog = Record<string /*dateKey*/, Record<string /*habitId*/, Cell<boolean>>>;
 ```
 
-Note: `Date.now()`/`Math.random()` are fine in app runtime (the workflow-script
-restriction does not apply here), but prefer a small id helper for testability.
+Notes:
+- `Date.now()`/`Math.random()` are fine in app runtime (the workflow-script
+  restriction does not apply here), but prefer a small id helper for testability.
+- IDs must be globally unique (uuid-style), not sequential, so two offline
+  devices never mint the same habit id before a first sync.
 
 ## Storage Keys (versioned)
 
@@ -132,6 +142,10 @@ Add to the CLAUDE.md AsyncStorage registry:
 - `tracking:reminder_prefs_v1` — reminder master toggle + scheduled ids
 - (qada is **derived** from `prayer_log` `missed` count minus made-up entries;
   if explicit make-up tracking is needed, add `tracking:qada_resolved_v1`)
+
+Values are stored as `Cell<T>` (value + `updatedAt`); habits carry `updatedAt`
+and an optional `deletedAt` tombstone (see Sync-Readiness). Reads filter out
+tombstoned habits and unwrap cells so callers see plain values.
 
 ## DeviceEventEmitter Events
 
@@ -238,11 +252,32 @@ and (Android) notification channel.
   top-level `jest.mock()`.
 - Update `frontend/__tests__/README.md` when adding suites.
 
-## Future Hooks (accounts / sync)
+## Sync-Readiness (accounts / cloud sync — future)
 
-Storage is namespaced under `tracking:` and modeled as plain serializable maps
-keyed by date — straightforward to later mirror to a backend per-user document.
-No design decision here blocks a future sync layer.
+The local schema is designed so a future sync layer drops in without a data
+migration. The big lift will be backend-side (the API is currently a stateless
+proxy with **no datastore**; accounts need auth + a per-user document store) —
+that is its own spec. This feature only needs to make the *local* model
+forward-compatible:
+
+- **Per-cell `updatedAt`** (`Cell<T>`) on every prayer-status and habit-completion
+  value, plus `updatedAt`/`deletedAt` on habit definitions. Enables
+  **last-write-wins per cell** — correct for this data because every value is a
+  small enum or boolean, so cross-device conflicts are trivial (no CRDTs needed).
+- **Tombstones** (`deletedAt`) so hard deletes propagate instead of resurrecting
+  from another device. Archiving stays a soft flag that syncs normally.
+- **Offline-first stays the model:** AsyncStorage remains the source of truth;
+  the cloud is a background mirror. Sync = pull remote, merge (LWW per cell),
+  push local diffs.
+- **First-login merge:** a pure `merge(local, remote)` function (unit-tested
+  alongside `stats.ts`) does a per-cell union, keeping the higher `updatedAt`.
+- **Sync granularity:** the on-disk shape stays one blob per key for simple local
+  reads; the sync layer can later read/write per-day / per-habit slices to avoid
+  uploading years of history wholesale. No model change required.
+
+Local read ergonomics note: services unwrap `Cell<T>` at the boundary so the
+rest of the app (and `stats.ts`) works with plain `PrayerStatus` / `boolean`,
+not the wrapper. The stamp is an implementation detail of the storage layer.
 
 ## Open Questions
 
