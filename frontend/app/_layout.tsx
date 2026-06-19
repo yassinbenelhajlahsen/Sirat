@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Fraunces_700Bold } from "@expo-google-fonts/fraunces";
 import { Asset } from "expo-asset";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
@@ -176,6 +177,7 @@ function RootLayoutContent() {
 
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
+    Fraunces_700Bold,
   });
 
   const [showSplash, setShowSplash] = useState(true);
