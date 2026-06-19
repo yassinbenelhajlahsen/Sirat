@@ -111,6 +111,14 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/tracking/stats.habit.test.ts` — daily + weekly habit streaks
   - `services/tracking/merge.test.ts` — LWW merge for prayer log, habits, habit log
   - `services/tracking/facades.test.ts` — prayerTracker + habitTracker barrel re-exports
+- `prayer logging UI (Phase 2) testing`
+  - `utils/prayerLabel.test.ts` — maps prayer-arc labels to PrayerName (Sunrise → null)
+  - `hooks/usePrayerLog.test.ts` — usePrayerLog hook: load, set/clear, event filtering, unmount cleanup
+  - `components/tracking/PrayerStatusDot.test.tsx` — prayer status indicator dot states
+  - `components/tracking/PrayerLogSheet.test.tsx` — prayer logging bottom sheet (Prayed/Late/Missed + Clear)
+  - `components/PrayerArc.logging.test.tsx` — PrayerArc logging mode (status dots, tap-to-log, Sunrise excluded)
+  - `screens/home-prayer-logging.test.tsx` — logging a prayer from the Home arc persists
+  - `components/calendar/DayDetailPanel.logging.test.tsx` — logging a prayer for a past date in the Calendar detail
 
 ## Run Tests
 
