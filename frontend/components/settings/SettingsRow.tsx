@@ -39,12 +39,17 @@ export default function SettingsRow({
   const haptics = useHaptics();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  // A string `value` becomes a right-aligned detail that fills leftover space and
+  // truncates; the title then keeps its natural width. A custom `trailing` (e.g. a
+  // Switch) is fixed-size, so the text block keeps growing to push it to the edge.
+  const hasValue = !trailing && !!value;
+
   const content = (
     <View style={[styles.row, !first && styles.divider, disabled && styles.disabled]}>
       <View style={styles.iconTile}>
         <Ionicons name={icon} size={17} color={colors.accent} />
       </View>
-      <View style={styles.textBlock}>
+      <View style={[styles.textBlock, hasValue && styles.textBlockTight]}>
         <Body color={colors.white} numberOfLines={1}>
           {title}
         </Body>
@@ -54,10 +59,16 @@ export default function SettingsRow({
           </Footnote>
         ) : null}
       </View>
-      <View style={styles.trailing}>
+      <View style={[styles.trailing, hasValue && styles.trailingFill]}>
         {trailing ??
           (value ? (
-            <Subhead color={withOpacity(colors.white, 0.55)}>{value}</Subhead>
+            <Subhead
+              color={withOpacity(colors.white, 0.55)}
+              numberOfLines={1}
+              style={styles.value}
+            >
+              {value}
+            </Subhead>
           ) : null)}
         {showChevron ? (
           <Ionicons
@@ -116,8 +127,11 @@ const createStyles = (theme: AppTheme) => {
       backgroundColor: withOpacity(colors.accent, 0.14),
     },
     textBlock: { flex: 1, minWidth: 0 },
+    textBlockTight: { flex: 0, flexBasis: "auto" },
     subtitle: { marginTop: 2 },
     trailing: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+    trailingFill: { flex: 1, justifyContent: "flex-end", minWidth: 0 },
+    value: { flexShrink: 1 },
     chevron: { marginLeft: 2 },
   });
 };
