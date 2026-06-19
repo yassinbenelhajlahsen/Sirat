@@ -20,7 +20,7 @@ import SurahTab, {
 
 // Stable module-level backgroundComponent — avoids recreating on each render.
 function NavigatorSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
-  return <SheetBackground {...p} solid />;
+  return <SheetBackground {...p} opaque />;
 }
 
 type LastReadAyah = {
