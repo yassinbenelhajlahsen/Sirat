@@ -48,7 +48,7 @@ See `AGENTS.md` for full architecture details. Key points:
 - Screens in `app/(tabs)/` are thin — they delegate to hooks and services
 - Business logic lives in `services/`, with modular sub-directories (`prayer-times/`, `notifications/`) orchestrated by facade files (`prayerTimes.ts`, `notificationService.ts`)
 - State: React Context (`ThemeContext`, `QuranAudioProvider`) + local state + AsyncStorage persistence — no Redux/Zustand
-- Cross-screen sync via `DeviceEventEmitter` with exact event names: `settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`, `FORCE_UPDATE_REQUIRED`
+- Cross-screen sync via `DeviceEventEmitter` with exact event names: `settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`, `FORCE_UPDATE_REQUIRED`, `PRAYER_LOG_UPDATED`, `HABITS_UPDATED`, `HABIT_LOG_UPDATED`
 - All backend HTTP calls go through `frontend/services/apiClient.ts` (`apiFetch`/`apiPost`) which attaches version headers and intercepts 426 responses
 
 **Backend patterns:**
@@ -78,6 +78,8 @@ Versioned keys — do not rename without migrating all references.
 **Notifications:** `notif_enabled_v1` (`"1"`/`"0"` strings, not JSON booleans), `notif_os_status_v1`, `notif_schedule_ids_v1`, `notif_daykey_v1`, `notif_seen_keys_v1`, `notif_city_display_loc_v1`, `notif_city_display_man_v1`, `notif_last_manual_city_v1`, `notif_map_v1`, `notif_sound_mode_v1`
 
 **Quran:** `quran:bookmarks`, `quran_display_modes`, `quran:last-read:index`, `quran:last-read:position`
+
+**Tracking:** `tracking:prayer_log_v1` (prayer status cells), `tracking:habits_v1` (habit definitions), `tracking:habit_log_v1` (habit completion cells). Values stored as `Cell<T>` = `{ value, updatedAt }` for sync LWW; habits carry `updatedAt` + optional `deletedAt` tombstone.
 
 **Other:** `dua_history_v1` (dua request history), `ramadan_tracker_v1` (missed fast days map), `mosques_[lat]_[lng]` (dynamically keyed mosque cache)
 
