@@ -4,6 +4,12 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 
 import { defaultTheme } from "@/constants/theme";
 
+jest.mock("@gorhom/bottom-sheet", () => {
+  const { FlatList, View } = require("react-native");
+  const Comp = ({ children }: any) => require("react").createElement(View, null, children);
+  return { __esModule: true, default: Comp, BottomSheetView: Comp, BottomSheetFlatList: FlatList };
+});
+
 const mockPush = jest.fn();
 
 const mockRefresh = jest.fn(async () => {});

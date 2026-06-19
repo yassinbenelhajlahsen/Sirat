@@ -55,6 +55,8 @@ const baseProps = {
   onOpenSettings: jest.fn(),
   nextPrayer: null,
   timeLeft: "",
+  statuses: {} as any,
+  onPressPrayer: jest.fn(),
 };
 
 describe("DayDetailPanel", () => {
