@@ -9,10 +9,13 @@ import * as Updates from "expo-updates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, DeviceEventEmitter, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
+
+import { ThemeProvider as NavThemeProvider, DarkTheme } from "@react-navigation/native";
 
 import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -39,9 +42,7 @@ export const SETTINGS_CHANGED_EVENT = "settingsChanged";
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
 async function preloadImages() {
-  await Asset.loadAsync([
-    require("../assets/images/qibla-compass-svgrepo-com.png"),
-  ]);
+  await Asset.loadAsync([]);
 }
 
 // Safe JSON parse helper
@@ -166,9 +167,6 @@ function RootLayoutContent() {
     : LAUNCH_BACKGROUND_COLOR;
 
   const [fontsLoaded] = useFonts({
-    "SFProDisplay-Bold": require("../assets/fonts/SF-Pro-Display-Bold.otf"),
-    "SFProDisplay-Regular": require("../assets/fonts/SF-Pro-Display-Regular.otf"),
-    "SFProDisplay-Semibold": require("../assets/fonts/SF-Pro-Display-Semibold.otf"),
     ...Ionicons.font,
   });
 
@@ -369,18 +367,30 @@ function RootLayoutContent() {
   const splashReady = appReady;
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <PortalProvider>
         {/* Always render app content so it mounts and loads data while splash is visible */}
         <QuranAudioProvider>
           <View style={{ flex: 1, backgroundColor }}>
-            <Stack screenOptions={{ headerShown: false, animation: "none" }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen
-                name="MosqueMap"
-                options={{ animation: "fade", animationDuration: 300 }}
-              />
-            </Stack>
+            <NavThemeProvider
+              value={{ ...DarkTheme, colors: { ...DarkTheme.colors, background: theme.colors.primaryDark } }}
+            >
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  animation: "fade",
+                  animationDuration: 280,
+                  contentStyle: { backgroundColor: theme.colors.primaryDark },
+                }}
+              >
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen
+                  name="Settings"
+                  options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
+                />
+              </Stack>
+            </NavThemeProvider>
             <QuranMiniPlayerPortal />
           </View>
         </QuranAudioProvider>
@@ -436,5 +446,6 @@ function RootLayoutContent() {
         />
       </PortalProvider>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

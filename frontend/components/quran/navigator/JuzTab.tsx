@@ -1,13 +1,13 @@
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo } from "react";
 import {
   InteractionManager,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import { radii, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 import PressableScale from "../../PressableScale";
@@ -15,9 +15,10 @@ import PressableScale from "../../PressableScale";
 type JuzTabProps = {
   onSelectJuz: (juzNumber: number) => void;
   onClose: () => void;
+  bottomInset?: number;
 };
 
-function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
+function JuzTab({ onSelectJuz, onClose, bottomInset = 0 }: JuzTabProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -52,9 +53,12 @@ function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
   );
 
   return (
-    <ScrollView
+    <BottomSheetScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[
+        styles.contentContainer,
+        { paddingBottom: bottomInset + 24 },
+      ]}
       showsVerticalScrollIndicator={false}
     >
       <View>
@@ -75,7 +79,7 @@ function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
           </View>
         ))}
       </View>
-    </ScrollView>
+    </BottomSheetScrollView>
   );
 }
 
@@ -83,6 +87,7 @@ export default memo(JuzTab);
 
 const createStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
+  const isLight = theme.name === "light";
 
   return StyleSheet.create({
     scrollView: {
@@ -90,14 +95,8 @@ const createStyles = (theme: AppTheme) => {
     },
     contentContainer: {
       paddingHorizontal: 20,
-      paddingBottom: 16,
+      paddingBottom: 24,
       paddingTop: 20,
-    },
-    heading: {
-      color: themeColors.white,
-      fontSize: 16,
-      fontWeight: "600",
-      marginBottom: 12,
     },
     row: {
       flexDirection: "row",
@@ -105,12 +104,13 @@ const createStyles = (theme: AppTheme) => {
     },
     button: {
       flex: 1,
-      paddingVertical: 10,
+      paddingVertical: 14,
       paddingHorizontal: 14,
-      borderRadius: 12,
-      backgroundColor: themeColors.primaryDark,
+      borderRadius: radii.row,
+      borderCurve: "continuous",
+      backgroundColor: withOpacity(themeColors.white, 0.05),
       borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.25),
+      borderColor: withOpacity(themeColors.accent, 0.3),
       alignItems: "center",
       justifyContent: "center",
     },
@@ -118,8 +118,9 @@ const createStyles = (theme: AppTheme) => {
       marginRight: 12,
     },
     buttonText: {
-      color: themeColors.white,
+      color: isLight ? themeColors.offWhite : themeColors.white,
       fontWeight: "600",
+      fontSize: 14,
     },
   });
 };

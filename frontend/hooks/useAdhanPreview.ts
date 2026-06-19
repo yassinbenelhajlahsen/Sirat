@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { SoundMode } from "../utils/notifications/constants";
 
-const ADHAN_SOURCE = require("../assets/sounds/adhan.wav");
+const ADHAN_SOURCE = require("../assets/sounds/adhan.caf");
 
 export function useAdhanPreview(enabled: boolean) {
   const player = useAudioPlayer(ADHAN_SOURCE);

@@ -61,6 +61,7 @@ jest.mock("@expo/vector-icons", () => {
 jest.mock("react-native-safe-area-context", () => ({
   SafeAreaProvider: ({ children }: any) => children,
   SafeAreaView: ({ children }: any) => children,
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
 jest.mock("@react-navigation/bottom-tabs", () => ({
@@ -137,15 +138,8 @@ jest.mock("../../services/getNearbyMosques", () => ({
   getNearbyMosques: (...args: any[]) => mockGetNearbyMosques(...args),
 }));
 
-jest.mock("../../components/PrayerTimesList", () => {
-  const React = require("react");
-  const { View } = require("react-native");
-  return () => React.createElement(View);
-});
-
 import CalendarScreen from "@/app/(tabs)/Calendar";
 import MosqueScreen from "@/app/(tabs)/Mosques";
-import CalendarDetail from "@/app/[date]";
 
 describe("route params and path wiring contract", () => {
   const ramadanStart = new Date("2026-03-01T00:00:00.000Z");
@@ -223,6 +217,14 @@ describe("route params and path wiring contract", () => {
       canGoPrev: true,
       canGoNext: true,
       dayButtonSize: 40,
+      fullMatrix: [
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [10, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+      ],
       visibleMatrix: [[10, 0, 0, 0, 0, 0, 0]],
       monthName: "March",
     });
@@ -236,9 +238,11 @@ describe("route params and path wiring contract", () => {
         totalMissed: 2,
         missedDays: ["Mar 5", "Mar 6"],
       },
+      ramadanMonthActive: true,
       firstMissedFastDate,
       missedDaysLabel: "Mar 5, Mar 6",
       showRamadanSummary: true,
+      reloadMissedFasts: jest.fn(),
     });
 
     mockUseCalendarNavigationTransitions.mockReturnValue({
@@ -296,79 +300,44 @@ describe("route params and path wiring contract", () => {
     mockGetNearbyMosques.mockResolvedValue(mosques);
   });
 
-  it("pushes /[date] with selected day params from the calendar grid", () => {
-    jest.useFakeTimers();
-    const expectedDateIso = new Date(2026, 2, 10).toISOString();
+  it("selects the day inline from the calendar grid (no navigation)", () => {
+    const expectedIso = new Date(2026, 2, 10).toISOString();
     const { getByLabelText } = render(<CalendarScreen />);
 
-    fireEvent.press(getByLabelText("Open March 10, 2026"));
-    act(() => {
-      jest.runOnlyPendingTimers();
-    });
+    fireEvent.press(getByLabelText("Select March 10, 2026"));
 
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/[date]",
-      params: {
-        date: expectedDateIso,
-        month: "2",
-        year: "2026",
-        holiday: "",
-        ramadanStart: ramadanStart.toISOString(),
-        ramadanEnd: ramadanEnd.toISOString(),
-      },
-    });
+    expect(mockPush).not.toHaveBeenCalled();
+    const calls = mockUsePrayerTimes.mock.calls;
+    const lastArg = calls[calls.length - 1][0] as Date | null;
+    expect(lastArg?.toISOString()).toBe(expectedIso);
   });
 
-  it("pushes /[date] with first missed fast params from Ramadan summary", () => {
+  it("selects the first missed fast date inline from the Ramadan summary", () => {
     const { getByLabelText } = render(<CalendarScreen />);
 
     fireEvent.press(getByLabelText("Open first missed Ramadan fast date"));
 
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/[date]",
-      params: {
-        date: firstMissedFastDate.toISOString(),
-        month: "2",
-        year: "2026",
-        holiday: "",
-        ramadanStart: ramadanStart.toISOString(),
-        ramadanEnd: ramadanEnd.toISOString(),
-      },
-    });
+    expect(mockPush).not.toHaveBeenCalled();
+    const calls = mockUsePrayerTimes.mock.calls;
+    const lastArg = calls[calls.length - 1][0] as Date | null;
+    // firstMissedFastDate (2026-03-05) is in the viewed month (March) → selected directly.
+    expect(lastArg?.toISOString()).toBe(firstMissedFastDate.toISOString());
   });
 
-  it("decodes [date] param and replaces back to Calendar with month/year query", async () => {
+  it("pre-selects the day passed via the `date` param (e.g. tomorrow from Home)", async () => {
     mockLocalSearchParams = {
       date: encodeURIComponent("2026-03-22T00:00:00.000Z"),
       month: "2",
       year: "2026",
-      holiday: "",
-      ramadanStart: ramadanStart.toISOString(),
-      ramadanEnd: ramadanEnd.toISOString(),
     };
 
-    const { getByText } = render(<CalendarDetail />);
+    render(<CalendarScreen />);
 
     await waitFor(() => {
-      expect(mockUsePrayerTimes).toHaveBeenLastCalledWith(expect.any(Date));
+      const calls = mockUsePrayerTimes.mock.calls;
+      const lastArg = calls[calls.length - 1][0] as Date | null;
+      expect(lastArg?.toISOString()).toBe("2026-03-22T00:00:00.000Z");
     });
-
-    const lastPrayerTimesArg =
-      mockUsePrayerTimes.mock.calls[mockUsePrayerTimes.mock.calls.length - 1][0];
-    expect(lastPrayerTimesArg.toISOString()).toBe("2026-03-22T00:00:00.000Z");
-
-    fireEvent.press(getByText("Calendar"));
-    expect(mockReplace).toHaveBeenCalledWith("/Calendar?month=2&year=2026");
   });
 
-  it("wires map preview press to ../MosqueMap", async () => {
-    const { getByLabelText } = render(<MosqueScreen />);
-
-    const openMapButton = await waitFor(() =>
-      getByLabelText("Open full mosque map"),
-    );
-    fireEvent.press(openMapButton);
-
-    expect(mockPush).toHaveBeenCalledWith("../MosqueMap");
-  });
 });

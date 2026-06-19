@@ -30,8 +30,15 @@ describe("appVersion", () => {
     expect(getAppVersion()).toBe("1.0.10");
   });
 
-  it("prefers runtimeVersion over expoConfig.version", () => {
+  it("prefers expoConfig.version over runtimeVersion", () => {
     mockUpdates.runtimeVersion = "2.0.0";
+    mockConstants.expoConfig = { version: "1.0.10" };
+    expect(getAppVersion()).toBe("1.0.10");
+  });
+
+  it("falls back to runtimeVersion when expoConfig.version is missing", () => {
+    mockUpdates.runtimeVersion = "2.0.0";
+    mockConstants.expoConfig = {};
     expect(getAppVersion()).toBe("2.0.0");
   });
 

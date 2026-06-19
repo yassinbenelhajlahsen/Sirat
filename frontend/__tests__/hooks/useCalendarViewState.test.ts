@@ -76,4 +76,14 @@ describe("hooks/useCalendarViewState", () => {
 
     expect(result.current.dayButtonSize).toBe(34);
   });
+
+  it("exposes a full 6-row matrix regardless of month length", () => {
+    const { result } = renderHook(() =>
+      useCalendarViewState({ monthParam: "1", yearParam: "2027", isSmall: false }),
+    );
+    // February 2027 fits in 4 visible weeks, but fullMatrix is always 6 rows.
+    expect(result.current.fullMatrix).toHaveLength(6);
+    expect(result.current.fullMatrix.every((w) => w.length === 7)).toBe(true);
+    expect(result.current.visibleMatrix.length).toBeLessThan(6);
+  });
 });

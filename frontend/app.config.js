@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.0.10",
+    version: "1.1.0",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
@@ -17,7 +17,7 @@ export default {
       userInterfaceStyle: "dark",
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
-      buildNumber: "1.0.5",
+      buildNumber: "1.0.6",
       teamId: "5AN795CL7Z",
       infoPlist: {
         CFBundleDisplayName: "Sirat",
@@ -37,9 +37,21 @@ export default {
         "expo-notifications",
         {
           sounds: [
-            "./assets/sounds/adhan.wav",
+            "./assets/sounds/adhan.caf",
           ],
         },
+      ],
+      // Alternate app icons matched to in-app themes. iOS-only by design.
+      // Names are PascalCase to match what setAlternateAppIcon expects.
+      // NOTE: this plugin also adds Android activity-aliases referencing
+      // @mipmap/ic_launcher_dark|light — Android builds would need adaptive
+      // icon assets added here before they will compile.
+      [
+        "expo-alternate-app-icons",
+        [
+          { name: "Dark", ios: "./assets/icons/icon-dark.png" },
+          { name: "Light", ios: "./assets/icons/icon-light.png" },
+        ],
       ],
     ],
     experiments: {

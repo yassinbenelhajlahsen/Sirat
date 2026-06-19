@@ -63,8 +63,7 @@ describe("QuranAyahCard contract", () => {
 
     expect(getByText("سُورَةُ البَقَرَةِ")).toBeTruthy();
     expect(getByText("The Cow")).toBeTruthy();
-    expect(getByText("2:255")).toBeTruthy();
-    expect(getByText(ayah.arabicText)).toBeTruthy();
+    expect(getByText(ayah.arabicText, { exact: false })).toBeTruthy();
     expect(getByText(ayah.transliteration as string)).toBeTruthy();
     expect(getByText(ayah.englishText)).toBeTruthy();
     expect(getByText("icon:bookmark")).toBeTruthy();

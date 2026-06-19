@@ -5,6 +5,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { NormalizedAyah, NormalizedSurahMeta } from "@/services/quranData";
+import SurahBanner from "@/components/quran/SurahBanner";
 
 type QuranAyahCardProps = {
   ayah: NormalizedAyah;
@@ -96,70 +97,61 @@ function QuranAyahCard({
   return (
     <View style={styles.container}>
       {isSurahStart ? (
-        <View style={styles.surahDividerRow}>
-          <View style={styles.surahDividerLine} />
-          <View style={styles.surahDividerLabel}>
-            <Text style={styles.surahDividerArabic}>{arabicName}</Text>
-            {englishName ? (
-              <Text style={styles.surahDividerEnglish}>{englishName}</Text>
-            ) : null}
-          </View>
-          <View style={styles.surahDividerLine} />
+        <SurahBanner arabicName={arabicName} englishName={englishName} />
+      ) : (
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
         </View>
-      ) : null}
+      )}
 
       <Animated.View style={{ transform: [{ scale: holdScale }] }}>
-      <Pressable
-        style={[
-          styles.ayahCard,
-          isBookmarked ? styles.ayahCardBookmarked : null,
-          isDoubleTapFeedbackVisible && onDoubleTap ? styles.ayahCardPressed : null,
-        ]}
-        onPress={handlePress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onLongPress={onLongPress}
-        delayLongPress={400}
-        accessibilityRole="button"
-        accessibilityLabel={`Ayah ${ayah.ayahNumber} from Surah ${ayah.surahNumber}`}
-      >
-        {isBookmarked ? (
-          <View style={styles.bookmarkBadge}>
-            <Ionicons name="bookmark" size={18} color={themeColors.danger} />
-          </View>
-        ) : null}
-        <Text style={styles.surahTag}>
-          {ayah.surahNumber}:{ayah.ayahNumber}
-        </Text>
-        {shouldShowArabic ? (
-          <Text
-            style={[
-              styles.arabic,
-              (shouldShowEnglish || shouldShowTransliteration) &&
-                styles.textBlockSpacing,
-            ]}
-            allowFontScaling={false}
-            // @ts-expect-error includeFontPadding is available on React Native Text for Android layout
-            includeFontPadding={false}
-            textBreakStrategy="highQuality"
-          >
-            {ayah.arabicText}
-          </Text>
-        ) : null}
-        {shouldShowTransliteration ? (
-          <Text
-            style={[
-              styles.transliteration,
-              shouldShowEnglish && styles.textBlockSpacing,
-            ]}
-          >
-            {ayah.transliteration}
-          </Text>
-        ) : null}
-        {shouldShowEnglish ? (
-          <Text style={styles.translation}>{ayah.englishText}</Text>
-        ) : null}
-      </Pressable>
+        <Pressable
+          style={[
+            styles.ayahBlock,
+            isDoubleTapFeedbackVisible && onDoubleTap ? styles.ayahCardPressed : null,
+          ]}
+          onPress={handlePress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          onLongPress={onLongPress}
+          delayLongPress={400}
+          accessibilityRole="button"
+          accessibilityLabel={`Ayah ${ayah.ayahNumber} from Surah ${ayah.surahNumber}`}
+        >
+          {isBookmarked ? (
+            <View style={styles.bookmarkBadge}>
+              <Ionicons name="bookmark" size={18} color={themeColors.danger} />
+            </View>
+          ) : null}
+          {shouldShowArabic ? (
+            <Text
+              style={[
+                styles.arabic,
+                (shouldShowEnglish || shouldShowTransliteration) &&
+                  styles.textBlockSpacing,
+              ]}
+              allowFontScaling={false}
+              // @ts-expect-error includeFontPadding is available on React Native Text for Android layout
+              includeFontPadding={false}
+              textBreakStrategy="highQuality"
+            >
+              {ayah.arabicText}
+            </Text>
+          ) : null}
+          {shouldShowTransliteration ? (
+            <Text
+              style={[
+                styles.transliteration,
+                shouldShowEnglish && styles.textBlockSpacing,
+              ]}
+            >
+              {ayah.transliteration}
+            </Text>
+          ) : null}
+          {shouldShowEnglish ? (
+            <Text style={styles.translation}>{ayah.englishText}</Text>
+          ) : null}
+        </Pressable>
       </Animated.View>
     </View>
   );
@@ -175,82 +167,25 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: 22,
     },
 
-    /* SURAH DIVIDER */
-    surahDividerRow: {
+    /* DIVIDER (between ayahs, not surah start) */
+    divider: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
-      marginBottom: 12,
+      gap: theme.spacing.md,
+      opacity: 0.45,
+      marginTop: theme.spacing.sm,
     },
-    surahDividerLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: withOpacity(themeColors.accent, 0.18),
-    },
-    surahDividerLabel: {
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.28),
-      backgroundColor: withOpacity(themeColors.primarySurface, 0.85),
-      alignItems: "center",
-      justifyContent: "center",
-      minWidth: 144,
-    },
-    surahDividerArabic: {
-      color: themeColors.accent,
-      fontSize: 17,
-      fontWeight: "600",
-      letterSpacing: 0.3,
-      textAlign: "center",
-    },
-    surahDividerEnglish: {
-      color: themeColors.white,
-      fontSize: 12,
-      opacity: 0.65,
-      marginTop: 2,
-      textAlign: "center",
-    },
+    dividerLine: { flex: 1, height: 1, backgroundColor: withOpacity(themeColors.white, 0.16) },
 
-    /* AYAH CARD */
-    ayahCard: {
-      backgroundColor: withOpacity(themeColors.primarySurface, 0.92),
-      borderRadius: 18,
-      paddingVertical: 22,
-      paddingHorizontal: 20,
-
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.06),
-
-      shadowColor: themeColors.black,
-      shadowOpacity: 0.18,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
-    },
-    ayahCardBookmarked: {
-      borderColor: withOpacity(themeColors.accent, 0.32),
-      backgroundColor: withOpacity(themeColors.primarySurface, 0.96),
+    /* AYAH BLOCK */
+    ayahBlock: {
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.xs,
     },
 
     ayahCardPressed: {
       transform: [{ scale: 0.985 }],
       opacity: 0.95,
-    },
-
-    /* TOP RIGHT AYAH NUMBER */
-    surahTag: {
-      alignSelf: "flex-end",
-      color: themeColors.accent,
-      fontSize: 12,
-      fontWeight: "600",
-      letterSpacing: 0.8,
-      marginBottom: 10,
-      paddingHorizontal: 10,
-      paddingVertical: 3,
-      borderRadius: 999,
-      backgroundColor: withOpacity(themeColors.accent, 0.08),
     },
 
     /* BOOKMARK BADGE */

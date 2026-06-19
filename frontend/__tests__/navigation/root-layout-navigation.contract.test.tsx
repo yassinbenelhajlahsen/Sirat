@@ -93,7 +93,7 @@ describe("root layout navigation contract", () => {
     appStateListenerSpy.mockRestore();
   });
 
-  it("registers tabs and MosqueMap screens in the root stack", async () => {
+  it("registers tabs and Settings screens in the root stack", async () => {
     const expoRouter = jest.requireMock("expo-router") as {
       Stack: jest.Mock & { Screen: jest.Mock };
     };
@@ -113,7 +113,8 @@ describe("root layout navigation contract", () => {
     expect(stackProps.screenOptions).toEqual(
       expect.objectContaining({
         headerShown: false,
-        animation: "none",
+        animation: "fade",
+        animationDuration: 280,
       }),
     );
 
@@ -124,17 +125,7 @@ describe("root layout navigation contract", () => {
       new Set(screenRegistrations.map((registration) => registration.name)),
     );
 
-    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "MosqueMap"]));
-
-    const mosqueMapRegistration = screenRegistrations.find(
-      (registration) => registration.name === "MosqueMap",
-    );
-    expect(mosqueMapRegistration).toBeDefined();
-    expect(mosqueMapRegistration.options).toEqual(
-      expect.objectContaining({
-        animation: "fade",
-        animationDuration: 300,
-      }),
-    );
+    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "Settings"]));
+    expect(routeNames).not.toContain("MosqueMap");
   });
 });

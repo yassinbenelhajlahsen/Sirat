@@ -62,6 +62,22 @@ function getRandomDuaByCategory(category: string): Dua | null {
   return toDua(matches[randomIndex]);
 }
 
+// A different dua for the same need — never the one currently shown. Prefers the
+// same category; falls back to the wider pool when the category has no other dua.
+export function getAnotherDua(category: string, excludeId: number): Dua | null {
+  const sameCategory = LOCAL_DUAS.filter(
+    (dua) => dua.category === category && dua.id !== excludeId,
+  );
+  const pool =
+    sameCategory.length > 0
+      ? sameCategory
+      : LOCAL_DUAS.filter((dua) => dua.id !== excludeId);
+  if (pool.length === 0) {
+    return null;
+  }
+  return toDua(pool[Math.floor(Math.random() * pool.length)]);
+}
+
 function getGeneralFallbackDua(): Dua {
   const general = LOCAL_DUAS.find(
     (dua) => dua.category.toLowerCase() === "general",

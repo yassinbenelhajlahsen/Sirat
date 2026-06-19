@@ -1,3 +1,4 @@
+require("react-native-gesture-handler/jestSetup");
 import "@testing-library/jest-native/extend-expect";
 
 declare global {
@@ -37,6 +38,52 @@ const mockNotifications = {
 
 jest.mock("expo-notifications", () => mockNotifications);
 
+jest.mock(
+  "expo-glass-effect",
+  () => {
+    const React = require("react");
+    const { View } = require("react-native");
+    return {
+      GlassView: ({ children, ...props }: any) =>
+        React.createElement(View, props, children),
+      GlassContainer: ({ children, ...props }: any) =>
+        React.createElement(View, props, children),
+      isGlassEffectAvailable: jest.fn(() => true),
+      isGlassEffectAPIAvailable: jest.fn(() => true),
+      isLiquidGlassAvailable: jest.fn(() => true),
+    };
+  },
+  { virtual: true },
+);
+
+jest.mock("expo-blur", () => {
+  const { View } = require("react-native");
+  return {
+    BlurView: View,
+  };
+});
+
+jest.mock("expo-haptics", () => ({
+  selectionAsync: jest.fn(async () => {}),
+  impactAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+  NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
+}));
+
+// react-native-svg renders as plain Views in tests (Aurora background, PrayerArc).
+// Every named export (Svg/Path/Rect/Defs/RadialGradient/Stop/…) maps to the mock.
+jest.mock("react-native-svg", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  const Mock = ({ children, ...props }: any) =>
+    React.createElement(View, props, children);
+  return new Proxy(
+    { __esModule: true, default: Mock },
+    { get: (target: any, prop: string) => target[prop] ?? Mock },
+  );
+});
+
 (global as unknown as { fetch: jest.Mock }).fetch = jest.fn();
 
 global.freezeTestTime = (isoDate: string | Date) => {
@@ -59,4 +106,42 @@ afterEach(() => {
   ) {
     jest.useRealTimers();
   }
+});
+
+// @gorhom/bottom-sheet renders as plain views/list in tests so screens that
+// embed the sheet can be rendered and queried.
+jest.mock("@gorhom/bottom-sheet", () => {
+  const React = require("react");
+  const { View, FlatList, ScrollView, TextInput } = require("react-native");
+  const Passthrough = ({ children, ...props }: any) =>
+    React.createElement(View, props, children);
+  return {
+    __esModule: true,
+    default: React.forwardRef(function BottomSheet({ children, ...props }: any, _ref: any) {
+      return React.createElement(View, props, children);
+    }),
+    BottomSheetView: Passthrough,
+    BottomSheetScrollView: ({ children, ...props }: any) =>
+      React.createElement(ScrollView, props, children),
+    BottomSheetFlatList: ({ ListHeaderComponent, ...props }: any) =>
+      React.createElement(
+        View,
+        null,
+        ListHeaderComponent
+          ? React.createElement(
+              typeof ListHeaderComponent === "function"
+                ? ListHeaderComponent
+                : () => ListHeaderComponent,
+            )
+          : null,
+        React.createElement(FlatList, props),
+      ),
+    BottomSheetTextInput: TextInput,
+    useBottomSheet: () => ({
+      snapToIndex: jest.fn(),
+      expand: jest.fn(),
+      collapse: jest.fn(),
+      close: jest.fn(),
+    }),
+  };
 });

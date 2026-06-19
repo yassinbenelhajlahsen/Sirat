@@ -17,14 +17,25 @@ function computeBearing(lat1: number, lon1: number, lat2: number, lon2: number) 
   if (θ < 0) θ += 360;
   return θ;
 }
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function norm360(a: number) { const r = a % 360; return r < 0 ? r + 360 : r; }
 function shortestDelta(a: number, b: number) { return ((b - a + 540) % 360) - 180; }
 
 export type UseQiblaResult = {
-  rotation: number | null; 
-  heading: number | null;   
+  rotation: number | null;
+  heading: number | null;
   qiblaAngle: number | null;
-  accuracy: number | null;  
+  distanceKm: number | null;
+  accuracy: number | null;
   error: string | null;
   isAligned: boolean;        // within tolerance for haptics
 };
@@ -33,6 +44,7 @@ export default function useQibla(): UseQiblaResult {
   const [heading, setHeading] = useState<number | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [qiblaAngle, setQiblaAngle] = useState<number | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const smoothRef = useRef<number | null>(null);
@@ -49,6 +61,7 @@ export default function useQibla(): UseQiblaResult {
         }
         const { coords } = await Location.getCurrentPositionAsync({});
         setQiblaAngle(computeBearing(coords.latitude, coords.longitude, KAABA_LAT, KAABA_LON));
+        setDistanceKm(haversineKm(coords.latitude, coords.longitude, KAABA_LAT, KAABA_LON));
       } catch {
         setError("Could not read your location.");
       }
@@ -145,5 +158,5 @@ export default function useQibla(): UseQiblaResult {
   const isAligned =
     typeof rotation === "number" ? Math.abs(shortestDelta(0, rotation)) <= 2 : false;
 
-  return { rotation, heading, qiblaAngle, accuracy, error, isAligned };
+  return { rotation, heading, qiblaAngle, distanceKm, accuracy, error, isAligned };
 }

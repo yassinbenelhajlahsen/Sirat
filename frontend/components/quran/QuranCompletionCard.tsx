@@ -1,8 +1,11 @@
+import { Ionicons } from "@expo/vector-icons";
 import { memo, useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import GlassSurface from "@/components/ui/GlassSurface";
+import { Title3, Subhead, Headline } from "@/components/ui/Text";
 import PressableScale from "../PressableScale";
 
 type QuranCompletionCardProps = {
@@ -14,62 +17,67 @@ function QuranCompletionCard({ onBackToTop }: QuranCompletionCardProps) {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>You have reached the end of the Quran</Text>
-      <Text style={styles.subtitle}>
+    <GlassSurface tier="card" radius={theme.radii.card} style={styles.container}>
+      <View style={styles.ornament}>
+        <View style={styles.ornamentLine} />
+        <Ionicons name="sparkles" size={13} color={withOpacity(theme.colors.accent, 0.7)} />
+        <View style={styles.ornamentLine} />
+      </View>
+      <Title3 style={styles.title}>
+        You have reached the end of the Quran
+      </Title3>
+      <Subhead color={withOpacity(theme.colors.white, 0.85)} style={styles.subtitle}>
         May this journey of recitation bring you continued blessings.
-      </Text>
+      </Subhead>
       <PressableScale
         accessibilityRole="button"
         style={styles.backToTopButton}
         onPress={onBackToTop}
       >
-        <Text style={styles.backToTopText}>Back to Top</Text>
+        <Headline color={theme.colors.onAccent}>Back to Top</Headline>
       </PressableScale>
-    </View>
+    </GlassSurface>
   );
 }
 
 export default memo(QuranCompletionCard);
 
 const createStyles = (theme: AppTheme) => {
-  const themeColors = theme.colors;
+  const { colors } = theme;
 
   return StyleSheet.create({
     container: {
       marginTop: 32,
       marginBottom: 60,
+      marginHorizontal: 16,
       padding: 24,
-      borderRadius: 20,
-      backgroundColor: withOpacity(themeColors.white, 0.04),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.25),
       alignItems: "center",
     },
+    ornament: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      marginBottom: 16,
+    },
+    ornamentLine: {
+      height: 1,
+      width: 40,
+      backgroundColor: withOpacity(colors.accent, 0.3),
+    },
     title: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: themeColors.white,
       textAlign: "center",
-      marginBottom: 12,
+      marginBottom: 10,
     },
     subtitle: {
-      color: themeColors.white,
-      opacity: 0.85,
-      fontSize: 15,
       textAlign: "center",
       marginBottom: 20,
     },
     backToTopButton: {
-      backgroundColor: themeColors.accent,
+      backgroundColor: colors.accent,
       paddingHorizontal: 24,
       paddingVertical: 12,
-      borderRadius: 24,
-    },
-    backToTopText: {
-      fontWeight: "600",
-      color: themeColors.onAccent,
-      fontSize: 15,
+      borderRadius: theme.radii.pill,
     },
   });
 };

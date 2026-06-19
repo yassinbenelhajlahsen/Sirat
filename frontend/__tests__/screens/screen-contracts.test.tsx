@@ -69,19 +69,6 @@ jest.mock("@react-navigation/bottom-tabs", () => ({
   useBottomTabBarHeight: jest.fn(() => 0),
 }));
 
-jest.mock("react-native-dropdown-picker", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
-
-  return function DropDownPickerMock({
-    value,
-  }: {
-    value?: string | number | null;
-  }) {
-    return <Text testID="dropdown-picker">{String(value ?? "")}</Text>;
-  };
-});
-
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: jest.fn(),
 }));
@@ -107,9 +94,10 @@ jest.mock("@/hooks/useSettingsPermissions", () => ({
   useSettingsPermissions: jest.fn(),
 }));
 
-jest.mock("@/hooks/useSettingsDropdowns", () => ({
-  useSettingsDropdowns: jest.fn(),
-}));
+jest.mock("@/components/settings/PickerDialog", () => {
+  const { View } = require("react-native");
+  return { __esModule: true, default: () => <View /> };
+});
 
 jest.mock("@/hooks/useQuranDisplayModes", () => ({
   useQuranDisplayModes: jest.fn(),
@@ -129,6 +117,16 @@ jest.mock("@/hooks/useCalendarNavigationTransitions", () => ({
 
 jest.mock("@/hooks/useCalendarSummaryTransition", () => ({
   useCalendarSummaryTransition: jest.fn(),
+}));
+
+jest.mock("@/hooks/usePrayerTimes", () => ({
+  usePrayerTimes: jest.fn(),
+}));
+jest.mock("@/hooks/useNextPrayer", () => ({
+  useNextPrayer: jest.fn(),
+}));
+jest.mock("@/hooks/useRamadanTracker", () => ({
+  useRamadanTracker: jest.fn(),
 }));
 
 jest.mock("@/context/QuranAudioProvider", () => ({
@@ -168,8 +166,11 @@ jest.mock("expo-audio", () => ({
 }));
 
 jest.mock("expo-haptics", () => ({
-  ImpactFeedbackStyle: { Light: "light" },
+  selectionAsync: jest.fn(async () => {}),
   impactAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+  NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
 }));
 
 jest.mock("expo-location", () => ({
@@ -231,11 +232,11 @@ jest.mock("@shopify/flash-list", () => {
   return { FlashList };
 });
 
-jest.mock("@/components/PrayerTimesList", () => {
+jest.mock("@/components/PrayerArc", () => {
   const React = require("react");
   const { Text } = require("react-native");
 
-  return function PrayerTimesListMock({
+  return function PrayerArcMock({
     loading,
     prayerTimes,
   }: {
@@ -243,7 +244,7 @@ jest.mock("@/components/PrayerTimesList", () => {
     prayerTimes: unknown[];
   }) {
     return (
-      <Text testID="prayer-times-list">
+      <Text testID="prayer-arc">
         loading:{String(loading)} count:{prayerTimes.length}
       </Text>
     );
@@ -327,15 +328,6 @@ jest.mock("@/components/PressableScale", () => {
   };
 });
 
-jest.mock("@/components/CitySearchModal", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
-
-  return function CitySearchModalMock({ visible }: { visible: boolean }) {
-    return <Text>CitySearchModal:{visible ? "open" : "closed"}</Text>;
-  };
-});
-
 jest.mock("@/components/NotificationSettings", () => {
   const React = require("react");
   const { Text } = require("react-native");
@@ -397,7 +389,7 @@ jest.mock("@/components/quran/QuranDisplaySettingsModal", () => {
 import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Home from "@/app/(tabs)/index";
-import Settings from "@/app/(tabs)/Settings";
+import Settings from "@/app/Settings";
 import QuranScreen from "@/app/(tabs)/Quran";
 import CalendarScreen from "@/app/(tabs)/Calendar";
 import MosqueScreen from "@/app/(tabs)/Mosques";
@@ -407,7 +399,6 @@ import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
 import { useKeyboardAutoScroll } from "@/hooks/useKeyboardAutoScroll";
 import useModalTransition from "@/hooks/useModalTransition";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
-import { useSettingsDropdowns } from "@/hooks/useSettingsDropdowns";
 import { useSettingsPermissions } from "@/hooks/useSettingsPermissions";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
@@ -415,6 +406,9 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 import { useCalendarNavigationTransitions } from "@/hooks/useCalendarNavigationTransitions";
 import { useCalendarSummaryTransition } from "@/hooks/useCalendarSummaryTransition";
 import { useCalendarViewState } from "@/hooks/useCalendarViewState";
+import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { useNextPrayer } from "@/hooks/useNextPrayer";
+import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { deleteBookmark, getBookmarkKey, getBookmarks, upsertBookmark } from "@/services/quranBookmarks";
 import { getAllAyat, getAyatIndexForSurahAndAyah, getSurahMeta } from "@/services/quranData";
 import { getCachedMosques, getNearbyMosques } from "@/services/getNearbyMosques";
@@ -440,8 +434,6 @@ const mockUsePrayerSettingsState =
   usePrayerSettingsState as jest.MockedFunction<typeof usePrayerSettingsState>;
 const mockUseSettingsPermissions =
   useSettingsPermissions as jest.MockedFunction<typeof useSettingsPermissions>;
-const mockUseSettingsDropdowns =
-  useSettingsDropdowns as jest.MockedFunction<typeof useSettingsDropdowns>;
 const mockUseQuranAudioController =
   useQuranAudioController as jest.MockedFunction<typeof useQuranAudioController>;
 const mockUseQuranDisplayModes =
@@ -458,6 +450,9 @@ const mockUseCalendarSummaryTransition =
   useCalendarSummaryTransition as jest.MockedFunction<
     typeof useCalendarSummaryTransition
   >;
+const mockUsePrayerTimes = usePrayerTimes as jest.MockedFunction<typeof usePrayerTimes>;
+const mockUseNextPrayer = useNextPrayer as jest.MockedFunction<typeof useNextPrayer>;
+const mockUseRamadanTracker = useRamadanTracker as jest.MockedFunction<typeof useRamadanTracker>;
 
 const mockGetAllAyat = getAllAyat as jest.MockedFunction<typeof getAllAyat>;
 const mockGetSurahMeta = getSurahMeta as jest.MockedFunction<typeof getSurahMeta>;
@@ -572,22 +567,6 @@ const buildPermissionsState = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const buildDropdownState = (overrides: Record<string, unknown> = {}) => ({
-  methodOpen: false,
-  setMethodOpen: jest.fn(),
-  methodItems: [{ label: "MWL", value: 2 }],
-  setMethodItems: jest.fn(),
-  themeOpen: false,
-  setThemeOpen: jest.fn(),
-  themeItems: [{ label: "Default", value: "default" }],
-  setThemeItems: jest.fn(),
-  methodScaleStyle: {},
-  themeScaleStyle: {},
-  locationAnim: new Animated.Value(1),
-  toggleScale: new Animated.Value(1),
-  ...overrides,
-});
-
 const buildAudioController = (overrides: Record<string, unknown> = {}) => ({
   isPlaying: false,
   isAudioLoading: false,
@@ -617,6 +596,14 @@ const buildCalendarViewState = (overrides: Record<string, unknown> = {}) => ({
   canGoPrev: true,
   canGoNext: true,
   dayButtonSize: 40,
+  fullMatrix: [
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [10, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+  ],
   visibleMatrix: [[10, 0, 0, 0, 0, 0, 0]],
   monthName: "March",
   ...overrides,
@@ -628,9 +615,11 @@ const buildCalendarData = (overrides: Record<string, unknown> = {}) => ({
   ramadanStart,
   ramadanEnd,
   ramadanSummary: { totalMissed: 2, missedDays: ["Mar 5"] },
+  ramadanMonthActive: true,
   firstMissedFastDate,
   missedDaysLabel: "Mar 5",
   showRamadanSummary: true,
+  reloadMissedFasts: jest.fn(),
   ...overrides,
 });
 
@@ -661,6 +650,7 @@ describe("Screen contracts", () => {
 
     mockUseRouter.mockReturnValue({
       push: mockPush,
+      back: jest.fn(),
     } as any);
     mockUseLocalSearchParams.mockReturnValue({
       month: "2",
@@ -690,7 +680,6 @@ describe("Screen contracts", () => {
       buildPrayerSettingsState() as any,
     );
     mockUseSettingsPermissions.mockReturnValue(buildPermissionsState() as any);
-    mockUseSettingsDropdowns.mockReturnValue(buildDropdownState() as any);
 
     mockUseQuranAudioController.mockReturnValue(buildAudioController() as any);
     mockUseQuranDisplayModes.mockReturnValue({
@@ -718,6 +707,20 @@ describe("Screen contracts", () => {
     mockUseCalendarSummaryTransition.mockReturnValue(
       buildCalendarSummaryTransition() as any,
     );
+    mockUsePrayerTimes.mockReturnValue({
+      prayerTimes: [{ label: "Fajr", time: "5:31 AM" }],
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+      prayerTimesDateKey: "2026-03-10",
+    } as any);
+    mockUseNextPrayer.mockReturnValue({ nextPrayer: null, timeLeft: "" } as any);
+    mockUseRamadanTracker.mockReturnValue({
+      isRamadan: false,
+      isFastMissed: false,
+      loadingRamadan: false,
+      toggleMissedFast: jest.fn(),
+    } as any);
     mockDateKeyFromDate.mockImplementation((date: Date) =>
       date.toISOString().slice(0, 10),
     );
@@ -738,17 +741,22 @@ describe("Screen contracts", () => {
 
   describe("Home", () => {
     it("renders the prayer and dua sections contract", () => {
-      const { getByText, getByTestId } = render(<Home />);
+      const { getByText, getByTestId, getByLabelText } = render(<Home />);
 
-      expect(getByText("Prayer Times")).toBeTruthy();
       expect(getByText("Chicago, US")).toBeTruthy();
+      expect(getByText("Dhuhr")).toBeTruthy();
       expect(getByText("DuaCardMock")).toBeTruthy();
-      expect(getByTestId("prayer-times-list")).toHaveTextContent(
-        "loading:false count:1",
-      );
+      expect(getByTestId("prayer-arc")).toHaveTextContent("loading:false count:1");
+      expect(getByLabelText("Open settings")).toBeTruthy();
     });
 
-    it("navigates to tomorrow prayer details from the completion branch", () => {
+    it("opens settings from the header gear", () => {
+      const { getByLabelText } = render(<Home />);
+      fireEvent.press(getByLabelText("Open settings"));
+      expect(mockPush).toHaveBeenCalledWith("/Settings");
+    });
+
+    it("navigates to the calendar with tomorrow selected from the completion branch", () => {
       mockUseHomePrayerTimes.mockReturnValue(
         buildHomePrayerState({
           nextPrayer: null,
@@ -765,7 +773,7 @@ describe("Screen contracts", () => {
         pathname: string;
         params: Record<string, string>;
       };
-      expect(pushPayload.pathname).toBe("../[date]");
+      expect(pushPayload.pathname).toBe("/Calendar");
       expect(pushPayload.params).toEqual(
         expect.objectContaining({
           date: expect.any(String),
@@ -804,7 +812,7 @@ describe("Screen contracts", () => {
     it("renders quran header and list contract", async () => {
       const { getByText, getByTestId } = render(<QuranScreen />);
 
-      expect(getByText("Quran")).toBeTruthy();
+      expect(getByText("Al-Fatihah")).toBeTruthy();
 
       await waitFor(() => {
         expect(getByTestId("flash-list-mock")).toHaveTextContent("items:2");
@@ -833,8 +841,8 @@ describe("Screen contracts", () => {
       const { getByText, getByLabelText } = render(<CalendarScreen />);
 
       expect(getByText("Calendar")).toBeTruthy();
-      expect(getByText("March 2026")).toBeTruthy();
-      expect(getByLabelText("Open March 10, 2026")).toBeTruthy();
+      expect(getByText("Mar 2026")).toBeTruthy();
+      expect(getByLabelText("Select March 10, 2026")).toBeTruthy();
     });
 
     it("routes next month button to transition handler", () => {

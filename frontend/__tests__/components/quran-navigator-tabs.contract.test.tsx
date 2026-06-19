@@ -19,35 +19,42 @@ jest.mock("@/components/PressableScale", () => {
 });
 
 describe("NavigatorTabs contract", () => {
-  it("renders both tab options and reflects selected state", () => {
+  it("renders all three segment options and reflects selected state", () => {
     const { getAllByRole } = render(
-      <NavigatorTabs selectedTab="goto" onSelectTab={jest.fn()} />
+      <NavigatorTabs selectedTab="surah" onSelectTab={jest.fn()} />
     );
 
     const tabButtons = getAllByRole("button");
-    const goToTab = tabButtons.find((button) =>
-      within(button).queryByText("Go To")
+    const surahTab = tabButtons.find((button) =>
+      within(button).queryByText("Sūrah")
+    );
+    const juzTab = tabButtons.find((button) =>
+      within(button).queryByText("Juzʾ")
     );
     const bookmarksTab = tabButtons.find((button) =>
       within(button).queryByText("Bookmarks")
     );
 
-    expect(goToTab).toBeTruthy();
+    expect(surahTab).toBeTruthy();
+    expect(juzTab).toBeTruthy();
     expect(bookmarksTab).toBeTruthy();
-    expect(goToTab.props.accessibilityState).toEqual({ selected: true });
+    expect(surahTab.props.accessibilityState).toEqual({ selected: true });
+    expect(juzTab.props.accessibilityState).toEqual({ selected: false });
     expect(bookmarksTab.props.accessibilityState).toEqual({ selected: false });
   });
 
   it("wires tab press callbacks with the expected tab keys", () => {
     const onSelectTab = jest.fn();
     const { getByText } = render(
-      <NavigatorTabs selectedTab="goto" onSelectTab={onSelectTab} />
+      <NavigatorTabs selectedTab="surah" onSelectTab={onSelectTab} />
     );
 
+    fireEvent.press(getByText("Sūrah"));
+    fireEvent.press(getByText("Juzʾ"));
     fireEvent.press(getByText("Bookmarks"));
-    fireEvent.press(getByText("Go To"));
 
-    expect(onSelectTab).toHaveBeenNthCalledWith(1, "bookmarks");
-    expect(onSelectTab).toHaveBeenNthCalledWith(2, "goto");
+    expect(onSelectTab).toHaveBeenNthCalledWith(1, "surah");
+    expect(onSelectTab).toHaveBeenNthCalledWith(2, "juz");
+    expect(onSelectTab).toHaveBeenNthCalledWith(3, "bookmarks");
   });
 });

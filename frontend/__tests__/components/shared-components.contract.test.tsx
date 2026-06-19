@@ -1,7 +1,6 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Share } from "react-native";
 
-import CitySearchModal from "@/components/CitySearchModal";
 import DuaCard from "@/components/DuaCard";
 import DuaResultCard from "@/components/DuaResultCard";
 import PrayerTimesList from "@/components/PrayerTimesList";
@@ -78,8 +77,8 @@ describe("shared component UI contracts", () => {
       );
 
       expect(getByText("Anxiety")).toBeTruthy();
+      expect(getByText("Translation")).toBeTruthy();
       expect(getByText("Transliteration")).toBeTruthy();
-      expect(getByText("English Translation")).toBeTruthy();
       expect(getByText(sampleDua.arabic)).toBeTruthy();
       expect(getByText(sampleDua.reference)).toBeTruthy();
     });
@@ -124,26 +123,4 @@ describe("shared component UI contracts", () => {
     });
   });
 
-  describe("CitySearchModal", () => {
-    it("renders when visible and calls onSelectKey when a city is tapped", () => {
-      const onSelectKey = jest.fn();
-      const items = [
-        { label: "San Francisco", value: "san-francisco" },
-        { label: "New York", value: "new-york" },
-      ];
-      const { getByText } = render(
-        <CitySearchModal
-          visible
-          onClose={jest.fn()}
-          onSelectKey={onSelectKey}
-          items={items}
-        />
-      );
-
-      expect(getByText("Select city")).toBeTruthy();
-      fireEvent.press(getByText("New York"));
-
-      expect(onSelectKey).toHaveBeenCalledWith("new-york");
-    });
-  });
 });

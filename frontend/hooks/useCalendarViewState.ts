@@ -93,6 +93,7 @@ export function useCalendarViewState({
     canGoPrev,
     canGoNext,
     dayButtonSize,
+    fullMatrix: matrix,
     visibleMatrix,
     monthName,
   };

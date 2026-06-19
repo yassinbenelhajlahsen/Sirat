@@ -21,7 +21,7 @@ jest.mock("@expo/vector-icons", () => {
 const sampleDua: Dua = {
   id: 12,
   category: "anxiety",
-  arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
+  arabic: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
   english: "Allah is sufficient for us, and He is the best disposer of affairs.",
   transliteration: "Hasbunallahu wa ni'mal wakeel",
   reference: "Qur'an 3:173",
@@ -29,18 +29,30 @@ const sampleDua: Dua = {
 };
 
 describe("DuaResultCard contract", () => {
-  it("renders the dua content contract and category formatting", () => {
-    const { getByText } = render(
+  it("renders the dua, category eyebrow, and translation by default", () => {
+    const { getByText, queryByText } = render(
       <DuaResultCard dua={sampleDua} onClose={jest.fn()} />
     );
 
     expect(getByText("Anxiety")).toBeTruthy();
+    expect(getByText("Translation")).toBeTruthy();
     expect(getByText("Transliteration")).toBeTruthy();
-    expect(getByText("English Translation")).toBeTruthy();
     expect(getByText(sampleDua.arabic)).toBeTruthy();
-    expect(getByText(sampleDua.transliteration)).toBeTruthy();
-    expect(getByText(sampleDua.english)).toBeTruthy();
     expect(getByText(sampleDua.reference)).toBeTruthy();
+    // Translation is the default mode; the transliteration text is hidden.
+    expect(getByText(sampleDua.english)).toBeTruthy();
+    expect(queryByText(sampleDua.transliteration)).toBeNull();
+  });
+
+  it("toggles to transliteration via the segmented control", () => {
+    const { getByText, queryByText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} />
+    );
+
+    fireEvent.press(getByText("Transliteration"));
+
+    expect(getByText(sampleDua.transliteration)).toBeTruthy();
+    expect(queryByText(sampleDua.english)).toBeNull();
   });
 
   it("wires close button callback", () => {
@@ -52,6 +64,31 @@ describe("DuaResultCard contract", () => {
     fireEvent.press(getByLabelText("Close dua details"));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a toast when copy is pressed", () => {
+    const { getByLabelText, getByText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} />
+    );
+
+    fireEvent.press(getByLabelText("Copy dua"));
+
+    expect(getByText("Copied to clipboard")).toBeTruthy();
+  });
+
+  it("renders find-another only when onAnother is provided and wires it", () => {
+    const onAnother = jest.fn();
+    const withAnother = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} onAnother={onAnother} />
+    );
+
+    fireEvent.press(withAnother.getByLabelText("Find another dua"));
+    expect(onAnother).toHaveBeenCalledTimes(1);
+
+    const withoutAnother = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} />
+    );
+    expect(withoutAnother.queryByLabelText("Find another dua")).toBeNull();
   });
 
   it("wires share button with expected payload", async () => {

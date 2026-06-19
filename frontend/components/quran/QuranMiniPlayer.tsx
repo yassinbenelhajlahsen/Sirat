@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import GlassSurface from "@/components/ui/GlassSurface";
 import PressableScale from "../PressableScale";
 
 const PROGRESS_POLL_INTERVAL_MS = 500;
@@ -54,7 +55,10 @@ export function QuranMiniPlayer({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const insets = useSafeAreaInsets();
-  const TAB_BAR_GAP = 64;
+  // Tab bar sits at bottom: Math.max(insets.bottom, 14) + 6 with height 64.
+  // Its top edge is at Math.max(insets.bottom, 14) + 70 from the screen bottom.
+  // Add an 8px gap so the mini player clears it cleanly.
+  const TAB_BAR_CLEARANCE = Math.max(insets.bottom, 14) + 78;
   const [duration, setDuration] = useState(playbackDuration);
   const [position, setPosition] = useState(playbackPosition);
   const router = useRouter();
@@ -194,7 +198,7 @@ export function QuranMiniPlayer({
         styles.wrapper,
         style,
         {
-          marginBottom: (insets.bottom > 0 ? insets.bottom : 12) + TAB_BAR_GAP,
+          marginBottom: TAB_BAR_CLEARANCE,
         },
       ]}
     >
@@ -204,7 +208,7 @@ export function QuranMiniPlayer({
         accessibilityLabel="Open Quran screen"
         accessibilityHint="Navigates back to the Quran tab"
       >
-        <View style={styles.innerContainer}>
+        <GlassSurface tier="chrome" radius={theme.radii.cardLg} style={styles.innerContainer}>
           <View style={styles.textSection}>
             <Text
               style={styles.surahName}
@@ -241,7 +245,7 @@ export function QuranMiniPlayer({
               />
             </Pressable>
           </View>
-        </View>
+        </GlassSurface>
       </PressableScale>
       <View style={styles.progressTrack}>
         <Animated.View
@@ -262,7 +266,7 @@ const createStyles = (theme: AppTheme) => {
       position: "absolute",
       left: 16,
       right: 16,
-      bottom: -12,
+      bottom: 0,
       shadowColor: themeColors.black,
       shadowOpacity: 0.24,
       shadowRadius: 14,
@@ -274,15 +278,6 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       justifyContent: "space-between",
       padding: 14,
-      borderRadius: 20,
-      backgroundColor: withOpacity(themeColors.primaryDeep, 0.9),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.16),
-      shadowColor: themeColors.black,
-      shadowOpacity: 0.32,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 14,
     },
     textSection: {
       flex: 1,
@@ -319,6 +314,11 @@ const createStyles = (theme: AppTheme) => {
     playButton: {
       backgroundColor: themeColors.accent,
       borderColor: withOpacity(themeColors.accent, 0.85),
+      shadowColor: withOpacity(themeColors.accent, 0.4),
+      shadowOpacity: 1,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 6,
     },
     progressTrack: {
       height: 4,

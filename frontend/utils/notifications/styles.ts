@@ -6,52 +6,57 @@ export const getNotificationStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
 
   return StyleSheet.create({
-    sectionHeader: {
-      paddingHorizontal: 20,
-      marginTop: 18,
+    section: { marginTop: theme.spacing.xl },
+    sectionLabel: {
+      letterSpacing: 1,
+      marginLeft: theme.spacing.xs,
+      marginBottom: theme.spacing.sm,
+    },
+    card: { overflow: "hidden" },
+    masterRow: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
+      gap: 12,
       minHeight: 56,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
     },
-    headerTextBlock: {
-      flexShrink: 1,
-      paddingRight: 12,
+    masterIcon: {
+      width: 30,
+      height: 30,
+      borderRadius: 9,
+      borderCurve: "continuous",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.accent, 0.14),
     },
-    headerEyebrow: {
-      color: withOpacity(themeColors.accent, 0.9),
-      fontSize: 11,
-      fontFamily: "SFProDisplay-Semibold",
-      textTransform: "uppercase",
-      letterSpacing: 0.9,
-    },
-    headerTitle: {
-      fontSize: 16,
-      fontFamily: "SFProDisplay-Semibold",
-      marginTop: 1,
-    },
-    headerSubtitle: {
+    masterText: { flex: 1, minWidth: 0 },
+    masterTitle: { fontSize: 16, fontWeight: "600" },
+    masterSubtitle: {
       fontSize: 12,
       marginTop: 2,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
-    cardContainer: {
-      marginTop: 14,
-      marginHorizontal: 20,
-      paddingBottom: 4,
+    masterControl: { flexDirection: "row", alignItems: "center", gap: 4 },
+    masterStatus: { fontSize: 14, fontWeight: "600" },
+    reveal: { paddingHorizontal: 14, overflow: "hidden" },
+    revealDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(themeColors.white, 0.08),
+      marginBottom: 14,
     },
     prayerSectionHeader: {
       marginBottom: 10,
     },
     prayerSectionTitle: {
       fontSize: 14,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     prayerSectionDescription: {
       fontSize: 12,
       lineHeight: 17,
       marginTop: 3,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
     rowWrapper: {
       marginBottom: 12,
@@ -79,7 +84,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     rowLabel: {
       color: withOpacity(themeColors.white, 0.9),
       fontSize: 16,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       letterSpacing: 0.2,
     },
     rowLabelDisabled: {
@@ -100,11 +105,12 @@ export const getNotificationStyles = (theme: AppTheme) => {
     rowIndicatorText: {
       marginLeft: 8,
       fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       color: withOpacity(themeColors.white, 0.85),
     },
     soundCard: {
       marginTop: 14,
+      marginBottom: 14,
       borderRadius: 12,
       borderWidth: 2,
       paddingVertical: 16,
@@ -119,12 +125,12 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     soundSectionTitle: {
       fontSize: 16,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       color: themeColors.white,
     },
     soundSectionSubtitle: {
       fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       marginTop: 6,
       color: withOpacity(themeColors.white, 0.75),
     },
@@ -145,7 +151,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     soundSegmentLabel: {
       fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
     },
     soundSegmentHighlight: {
       position: "absolute",
@@ -166,7 +172,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     },
     soundDescriptionText: {
       fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       lineHeight: 18,
       color: withOpacity(themeColors.white, 0.85),
     },
@@ -183,13 +189,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     soundPreviewText: {
       marginLeft: 8,
       fontSize: 13,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    androidNote: {
-      marginTop: 10,
-      marginHorizontal: 20,
-      fontSize: 12,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "600",
     },
   });
 };

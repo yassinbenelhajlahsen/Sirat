@@ -1,19 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
   InteractionManager,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import { radii, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { QuranBookmark } from "@/services/quranBookmarks";
 
@@ -22,7 +21,6 @@ import PressableScale from "../../PressableScale";
 export type BookmarkNavigatorItem = {
   bookmark: QuranBookmark;
   title: string;
-  note?: string;
   surahEnglish: string;
   surahArabic: string;
 };
@@ -31,6 +29,7 @@ type BookmarksTabProps = {
   bookmarks: readonly BookmarkNavigatorItem[];
   filteredBookmarks: readonly BookmarkNavigatorItem[];
   bookmarkSearchQuery: string;
+  bottomInset?: number;
   onBookmarkSearchQueryChange: (value: string) => void;
   onSelectBookmark: (bookmark: QuranBookmark) => void;
   onDeleteBookmark: (bookmark: QuranBookmark) => void;
@@ -169,19 +168,26 @@ const BookmarkRow = memo(function BookmarkRow({
         overshootRight={false}
         friction={2}
         enabled={!isDeleting}
+        activeOffsetX={[-12, 12]}
+        failOffsetY={[-12, 12]}
       >
         <PressableScale style={styles.bookmarkButton} onPress={handleSelect}>
-          <Text style={styles.bookmarkTitle}>{item.title}</Text>
-          <Text style={styles.bookmarkMeta}>
-            Surah {item.bookmark.surahNumber} • Ayah {item.bookmark.ayahNumber}
-          </Text>
-          <Text style={styles.bookmarkSurahNames}>
-            {item.surahEnglish}
-            {item.surahArabic ? ` • ${item.surahArabic}` : ""}
-          </Text>
-          {item.note ? (
-            <Text style={styles.bookmarkNote}>{item.note}</Text>
-          ) : null}
+          <View style={styles.bookmarkRowInner}>
+            <View style={styles.bookmarkIconCircle}>
+              <Ionicons
+                name="bookmark"
+                size={14}
+                color={themeColors.accent}
+              />
+            </View>
+            <View style={styles.bookmarkContent}>
+              <Text style={styles.bookmarkTitle}>{item.title}</Text>
+              <Text style={styles.bookmarkMeta}>
+                {item.bookmark.surahNumber}:{item.bookmark.ayahNumber}
+                {item.surahArabic ? ` · ${item.surahArabic}` : ""}
+              </Text>
+            </View>
+          </View>
         </PressableScale>
       </Swipeable>
     </Animated.View>
@@ -192,6 +198,7 @@ function BookmarksTab({
   bookmarks,
   filteredBookmarks,
   bookmarkSearchQuery,
+  bottomInset = 0,
   onBookmarkSearchQueryChange,
   onSelectBookmark,
   onDeleteBookmark,
@@ -209,15 +216,19 @@ function BookmarksTab({
   }, [bookmarks, filteredBookmarks, trimmedQuery]);
 
   return (
-    <ScrollView
+    <BottomSheetScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[
+        styles.contentContainer,
+        { paddingBottom: bottomInset + 24 },
+        !hasBookmarks && styles.contentContainerEmpty,
+      ]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
       {hasBookmarks ? (
         <View>
-          <TextInput
+          <BottomSheetTextInput
             style={styles.searchInput}
             placeholder="Search bookmarks..."
             placeholderTextColor={
@@ -253,7 +264,7 @@ function BookmarksTab({
           Double tap an Ayah to make your first bookmark.
         </Text>
       )}
-    </ScrollView>
+    </BottomSheetScrollView>
   );
 }
 
@@ -268,15 +279,13 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
     },
     contentContainer: {
+      flexGrow: 1,
       paddingHorizontal: 20,
-      paddingBottom: 18,
+      paddingBottom: 24,
       paddingTop: 8,
     },
-    sectionHeading: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 16,
-      fontWeight: "600",
-      marginBottom: 12,
+    contentContainerEmpty: {
+      justifyContent: "center",
     },
     searchInput: {
       paddingHorizontal: 16,
@@ -297,46 +306,49 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: 12,
     },
     bookmarkRow: {
-      borderRadius: 15,
+      borderRadius: radii.row,
       overflow: "hidden",
       marginBottom: 11,
     },
     bookmarkButton: {
-      paddingVertical: 15,
-      paddingLeft: 16,
-      paddingRight: 36,
-      borderRadius: 15,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primaryHighlight, 0.95)
-        : withOpacity(themeColors.white, 0.07),
+      paddingVertical: 13,
+      paddingHorizontal: 14,
+      borderRadius: radii.row,
+      borderCurve: "continuous",
+      backgroundColor: withOpacity(themeColors.white, 0.05),
       borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.72)
-        : withOpacity(themeColors.accent, 0.28),
+      borderColor: withOpacity(themeColors.white, 0.1),
+    },
+    bookmarkRowInner: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+    },
+    bookmarkIconCircle: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: withOpacity(themeColors.accent, 0.15),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.3),
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+      marginTop: 1,
+      flexShrink: 0,
+    },
+    bookmarkContent: {
+      flex: 1,
     },
     bookmarkTitle: {
       color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: "600",
-      marginBottom: 4,
+      marginBottom: 3,
     },
     bookmarkMeta: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.94)
-        : withOpacity(themeColors.white, 0.68),
+      color: themeColors.accent,
       fontSize: 12,
       marginBottom: 2,
-    },
-    bookmarkSurahNames: {
-      color: isLight ? themeColors.primaryOutline : themeColors.accent,
-      fontSize: 13,
-      marginBottom: 4,
-    },
-    bookmarkNote: {
-      color: isLight
-        ? withOpacity(themeColors.offWhite, 0.86)
-        : withOpacity(themeColors.white, 0.8),
-      fontSize: 13,
     },
     bookmarkEmptyText: {
       color: isLight
@@ -363,7 +375,8 @@ const createStyles = (theme: AppTheme) => {
         : "#fd0000ff",
       paddingVertical: 17,
       paddingHorizontal: 17,
-      borderRadius: 15,
+      borderRadius: radii.row,
+      borderCurve: "continuous",
       marginRight: 4,
       alignItems: "center",
       justifyContent: "center",

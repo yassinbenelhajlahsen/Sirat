@@ -1,21 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useMemo } from "react";
-import {
-  Animated,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaFrame } from "react-native-safe-area-context";
 
+import SheetBackground from "@/components/ui/SheetBackground";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import useModalTransition from "@/hooks/useModalTransition";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
 import { QuranDisplayMode } from "@/services/quranDisplayModes";
 
 import PressableScale from "../PressableScale";
+
+function DisplaySettingsSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
+  return <SheetBackground {...p} solid />;
+}
+
+const SNAP_POINTS = ["40%"];
 
 type QuranDisplaySettingsModalProps = {
   visible: boolean;
@@ -37,14 +38,56 @@ export default function QuranDisplaySettingsModal({
 }: QuranDisplaySettingsModalProps) {
   const { theme } = useTheme();
   const themeColors = theme.colors;
-  const isLight = theme.name === "light";
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { displayModes, isModeEnabled, toggleDisplayMode } =
     useQuranDisplayModes();
   const selectedDisplayModeCount = displayModes.length;
-  const { shouldRender, overlayAnimatedStyle, cardAnimatedStyle } =
-    useModalTransition(visible);
+  const frame = useSafeAreaFrame();
+  // gorhom 5.2 + reanimated 4 doesn't bound the sheet content to the snap
+  // height, so cap it to the snap fraction of the real window. Matches
+  // SNAP_POINTS ("40%"). See components/quran/navigator/NavigatorModal.tsx.
+  const contentMaxHeight = Math.round(frame.height * 0.4);
+
+  // Stays mounted through the close animation; only unmounts once the sheet
+  // reports it has fully closed (onChange === -1), so closing animates instead
+  // of snapping shut.
+  const [mounted, setMounted] = useState(visible);
+  const sheetRef = useRef<BottomSheet>(null);
+  const previousVisibleRef = useRef(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible && !previousVisibleRef.current) {
+      sheetRef.current?.snapToIndex(0);
+    } else if (!visible && previousVisibleRef.current) {
+      sheetRef.current?.close();
+    }
+    previousVisibleRef.current = visible;
+  }, [visible]);
+
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        setMounted(false);
+        onClose();
+      }
+    },
+    [onClose],
+  );
+
+  const handleIndicatorStyle = useMemo(
+    () => ({
+      backgroundColor: withOpacity(themeColors.white, 0.3),
+      width: 38,
+    }),
+    [themeColors.white],
+  );
 
   const handleDisplayModePress = useCallback(
     (mode: QuranDisplayMode) => {
@@ -53,90 +96,94 @@ export default function QuranDisplaySettingsModal({
     [toggleDisplayMode],
   );
 
-  if (!shouldRender) {
+  if (!mounted) {
     return null;
   }
 
   return (
-    <Modal
-      animationType="none"
-      transparent
-      visible={shouldRender}
-      onRequestClose={onClose}
+    <BottomSheet
+      ref={sheetRef}
+      index={0}
+      snapPoints={SNAP_POINTS}
+      enableDynamicSizing={false}
+      enablePanDownToClose
+      backgroundComponent={DisplaySettingsSheetBackground}
+      handleIndicatorStyle={handleIndicatorStyle}
+      onChange={handleSheetChange}
     >
-      <Animated.View style={[styles.overlay, overlayAnimatedStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <Animated.View style={[styles.card, cardAnimatedStyle]}>
-          <View style={styles.headerRow}>
+      <BottomSheetView style={[styles.content, { maxHeight: contentMaxHeight }]}>
+        <View style={styles.headerRow}>
+          <View>
             <Text style={styles.title}>Display Text</Text>
-            <PressableScale
-              accessibilityRole="button"
-              onPress={onClose}
-              style={styles.dismissButton}
-              scaleTo={0.85}
-            >
-              <Ionicons
-                name="close"
-                size={18}
-                color={isLight ? themeColors.offWhite : themeColors.white}
-              />
-            </PressableScale>
+            <Text style={styles.subtitle}>Select which text to show</Text>
           </View>
-          <Text style={styles.subtitle}>Select which text to show</Text>
-          <View style={styles.displayModeList}>
-            {DISPLAY_MODE_OPTIONS.map((option, index) => {
-              const checked = isModeEnabled(option.mode);
-              const isDisabled = checked && selectedDisplayModeCount === 1;
-              const isLast = index === DISPLAY_MODE_OPTIONS.length - 1;
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            onPress={onClose}
+            style={styles.dismissButton}
+            scaleTo={0.85}
+          >
+            <View style={styles.dismissIcon}>
+              <View style={[styles.dismissLine, styles.dismissLineFirst]} />
+              <View style={[styles.dismissLine, styles.dismissLineSecond]} />
+            </View>
+          </PressableScale>
+        </View>
 
-              return (
-                <Pressable
-                  key={option.mode}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked, disabled: isDisabled }}
-                  onPress={() => {
-                    if (!isDisabled) {
-                      handleDisplayModePress(option.mode);
-                    }
-                  }}
-                  style={({ pressed }) => [
-                    styles.displayModeRow,
-                    isLast ? styles.displayModeRowLast : null,
-                    pressed && !isDisabled
-                      ? styles.displayModeRowPressed
-                      : null,
-                    isDisabled ? styles.displayModeRowDisabled : null,
+        <View style={styles.displayModeList}>
+          {DISPLAY_MODE_OPTIONS.map((option, index) => {
+            const checked = isModeEnabled(option.mode);
+            const isDisabled = checked && selectedDisplayModeCount === 1;
+            const isLast = index === DISPLAY_MODE_OPTIONS.length - 1;
+
+            return (
+              <Pressable
+                key={option.mode}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked, disabled: isDisabled }}
+                onPress={() => {
+                  if (!isDisabled) {
+                    handleDisplayModePress(option.mode);
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.displayModeRow,
+                  isLast ? styles.displayModeRowLast : null,
+                  pressed && !isDisabled
+                    ? styles.displayModeRowPressed
+                    : null,
+                  isDisabled ? styles.displayModeRowDisabled : null,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.displayModeCheckbox,
+                    checked ? styles.displayModeCheckboxChecked : null,
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.displayModeCheckbox,
-                      checked ? styles.displayModeCheckboxChecked : null,
-                    ]}
-                  >
-                    {checked ? (
-                      <Ionicons
-                        name="checkmark"
-                        size={14}
-                        color={themeColors.onAccent}
-                      />
-                    ) : null}
-                  </View>
-                  <Text
-                    style={[
-                      styles.displayModeLabel,
-                      isDisabled ? styles.displayModeLabelDisabled : null,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Animated.View>
-      </Animated.View>
-    </Modal>
+                  {checked ? (
+                    <Ionicons
+                      name="checkmark"
+                      size={14}
+                      color={themeColors.onAccent}
+                    />
+                  ) : null}
+                </View>
+                <Text
+                  style={[
+                    styles.displayModeLabel,
+                    isDisabled ? styles.displayModeLabelDisabled : null,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </BottomSheetView>
+    </BottomSheet>
   );
 }
 
@@ -145,49 +192,60 @@ const createStyles = (theme: AppTheme) => {
   const isLight = theme.name === "light";
 
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.black, 0.28)
-        : withOpacity(themeColors.black, 0.45),
-      justifyContent: "center",
+    content: {
       paddingHorizontal: 20,
-    },
-    card: {
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primaryLift, 0.98)
-        : withOpacity(themeColors.primaryDeep, 0.95),
-      borderRadius: 20,
-      paddingHorizontal: 20,
-      paddingVertical: 20,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.8)
-        : withOpacity(themeColors.accent, 0.5),
+      paddingBottom: 24,
     },
     headerRow: {
       flexDirection: "row",
-      alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 6,
+      alignItems: "flex-start",
+      paddingTop: 18,
+      marginBottom: 16,
     },
     title: {
       color: isLight ? themeColors.offWhite : themeColors.white,
       fontSize: 20,
       fontWeight: "700",
     },
+    subtitle: {
+      marginTop: 4,
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.95)
+        : withOpacity(themeColors.white, 0.66),
+      fontSize: 12,
+      letterSpacing: 0.3,
+    },
     dismissButton: {
-      width: 32,
-      height: 32,
+      padding: 8,
+      marginTop: -2,
+      borderRadius: 999,
+      backgroundColor: isLight
+        ? withOpacity(themeColors.primarySurfaceAlt, 0.55)
+        : withOpacity(themeColors.white, 0.08),
+      borderWidth: 1,
+      borderColor: isLight
+        ? withOpacity(themeColors.primaryBorder, 0.7)
+        : withOpacity(themeColors.white, 0.12),
+    },
+    dismissIcon: {
+      width: 18,
+      height: 18,
       alignItems: "center",
       justifyContent: "center",
     },
-    subtitle: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.95)
-        : withOpacity(themeColors.white, 0.78),
-      fontSize: 13,
-      marginBottom: 12,
+    dismissLine: {
+      position: "absolute",
+      width: 18,
+      height: 2,
+      backgroundColor: isLight ? themeColors.offWhite : themeColors.white,
+      borderRadius: 999,
+    },
+    dismissLineFirst: {
+      transform: [{ rotate: "45deg" }],
+    },
+    dismissLineSecond: {
+      transform: [{ rotate: "-45deg" }],
     },
     displayModeList: {
       borderWidth: 1,
@@ -241,7 +299,7 @@ const createStyles = (theme: AppTheme) => {
     displayModeLabel: {
       color: isLight ? themeColors.offWhite : themeColors.white,
       fontSize: 15,
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
     },
     displayModeLabelDisabled: {
       opacity: 0.9,

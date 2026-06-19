@@ -1,0 +1,134 @@
+import { BlurView } from "expo-blur";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
+import { LinearGradient } from "expo-linear-gradient";
+import { Platform, StyleSheet, View } from "react-native";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import type { BottomSheetBackgroundProps } from "@gorhom/bottom-sheet";
+
+import { withOpacity } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+
+type Props = BottomSheetBackgroundProps & {
+  testID?: string;
+  fadeToSolidFrom?: number;
+  solid?: boolean;
+  opaque?: boolean;
+};
+
+// Real iOS 26 liquid glass over the map at peek/half (translucent fallback
+// elsewhere), with a solid vertical gradient that fades in toward full. Only
+// the gradient overlay animates — never the glass — so the material keeps
+// rendering (animating a GlassView's opacity stops it drawing).
+//
+// When `solid` is true (Quran sheets), an always-opaque gradient is shown
+// regardless of snap position. The glass sheen is layered on top on iOS 26.
+export default function SheetBackground({
+  style,
+  animatedIndex,
+  testID,
+  fadeToSolidFrom = 1,
+  solid = false,
+  opaque = false,
+}: Props) {
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const glass = Platform.OS === "ios" && isLiquidGlassAvailable();
+
+  const solidStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      animatedIndex.value,
+      [fadeToSolidFrom, fadeToSolidFrom + 1],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
+  const blurTint = theme.name === "light" ? "light" : "dark";
+
+  // Fully opaque (no GlassView/BlurView) — a flat vertical gradient. Used where a
+  // live backdrop filter is too costly: the Mosque sheet over a continuously
+  // redrawing map, and as the Navigator's perf fallback. No per-frame readback.
+  if (opaque) {
+    return (
+      <View
+        testID={testID}
+        pointerEvents="none"
+        style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+      >
+        <LinearGradient
+          colors={[colors.primaryDeep, colors.primary]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+    );
+  }
+
+  if (solid) {
+    return (
+      <View
+        testID={testID}
+        pointerEvents="none"
+        style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+      >
+        {glass ? (
+          <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
+        ) : (
+          <BlurView
+            tint={blurTint}
+            intensity={55}
+            experimentalBlurMethod="dimezisBlurView"
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+        <LinearGradient
+          colors={[withOpacity(colors.primaryDeep, 0.65), withOpacity(colors.primary, 0.6)]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View
+      testID={testID}
+      pointerEvents="none"
+      style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+    >
+      {glass ? (
+        <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
+      ) : (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: withOpacity(colors.primaryDeep, 0.82) },
+          ]}
+        />
+      )}
+      <Animated.View style={[StyleSheet.absoluteFill, solidStyle]}>
+        <LinearGradient
+          colors={[colors.primaryDeep, colors.primary]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  bg: {
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderTopWidth: 1,
+    overflow: "hidden",
+  },
+});

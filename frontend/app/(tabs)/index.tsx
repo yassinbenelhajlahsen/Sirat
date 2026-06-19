@@ -1,22 +1,21 @@
 // app/(tabs)/index.tsx
+import { Ionicons } from "@expo/vector-icons";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo } from "react";
-import {
-  Animated,
-  Image,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import GlassSurface from "@/components/ui/GlassSurface";
+import { Caption, Headline, LargeTitle, Title2 } from "@/components/ui/Text";
+import Screen from "@/components/ui/Screen";
+import { BREATH_HALF_CYCLE } from "@/constants/motion";
+import { getGreeting } from "@/utils/greeting";
+import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
-import PrayerTimesList from "../../components/PrayerTimesList";
+import PrayerArc from "@/components/PrayerArc";
 import PressableScale from "../../components/PressableScale";
 import { useDuaInteraction } from "../../hooks/useDuaInteraction";
 import { useHomePrayerTimes } from "../../hooks/useHomePrayerTimes";
@@ -25,384 +24,190 @@ import useModalTransition from "../../hooks/useModalTransition";
 
 export default function Home() {
   const { theme } = useTheme();
-  const { colors } = theme;
+  const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
 
   const router = useRouter();
   const {
-    prayerTimes,
-    nextPrayer,
-    nextDayFajr,
-    timeLeft,
-    loading,
-    refreshing,
-    banner,
-    locationLabel,
-    refresh,
+    prayerTimes, nextPrayer, nextDayFajr, timeLeft,
+    loading, refreshing, banner, locationLabel, refresh,
   } = useHomePrayerTimes();
-  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua } =
-    useDuaInteraction();
+  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
 
   const handleSubmitDua = useCallback(async (userRequest: string) => {
     await submitDua(userRequest);
-    // Allow the result card to render before scrolling
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 400);
+    setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 400);
   }, [submitDua, scrollViewRef]);
 
   const hasPrayerSummary = !!(nextPrayer || nextDayFajr);
-  const {
-    shouldRender: shouldRenderPrayerSummary,
-    cardAnimatedStyle: prayerSummaryAnimatedStyle,
-  } = useModalTransition(hasPrayerSummary);
+  const { shouldRender: shouldRenderPrayerSummary, cardAnimatedStyle: prayerSummaryAnimatedStyle } =
+    useModalTransition(hasPrayerSummary);
 
-  const onRefresh = async () => {
-    await refresh();
-  };
+  const onRefresh = async () => { await refresh(); };
 
   const today = new Date();
-  const gregorianDate = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(today);
+  const greeting = getGreeting(today);
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
+    day: "numeric", month: "long", year: "numeric",
   }).format(today);
 
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
   const tomorrowParam = encodeURIComponent(tomorrow.toISOString());
+
+  // Breathing pulse on the hero badge (scale only — never animate opacity of glass).
+  const breath = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breath, { toValue: 1, duration: BREATH_HALF_CYCLE, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(breath, { toValue: 0, duration: BREATH_HALF_CYCLE, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [breath]);
+  const breathScale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] });
+
   const duaCardAnimatedStyle = {
     opacity: duaSwapAnim,
     transform: [
-      {
-        translateY: duaSwapAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [14, 0],
-        }),
-      },
-      {
-        scale: duaSwapAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.96, 1],
-        }),
-      },
+      { translateY: duaSwapAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) },
+      { scale: duaSwapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
     ],
   };
 
   return (
-    <LinearGradient
-      colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.screen}
-    >
-      <Image
-        source={require("@/assets/patterns/islamic-gold2.png")}
-        style={styles.patternOverlay}
-      />
+    <Screen safeArea={false}>
+      <ScrollView
+        ref={scrollViewRef}
+        onLayout={onScrollViewLayout}
+        keyboardShouldPersistTaps="handled"
+        contentInsetAdjustmentBehavior="never"
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + 120 },
+          keyboardHeight > 0 && { paddingBottom: keyboardHeight },
+        ]}
+        onScroll={handleTabBarScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} title="Refreshing…" titleColor={colors.accent} />
+        }
+      >
+        {!!banner && (
+          <GlassSurface tier="row" radius={theme.radii.row} style={styles.bannerCard}>
+            <Headline color={colors.accent}>{banner}</Headline>
+          </GlassSurface>
+        )}
 
-      <View style={styles.screen}>
-        <SafeAreaView style={styles.screen}>
-          <ScrollView
-            ref={scrollViewRef}
-            onLayout={onScrollViewLayout}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={[styles.scrollContent, keyboardHeight > 0 && { paddingBottom: keyboardHeight}]}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={true}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={colors.accent}
-                title="Refreshing…"
-                titleColor={colors.accent}
-              />
-            }
+        {/* Header: greeting + location + settings gear */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerText}>
+            <Caption color={colors.accent} style={styles.eyebrow}>{islamicDate}</Caption>
+            <LargeTitle>{greeting}</LargeTitle>
+            {locationLabel ? (
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={14} color={withOpacity(colors.white, 0.6)} />
+                <Headline color={withOpacity(colors.white, 0.7)} style={styles.locationText}>{locationLabel}</Headline>
+              </View>
+            ) : null}
+          </View>
+          <PressableScale
+            onPress={() => router.push("/Settings")}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
           >
-            {!!banner && (
-              <View style={styles.bannerCard}>
-                <Text style={styles.bannerText}>{banner}</Text>
-              </View>
-            )}
+            <GlassSurface tier="chrome" radius={22} style={styles.gear}>
+              <Ionicons name="settings-outline" size={20} color={withOpacity(colors.white, 0.85)} />
+            </GlassSurface>
+          </PressableScale>
+        </View>
 
-            <View style={styles.headerSection}>
-              <Text style={styles.sectionTitle}>Prayer Times</Text>
-
-              {locationLabel ? (
-                <Text style={styles.locationLabel}>{locationLabel}</Text>
-              ) : null}
-
-              <View style={styles.dateSection}>
-                <Text style={styles.gregorianDate}>{gregorianDate}</Text>
-                <Text style={styles.hijriDate}>{islamicDate}</Text>
-              </View>
-            </View>
-
-            {(loading || shouldRenderPrayerSummary || hasPrayerSummary) && (
-              <View style={styles.nextPrayerContainer}>
-                <View style={styles.nextPrayerSlot}>
-                  {shouldRenderPrayerSummary ? (
-                    <Animated.View
-                      style={[
-                        styles.nextPrayerAnimatedWrap,
-                        prayerSummaryAnimatedStyle,
-                      ]}
-                    >
-                      {nextPrayer ? (
-                        <View style={styles.nextPrayerCard}>
-                          <Text style={styles.nextPrayerLabel}>
-                            Next Prayer
-                          </Text>
-                          <View style={styles.nextPrayerRow}>
-                            <Text style={styles.nextPrayerName}>
-                              {nextPrayer.label}
-                            </Text>
-                            <Text style={styles.nextPrayerTime}>
-                              {nextPrayer.time}
-                            </Text>
-                          </View>
-                          <Text style={styles.nextPrayerCountdown}>
-                            Starts in {timeLeft}
-                          </Text>
-                        </View>
-                      ) : nextDayFajr ? (
-                        <PressableScale
-                          onPress={() =>
-                            router.push({
-                              pathname: "../[date]",
-                              params: {
-                                date: tomorrowParam,
-                                month: tomorrow.getMonth().toString(),
-                                year: tomorrow.getFullYear().toString(),
-                              },
-                            })
-                          }
-                          style={styles.tomorrowCardButton}
-                          accessibilityRole="button"
-                          accessibilityLabel="View tomorrow prayer times"
-                        >
-                          <Text style={styles.finishedTitle}>
-                            Finished all prayers!
-                          </Text>
-                          <Text style={styles.finishedSubtitle}>
-                            Tap to see tomorrow&apos;s prayer times
-                          </Text>
-                        </PressableScale>
-                      ) : null}
+        {/* Hero next-prayer card */}
+        {(loading || shouldRenderPrayerSummary || hasPrayerSummary) && (
+          <View style={styles.heroSlot}>
+            {shouldRenderPrayerSummary ? (
+              <Animated.View style={[prayerSummaryAnimatedStyle, { opacity: 1 }]}>
+                {nextPrayer ? (
+                  <GlassSurface tier="card" radius={theme.radii.heroLg} style={styles.heroCard}>
+                    <View style={styles.heroTextCol}>
+                      <Caption color={withOpacity(colors.white, 0.55)} style={styles.heroLabel}>UP NEXT</Caption>
+                      <Title2>{nextPrayer.label}</Title2>
+                      <Headline color={colors.accent}>{nextPrayer.time}</Headline>
+                    </View>
+                    <Animated.View style={[styles.heroBadge, { transform: [{ scale: breathScale }] }]}>
+                      <Caption color={colors.onAccent} style={styles.heroBadgeText}>in {timeLeft}</Caption>
                     </Animated.View>
-                  ) : null}
-                </View>
-              </View>
-            )}
-
-            <View style={styles.prayerListCard}>
-              <PrayerTimesList loading={loading} prayerTimes={prayerTimes} />
-            </View>
-            {/* Dua Section */}
-            <View style={styles.duaSection} onLayout={onDuaSectionLayout}>
-              <Animated.View style={duaCardAnimatedStyle}>
-                {selectedDua ? (
-                  <DuaResultCard dua={selectedDua} onClose={closeDua} />
-                ) : (
-                  <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />
-                )}
+                  </GlassSurface>
+                ) : nextDayFajr ? (
+                  <PressableScale
+                    onPress={() =>
+                      router.push({
+                        pathname: "/Calendar",
+                        params: { date: tomorrowParam, month: tomorrow.getMonth().toString(), year: tomorrow.getFullYear().toString() },
+                      })
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel="View tomorrow prayer times"
+                  >
+                    <GlassSurface tier="card" radius={theme.radii.heroLg} style={styles.heroCard}>
+                      <View style={styles.heroTextCol}>
+                        <Title2 color={colors.accent}>Finished all prayers!</Title2>
+                        <Headline color={withOpacity(colors.white, 0.85)}>Tap to see tomorrow&apos;s prayer times</Headline>
+                      </View>
+                    </GlassSurface>
+                  </PressableScale>
+                ) : null}
               </Animated.View>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    </LinearGradient>
+            ) : null}
+          </View>
+        )}
+
+        {/* Prayer arc (owns its own glass card) */}
+        <View style={styles.arcSlot}>
+          <PrayerArc loading={loading} prayerTimes={prayerTimes} nextPrayer={nextPrayer} />
+        </View>
+
+        {/* Dua section (logic unchanged) */}
+        <View style={styles.duaSection} onLayout={onDuaSectionLayout}>
+          <Animated.View style={duaCardAnimatedStyle}>
+            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
+          </Animated.View>
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing, typography } = theme;
-  const isLight = theme.name === "light";
-
+  const { colors, spacing } = theme;
   return StyleSheet.create({
-    screen: { flex: 1 },
-    patternOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      opacity: 0.05,
-      resizeMode: "repeat",
-      width: "100%",
-      height: "100%",
-    },
-    scrollContent: {
+    scrollContent: { paddingHorizontal: spacing.xl },
+    bannerCard: { padding: spacing.md, marginBottom: spacing.lg },
+    headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginTop: spacing.sm },
+    headerText: { flex: 1, paddingRight: spacing.md },
+    eyebrow: { letterSpacing: 1, textTransform: "uppercase", marginBottom: spacing.xs },
+    locationRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: spacing.sm },
+    locationText: {},
+    gear: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+    heroSlot: { marginTop: spacing.xl },
+    heroCard: {
+      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
       padding: spacing.xl,
-      paddingBottom: 80,
+      shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 22, shadowOffset: { width: 0, height: 12 },
     },
-    bannerCard: {
-      backgroundColor: colors.primaryLift,
-      borderColor: colors.accent,
-      borderWidth: 1,
-      borderRadius: 12,
-      paddingVertical: spacing.sm + 2,
-      paddingHorizontal: spacing.lg - 2,
-      marginBottom: spacing.lg,
+    heroTextCol: { gap: 4 },
+    heroLabel: { letterSpacing: 0.5 },
+    heroBadge: {
+      backgroundColor: colors.accent, borderRadius: theme.radii.pill,
+      paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignItems: "center", justifyContent: "center",
     },
-    bannerText: {
-      color: colors.accent,
-      fontFamily: "SFProDisplay-Semibold",
-      fontSize: typography.body,
-    },
-    headerSection: {
-      marginTop: spacing.sm,
-      alignItems: "center",
-    },
-    eyebrow: {
-      color: withOpacity(colors.accent, 0.9),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-      letterSpacing: 1,
-      textTransform: "uppercase",
-    },
-    sectionTitle: {
-      color: colors.white,
-      fontSize: 32,
-      fontFamily: "SFProDisplay-Bold",
-      marginTop: spacing.xs,
-    },
-    locationLabel: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Semibold",
-      marginTop: spacing.xs,
-      textAlign: "center",
-    },
-    dateSection: {
-      marginTop: spacing.md,
-      alignItems: "center",
-    },
-    gregorianDate: {
-      color: colors.white,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Bold",
-      textAlign: "center",
-    },
-    hijriDate: {
-      color: colors.accent,
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Semibold",
-      marginTop: spacing.xs,
-      marginBottom: spacing.md,
-      textAlign: "center",
-    },
-    prayerListCard: {
-      marginTop: spacing.md,
-      backgroundColor: isLight
-        ? withOpacity(colors.primarySurfaceAlt, 0.3)
-        : withOpacity(colors.black, 0.2),
-      borderRadius: 18,
-      padding: spacing.lg,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.35)
-        : withOpacity(colors.white, 0.08),
-      shadowColor: colors.primaryDark,
-      shadowOpacity: isLight ? 0.22 : 0.25,
-      shadowRadius: isLight ? 20 : 24,
-      shadowOffset: { width: 0, height: isLight ? 10 : 16 },
-      elevation: isLight ? 4 : 6,
-      minHeight: 320,
-      justifyContent: "center",
-    },
-    nextPrayerContainer: {
-      alignItems: "center",
-      marginBottom: -2,
-    },
-    nextPrayerSlot: {
-      width: "100%",
-    },
-    nextPrayerAnimatedWrap: {
-      width: "100%",
-    },
-    nextPrayerCard: {
-      width: "100%",
-      backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.3),
-      borderRadius: 16,
-      paddingVertical: spacing.md + 2,
-      paddingHorizontal: spacing.lg,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.35),
-      shadowColor: colors.primaryDark,
-      shadowOpacity: 0.22,
-      shadowRadius: 20,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 4,
-      justifyContent: "center",
-    },
-    tomorrowCardButton: {
-      backgroundColor: withOpacity(colors.primarySurfaceAlt, 0.25),
-      borderRadius: 12,
-      paddingVertical: 18,
-      paddingHorizontal: 24,
-      borderWidth: 2,
-      borderColor: withOpacity(colors.accent, 0.75),
-      shadowColor: colors.accent,
-      shadowOpacity: 0.6,
-      shadowRadius: 4,
-      elevation: 5,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    nextPrayerLabel: {
-      color: withOpacity(colors.accent, 0.95),
-      fontSize: typography.caption,
-      fontFamily: "SFProDisplay-Semibold",
-      letterSpacing: 0.7,
-      textTransform: "uppercase",
-    },
-    nextPrayerRow: {
-      marginTop: spacing.xs,
-      flexDirection: "row",
-      alignItems: "flex-end",
-      justifyContent: "space-between",
-    },
-    nextPrayerName: {
-      color: colors.white,
-      fontSize: typography.title,
-      fontFamily: "SFProDisplay-Bold",
-    },
-    nextPrayerTime: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Bold",
-    },
-    nextPrayerCountdown: {
-      marginTop: spacing.xs,
-      color: withOpacity(colors.white, 0.9),
-      fontSize: typography.body,
-      fontFamily: "SFProDisplay-Semibold",
-    },
-    finishedTitle: {
-      color: colors.accent,
-      fontSize: typography.subtitle,
-      fontFamily: "SFProDisplay-Bold",
-      textAlign: "center",
-      marginBottom: spacing.xs,
-    },
-    finishedSubtitle: {
-      color: colors.white,
-      fontSize: typography.bodyLg,
-      fontFamily: "SFProDisplay-Semibold",
-      textAlign: "center",
-    },
-    duaSection: {
-      position: "relative",
-      marginTop: spacing.xs,
-    },
+    heroBadgeText: { fontWeight: "700" },
+    arcSlot: { marginTop: spacing.lg },
+    duaSection: { position: "relative", marginTop: spacing.lg },
   });
 };

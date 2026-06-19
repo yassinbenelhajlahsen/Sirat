@@ -232,13 +232,13 @@ const createRowStyles = (theme: AppTheme) => {
     labelText: {
       color: withOpacity(themeColors.white, 0.9),
       fontSize: 17,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600" as const,
       letterSpacing: 0.2,
     },
     timeText: {
       color: themeColors.accent,
       fontSize: 17,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700" as const,
       letterSpacing: 0.2,
     },
   };

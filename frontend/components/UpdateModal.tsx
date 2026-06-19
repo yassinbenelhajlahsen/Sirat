@@ -86,13 +86,13 @@ const createStyles = (theme: AppTheme) => {
     },
     title: {
       color: themeColors.white,
-      fontFamily: "SFProDisplay-Bold",
+      fontWeight: "700",
       fontSize: 20,
     },
     description: {
       marginTop: 10,
       color: withOpacity(themeColors.white, 0.78),
-      fontFamily: "SFProDisplay-Regular",
+      fontWeight: "400",
       fontSize: 15,
       lineHeight: 21,
     },
@@ -112,7 +112,7 @@ const createStyles = (theme: AppTheme) => {
     },
     laterLabel: {
       color: themeColors.white,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       fontSize: 15,
     },
     restartButton: {
@@ -124,7 +124,7 @@ const createStyles = (theme: AppTheme) => {
     },
     restartLabel: {
       color: themeColors.onAccent,
-      fontFamily: "SFProDisplay-Semibold",
+      fontWeight: "600",
       fontSize: 15,
     },
     buttonDisabled: {

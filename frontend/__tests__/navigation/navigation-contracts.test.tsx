@@ -55,6 +55,7 @@ jest.mock("@gorhom/portal", () => ({
 jest.mock("react-native-safe-area-context", () => ({
   SafeAreaProvider: ({ children }: any) => children,
   SafeAreaView: ({ children }: any) => children,
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
 jest.mock("@/context/QuranAudioProvider", () => ({
@@ -83,11 +84,6 @@ jest.mock("@/components/UpdateModal", () => "UpdateModal");
 jest.mock("@/components/quran/QuranMiniPlayerPortal", () => ({
   QuranMiniPlayerPortal: () => null,
 }));
-jest.mock("../../components/PrayerTimesList", () => {
-  const React = require("react");
-  const { View } = require("react-native");
-  return () => React.createElement(View);
-});
 jest.mock("../../components/PressableScale", () => {
   const React = require("react");
   const { Pressable } = require("react-native");
@@ -149,7 +145,6 @@ jest.mock("../../services/holidayService", () => ({
 
 import TabLayout from "@/app/(tabs)/_layout";
 import RootLayout from "@/app/_layout";
-import CalendarDetail from "@/app/[date]";
 
 describe("navigation contracts", () => {
   let appStateListenerSpy: jest.SpyInstance;
@@ -238,15 +233,14 @@ describe("navigation contracts", () => {
     );
     expect(routeNames).toEqual([
       "index",
-      "Mosques",
-      "Qibla",
       "Quran",
+      "Qibla",
+      "Mosques",
       "Calendar",
-      "Settings",
     ]);
   });
 
-  it("registers tabs and MosqueMap routes in the root stack", async () => {
+  it("registers tabs and Settings routes in the root stack", async () => {
     const expoRouter = jest.requireMock("expo-router") as {
       Stack: jest.Mock & { Screen: jest.Mock };
     };
@@ -261,7 +255,8 @@ describe("navigation contracts", () => {
     expect(stackProps.screenOptions).toEqual(
       expect.objectContaining({
         headerShown: false,
-        animation: "none",
+        animation: "fade",
+        animationDuration: 280,
       }),
     );
 
@@ -271,40 +266,7 @@ describe("navigation contracts", () => {
     const routeNames = Array.from(
       new Set(registrations.map((registration) => registration.name)),
     );
-    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "MosqueMap"]));
-
-    const mosqueMap = registrations.find(
-      (registration) => registration.name === "MosqueMap",
-    );
-    expect(mosqueMap.options).toEqual(
-      expect.objectContaining({
-        animation: "fade",
-        animationDuration: 300,
-      }),
-    );
-  });
-
-  it("decodes [date] param and routes back to Calendar with month/year query", async () => {
-    mockLocalSearchParams = {
-      date: encodeURIComponent("2026-03-22T00:00:00.000Z"),
-      month: "2",
-      year: "2026",
-      holiday: "",
-      ramadanStart: "2026-03-01T00:00:00.000Z",
-      ramadanEnd: "2026-03-30T00:00:00.000Z",
-    };
-
-    const { getByText } = render(<CalendarDetail />);
-
-    await waitFor(() => {
-      expect(mockUsePrayerTimes).toHaveBeenCalled();
-    });
-
-    const lastArg =
-      mockUsePrayerTimes.mock.calls[mockUsePrayerTimes.mock.calls.length - 1]?.[0];
-    expect(lastArg?.toISOString()).toBe("2026-03-22T00:00:00.000Z");
-
-    fireEvent.press(getByText("Calendar"));
-    expect(mockReplace).toHaveBeenCalledWith("/Calendar?month=2&year=2026");
+    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "Settings"]));
+    expect(routeNames).not.toContain("MosqueMap");
   });
 });

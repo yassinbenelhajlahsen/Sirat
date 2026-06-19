@@ -33,7 +33,7 @@ export const PRAYER_EMOJI: Record<PrayerKey, string> = {
 
 export const IOS_SOUND_MAP: Record<SoundMode, string> = {
   default: "default",
-  adhan: "adhan.wav",
+  adhan: "adhan.caf",
 };
 
 export type RescheduleReason =
