@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DeviceEventEmitter } from "react-native";
 
+import { dateKeyFromDate } from "../holidayService";
 import type { Habit, HabitFrequency, HabitReminder } from "./types";
 import { newId, nowMs } from "./util";
 
@@ -54,13 +55,6 @@ async function persist(habits: Habit[]): Promise<void> {
   emit();
 }
 
-function dateKeyNow(): string {
-  const d = new Date(nowMs());
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`;
-}
-
 export async function createHabit(input: {
   name: string;
   icon: string;
@@ -78,7 +72,7 @@ export async function createHabit(input: {
     reminder: input.reminder,
     order: maxOrder + 1,
     archived: false,
-    createdAtKey: dateKeyNow(),
+    createdAtKey: dateKeyFromDate(new Date(nowMs())),
     updatedAt: ts,
   };
   await persist([...all, habit]);
