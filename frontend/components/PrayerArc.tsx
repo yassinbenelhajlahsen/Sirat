@@ -4,6 +4,7 @@ import {
   Animated,
   DimensionValue,
   Easing,
+  Pressable,
   StyleSheet,
   View,
 } from "react-native";
@@ -11,9 +12,11 @@ import Svg, { Line, Path } from "react-native-svg";
 
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption } from "@/components/ui/Text";
+import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import { BREATH_HALF_CYCLE } from "@/constants/motion";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
 import {
   ARC_VIEWBOX,
@@ -23,6 +26,7 @@ import {
   sunMarker,
   type ArcPrayer,
 } from "@/utils/prayerArc";
+import { prayerNameForArcLabel } from "@/utils/prayerLabel";
 
 const ARC_H = ARC_VIEWBOX.height;
 const ARC_PATH = `M${arcPoint(0).x},${arcPoint(0).y} Q150,2 ${arcPoint(1).x},${arcPoint(1).y}`;
@@ -37,6 +41,9 @@ type PrayerArcProps = {
   nextPrayer: { label: string; time: string } | null;
   now?: Date;
   live?: boolean;
+  logging?: boolean;
+  statuses?: Partial<Record<PrayerName, PrayerStatus>>;
+  onPressPrayer?: (name: PrayerName, label: string) => void;
 };
 
 export default function PrayerArc({
@@ -45,6 +52,9 @@ export default function PrayerArc({
   nextPrayer,
   now,
   live = true,
+  logging = false,
+  statuses,
+  onPressPrayer,
 }: PrayerArcProps) {
   const { theme } = useTheme();
   const { colors } = theme;
@@ -167,15 +177,48 @@ export default function PrayerArc({
             state === "next"
               ? colors.accent
               : withOpacity(colors.white, state === "passed" ? 0.4 : 1);
-          return (
-            <View key={p.label} style={styles.col}>
+
+          if (!logging) {
+            return (
+              <View key={p.label} style={styles.col}>
+                <Caption color={nameColor} numberOfLines={1} style={styles.name}>
+                  {p.label}
+                </Caption>
+                <Caption color={timeColor} numberOfLines={1} style={styles.time}>
+                  {p.time ? shortTime(p.time) : "—"}
+                </Caption>
+              </View>
+            );
+          }
+
+          const name = prayerNameForArcLabel(p.label);
+          const loggable = logging && name != null && (!live || state === "passed" || state === "next");
+          const status = name ? statuses?.[name] : undefined;
+
+          const column = (
+            <View style={styles.col}>
               <Caption color={nameColor} numberOfLines={1} style={styles.name}>
                 {p.label}
               </Caption>
               <Caption color={timeColor} numberOfLines={1} style={styles.time}>
                 {p.time ? shortTime(p.time) : "—"}
               </Caption>
+              {name ? <PrayerStatusDot status={status} loggable={loggable} /> : null}
             </View>
+          );
+
+          return loggable && onPressPrayer ? (
+            <Pressable
+              key={p.label}
+              onPress={() => onPressPrayer(name!, p.label)}
+              accessibilityRole="button"
+              accessibilityLabel={`Log ${p.label}`}
+              style={{ flex: 1 }}
+            >
+              {column}
+            </Pressable>
+          ) : (
+            <View key={p.label} style={{ flex: 1 }}>{column}</View>
           );
         })}
       </View>
