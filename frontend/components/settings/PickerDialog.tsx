@@ -166,7 +166,10 @@ export default function PickerDialog<T extends string | number>({
                       pressed && styles.itemPressed,
                     ]}
                   >
-                    <Body color={isSelected ? colors.accent : colors.white}>
+                    <Body
+                      color={isSelected ? colors.accent : colors.white}
+                      style={styles.itemLabel}
+                    >
                       {item.label}
                     </Body>
                     {isSelected ? (
@@ -234,6 +237,7 @@ const createStyles = (theme: AppTheme) => {
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.xl,
     },
+    itemLabel: { flex: 1, minWidth: 0, paddingRight: spacing.md },
     itemPressed: { backgroundColor: withOpacity(colors.white, 0.06) },
     separator: {
       height: StyleSheet.hairlineWidth,
