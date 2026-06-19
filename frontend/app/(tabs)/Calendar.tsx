@@ -222,6 +222,7 @@ export default function CalendarScreen() {
   const [prayerSheet, setPrayerSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
   return (
+    <View style={styles.fill}>
     <Screen>
       <View style={styles.fill}>
         {/* Header: title + bare top-right month switcher */}
@@ -446,16 +447,17 @@ export default function CalendarScreen() {
           )}
         </ScrollView>
       </View>
-      <PrayerLogSheet
-        visible={prayerSheet !== null}
-        prayerName={prayerSheet?.name ?? null}
-        prayerLabel={prayerSheet?.label ?? ""}
-        currentStatus={prayerSheet ? statuses[prayerSheet.name] : undefined}
-        onSelect={(s) => { if (prayerSheet) setStatus(prayerSheet.name, s); setPrayerSheet(null); }}
-        onClear={() => { if (prayerSheet) clearStatus(prayerSheet.name); setPrayerSheet(null); }}
-        onClose={() => setPrayerSheet(null)}
-      />
     </Screen>
+    <PrayerLogSheet
+      visible={prayerSheet !== null}
+      prayerName={prayerSheet?.name ?? null}
+      prayerLabel={prayerSheet?.label ?? ""}
+      currentStatus={prayerSheet ? statuses[prayerSheet.name] : undefined}
+      onSelect={(s) => { if (prayerSheet) setStatus(prayerSheet.name, s); setPrayerSheet(null); }}
+      onClear={() => { if (prayerSheet) clearStatus(prayerSheet.name); setPrayerSheet(null); }}
+      onClose={() => setPrayerSheet(null)}
+    />
+    </View>
   );
 }
 
