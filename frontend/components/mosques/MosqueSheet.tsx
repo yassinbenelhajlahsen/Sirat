@@ -8,16 +8,16 @@ import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { distanceKm, formatDistanceShort } from "@/utils/geo";
 import type { Mosque } from "@/services/getNearbyMosques";
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
-import React, { useMemo } from "react";
-import { Platform, StyleSheet, View } from "react-native";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  type SharedValue,
-} from "react-native-reanimated";
+import { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
+import { type SharedValue } from "react-native-reanimated";
+
+// Opaque background (no GlassView/BlurView) — the sheet sits over a live MapView,
+// and a real-time backdrop filter forces a GPU readback of the redrawing map
+// every frame. A flat opaque gradient removes that per-frame cost entirely.
+function MosqueSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
+  return <SheetBackground {...p} opaque />;
+}
 
 type MosqueSheetProps = {
   mosques: Mosque[];
@@ -40,16 +40,8 @@ export default function MosqueSheet({
 }: MosqueSheetProps) {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
-  const glass = Platform.OS === "ios" && isLiquidGlassAvailable();
 
   const snapPoints = useMemo(() => ["18%", "50%", "92%"], []);
-
-  // Shared with the chrome strip behind the floating tab bar so the bottom
-  // matches the sheet in every state.
-  const animatedIndex = useSharedValue(0);
-  const chromeSolid = useAnimatedStyle(() => ({
-    opacity: interpolate(animatedIndex.value, [1, 2], [0, 1], Extrapolation.CLAMP),
-  }));
 
   const rows = useMemo(() => {
     const r = mosques.slice(0, 10);
@@ -79,39 +71,23 @@ export default function MosqueSheet({
 
   return (
     <>
-      {/* Chrome behind the floating tab bar — same glass + solid-fade as the
-          sheet so the bottom reads as one continuous surface. */}
+      {/* Chrome behind the floating tab bar — a flat fill matching the sheet's
+          opaque bottom edge so the two read as one continuous surface. */}
       <View
         pointerEvents="none"
-        style={[styles.chrome, { height: bottomInset }]}
-      >
-        {glass ? (
-          <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
-        ) : (
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: withOpacity(colors.primaryDeep, 0.82) },
-            ]}
-          />
-        )}
-        <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            chromeSolid,
-            { backgroundColor: colors.primary },
-          ]}
-        />
-      </View>
+        style={[
+          styles.chrome,
+          { height: bottomInset, backgroundColor: colors.primary },
+        ]}
+      />
 
       <BottomSheet
         index={0}
         snapPoints={snapPoints}
         bottomInset={bottomInset}
-        animatedIndex={animatedIndex}
         animatedPosition={animatedPosition}
         enablePanDownToClose={false}
-        backgroundComponent={SheetBackground}
+        backgroundComponent={MosqueSheetBackground}
         handleIndicatorStyle={handleStyle}
       >
         <BottomSheetFlatList

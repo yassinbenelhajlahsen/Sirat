@@ -891,6 +891,16 @@ export default function QuranScreen() {
   }, [bookmarks, surahMap]);
   const currentSurahMeta = surahMap.get(currentAyah.surahNumber);
 
+  const navigatorLastRead = useMemo(
+    () => ({
+      surahNumber: currentAyah.surahNumber,
+      ayahNumber: currentAyah.ayahNumber,
+      englishName: currentSurahMeta?.englishName ?? currentAyah.surahNameEn,
+      arabicName: currentSurahMeta?.arabicName ?? currentAyah.surahNameAr,
+    }),
+    [currentAyah, currentSurahMeta],
+  );
+
   const handleAudioButtonPress = useCallback(() => {
     if (isPlaying) {
       pauseAudio();
@@ -1357,6 +1367,7 @@ export default function QuranScreen() {
           <NavigatorModal
             visible={navigatorOpen}
             initialTab={navigatorInitialTab}
+            lastRead={navigatorLastRead}
             surahs={surahs}
             filteredSurahs={filteredSurahs}
             ayahSearchResults={filteredAyahResults}

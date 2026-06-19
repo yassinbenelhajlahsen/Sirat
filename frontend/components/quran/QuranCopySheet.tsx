@@ -1,9 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
-import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SheetBackground from "@/components/ui/SheetBackground";
@@ -48,7 +46,6 @@ export default function QuranCopySheet({
   const sheetRef = useRef<BottomSheet>(null);
   const previousVisibleRef = useRef(visible);
   const insets = useSafeAreaInsets();
-  const glass = Platform.OS === "ios" && isLiquidGlassAvailable();
 
   // `visible` and `ayah` clear together on close, so keep the last ayah around
   // for the duration of the close animation.
@@ -58,8 +55,9 @@ export default function QuranCopySheet({
   }
   const activeAyah = ayah ?? lastAyahRef.current;
 
-  // Lift the sheet above the floating glass tab bar (mirrors GlassTabBar's
-  // layout: bottom offset + pill height + gap). See app/(tabs)/Mosques.tsx.
+  // The sheet runs full-height to the screen bottom (one continuous surface, no
+  // separate chrome strip), so its content is padded past the floating glass tab
+  // bar. Mirrors GlassTabBar's layout: bottom offset + pill height + gap.
   const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
 
   useEffect(() => {
@@ -107,154 +105,123 @@ export default function QuranCopySheet({
   const title = `${activeAyah.surahNameEn} ${activeAyah.surahNumber}:${activeAyah.ayahNumber}`;
 
   return (
-    <>
-      {/* Chrome behind the floating tab bar — matches the sheet's solid glass
-          so the lifted bottom edge reads as one continuous surface. */}
-      <View
-        pointerEvents="none"
-        style={[styles.chrome, { height: tabBarClearance }]}
+    <BottomSheet
+      ref={sheetRef}
+      index={0}
+      enableDynamicSizing
+      enablePanDownToClose
+      backgroundComponent={CopySheetBackground}
+      handleIndicatorStyle={handleIndicatorStyle}
+      onChange={handleSheetChange}
+    >
+      <BottomSheetView
+        style={[styles.content, { paddingBottom: tabBarClearance + 24 }]}
       >
-        {glass ? (
-          <GlassView
-            glassEffectStyle="regular"
-            style={StyleSheet.absoluteFill}
-          />
-        ) : (
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: withOpacity(themeColors.primaryDeep, 0.82) },
-            ]}
-          />
-        )}
-        <LinearGradient
-          colors={[
-            withOpacity(themeColors.primaryDeep, 0.65),
-            withOpacity(themeColors.primary, 0.6),
-          ]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      </View>
-
-      <BottomSheet
-        ref={sheetRef}
-        index={0}
-        bottomInset={tabBarClearance}
-        enableDynamicSizing
-        enablePanDownToClose
-        backgroundComponent={CopySheetBackground}
-        handleIndicatorStyle={handleIndicatorStyle}
-        onChange={handleSheetChange}
-      >
-        <BottomSheetView style={styles.content}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.subtitle}>Copy ayah text</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.subtitle}>Copy ayah text</Text>
+          </View>
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            onPress={onClose}
+            style={styles.dismissButton}
+            scaleTo={0.85}
+          >
+            <View style={styles.dismissIcon}>
+              <View style={[styles.dismissLine, styles.dismissLineFirst]} />
+              <View style={[styles.dismissLine, styles.dismissLineSecond]} />
             </View>
-            <PressableScale
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-              onPress={onClose}
-              style={styles.dismissButton}
-              scaleTo={0.85}
-            >
-              <View style={styles.dismissIcon}>
-                <View style={[styles.dismissLine, styles.dismissLineFirst]} />
-                <View style={[styles.dismissLine, styles.dismissLineSecond]} />
-              </View>
-            </PressableScale>
-          </View>
+          </PressableScale>
+        </View>
 
-          <View style={styles.optionList}>
-            {showArabic ? (
+        <View style={styles.optionList}>
+          {showArabic ? (
+            <CopyRow
+              icon="copy-outline"
+              label="Copy Arabic"
+              isLast={!showTransliteration && !showEnglish && !showCopyAll}
+              isGold={false}
+              styles={styles}
+              themeColors={themeColors}
+              onPress={() =>
+                onCopy(
+                  formatCopyText(activeAyah, {
+                    arabic: true,
+                    english: false,
+                    transliteration: false,
+                  }),
+                )
+              }
+            />
+          ) : null}
+
+          {showTransliteration ? (
+            <CopyRow
+              icon="copy-outline"
+              label="Copy Transliteration"
+              isLast={!showEnglish && !showCopyAll}
+              isGold={false}
+              styles={styles}
+              themeColors={themeColors}
+              onPress={() =>
+                onCopy(
+                  formatCopyText(activeAyah, {
+                    arabic: false,
+                    english: false,
+                    transliteration: true,
+                  }),
+                )
+              }
+            />
+          ) : null}
+
+          {showEnglish ? (
+            <CopyRow
+              icon="copy-outline"
+              label="Copy English"
+              isLast={!showCopyAll}
+              isGold={false}
+              styles={styles}
+              themeColors={themeColors}
+              onPress={() =>
+                onCopy(
+                  formatCopyText(activeAyah, {
+                    arabic: false,
+                    english: true,
+                    transliteration: false,
+                  }),
+                )
+              }
+            />
+          ) : null}
+
+          {showCopyAll ? (
+            <>
+              <View style={styles.divider} />
               <CopyRow
-                icon="copy-outline"
-                label="Copy Arabic"
-                isLast={!showTransliteration && !showEnglish && !showCopyAll}
-                isGold={false}
+                icon="documents-outline"
+                label="Copy All"
+                isLast
+                isGold
                 styles={styles}
                 themeColors={themeColors}
                 onPress={() =>
                   onCopy(
                     formatCopyText(activeAyah, {
-                      arabic: true,
-                      english: false,
-                      transliteration: false,
+                      arabic: showArabic,
+                      english: showEnglish,
+                      transliteration: showTransliteration,
                     }),
                   )
                 }
               />
-            ) : null}
-
-            {showTransliteration ? (
-              <CopyRow
-                icon="copy-outline"
-                label="Copy Transliteration"
-                isLast={!showEnglish && !showCopyAll}
-                isGold={false}
-                styles={styles}
-                themeColors={themeColors}
-                onPress={() =>
-                  onCopy(
-                    formatCopyText(activeAyah, {
-                      arabic: false,
-                      english: false,
-                      transliteration: true,
-                    }),
-                  )
-                }
-              />
-            ) : null}
-
-            {showEnglish ? (
-              <CopyRow
-                icon="copy-outline"
-                label="Copy English"
-                isLast={!showCopyAll}
-                isGold={false}
-                styles={styles}
-                themeColors={themeColors}
-                onPress={() =>
-                  onCopy(
-                    formatCopyText(activeAyah, {
-                      arabic: false,
-                      english: true,
-                      transliteration: false,
-                    }),
-                  )
-                }
-              />
-            ) : null}
-
-            {showCopyAll ? (
-              <>
-                <View style={styles.divider} />
-                <CopyRow
-                  icon="documents-outline"
-                  label="Copy All"
-                  isLast
-                  isGold
-                  styles={styles}
-                  themeColors={themeColors}
-                  onPress={() =>
-                    onCopy(
-                      formatCopyText(activeAyah, {
-                        arabic: showArabic,
-                        english: showEnglish,
-                        transliteration: showTransliteration,
-                      }),
-                    )
-                  }
-                />
-              </>
-            ) : null}
-          </View>
-        </BottomSheetView>
-      </BottomSheet>
-    </>
+            </>
+          ) : null}
+        </View>
+      </BottomSheetView>
+    </BottomSheet>
   );
 }
 
@@ -304,13 +271,6 @@ const createStyles = (theme: AppTheme) => {
   const isLight = theme.name === "light";
 
   return StyleSheet.create({
-    chrome: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
-      overflow: "hidden",
-    },
     content: {
       paddingHorizontal: 20,
       paddingBottom: 24,

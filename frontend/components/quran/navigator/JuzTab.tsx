@@ -15,9 +15,10 @@ import PressableScale from "../../PressableScale";
 type JuzTabProps = {
   onSelectJuz: (juzNumber: number) => void;
   onClose: () => void;
+  bottomInset?: number;
 };
 
-function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
+function JuzTab({ onSelectJuz, onClose, bottomInset = 0 }: JuzTabProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -54,7 +55,10 @@ function JuzTab({ onSelectJuz, onClose }: JuzTabProps) {
   return (
     <BottomSheetScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[
+        styles.contentContainer,
+        { paddingBottom: bottomInset + 24 },
+      ]}
       showsVerticalScrollIndicator={false}
     >
       <View>

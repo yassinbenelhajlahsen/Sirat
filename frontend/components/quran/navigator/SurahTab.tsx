@@ -1,11 +1,13 @@
 import { BottomSheetFlatList, BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   InteractionManager,
   ListRenderItem,
+  StyleProp,
   StyleSheet,
   Text,
   View,
+  ViewStyle,
   useWindowDimensions,
 } from "react-native";
 
@@ -15,12 +17,21 @@ import { NormalizedSurahMeta } from "@/services/quranData";
 
 import PressableScale from "../../PressableScale";
 
+type LastReadAyah = {
+  surahNumber: number;
+  ayahNumber: number;
+  englishName: string;
+  arabicName: string;
+};
+
 type SurahTabProps = {
   surahs: readonly NormalizedSurahMeta[];
   filteredSurahs: readonly NormalizedSurahMeta[];
   ayahSearchResults: readonly QuranAyahSearchResult[];
   juzSearchResult: QuranJuzSearchResult | null;
   surahSearchQuery: string;
+  lastRead?: LastReadAyah | null;
+  bottomInset?: number;
   onSurahSearchQueryChange: (value: string) => void;
   onSelectSurah: (surahNumber: number) => void;
   onSelectAyah: (surahNumber: number, ayahNumber: number) => void;
@@ -39,12 +50,19 @@ export type QuranJuzSearchResult = {
   juzNumber: number;
 };
 
+// Surahs people most often jump to. Kept short so the default (no-search) view
+// renders a handful of tiles instead of all 114; the full list is one tap away.
+const POPULAR_SURAH_NUMBERS = [1, 2, 18, 36, 55, 56, 67, 112] as const;
+const EMPTY_SURAHS: readonly SurahItem[] = [];
+
 function SurahTab({
   surahs,
   filteredSurahs,
   ayahSearchResults,
   juzSearchResult,
   surahSearchQuery,
+  lastRead,
+  bottomInset = 0,
   onSurahSearchQueryChange,
   onSelectSurah,
   onSelectAyah,
@@ -57,13 +75,32 @@ function SurahTab({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const trimmedQuery = surahSearchQuery.trim();
+  const hasQuery = trimmedQuery.length > 0;
+
+  // Search-forward: the default view shows Continue reading + Popular only; the
+  // full 114 render only after the user taps "All Sūrahs". Reset when a search
+  // starts so clearing it returns to the compact default.
+  const [showAllSurahs, setShowAllSurahs] = useState(false);
+  useEffect(() => {
+    if (hasQuery) setShowAllSurahs(false);
+  }, [hasQuery]);
+
   const data = useMemo(() => {
-    return trimmedQuery ? filteredSurahs : surahs;
-  }, [filteredSurahs, surahs, trimmedQuery]);
+    if (hasQuery) return filteredSurahs;
+    if (showAllSurahs) return surahs;
+    return EMPTY_SURAHS;
+  }, [hasQuery, showAllSurahs, filteredSurahs, surahs]);
 
   const dataLength = data.length;
   const { width } = useWindowDimensions();
   const numColumns = width >= 640 ? 3 : 2;
+
+  const popularSurahs = useMemo(() => {
+    const byNumber = new Map(surahs.map((s) => [s.surahNumber, s]));
+    return POPULAR_SURAH_NUMBERS.map((n) => byNumber.get(n)).filter(
+      (s): s is SurahItem => s != null,
+    );
+  }, [surahs]);
 
   const handleSelect = useCallback(
     (surahNumber: number) => {
@@ -95,47 +132,54 @@ function SurahTab({
     [onClose, onSelectJuz],
   );
 
+  // Shared tile markup for both the virtualized list and the Popular grid.
+  const renderTile = useCallback(
+    (item: SurahItem, style: StyleProp<ViewStyle>, onPress: () => void) => (
+      <PressableScale key={item.surahNumber} style={style} onPress={onPress}>
+        <View style={styles.surahTileRow}>
+          <Text style={styles.surahNumber}>{item.surahNumber}</Text>
+          <Text style={styles.surahArabic}>{item.arabicName}</Text>
+        </View>
+        <Text style={styles.surahEnglish}>{item.englishName}</Text>
+        <Text style={styles.surahMeta}>{item.ayahCount} ayāt</Text>
+      </PressableScale>
+    ),
+    [styles],
+  );
+
   const renderItem = useCallback<ListRenderItem<SurahItem>>(
     ({ item, index }) => {
       const isEndOfRow = (index + 1) % numColumns === 0;
       const isLastItem = index === dataLength - 1;
       const itemStyle =
         isEndOfRow || isLastItem ? styles.surahTile : styles.surahTileSpaced;
-
-      return (
-        <PressableScale
-          style={itemStyle}
-          onPress={() => handleSelect(item.surahNumber)}
-        >
-          <View style={styles.surahTileRow}>
-            <Text style={styles.surahNumber}>{item.surahNumber}</Text>
-            <Text style={styles.surahArabic}>{item.arabicName}</Text>
-          </View>
-          <Text style={styles.surahEnglish}>{item.englishName}</Text>
-          <Text style={styles.surahMeta}>
-            {item.ayahCount} ayāt
-          </Text>
-        </PressableScale>
-      );
+      return renderTile(item, itemStyle, () => handleSelect(item.surahNumber));
     },
-    [dataLength, handleSelect, numColumns, styles],
+    [dataLength, handleSelect, numColumns, renderTile, styles],
   );
 
   const keyExtractor = useCallback((item: SurahItem) => {
     return String(item.surahNumber);
   }, []);
 
+  const popularRows = useMemo(() => {
+    const rows: SurahItem[][] = [];
+    for (let i = 0; i < popularSurahs.length; i += numColumns) {
+      rows.push(popularSurahs.slice(i, i + numColumns));
+    }
+    return rows;
+  }, [popularSurahs, numColumns]);
+
   const showEmptyState =
-    trimmedQuery.length > 0 &&
+    hasQuery &&
     data.length === 0 &&
     ayahSearchResults.length === 0 &&
     !juzSearchResult;
 
   const hasSearchResults =
-    trimmedQuery.length > 0 &&
-    (ayahSearchResults.length > 0 || juzSearchResult !== null);
+    hasQuery && (ayahSearchResults.length > 0 || juzSearchResult !== null);
 
-  const listHeaderComponent = hasSearchResults ? (
+  const searchResultsHeader = hasSearchResults ? (
     <View style={styles.headerContainer}>
       {ayahSearchResults.length > 0 ? (
         <View style={styles.ayahResultsContainer}>
@@ -178,6 +222,57 @@ function SurahTab({
     </View>
   ) : null;
 
+  const defaultHeader = (
+    <View style={styles.defaultHeader}>
+      {lastRead ? (
+        <PressableScale
+          style={styles.continueCard}
+          accessibilityRole="button"
+          onPress={() =>
+            handleSelectAyah(lastRead.surahNumber, lastRead.ayahNumber)
+          }
+        >
+          <Text style={styles.continueLabel}>Continue reading</Text>
+          <View style={styles.continueTitleRow}>
+            <Text style={styles.continueTitle}>{lastRead.englishName}</Text>
+            <Text style={styles.continueArabic}>{lastRead.arabicName}</Text>
+          </View>
+          <Text style={styles.continueMeta}>Ayah {lastRead.ayahNumber}</Text>
+        </PressableScale>
+      ) : null}
+
+      <Text style={styles.sectionHeading}>Popular</Text>
+      {popularRows.map((row, rowIndex) => (
+        <View key={`popular-row-${rowIndex}`} style={styles.popularRow}>
+          {row.map((item, i) =>
+            renderTile(
+              item,
+              i === row.length - 1 ? styles.surahTile : styles.surahTileSpaced,
+              () => handleSelect(item.surahNumber),
+            ),
+          )}
+        </View>
+      ))}
+
+      {showAllSurahs ? (
+        <Text style={[styles.sectionHeading, styles.allHeading]}>
+          All Sūrahs
+        </Text>
+      ) : (
+        <PressableScale
+          style={styles.allButton}
+          accessibilityRole="button"
+          onPress={() => setShowAllSurahs(true)}
+        >
+          <Text style={styles.allButtonText}>All Sūrahs</Text>
+          <Text style={styles.allButtonChevron}>›</Text>
+        </PressableScale>
+      )}
+    </View>
+  );
+
+  const listHeaderComponent = hasQuery ? searchResultsHeader : defaultHeader;
+
   const stickySearch = (
     <View style={styles.searchContainer}>
       <BottomSheetTextInput
@@ -203,6 +298,9 @@ function SurahTab({
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         numColumns={numColumns}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={5}
         ListHeaderComponent={listHeaderComponent}
         ListEmptyComponent={
           showEmptyState
@@ -214,7 +312,10 @@ function SurahTab({
             : null
         }
         style={styles.list}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: bottomInset + 32 },
+        ]}
         columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="always"
@@ -250,6 +351,77 @@ const createStyles = (theme: AppTheme) => {
     },
     columnWrapper: {
       paddingBottom: 12,
+    },
+    defaultHeader: {
+      paddingTop: 4,
+    },
+    continueCard: {
+      borderRadius: radii.row,
+      borderCurve: "continuous",
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: withOpacity(themeColors.accent, isLight ? 0.16 : 0.14),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, isLight ? 0.4 : 0.35),
+      marginBottom: 16,
+    },
+    continueLabel: {
+      color: isLight ? themeColors.primaryOutline : themeColors.accent,
+      fontSize: 12,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+      marginBottom: 4,
+    },
+    continueTitleRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    continueTitle: {
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    continueArabic: {
+      color: themeColors.accent,
+      fontSize: 17,
+    },
+    continueMeta: {
+      color: isLight
+        ? withOpacity(themeColors.grayDark, 0.94)
+        : withOpacity(themeColors.white, 0.6),
+      fontSize: 12,
+      marginTop: 2,
+    },
+    popularRow: {
+      flexDirection: "row",
+    },
+    allHeading: {
+      marginTop: 4,
+    },
+    allButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 13,
+      borderRadius: radii.row,
+      borderCurve: "continuous",
+      backgroundColor: withOpacity(themeColors.white, 0.05),
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.accent, 0.3),
+      marginTop: 2,
+    },
+    allButtonText: {
+      color: isLight ? themeColors.offWhite : themeColors.white,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    allButtonChevron: {
+      color: themeColors.accent,
+      fontSize: 18,
+      marginLeft: 6,
+      marginTop: -2,
     },
     headerContainer: {
       marginBottom: 14,

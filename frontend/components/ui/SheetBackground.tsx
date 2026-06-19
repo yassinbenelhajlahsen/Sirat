@@ -16,6 +16,7 @@ type Props = BottomSheetBackgroundProps & {
   testID?: string;
   fadeToSolidFrom?: number;
   solid?: boolean;
+  opaque?: boolean;
 };
 
 // Real iOS 26 liquid glass over the map at peek/half (translucent fallback
@@ -31,6 +32,7 @@ export default function SheetBackground({
   testID,
   fadeToSolidFrom = 1,
   solid = false,
+  opaque = false,
 }: Props) {
   const { theme } = useTheme();
   const colors = theme.colors;
@@ -46,6 +48,26 @@ export default function SheetBackground({
   }));
 
   const blurTint = theme.name === "light" ? "light" : "dark";
+
+  // Fully opaque (no GlassView/BlurView) — a flat vertical gradient. Used where a
+  // live backdrop filter is too costly: the Mosque sheet over a continuously
+  // redrawing map, and as the Navigator's perf fallback. No per-frame readback.
+  if (opaque) {
+    return (
+      <View
+        testID={testID}
+        pointerEvents="none"
+        style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+      >
+        <LinearGradient
+          colors={[colors.primaryDeep, colors.primary]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+    );
+  }
 
   if (solid) {
     return (

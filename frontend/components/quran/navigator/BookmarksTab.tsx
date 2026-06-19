@@ -29,6 +29,7 @@ type BookmarksTabProps = {
   bookmarks: readonly BookmarkNavigatorItem[];
   filteredBookmarks: readonly BookmarkNavigatorItem[];
   bookmarkSearchQuery: string;
+  bottomInset?: number;
   onBookmarkSearchQueryChange: (value: string) => void;
   onSelectBookmark: (bookmark: QuranBookmark) => void;
   onDeleteBookmark: (bookmark: QuranBookmark) => void;
@@ -197,6 +198,7 @@ function BookmarksTab({
   bookmarks,
   filteredBookmarks,
   bookmarkSearchQuery,
+  bottomInset = 0,
   onBookmarkSearchQueryChange,
   onSelectBookmark,
   onDeleteBookmark,
@@ -218,6 +220,7 @@ function BookmarksTab({
       style={styles.scrollView}
       contentContainerStyle={[
         styles.contentContainer,
+        { paddingBottom: bottomInset + 24 },
         !hasBookmarks && styles.contentContainerEmpty,
       ]}
       showsVerticalScrollIndicator={false}
