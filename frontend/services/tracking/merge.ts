@@ -1,5 +1,8 @@
 import type { Cell, Habit, HabitLog, PrayerLog } from "./types";
 
+// Last-write-wins by updatedAt. On an exact tie, the LOCAL value is kept —
+// local is the source of truth in our offline-first model; an equal-stamped
+// remote never overwrites it.
 function pickCell<T>(a: Cell<T> | undefined, b: Cell<T> | undefined): Cell<T> | undefined {
   if (!a) return b;
   if (!b) return a;
@@ -42,6 +45,7 @@ export function mergeHabitLogs(local: HabitLog, remote: HabitLog): HabitLog {
   return out;
 }
 
+// On equal updatedAt, keeps the local value (same tie-break rule as pickCell).
 export function mergeHabits(local: Habit[], remote: Habit[]): Habit[] {
   const byId = new Map<string, Habit>();
   for (const h of local) byId.set(h.id, h);
