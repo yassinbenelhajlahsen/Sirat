@@ -4,7 +4,7 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlassSurface from "@/components/ui/GlassSurface";
@@ -23,6 +23,7 @@ import { useHomePrayerTimes } from "../../hooks/useHomePrayerTimes";
 import { useKeyboardAutoScroll } from "../../hooks/useKeyboardAutoScroll";
 import useModalTransition from "../../hooks/useModalTransition";
 import { usePrayerLog } from "@/hooks/usePrayerLog";
+import { useTrackingStats } from "@/hooks/useTrackingStats";
 import { dateKeyFromDate } from "@/services/holidayService";
 import type { PrayerName } from "@/services/prayerTracker";
 
@@ -54,6 +55,7 @@ export default function Home() {
   const today = new Date();
   const todayKey = dateKeyFromDate(today);
   const { statuses, setStatus, clearStatus } = usePrayerLog(todayKey);
+  const stats = useTrackingStats();
   const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
   const greeting = getGreeting(today);
@@ -185,6 +187,20 @@ export default function Home() {
             statuses={statuses}
             onPressPrayer={(name, label) => setSheet({ name, label })}
           />
+          <PressableScale
+            onPress={() => router.push("/Tracker")}
+            accessibilityRole="button"
+            accessibilityLabel="View tracker and habits"
+            style={styles.trackerRow}
+          >
+            <View style={styles.streakChip}>
+              <Text style={styles.flame}>🔥</Text>
+              <Caption color={colors.accent} style={styles.streakChipText}>
+                {stats?.streak ?? 0} day streak
+              </Caption>
+            </View>
+            <Caption color={withOpacity(colors.white, 0.7)}>View tracker &amp; habits →</Caption>
+          </PressableScale>
         </View>
 
         {/* Dua section (logic unchanged) */}
@@ -232,6 +248,16 @@ const createStyles = (theme: AppTheme) => {
     },
     heroBadgeText: { fontWeight: "700" },
     arcSlot: { marginTop: spacing.lg },
+    trackerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: spacing.md,
+      paddingHorizontal: spacing.xs,
+    },
+    streakChip: { flexDirection: "row", alignItems: "center", gap: 4 },
+    streakChipText: { fontWeight: "700" },
+    flame: { fontSize: 13 },
     duaSection: { position: "relative", marginTop: spacing.lg },
   });
 };
