@@ -37,7 +37,7 @@ describe("tracking/habits", () => {
     const svc = loadService();
     const a = await svc.createHabit({ name: "A", icon: "i", frequency: { type: "daily" } });
     const b = await svc.createHabit({ name: "B", icon: "i", frequency: { type: "daily" } });
-    const c = await svc.createHabit({ name: "C", icon: "i", frequency: { type: "daily" } });
+    await svc.createHabit({ name: "C", icon: "i", frequency: { type: "daily" } });
 
     await svc.updateHabit(a.id, { archived: true });
     await svc.deleteHabit(b.id);
@@ -45,7 +45,6 @@ describe("tracking/habits", () => {
     const active = await svc.getActiveHabits();
     expect(active.map((h) => h.name)).toEqual(["C"]);
     expect((await svc.getAllHabits()).find((h) => h.id === b.id)?.deletedAt).toBe(1700000000000);
-    void c;
   });
 
   it("reorderHabits rewrites order by id position", async () => {

@@ -55,7 +55,7 @@ async function persist(habits: Habit[]): Promise<void> {
 }
 
 function dateKeyNow(): string {
-  const d = new Date();
+  const d = new Date(nowMs());
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate(),
   ).padStart(2, "0")}`;
@@ -110,8 +110,9 @@ export async function reorderHabits(orderedIds: string[]): Promise<void> {
 
 export async function deleteHabit(id: string): Promise<void> {
   const all = await getAllHabits();
+  const ts = nowMs();
   const next = all.map((h) =>
-    h.id === id ? { ...h, deletedAt: nowMs(), updatedAt: nowMs() } : h,
+    h.id === id ? { ...h, deletedAt: ts, updatedAt: ts } : h,
   );
   await persist(next);
 }
