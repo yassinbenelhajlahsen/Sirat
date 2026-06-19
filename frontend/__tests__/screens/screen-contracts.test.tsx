@@ -140,6 +140,17 @@ jest.mock("@/hooks/usePrayerLog", () => ({
   usePrayerLog: jest.fn(),
 }));
 
+jest.mock("@/hooks/useTrackingStats", () => ({
+  useTrackingStats: jest.fn(() => ({
+    streak: 0,
+    completion: { overall: 0, byPrayer: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } },
+    qada: 0,
+    dailyScores: [],
+    year: 2026,
+    monthIndex0: 2,
+  })),
+}));
+
 jest.mock("@/context/QuranAudioProvider", () => ({
   useQuranAudioController: jest.fn(),
 }));
