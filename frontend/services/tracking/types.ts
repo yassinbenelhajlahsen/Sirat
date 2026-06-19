@@ -21,7 +21,7 @@ export type PrayerLog = Record<
 
 export type HabitFrequency =
   | { type: "daily" }
-  | { type: "weekly"; timesPerWeek: number };
+  | { type: "weekly"; days: number[] };
 
 export type HabitReminder = { enabled: boolean; time?: string };
 

@@ -9,7 +9,7 @@ const habit: Habit = {
   id: "h1",
   name: "Read Qur'an",
   icon: "book-outline",
-  frequency: { type: "weekly", timesPerWeek: 3 },
+  frequency: { type: "weekly", days: [1, 4] },
   order: 0,
   archived: false,
   createdAtKey: "2026-06-01",
@@ -21,7 +21,7 @@ const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
 describe("frequencyLabel", () => {
   it("formats daily and weekly", () => {
     expect(frequencyLabel({ type: "daily" })).toBe("Daily");
-    expect(frequencyLabel({ type: "weekly", timesPerWeek: 3 })).toBe("3× / week");
+    expect(frequencyLabel({ type: "weekly", days: [1, 4] })).toBe("Mon, Thu");
   });
 });
 
@@ -44,7 +44,7 @@ describe("HabitRow", () => {
       ),
     );
     expect(getByText("Read Qur'an")).toBeTruthy();
-    expect(getByText("3× / week")).toBeTruthy();
+    expect(getByText("Mon, Thu")).toBeTruthy();
     fireEvent.press(getByLabelText("Archive Read Qur'an"));
     expect(onArchive).toHaveBeenCalled();
     fireEvent.press(getByLabelText("Edit Read Qur'an"));

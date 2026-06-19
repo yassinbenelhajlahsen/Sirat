@@ -19,6 +19,14 @@ function emit(): void {
   }
 }
 
+function migrateHabitFrequency(h: Habit): Habit {
+  const f = h.frequency as { type?: string; days?: unknown };
+  if (f?.type === "weekly" && !Array.isArray(f.days)) {
+    return { ...h, frequency: { type: "daily" } };
+  }
+  return h;
+}
+
 export async function getAllHabits(): Promise<Habit[]> {
   if (cache) return cache;
   if (!loadPromise) {
@@ -26,7 +34,9 @@ export async function getAllHabits(): Promise<Habit[]> {
       try {
         const raw = await AsyncStorage.getItem(HABITS_STORAGE_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
-        cache = Array.isArray(parsed) ? (parsed as Habit[]) : [];
+        cache = Array.isArray(parsed)
+          ? (parsed as Habit[]).map(migrateHabitFrequency)
+          : [];
       } catch {
         cache = [];
       } finally {

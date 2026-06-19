@@ -23,7 +23,7 @@ describe("useHabits", () => {
     const { result } = renderHook(() => useHabits());
     let id = "";
     await act(async () => {
-      const h = await result.current.create({ name: "Tahajjud", icon: "moon-outline", frequency: { type: "weekly", timesPerWeek: 3 } });
+      const h = await result.current.create({ name: "Tahajjud", icon: "moon-outline", frequency: { type: "weekly", days: [1, 4] } });
       id = h.id;
     });
     await waitFor(() => expect(result.current.habits.some((h) => h.id === id)).toBe(true));
