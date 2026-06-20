@@ -54,6 +54,7 @@ describe("SignIn screen", () => {
       expect.objectContaining({ strategy: "oauth_google" }),
     );
     await waitFor(() => expect(mockSetActive).toHaveBeenCalledWith({ session: "sess_1" }));
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
   });
 
   it("starts the Apple SSO flow with the apple strategy", async () => {
@@ -65,5 +66,6 @@ describe("SignIn screen", () => {
         expect.objectContaining({ strategy: "oauth_apple" }),
       ),
     );
+    await waitFor(() => expect(mockSetActive).toHaveBeenCalledWith({ session: "sess_2" }));
   });
 });
