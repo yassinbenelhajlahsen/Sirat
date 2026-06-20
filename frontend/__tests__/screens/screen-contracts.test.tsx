@@ -101,6 +101,22 @@ jest.mock("@/hooks/useSettingsPermissions", () => ({
   useSettingsPermissions: jest.fn(),
 }));
 
+jest.mock("@/hooks/useAuthState", () => ({
+  useAuthState: jest.fn(() => ({
+    isLoaded: true,
+    isSignedIn: false,
+    userId: null,
+    email: null,
+  })),
+}));
+
+jest.mock("@/hooks/useAccountActions", () => ({
+  useAccountActions: jest.fn(() => ({
+    signOut: jest.fn(),
+    deleteAccount: jest.fn(),
+  })),
+}));
+
 jest.mock("@/components/settings/PickerDialog", () => {
   const { View } = require("react-native");
   return { __esModule: true, default: () => <View /> };
