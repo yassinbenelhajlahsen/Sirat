@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlassSurface from "@/components/ui/GlassSurface";

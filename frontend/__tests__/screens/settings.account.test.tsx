@@ -2,14 +2,13 @@ import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 
 const mockPush = jest.fn();
-const mockBack = jest.fn();
 const mockDeleteAccount = jest.fn().mockResolvedValue(undefined);
 const mockSignOut = jest.fn().mockResolvedValue(undefined);
 
 // --- expo-router ---
 jest.mock("expo-router", () => ({
   router: { push: (p: string) => mockPush(p), back: jest.fn() },
-  useRouter: () => ({ push: mockPush, back: mockBack }),
+  useRouter: () => ({ push: mockPush, back: jest.fn() }),
 }));
 
 // --- account hooks ---
