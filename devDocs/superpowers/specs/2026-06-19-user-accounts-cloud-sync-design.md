@@ -215,7 +215,10 @@ Theme / prayer settings are currently raw, unstamped values. To LWW-merge them:
   guard); settings-stamping tests; adapter `applyMerged` tests — following the
   existing Babel-jest static-mock pattern (no dynamic `import()`).
 - **Drift guard:** a shared merge **test vector** runs on both frontend and
-  backend.
+  backend. Phase 1 ships a backend-only `mergeSettings` (no frontend counterpart
+  until Phase 3's settings stamping). When Phase 3 adds frontend settings
+  merging, add `mergeSettings` to the shared merge test vector so both sides are
+  drift-guarded.
 
 ## Infra / config
 
