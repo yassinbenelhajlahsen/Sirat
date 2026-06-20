@@ -30,7 +30,7 @@ app.set("trust proxy", resolveTrustProxy());
 // /api/sync has its own 1MB parser on the router; skip the global 16KB parser for those paths.
 const defaultJsonParser = express.json({ limit: "16kb" });
 app.use((req, res, next) => {
-  if (req.path.startsWith("/api/sync")) return next();
+  if (req.path === "/api/sync" || req.path.startsWith("/api/sync/")) return next();
   return defaultJsonParser(req, res, next);
 });
 app.use(

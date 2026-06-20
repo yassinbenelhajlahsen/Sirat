@@ -24,6 +24,10 @@ function mergeDomain(domain: SyncDomain, stored: any, incoming: any): unknown {
       return mergeHabits(stored, incoming);
     case "settings":
       return mergeSettings(stored, incoming);
+    default: {
+      const _exhaustive: never = domain;
+      throw new Error(`Unhandled sync domain: ${String(_exhaustive)}`);
+    }
   }
 }
 
