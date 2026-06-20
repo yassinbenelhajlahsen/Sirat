@@ -6,7 +6,7 @@
 
 **Architecture:** Isolate every direct Clerk-SDK touch behind 2–3 thin adapter files (`services/auth/authToken.ts`, `hooks/useAuthState.ts`) so the rest of the app (apiClient, Settings UI, account actions) depends on *our* testable functions, not Clerk's version-sensitive API. The `ClerkProvider` wraps the root layout; a `SignIn` modal route runs the OAuth flow via `useSSO`/`startSSOFlow`; Settings gains an account section. The OAuth flow itself and the native provider can only be verified on a device/dev build — those tasks are marked **[native — manual verify]**; everything behind the adapters is **[TDD]**.
 
-**Tech Stack:** Expo 54 / RN 0.81 / Expo Router 6, `@clerk/clerk-expo` (Clerk Expo SDK), `expo-secure-store` (token cache), `expo-web-browser` (already installed; OAuth browser flow), Jest (Babel preset, `@testing-library/react-native`).
+**Tech Stack:** Expo 54 / RN 0.81 / Expo Router 6, `@clerk/expo` (Clerk Expo SDK), `expo-secure-store` (token cache), `expo-web-browser` (already installed; OAuth browser flow), Jest (Babel preset, `@testing-library/react-native`).
 
 **Spec:** `devDocs/superpowers/specs/2026-06-19-user-accounts-cloud-sync-design.md`
 **Builds on:** Phase 1 backend (`POST /api/sync`, `DELETE /api/account`, Clerk JWT verification) on branch `feat/auth`.
@@ -18,7 +18,7 @@
 - **Frontend Jest is Babel-based** (NOT `--experimental-vm-modules`). Dynamic `await import()` in tests does NOT work. Use static imports + top-level `jest.mock()` + mutate mock properties per test (see existing `frontend/__tests__` patterns).
 - **Tests that mock `react-native-safe-area-context` must include** `useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 })` alongside `SafeAreaView`/`SafeAreaProvider`.
 - **Backend calls go through `@/services/apiClient`** (`apiFetch`/`apiPost`). The sign-out/delete flow uses `apiFetch`, never raw `fetch`.
-- **Clerk package + API surface is version-sensitive.** Where a step calls a Clerk SDK symbol (package name, `useSSO`, `getClerkInstance`, `signOut`, `useAuth`/`useUser` fields), the step says **[VERIFY vs installed Clerk docs]** — the implementer MUST confirm the exact symbol against the installed `@clerk/clerk-expo` version's docs/types before finalizing, and report the confirmed signature. Do not assume from memory.
+- **Clerk package + API surface is version-sensitive.** Where a step calls a Clerk SDK symbol (package name, `useSSO`, `getClerkInstance`, `signOut`, `useAuth`/`useUser` fields), the step says **[VERIFY vs installed Clerk docs]** — the implementer MUST confirm the exact symbol against the installed `@clerk/expo` version's docs/types before finalizing, and report the confirmed signature. Do not assume from memory.
 - **Optional login:** the app stays fully usable signed-out. Nothing in this phase gates existing features behind auth (sync, which would need auth, is Phase 3).
 - **Commit hygiene:** NO `Co-Authored-By`, NO trailers, NO "Generated with" lines. Exact `-m` messages from each task.
 - **No `git push`** unless explicitly asked.
@@ -47,15 +47,15 @@ These must be done by the project owner before the OAuth flow can be verified en
 - Modify/Create: `frontend/.env.example` (document the new env var)
 
 **Interfaces:**
-- Produces: `@clerk/clerk-expo` + `expo-secure-store` installed; `app.config.js` `plugins` includes the secure-store and Clerk plugins; `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` documented.
+- Produces: `@clerk/expo` + `expo-secure-store` installed; `app.config.js` `plugins` includes the secure-store and Clerk plugins; `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` documented.
 
 - [ ] **Step 1: Install the packages**  **[VERIFY vs installed Clerk docs]**
 
-Run (from `frontend/`). Confirm the current package name + companion packages against Clerk's Expo quickstart (historically `@clerk/clerk-expo`; recent docs may show `@clerk/expo`). Use whatever the current quickstart prescribes:
+Run (from `frontend/`). Confirm the current package name + companion packages against Clerk's Expo quickstart (historically `@clerk/expo`; recent docs may show `@clerk/expo`). Use whatever the current quickstart prescribes:
 ```bash
-npx expo install @clerk/clerk-expo expo-secure-store
+npx expo install @clerk/expo expo-secure-store
 ```
-Expected: `package.json` gains `@clerk/clerk-expo` and `expo-secure-store`. (`expo-web-browser` and `expo-dev-client` are already present.)
+Expected: `package.json` gains `@clerk/expo` and `expo-secure-store`. (`expo-web-browser` and `expo-dev-client` are already present.)
 
 - [ ] **Step 2: Add the config plugins**
 
@@ -111,7 +111,7 @@ import { getAuthToken } from "@/services/auth/authToken";
 const mockGetToken = jest.fn();
 const mockGetClerkInstance = jest.fn();
 
-jest.mock("@clerk/clerk-expo", () => ({
+jest.mock("@clerk/expo", () => ({
   getClerkInstance: () => mockGetClerkInstance(),
 }));
 
@@ -149,7 +149,7 @@ Expected: FAIL — cannot find module `@/services/auth/authToken`.
 
 Create `frontend/services/auth/authToken.ts`. Confirm the non-hook accessor against the installed Clerk version — `getClerkInstance()` exposing `.session?.getToken()` is the documented pattern; verify the exact symbol/shape and adjust if the installed version differs:
 ```ts
-import { getClerkInstance } from "@clerk/clerk-expo";
+import { getClerkInstance } from "@clerk/expo";
 
 /**
  * Returns the active Clerk session JWT for attaching to backend requests,
@@ -269,7 +269,7 @@ Expected: PASS (2 tests).
 
 - [ ] **Step 5: Guard against regressions in existing apiClient consumers**
 
-Run the existing apiClient/dua tests to confirm the new `await getAuthToken()` (which other suites don't mock) defaults safely. If a suite that imports `apiClient` now fails because `@clerk/clerk-expo` isn't mocked, add to that suite a `jest.mock("@/services/auth/authToken", () => ({ getAuthToken: async () => null }))`. Run:
+Run the existing apiClient/dua tests to confirm the new `await getAuthToken()` (which other suites don't mock) defaults safely. If a suite that imports `apiClient` now fails because `@clerk/expo` isn't mocked, add to that suite a `jest.mock("@/services/auth/authToken", () => ({ getAuthToken: async () => null }))`. Run:
 ```bash
 npm test -- --runTestsByPath __tests__/services/duaService.test.ts
 ```
@@ -302,7 +302,7 @@ import { useAuthState } from "@/hooks/useAuthState";
 
 const mockUseAuth = jest.fn();
 const mockUseUser = jest.fn();
-jest.mock("@clerk/clerk-expo", () => ({
+jest.mock("@clerk/expo", () => ({
   useAuth: () => mockUseAuth(),
   useUser: () => mockUseUser(),
 }));
@@ -350,7 +350,7 @@ Expected: FAIL — cannot find module `@/hooks/useAuthState`.
 
 Create `frontend/hooks/useAuthState.ts`. Confirm `useAuth` returns `{ isLoaded, isSignedIn, userId }` and `useUser` returns `{ user }` with `primaryEmailAddress.emailAddress` in the installed version:
 ```ts
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/expo";
 
 export type AuthState = {
   isLoaded: boolean;
@@ -389,7 +389,7 @@ git commit -m "feat(auth): add useAuthState hook wrapper over Clerk"
 
 **Files:**
 - Modify: `frontend/app/_layout.tsx`
-- Modify (if needed): existing screen-contract / layout tests that render the root, to mock `@clerk/clerk-expo`.
+- Modify (if needed): existing screen-contract / layout tests that render the root, to mock `@clerk/expo`.
 
 **Interfaces:**
 - Consumes: `ClerkProvider` + `tokenCache` from the installed Clerk package.
@@ -397,10 +397,10 @@ git commit -m "feat(auth): add useAuthState hook wrapper over Clerk"
 
 - [ ] **Step 1: Add the provider**  **[VERIFY vs installed Clerk docs]**
 
-In `frontend/app/_layout.tsx`, import (confirm the `tokenCache` import path against the installed version — quickstart shows `@clerk/clerk-expo/token-cache`):
+In `frontend/app/_layout.tsx`, import (confirm the `tokenCache` import path against the installed version — quickstart shows `@clerk/expo/token-cache`):
 ```tsx
-import { ClerkProvider } from "@clerk/clerk-expo";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { ClerkProvider } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
 ```
 Read the publishable key near the top of the module (after the existing storage-key constants):
 ```tsx
@@ -424,14 +424,14 @@ export default function RootLayout() {
 
 Any test that renders `app/_layout` or mounts the full tree (e.g. `__tests__/screens/screen-contracts.test.tsx`) must mock Clerk so `ClerkProvider` renders its children inline. Add to those suites:
 ```tsx
-jest.mock("@clerk/clerk-expo", () => ({
+jest.mock("@clerk/expo", () => ({
   ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
   useAuth: () => ({ isLoaded: true, isSignedIn: false, userId: null }),
   useUser: () => ({ user: null }),
   useSSO: () => ({ startSSOFlow: jest.fn() }),
   getClerkInstance: () => ({ session: null }),
 }));
-jest.mock("@clerk/clerk-expo/token-cache", () => ({ tokenCache: {} }));
+jest.mock("@clerk/expo/token-cache", () => ({ tokenCache: {} }));
 ```
 Run the full suite to find every affected file:
 ```bash
@@ -474,7 +474,7 @@ const mockStartSSOFlow = jest.fn();
 const mockSetActive = jest.fn();
 const mockBack = jest.fn();
 
-jest.mock("@clerk/clerk-expo", () => ({
+jest.mock("@clerk/expo", () => ({
   useSSO: () => ({ startSSOFlow: mockStartSSOFlow }),
 }));
 jest.mock("@/hooks/useAuthState", () => ({
@@ -534,7 +534,7 @@ Expected: FAIL — cannot find module `@/app/SignIn`.
 Create `frontend/app/SignIn.tsx`. The structure below matches Clerk's Expo `useSSO` custom-flow shape — **verify the exact `startSSOFlow` argument keys, the returned `createdSessionId`/`setActive` shape, and the `redirectUrl` helper against the installed version's docs**, and adjust if different. Use `useTheme()` + `createStyles(theme)`; Ionicons for the button glyphs (no emoji). Build the redirect URL with the app scheme (`sirat`):
 ```tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useSSO } from "@clerk/clerk-expo";
+import { useSSO } from "@clerk/expo";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect } from "react";
@@ -799,7 +799,7 @@ import { useAccountActions } from "@/hooks/useAccountActions";
 
 const mockSignOut = jest.fn();
 const mockApiFetch = jest.fn();
-jest.mock("@clerk/clerk-expo", () => ({ useAuth: () => ({ signOut: mockSignOut }) }));
+jest.mock("@clerk/expo", () => ({ useAuth: () => ({ signOut: mockSignOut }) }));
 jest.mock("@/services/apiClient", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
 
 describe("useAccountActions", () => {
@@ -846,7 +846,7 @@ Expected: FAIL — cannot find module `@/hooks/useAccountActions`.
 Create `frontend/hooks/useAccountActions.ts` (confirm `useAuth().signOut` exists in the installed version):
 ```ts
 import { useCallback } from "react";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@clerk/expo";
 
 import { apiFetch } from "@/services/apiClient";
 
@@ -1047,4 +1047,4 @@ Out of Phase 2 scope (correct): the sync engine, adapters, settings stamping, sy
 
 **Type/name consistency:** `getAuthToken()` (T2) consumed by T3; `useAuthState()` shape `{ isLoaded, isSignedIn, userId, email }` (T4) consumed by T6/T7/T9; `useAccountActions()` `{ signOut, deleteAccount }` (T8) consumed by T9; `AccountSection` props `{ onSignIn, onSignOut, onDeleteAccount }` (T7) consumed by T9; `DELETE /api/account` matches the Phase 1 backend route. The `oauth_apple`/`oauth_google` strategy strings and `setActive({ session })` shape are marked for verification against the installed Clerk version.
 
-**Known risk:** the exact `@clerk/clerk-expo` API (`useSSO` argument keys, `getClerkInstance().session.getToken()`, `tokenCache` import path, `useAuth`/`useUser` fields) can differ by version. The adapter isolation means a wrong guess is contained to one small file and caught by that file's test or on-device check — but every such call is tagged `[VERIFY vs installed Clerk docs]` so the implementer confirms before finalizing.
+**Known risk:** the exact `@clerk/expo` API (`useSSO` argument keys, `getClerkInstance().session.getToken()`, `tokenCache` import path, `useAuth`/`useUser` fields) can differ by version. The adapter isolation means a wrong guess is contained to one small file and caught by that file's test or on-device check — but every such call is tagged `[VERIFY vs installed Clerk docs]` so the implementer confirms before finalizing.
