@@ -93,17 +93,6 @@ export function unwrapPrayerLog(log: PrayerLog): StatusesByDay {
   return out;
 }
 
-/** Sunday-started week label "YYYY-MM-DD" derived from the week's Sunday date key. */
-export function weekKey(dateKey: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  const sunday = new Date(date);
-  sunday.setDate(date.getDate() - date.getDay()); // back up to Sunday
-  return `${sunday.getFullYear()}-${String(sunday.getMonth() + 1).padStart(2, "0")}-${String(
-    sunday.getDate(),
-  ).padStart(2, "0")}`;
-}
-
 export function habitStreak(
   habit: Pick<Habit, "frequency">,
   doneByDay: Record<string, Record<string, boolean>>,

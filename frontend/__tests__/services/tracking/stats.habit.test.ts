@@ -1,12 +1,6 @@
-import { habitStreak, weekKey } from "@/services/tracking/stats";
+import { habitStreak } from "@/services/tracking/stats";
 
 describe("tracking/stats habit", () => {
-  it("weekKey groups consecutive days into the same Sunday-started week", () => {
-    // 2026-06-14 is a Sunday; 2026-06-20 is the following Saturday.
-    expect(weekKey("2026-06-14")).toBe(weekKey("2026-06-20"));
-    expect(weekKey("2026-06-14")).not.toBe(weekKey("2026-06-21"));
-  });
-
   it("daily streak counts consecutive done days, today not penalized", () => {
     const done = {
       "2026-06-18": { h1: true },
