@@ -69,7 +69,11 @@ export async function syncDomains(userId: string, payload: SyncPayload): Promise
     await client.query("COMMIT");
     return { ...(merged as Omit<SyncResponse, "syncedAt">), syncedAt: new Date().toISOString() };
   } catch (err) {
-    await client.query("ROLLBACK");
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // ignore rollback failure; surface the original error
+    }
     throw err;
   } finally {
     client.release();

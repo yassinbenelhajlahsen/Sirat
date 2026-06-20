@@ -83,4 +83,20 @@ describe("syncService.syncDomains", () => {
     expect(client.query).toHaveBeenCalledWith("ROLLBACK");
     expect(client.release).toHaveBeenCalledTimes(1);
   });
+
+  it("surfaces the original error when ROLLBACK also throws", async () => {
+    const client = {
+      query: jest.fn(async (text: string) => {
+        if (text.includes("SELECT doc FROM sync_documents")) throw new Error("db down");
+        if (text === "ROLLBACK") throw new Error("rollback failed");
+        return { rows: [] };
+      }),
+      release: jest.fn(),
+    };
+    (mockConnect as any).mockResolvedValue(client);
+    const { syncDomains } = await import("../src/services/syncService.js");
+
+    await expect(syncDomains("user_abc", {})).rejects.toThrow("db down");
+    expect(client.release).toHaveBeenCalledTimes(1);
+  });
 });
