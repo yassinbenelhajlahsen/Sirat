@@ -407,7 +407,13 @@ function RootLayoutContent() {
                 />
                 <Stack.Screen
                   name="SignIn"
-                  options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
+                  options={{
+                    presentation: "formSheet",
+                    sheetAllowedDetents: [0.55],
+                    sheetGrabberVisible: true,
+                    sheetCornerRadius: 24,
+                    headerShown: false,
+                  }}
                 />
                 <Stack.Screen name="Tracker" options={{ animation: "slide_from_right" }} />
               </Stack>

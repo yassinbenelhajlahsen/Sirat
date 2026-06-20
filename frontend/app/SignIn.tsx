@@ -5,11 +5,13 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useCallback, useEffect } from "react";
-import { Text, TouchableOpacity, View, StyleSheet, Platform } from "react-native";
+import { Alert, Text, TouchableOpacity, View, StyleSheet, Platform } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
+import Screen from "@/components/ui/Screen";
+import GoogleIcon from "@/components/ui/GoogleIcon";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -35,8 +37,10 @@ export default function SignIn() {
         await setActive({ session: createdSessionId });
         router.back();
       }
-    } catch {
-      // User cancelled or flow failed — stay on screen
+    } catch (err: unknown) {
+      const error = err as { code?: string };
+      if (error?.code === "ERR_REQUEST_CANCELED") return;
+      Alert.alert("Sign-in failed", "Something went wrong. Please try again.");
     }
   }, [startSSOFlow]);
 
@@ -50,70 +54,61 @@ export default function SignIn() {
     } catch (err: unknown) {
       const error = err as { code?: string };
       if (error?.code === "ERR_REQUEST_CANCELED") return;
-      // Other errors — stay on screen
+      Alert.alert("Sign-in failed", "Something went wrong. Please try again.");
     }
   }, [startAppleAuthenticationFlow]);
 
   const { colors } = theme;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.grabber} />
+    <Screen safeArea={false}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Sign in to sync</Text>
+        <Text style={styles.subtitle}>
+          Back up your tracker and settings across devices. You can keep using Sirat without an
+          account.
+        </Text>
 
-      <Text style={styles.title}>Sign in to sync</Text>
-      <Text style={styles.subtitle}>
-        Back up your tracker and settings across devices. You can keep using Sirat without an
-        account.
-      </Text>
+        {Platform.OS === "ios" && (
+          <TouchableOpacity
+            style={styles.button}
+            accessibilityRole="button"
+            onPress={() => void signInWithApple()}
+          >
+            <Ionicons name="logo-apple" size={20} color={colors.white} />
+            <Text style={styles.buttonText}>Continue with Apple</Text>
+          </TouchableOpacity>
+        )}
 
-      {Platform.OS === "ios" && (
         <TouchableOpacity
           style={styles.button}
           accessibilityRole="button"
-          onPress={() => void signInWithApple()}
+          onPress={() => void signInWithGoogle()}
         >
-          <Ionicons name="logo-apple" size={20} color={colors.white} />
-          <Text style={styles.buttonText}>Continue with Apple</Text>
+          <GoogleIcon size={20} />
+          <Text style={styles.buttonText}>Continue with Google</Text>
         </TouchableOpacity>
-      )}
 
-      <TouchableOpacity
-        style={styles.button}
-        accessibilityRole="button"
-        onPress={() => void signInWithGoogle()}
-      >
-        <Ionicons name="logo-google" size={20} color={colors.white} />
-        <Text style={styles.buttonText}>Continue with Google</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => router.back()}
-        accessibilityRole="button"
-        accessibilityLabel="Not now"
-      >
-        <Text style={styles.dismiss}>Not now</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Not now"
+        >
+          <Text style={styles.dismiss}>Not now</Text>
+        </TouchableOpacity>
+      </View>
+    </Screen>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing, radii } = theme;
   return StyleSheet.create({
-    container: {
+    content: {
       flex: 1,
       padding: spacing.xxl,
       justifyContent: "center",
       gap: spacing.lg,
-      backgroundColor: colors.primaryDark,
-    },
-    grabber: {
-      width: 38,
-      height: 5,
-      borderRadius: radii.pill,
-      backgroundColor: withOpacity(colors.white, 0.28),
-      alignSelf: "center",
-      marginBottom: spacing.xl,
     },
     title: {
       fontSize: 28,

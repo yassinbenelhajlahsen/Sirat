@@ -1,4 +1,5 @@
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
 import { defaultTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import SignIn from "@/app/SignIn";
@@ -32,6 +33,15 @@ jest.mock("expo-web-browser", () => ({
 jest.mock("expo-auth-session", () => ({
   makeRedirectUri: jest.fn(() => "sirat://sso-callback"),
 }));
+jest.mock("expo-linear-gradient", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return {
+    LinearGradient: ({ children, ...props }: { children: React.ReactNode }) => (
+      <View {...props}>{children}</View>
+    ),
+  };
+});
 
 const mockUseTheme = useTheme as jest.Mock;
 
@@ -79,5 +89,27 @@ describe("SignIn screen", () => {
     fireEvent.press(getByText("Continue with Apple"));
     await waitFor(() => expect(mockStartApple).toHaveBeenCalledTimes(1));
     expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  it("shows an Alert on non-cancel Apple sign-in errors", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockStartApple.mockRejectedValue(new Error("network error"));
+    const { getByText } = render(<SignIn />);
+    fireEvent.press(getByText("Continue with Apple"));
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith("Sign-in failed", "Something went wrong. Please try again."),
+    );
+    alertSpy.mockRestore();
+  });
+
+  it("shows an Alert on non-cancel Google sign-in errors", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockStartSSOFlow.mockRejectedValue(new Error("oauth error"));
+    const { getByText } = render(<SignIn />);
+    fireEvent.press(getByText("Continue with Google"));
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith("Sign-in failed", "Something went wrong. Please try again."),
+    );
+    alertSpy.mockRestore();
   });
 });
