@@ -444,7 +444,7 @@ export default function CalendarScreen() {
                 onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
               />
               <View style={{ height: spacing.lg }} />
-              <HabitChecklist habits={habits} done={habitDone} onToggle={toggleHabit} />
+              <HabitChecklist habits={habits} done={habitDone} date={selectedDate} onToggle={toggleHabit} />
             </>
           ) : (
             <View style={styles.prompt}>

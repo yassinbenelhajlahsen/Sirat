@@ -8,27 +8,29 @@ import { Caption, Headline, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { Habit } from "@/services/habitTracker";
-import { frequencyLabel } from "@/utils/habitFrequency";
+import { frequencyLabel, isHabitDueOnDate } from "@/utils/habitFrequency";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
 type Props = {
   habits: Habit[];
   done: Record<string, boolean>;
+  date: Date;
   onToggle: (habitId: string) => void;
 };
 
-export default function HabitChecklist({ habits, done, onToggle }: Props) {
+export default function HabitChecklist({ habits, done, date, onToggle }: Props) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  if (habits.length === 0) return null;
+  const dueHabits = habits.filter((h) => isHabitDueOnDate(h.frequency, date));
+  if (dueHabits.length === 0) return null;
 
   return (
     <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
       <Title3 style={styles.title}>Habits</Title3>
-      {habits.map((habit) => {
+      {dueHabits.map((habit) => {
         const checked = done[habit.id] === true;
         return (
           <PressableScale
