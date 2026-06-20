@@ -50,6 +50,7 @@ describe("Account Routes Integration", () => {
     const res = await request(app).delete("/api/account").expect(200);
 
     expect(res.body).toEqual({ deleted: true });
+    expect(mockQuery).toHaveBeenCalledWith(`DELETE FROM users WHERE id = $1`, ["user_abc"]);
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -67,5 +68,6 @@ describe("Account Routes Integration", () => {
     const res = await request(app).delete("/api/account").expect(500);
 
     expect(res.body).toEqual({ error: "Account deletion failed" });
+    expect(mockQuery).toHaveBeenCalled();
   });
 });
