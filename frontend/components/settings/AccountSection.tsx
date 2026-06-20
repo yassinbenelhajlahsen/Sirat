@@ -1,9 +1,7 @@
-import { Text, View, StyleSheet } from "react-native";
-
-import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
 import SettingsRow from "@/components/settings/SettingsRow";
+import SettingsSection from "@/components/settings/SettingsSection";
 
 type Props = {
   onSignIn: () => void;
@@ -13,31 +11,34 @@ type Props = {
 
 export function AccountSection({ onSignIn, onSignOut, onDeleteAccount }: Props) {
   const { theme } = useTheme();
-  const styles = createStyles(theme);
   const { isSignedIn, email } = useAuthState();
 
   if (!isSignedIn) {
     return (
-      <View>
+      <SettingsSection label="Account">
         <SettingsRow
           first
           icon="person-circle-outline"
           title="Sign in"
+          subtitle="Sign in to sync your data"
           showChevron
           onPress={onSignIn}
           accessibilityLabel="Sign in"
         />
-      </View>
+      </SettingsSection>
     );
   }
 
   return (
-    <View>
-      {email ? (
-        <Text style={styles.email}>{email}</Text>
-      ) : null}
+    <SettingsSection label="Account">
       <SettingsRow
         first
+        icon="person-circle-outline"
+        title="Signed in"
+        subtitle={email ?? undefined}
+        accessibilityLabel="Account"
+      />
+      <SettingsRow
         icon="log-out-outline"
         title="Sign out"
         onPress={onSignOut}
@@ -50,19 +51,6 @@ export function AccountSection({ onSignIn, onSignOut, onDeleteAccount }: Props) 
         onPress={onDeleteAccount}
         accessibilityLabel="Delete account"
       />
-    </View>
+    </SettingsSection>
   );
 }
-
-const createStyles = (theme: AppTheme) => {
-  const { colors, spacing } = theme;
-  return StyleSheet.create({
-    email: {
-      fontSize: 13,
-      color: withOpacity(colors.white, 0.6),
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.xs,
-    },
-  });
-};
