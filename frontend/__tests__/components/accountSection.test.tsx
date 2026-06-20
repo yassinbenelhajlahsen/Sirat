@@ -1,4 +1,5 @@
 import { render, fireEvent } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 const mockUseAuthState = jest.fn();
 jest.mock("@/hooks/useAuthState", () => ({ useAuthState: () => mockUseAuthState() }));
@@ -37,5 +38,13 @@ describe("AccountSection", () => {
     expect(handlers.onSignOut).toHaveBeenCalledTimes(1);
     fireEvent.press(getByText("Delete account"));
     expect(handlers.onDeleteAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders the Delete account title in the danger color", () => {
+    mockUseAuthState.mockReturnValue({ isLoaded: true, isSignedIn: true, userId: "u1", email: null });
+    const { getByText } = render(<AccountSection {...handlers} />);
+    const titleEl = getByText("Delete account");
+    const flatStyle = StyleSheet.flatten(titleEl.props.style);
+    expect(flatStyle.color).toBe("#ff7070");
   });
 });

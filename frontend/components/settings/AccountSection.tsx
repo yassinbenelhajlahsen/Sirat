@@ -45,6 +45,7 @@ export function AccountSection({ onSignIn, onSignOut, onDeleteAccount }: Props) 
         accessibilityLabel="Sign out"
       />
       <SettingsRow
+        danger
         icon="trash-outline"
         title="Delete account"
         onPress={onDeleteAccount}

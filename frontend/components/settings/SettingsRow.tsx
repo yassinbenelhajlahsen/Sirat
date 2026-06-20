@@ -20,6 +20,7 @@ type SettingsRowProps = {
   disabled?: boolean;
   first?: boolean;
   accessibilityLabel?: string;
+  danger?: boolean;
 };
 
 export default function SettingsRow({
@@ -33,6 +34,7 @@ export default function SettingsRow({
   disabled,
   first,
   accessibilityLabel,
+  danger,
 }: SettingsRowProps) {
   const { theme } = useTheme();
   const { colors } = theme;
@@ -46,11 +48,11 @@ export default function SettingsRow({
 
   const content = (
     <View style={[styles.row, !first && styles.divider, disabled && styles.disabled]}>
-      <View style={styles.iconTile}>
-        <Ionicons name={icon} size={17} color={colors.accent} />
+      <View style={[styles.iconTile, danger && styles.iconTileDanger]}>
+        <Ionicons name={icon} size={17} color={danger ? colors.danger : colors.accent} />
       </View>
       <View style={[styles.textBlock, hasValue && styles.textBlockTight]}>
-        <Body color={colors.white} numberOfLines={1}>
+        <Body color={danger ? colors.danger : colors.white} numberOfLines={1}>
           {title}
         </Body>
         {subtitle ? (
@@ -125,6 +127,9 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: withOpacity(colors.accent, 0.14),
+    },
+    iconTileDanger: {
+      backgroundColor: withOpacity(colors.danger, 0.14),
     },
     textBlock: { flex: 1, minWidth: 0 },
     textBlockTight: { flex: 0, flexBasis: "auto" },
