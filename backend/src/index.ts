@@ -10,6 +10,7 @@ import holidayRoutes from "./routes/holiday.js";
 import mosqueRoutes from "./routes/mosque.js";
 import prayerTimesRoutes from "./routes/prayerTimes.js";
 import syncRoutes from "./routes/sync.js";
+import accountRoutes from "./routes/account.js";
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use("/api/mosque", mosqueRoutes);
 app.use("/api/prayer-times", prayerTimesRoutes);
 app.use("/api/holidays", holidayRoutes);
 app.use("/api/sync", syncRoutes);
+app.use("/api/account", accountRoutes);
 
 // Root health check
 app.get("/", (req, res) => {
