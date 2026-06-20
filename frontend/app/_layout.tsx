@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
 import { Ionicons } from "@expo/vector-icons";
 import { Fraunces_700Bold } from "@expo-google-fonts/fraunces";
 import { Asset } from "expo-asset";
@@ -36,6 +38,8 @@ import { getVersionHeaders } from "@/services/appVersion";
 ExpoSplash.preventAutoHideAsync().catch(() => {});
 const LAUNCH_BACKGROUND_COLOR = "#0E1117";
 SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
+
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 // Storage keys and events used elsewhere in your app
 export const PRAYER_SETTINGS_KEY = "prayerSettings";
@@ -163,9 +167,11 @@ export async function runInitialAppSync(
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <RootLayoutContent />
-    </ThemeProvider>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <ThemeProvider>
+        <RootLayoutContent />
+      </ThemeProvider>
+    </ClerkProvider>
   );
 }
 

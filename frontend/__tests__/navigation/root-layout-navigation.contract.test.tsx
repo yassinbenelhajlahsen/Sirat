@@ -2,6 +2,14 @@ import React from "react";
 import { render, waitFor } from "@testing-library/react-native";
 import { AppState } from "react-native";
 
+jest.mock("@clerk/expo", () => ({
+  ClerkProvider: ({ children }: { children: any }) => children,
+  useAuth: () => ({ isLoaded: true, isSignedIn: false, userId: null }),
+  useUser: () => ({ user: null }),
+  useSSO: () => ({ startSSOFlow: jest.fn() }),
+  getClerkInstance: () => ({ session: null }),
+}));
+jest.mock("@clerk/expo/token-cache", () => ({ tokenCache: {} }));
 jest.mock("@expo/vector-icons", () => ({ Ionicons: { font: {} } }));
 jest.mock("expo-asset", () => ({ Asset: { loadAsync: jest.fn(async () => {}) } }));
 jest.mock("expo-constants", () => ({ appOwnership: "expo" }));
