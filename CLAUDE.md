@@ -44,6 +44,8 @@ See `AGENTS.md` for full architecture details. Key points:
 
 **Monorepo layout:** `frontend/` (Expo 54 / React Native 0.81 / Expo Router 6), `backend/` (Express 4 + TypeScript API proxy), `docs/` (GitHub Pages site at `sirat.dev`), `plans/` (planning docs).
 
+> **`docs/` vs `devDocs/`:** `docs/` is ONLY the public landing-page site deployed to GitHub Pages (`sirat.dev`) — never put internal/dev docs there. All internal design specs and implementation plans live under `devDocs/superpowers/` (`devDocs/superpowers/specs/`, `devDocs/superpowers/plans/`).
+
 **Frontend patterns:**
 - Screens in `app/(tabs)/` are thin — they delegate to hooks and services
 - Business logic lives in `services/`, with modular sub-directories (`prayer-times/`, `notifications/`) orchestrated by facade files (`prayerTimes.ts`, `notificationService.ts`)
