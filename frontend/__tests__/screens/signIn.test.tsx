@@ -6,9 +6,13 @@ import SignIn from "@/app/SignIn";
 const mockStartSSOFlow = jest.fn();
 const mockSetActive = jest.fn();
 const mockBack = jest.fn();
+const mockStartApple = jest.fn();
 
 jest.mock("@clerk/expo", () => ({
   useSSO: () => ({ startSSOFlow: mockStartSSOFlow }),
+}));
+jest.mock("@clerk/expo/apple", () => ({
+  useSignInWithApple: () => ({ startAppleAuthenticationFlow: mockStartApple }),
 }));
 jest.mock("@/hooks/useAuthState", () => ({
   useAuthState: () => ({ isLoaded: true, isSignedIn: false, userId: null, email: null }),
@@ -36,10 +40,12 @@ describe("SignIn screen", () => {
     mockStartSSOFlow.mockReset();
     mockSetActive.mockReset();
     mockBack.mockReset();
+    mockStartApple.mockReset();
     mockUseTheme.mockReturnValue({ theme: defaultTheme });
   });
 
-  it("renders Apple and Google options", () => {
+  it("renders Apple and Google options on iOS", () => {
+    // jest-expo defaults Platform.OS to "ios"
     const { getByText } = render(<SignIn />);
     expect(getByText("Continue with Apple")).toBeTruthy();
     expect(getByText("Continue with Google")).toBeTruthy();
@@ -57,15 +63,21 @@ describe("SignIn screen", () => {
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
   });
 
-  it("starts the Apple SSO flow with the apple strategy", async () => {
-    mockStartSSOFlow.mockResolvedValue({ createdSessionId: "sess_2", setActive: mockSetActive });
+  it("calls startAppleAuthenticationFlow and activates the session on Apple sign-in", async () => {
+    mockStartApple.mockResolvedValue({ createdSessionId: "sess_2", setActive: mockSetActive });
     const { getByText } = render(<SignIn />);
     fireEvent.press(getByText("Continue with Apple"));
-    await waitFor(() =>
-      expect(mockStartSSOFlow).toHaveBeenCalledWith(
-        expect.objectContaining({ strategy: "oauth_apple" }),
-      ),
-    );
+    await waitFor(() => expect(mockStartApple).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mockSetActive).toHaveBeenCalledWith({ session: "sess_2" }));
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
+  });
+
+  it("silently returns when Apple sign-in is cancelled", async () => {
+    const cancelError = Object.assign(new Error("Cancelled"), { code: "ERR_REQUEST_CANCELED" });
+    mockStartApple.mockRejectedValue(cancelError);
+    const { getByText } = render(<SignIn />);
+    fireEvent.press(getByText("Continue with Apple"));
+    await waitFor(() => expect(mockStartApple).toHaveBeenCalledTimes(1));
+    expect(mockBack).not.toHaveBeenCalled();
   });
 });

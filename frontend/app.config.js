@@ -55,6 +55,7 @@ export default {
       ],
       "expo-secure-store",
       "@clerk/expo",
+      "expo-apple-authentication",
     ],
     experiments: {
       typedRoutes: true,

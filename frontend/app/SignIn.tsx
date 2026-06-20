@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useSSO } from "@clerk/expo";
+import { useSignInWithApple } from "@clerk/expo/apple";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useCallback, useEffect } from "react";
-import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { Text, TouchableOpacity, View, StyleSheet, Platform } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -17,29 +18,41 @@ export default function SignIn() {
   const styles = createStyles(theme);
   const { isSignedIn } = useAuthState();
   const { startSSOFlow } = useSSO();
+  const { startAppleAuthenticationFlow } = useSignInWithApple();
 
   useEffect(() => {
     if (isSignedIn) router.back();
   }, [isSignedIn]);
 
-  const signInWith = useCallback(
-    async (strategy: "oauth_apple" | "oauth_google") => {
-      try {
-        const redirectUrl = AuthSession.makeRedirectUri({ scheme: "sirat" });
-        const { createdSessionId, setActive } = await startSSOFlow({
-          strategy,
-          redirectUrl,
-        });
-        if (createdSessionId && setActive) {
-          await setActive({ session: createdSessionId });
-          router.back();
-        }
-      } catch {
-        // User cancelled or flow failed — stay on screen
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: "sirat" });
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: "oauth_google",
+        redirectUrl,
+      });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        router.back();
       }
-    },
-    [startSSOFlow],
-  );
+    } catch {
+      // User cancelled or flow failed — stay on screen
+    }
+  }, [startSSOFlow]);
+
+  const signInWithApple = useCallback(async () => {
+    try {
+      const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        router.back();
+      }
+    } catch (err: unknown) {
+      const error = err as { code?: string };
+      if (error?.code === "ERR_REQUEST_CANCELED") return;
+      // Other errors — stay on screen
+    }
+  }, [startAppleAuthenticationFlow]);
 
   const { colors } = theme;
 
@@ -53,19 +66,21 @@ export default function SignIn() {
         account.
       </Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        accessibilityRole="button"
-        onPress={() => void signInWith("oauth_apple")}
-      >
-        <Ionicons name="logo-apple" size={20} color={colors.white} />
-        <Text style={styles.buttonText}>Continue with Apple</Text>
-      </TouchableOpacity>
+      {Platform.OS === "ios" && (
+        <TouchableOpacity
+          style={styles.button}
+          accessibilityRole="button"
+          onPress={() => void signInWithApple()}
+        >
+          <Ionicons name="logo-apple" size={20} color={colors.white} />
+          <Text style={styles.buttonText}>Continue with Apple</Text>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity
         style={styles.button}
         accessibilityRole="button"
-        onPress={() => void signInWith("oauth_google")}
+        onPress={() => void signInWithGoogle()}
       >
         <Ionicons name="logo-google" size={20} color={colors.white} />
         <Text style={styles.buttonText}>Continue with Google</Text>
