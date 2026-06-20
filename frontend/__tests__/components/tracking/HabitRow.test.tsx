@@ -34,6 +34,9 @@ describe("HabitRow", () => {
         <HabitRow
           habit={habit}
           streak={5}
+          dueToday
+          doneToday={false}
+          onToggleToday={jest.fn()}
           canMoveUp
           canMoveDown
           onMoveUp={jest.fn()}
@@ -49,5 +52,50 @@ describe("HabitRow", () => {
     expect(onArchive).toHaveBeenCalled();
     fireEvent.press(getByLabelText("Edit Read Qur'an"));
     expect(onEdit).toHaveBeenCalled();
+  });
+
+  it("fires onToggleToday when due today", () => {
+    const onToggleToday = jest.fn();
+    const { getByLabelText } = render(
+      wrap(
+        <HabitRow
+          habit={habit}
+          streak={5}
+          dueToday
+          doneToday={false}
+          onToggleToday={onToggleToday}
+          canMoveUp
+          canMoveDown
+          onMoveUp={jest.fn()}
+          onMoveDown={jest.fn()}
+          onEdit={jest.fn()}
+          onArchive={jest.fn()}
+        />,
+      ),
+    );
+    fireEvent.press(getByLabelText("Mark Read Qur'an done today"));
+    expect(onToggleToday).toHaveBeenCalled();
+  });
+
+  it("shows a non-interactive marker when not due today", () => {
+    const { getByTestId, queryByLabelText } = render(
+      wrap(
+        <HabitRow
+          habit={habit}
+          streak={5}
+          dueToday={false}
+          doneToday={false}
+          onToggleToday={jest.fn()}
+          canMoveUp
+          canMoveDown
+          onMoveUp={jest.fn()}
+          onMoveDown={jest.fn()}
+          onEdit={jest.fn()}
+          onArchive={jest.fn()}
+        />,
+      ),
+    );
+    expect(getByTestId(`habitrow-notdue-${habit.id}`)).toBeTruthy();
+    expect(queryByLabelText("Mark Read Qur'an done today")).toBeNull();
   });
 });

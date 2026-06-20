@@ -44,7 +44,10 @@ jest.mock("@/hooks/useHabits", () => ({
     reorder: jest.fn(),
   }),
 }));
-jest.mock("@/hooks/useHabitLog", () => ({ useHabitLogAll: () => ({}) }));
+jest.mock("@/hooks/useHabitLog", () => ({
+  useHabitLog: () => ({ done: {}, toggle: jest.fn() }),
+  useHabitLogAll: () => ({}),
+}));
 
 const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
 

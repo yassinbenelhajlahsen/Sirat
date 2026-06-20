@@ -16,11 +16,12 @@ import Screen from "@/components/ui/Screen";
 import { Caption, LargeTitle, Title2 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { useHabitLogAll } from "@/hooks/useHabitLog";
+import { useHabitLog, useHabitLogAll } from "@/hooks/useHabitLog";
 import { useHabits } from "@/hooks/useHabits";
 import { useTrackingStats } from "@/hooks/useTrackingStats";
 import { habitStreak, type Habit } from "@/services/habitTracker";
 import { dateKeyFromDate } from "@/services/holidayService";
+import { isHabitDueOnDate } from "@/utils/habitFrequency";
 
 export default function Tracker() {
   const { theme } = useTheme();
@@ -32,7 +33,9 @@ export default function Tracker() {
   const stats = useTrackingStats();
   const { habits, create, update, archive, remove, reorder } = useHabits();
   const allDone = useHabitLogAll();
-  const todayKey = dateKeyFromDate(new Date());
+  const today = new Date();
+  const todayKey = dateKeyFromDate(today);
+  const { done: doneToday, toggle: toggleToday } = useHabitLog(todayKey);
 
   const [editing, setEditing] = useState<{ open: boolean; habit: Habit | null }>({
     open: false,
@@ -102,6 +105,9 @@ export default function Tracker() {
                 key={habit.id}
                 habit={habit}
                 streak={habitStreak(habit, allDone, habit.id, todayKey)}
+                dueToday={isHabitDueOnDate(habit.frequency, today)}
+                doneToday={!!doneToday[habit.id]}
+                onToggleToday={() => void toggleToday(habit.id)}
                 canMoveUp={index > 0}
                 canMoveDown={index < habits.length - 1}
                 onMoveUp={() => move(index, -1)}
