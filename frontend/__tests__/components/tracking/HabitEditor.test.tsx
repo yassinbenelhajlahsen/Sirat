@@ -31,17 +31,29 @@ describe("HabitEditor", () => {
     });
   });
 
-  it("builds a weekly frequency", () => {
+  it("builds a weekly frequency from selected weekdays", () => {
     const onSubmit = jest.fn();
     const { getByPlaceholderText, getByText, getByLabelText } = render(
       wrap(<HabitEditor visible initial={null} onSubmit={onSubmit} onClose={jest.fn()} />),
     );
-    fireEvent.changeText(getByPlaceholderText("Habit name"), "Tahajjud");
+    fireEvent.changeText(getByPlaceholderText("Habit name"), "Fast");
     fireEvent.press(getByText("Weekly"));
-    fireEvent.press(getByLabelText("Increase times per week")); // default 1 -> 2
+    fireEvent.press(getByLabelText("Toggle Mon"));
+    fireEvent.press(getByLabelText("Toggle Thu"));
     fireEvent.press(getByText("Save"));
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Tahajjud", frequency: { type: "weekly", timesPerWeek: 2 } }),
+      expect.objectContaining({ name: "Fast", frequency: { type: "weekly", days: [1, 4] } }),
     );
+  });
+
+  it("does not submit a weekly habit with no days selected", () => {
+    const onSubmit = jest.fn();
+    const { getByPlaceholderText, getByText } = render(
+      wrap(<HabitEditor visible initial={null} onSubmit={onSubmit} onClose={jest.fn()} />),
+    );
+    fireEvent.changeText(getByPlaceholderText("Habit name"), "Fast");
+    fireEvent.press(getByText("Weekly"));
+    fireEvent.press(getByText("Save"));
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

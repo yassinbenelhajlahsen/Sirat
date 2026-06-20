@@ -11,6 +11,7 @@ import { Caption, Headline, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { Habit, HabitFrequency } from "@/services/habitTracker";
+import { WEEKDAY_SHORT } from "@/utils/habitFrequency";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -51,7 +52,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<IoniconName>(GLYPHS[0]);
   const [weekly, setWeekly] = useState(false);
-  const [timesPerWeek, setTimesPerWeek] = useState(1);
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
 
   const [mounted, setMounted] = useState(visible);
   const sheetRef = useRef<BottomSheet>(null);
@@ -64,7 +65,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
       setIcon((initial?.icon as IoniconName) ?? GLYPHS[0]);
       const f = initial?.frequency;
       setWeekly(f?.type === "weekly");
-      setTimesPerWeek(f?.type === "weekly" ? f.timesPerWeek : 1);
+      setSelectedDays(f?.type === "weekly" ? [...f.days] : []);
     }
   }, [visible, initial]);
 
@@ -97,17 +98,25 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
   );
 
   const trimmed = name.trim();
-  const canSave = trimmed.length > 0;
+  const canSave = trimmed.length > 0 && (!weekly || selectedDays.length > 0);
+
+  const toggleDay = useCallback((index: number) => {
+    setSelectedDays((prev) =>
+      prev.includes(index) ? prev.filter((d) => d !== index) : [...prev, index],
+    );
+  }, []);
 
   const handleSave = useCallback(() => {
     if (!canSave) return;
     onSubmit({
       name: trimmed,
       icon,
-      frequency: weekly ? { type: "weekly", timesPerWeek } : { type: "daily" },
+      frequency: weekly
+        ? { type: "weekly", days: [...selectedDays].sort((a, b) => a - b) }
+        : { type: "daily" },
     });
     onClose();
-  }, [canSave, trimmed, icon, weekly, timesPerWeek, onSubmit, onClose]);
+  }, [canSave, trimmed, icon, weekly, selectedDays, onSubmit, onClose]);
 
   if (!mounted) return null;
 
@@ -173,24 +182,22 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
         </View>
 
         {weekly ? (
-          <View style={styles.stepper}>
-            <PressableScale
-              onPress={() => setTimesPerWeek((n) => Math.max(1, n - 1))}
-              accessibilityRole="button"
-              accessibilityLabel="Decrease times per week"
-              style={styles.stepBtn}
-            >
-              <Ionicons name="remove" size={18} color={colors.white} />
-            </PressableScale>
-            <Headline style={styles.stepValue}>{timesPerWeek}× / week</Headline>
-            <PressableScale
-              onPress={() => setTimesPerWeek((n) => Math.min(7, n + 1))}
-              accessibilityRole="button"
-              accessibilityLabel="Increase times per week"
-              style={styles.stepBtn}
-            >
-              <Ionicons name="add" size={18} color={colors.white} />
-            </PressableScale>
+          <View style={styles.weekdayRow}>
+            {WEEKDAY_SHORT.map((label, index) => {
+              const selected = selectedDays.includes(index);
+              return (
+                <PressableScale
+                  key={label}
+                  onPress={() => toggleDay(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Toggle ${label}`}
+                  accessibilityState={{ selected }}
+                  style={[styles.weekday, selected && styles.weekdayActive]}
+                >
+                  <Caption color={selected ? colors.onAccent : colors.white}>{label}</Caption>
+                </PressableScale>
+              );
+            })}
           </View>
         ) : null}
 
@@ -257,17 +264,16 @@ const createStyles = (theme: AppTheme) => {
       borderColor: withOpacity(colors.white, 0.12),
     },
     freqBtnActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-    stepper: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-    stepBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: theme.radii.row,
+    weekdayRow: { flexDirection: "row", justifyContent: "space-between", gap: spacing.xs },
+    weekday: {
+      flex: 1,
       alignItems: "center",
-      justifyContent: "center",
+      paddingVertical: spacing.sm,
+      borderRadius: theme.radii.chip,
       borderWidth: 1,
       borderColor: withOpacity(colors.white, 0.12),
     },
-    stepValue: { flex: 1, textAlign: "center" },
+    weekdayActive: { backgroundColor: colors.accentSecondary, borderColor: colors.accentSecondary },
     save: {
       backgroundColor: colors.accent,
       alignItems: "center",
