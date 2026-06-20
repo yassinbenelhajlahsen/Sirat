@@ -144,6 +144,7 @@ jest.mock("@/components/PressableScale", () => {
   };
 });
 
+import { Alert } from "react-native";
 import { useAuthState } from "@/hooks/useAuthState";
 import Settings from "@/app/Settings";
 
@@ -186,5 +187,22 @@ describe("Settings account integration", () => {
     const { getByLabelText } = render(<Settings />);
     fireEvent.press(getByLabelText("Sign out"));
     expect(mockSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("pressing Delete account row opens confirmation dialog and Delete button calls deleteAccount", () => {
+    const alertSpy = jest.spyOn(Alert, "alert");
+
+    const { getByLabelText } = render(<Settings />);
+    fireEvent.press(getByLabelText("Delete account"));
+
+    expect(alertSpy).toHaveBeenCalledTimes(1);
+    const [, , buttons] = alertSpy.mock.calls[0] as [string, string, { text: string; style?: string; onPress?: () => void }[]];
+    const deleteButton = buttons?.find((b) => b.text === "Delete");
+    expect(deleteButton).toBeDefined();
+
+    deleteButton!.onPress!();
+    expect(mockDeleteAccount).toHaveBeenCalledTimes(1);
+
+    alertSpy.mockRestore();
   });
 });

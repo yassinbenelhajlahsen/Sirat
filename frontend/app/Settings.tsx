@@ -146,7 +146,15 @@ export default function Settings() {
               "This permanently deletes your account and all synced data. This cannot be undone.",
               [
                 { text: "Cancel", style: "cancel" },
-                { text: "Delete", style: "destructive", onPress: () => { void deleteAccount(); } },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => {
+                    deleteAccount().catch(() => {
+                      Alert.alert("Couldn't delete account", "Something went wrong. Please try again.");
+                    });
+                  },
+                },
               ],
             )
           }

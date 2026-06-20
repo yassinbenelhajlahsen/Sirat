@@ -13,7 +13,6 @@ type Props = {
 
 export function AccountSection({ onSignIn, onSignOut, onDeleteAccount }: Props) {
   const { theme } = useTheme();
-  const { colors } = theme;
   const styles = createStyles(theme);
   const { isSignedIn, email } = useAuthState();
 
