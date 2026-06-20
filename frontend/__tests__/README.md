@@ -133,6 +133,9 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/tracking/HabitChecklist.test.tsx` — per-day habit checklist (Calendar integration)
   - `screens/Tracker.test.tsx` — Tracker screen contract: Overview section + Habits section, add-habit flow
   - `screens/home-tracker-affordance.test.tsx` — Home streak chip + "View tracker & habits" affordance
+- `weekday habits + Tracker check-off (Phase 3.1) testing`
+  - `utils/habitFrequency.test.ts` — `frequencyLabel` (weekday list), `isHabitDueOnDate`, `WEEKDAY_SHORT`
+  - `services/tracking/habits.migration.test.ts` — legacy `{weekly, timesPerWeek}` habits migrate to Daily on read
 
 ## Run Tests
 
