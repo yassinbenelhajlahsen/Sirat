@@ -15,6 +15,9 @@ type IoniconName = keyof typeof Ionicons.glyphMap;
 type Props = {
   habit: Habit;
   streak: number;
+  dueToday: boolean;
+  doneToday: boolean;
+  onToggleToday: () => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -26,6 +29,9 @@ type Props = {
 export default function HabitRow({
   habit,
   streak,
+  dueToday,
+  doneToday,
+  onToggleToday,
   canMoveUp,
   canMoveDown,
   onMoveUp,
@@ -39,6 +45,23 @@ export default function HabitRow({
 
   return (
     <GlassSurface tier="row" radius={theme.radii.row} style={styles.row}>
+      {dueToday ? (
+        <PressableScale
+          onPress={onToggleToday}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: doneToday }}
+          accessibilityLabel={`Mark ${habit.name} done today`}
+          style={styles.check}
+        >
+          <Ionicons
+            name={doneToday ? "checkmark-circle" : "ellipse-outline"}
+            size={24}
+            color={doneToday ? colors.accentSecondary : withOpacity(colors.white, 0.5)}
+          />
+        </PressableScale>
+      ) : (
+        <View testID={`habitrow-notdue-${habit.id}`} style={styles.notDue} />
+      )}
       <View style={styles.icon}>
         <Ionicons name={habit.icon as IoniconName} size={18} color={colors.accentSecondary} />
       </View>
@@ -94,6 +117,15 @@ const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
     row: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md },
+    check: { paddingRight: spacing.xs },
+    notDue: {
+      width: 10,
+      height: 10,
+      borderRadius: 999,
+      marginRight: spacing.xs + 2,
+      marginLeft: spacing.xs,
+      backgroundColor: withOpacity(colors.white, 0.18),
+    },
     icon: {
       width: 34,
       height: 34,
