@@ -41,6 +41,15 @@ describe("syncMerge", () => {
     });
   });
 
+  it("mergeHabitLogs on equal updatedAt keeps the first arg (stored)", () => {
+    const stored = { "2026-06-19": { h1: { value: true, updatedAt: 15 } } };
+    const incoming = { "2026-06-19": { h1: { value: false, updatedAt: 15 } } };
+    expect(mergeHabitLogs(stored, incoming)["2026-06-19"].h1).toEqual({
+      value: true,
+      updatedAt: 15,
+    });
+  });
+
   it("mergeHabits keeps higher updatedAt and retains tombstones", () => {
     const base: Habit = {
       id: "h1", name: "A", icon: "i", frequency: { type: "daily" },
@@ -60,6 +69,20 @@ describe("syncMerge", () => {
     const merged = mergeHabits([stored], []);
     expect(merged).toHaveLength(1);
     expect(merged[0].id).toBe("h1");
+  });
+
+  it("mergeHabits on equal updatedAt keeps the first arg (stored)", () => {
+    const stored: Habit = {
+      id: "h1", name: "Stored Name", icon: "leaf", frequency: { type: "daily" },
+      order: 0, archived: false, createdAtKey: "2026-06-01", updatedAt: 10,
+    };
+    const incoming: Habit = {
+      id: "h1", name: "Incoming Name", icon: "star", frequency: { type: "daily" },
+      order: 1, archived: true, createdAtKey: "2026-06-01", updatedAt: 10,
+    };
+    const merged = mergeHabits([stored], [incoming]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].name).toBe("Stored Name");
   });
 
   it("mergeSettings keeps the higher updatedAt per key and unions keys", () => {
