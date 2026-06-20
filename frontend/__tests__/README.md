@@ -136,6 +136,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `weekday habits + Tracker check-off (Phase 3.1) testing`
   - `utils/habitFrequency.test.ts` — `frequencyLabel` (weekday list), `isHabitDueOnDate`, `WEEKDAY_SHORT`
   - `services/tracking/habits.migration.test.ts` — legacy `{weekly, timesPerWeek}` habits migrate to Daily on read
+- `Apple + Google sign-in screen (Phase 2, Task 6) testing`
+  - `screens/signIn.test.tsx` — SignIn screen: renders both provider buttons, Google/Apple SSO flow invocation, session activation
 
 ## Run Tests
 
