@@ -53,6 +53,8 @@ export default {
           { name: "Light", ios: "./assets/icons/icon-light.png" },
         ],
       ],
+      "expo-secure-store",
+      "@clerk/expo",
     ],
     experiments: {
       typedRoutes: true,
