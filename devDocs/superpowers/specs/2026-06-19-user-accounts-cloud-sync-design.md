@@ -351,3 +351,14 @@ Key implementation notes vs. the design:
 - Feedback-loop guard: `isApplyingRemote()` in the sync engine gates both
   stamp-bumps and debounced re-syncs during `applyMerged`, preventing an
   apply→event→sync→apply ping-pong.
+
+**Known limitation (accepted, tracked follow-up):** the `settings` domain merges
+each setting as a **whole value under one LWW stamp**. For the two *accumulating
+collections* — `quranBookmarks` and `ramadanTracker` — concurrent additions on
+two offline devices can lose entries: on merge, the lower-stamped device's whole
+list is discarded rather than unioned. This is **not a regression** (these never
+synced before Phase 3), and whole-object LWW is correct for the scalar settings
+(theme, prayer settings, Quran progress, display modes). Fix when warranted:
+migrate bookmarks (key by bookmark `id`) and the Ramadan map (key by dateKey) to
+per-item `Cell`-keyed maps merged like `habitLog`, so concurrent additions on
+different devices both survive.
