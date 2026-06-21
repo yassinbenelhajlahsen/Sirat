@@ -128,10 +128,13 @@ export default function SignIn() {
 
 const createStyles = (theme: AppTheme) => {
   const { colors, radii } = theme;
+  const isLightTheme = theme.name === "light";
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: withOpacity(colors.black, 0.55),
+      backgroundColor: isLightTheme
+        ? withOpacity(colors.black, 0.24)
+        : withOpacity(colors.black, 0.58),
       justifyContent: "center",
       alignItems: "center",
       padding: 24,
