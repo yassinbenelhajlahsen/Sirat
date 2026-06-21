@@ -140,8 +140,8 @@ const createStyles = (theme: AppTheme) => {
     card: {
       borderRadius: radii.heroLg,
       overflow: "hidden",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: withOpacity(colors.white, 0.12),
+      borderWidth: 1,
+      borderColor: withOpacity(colors.white, 0.2),
     },
     content: {
       paddingTop: 32,
