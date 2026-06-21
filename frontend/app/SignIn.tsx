@@ -4,16 +4,43 @@ import { useSignInWithApple } from "@clerk/expo/apple";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useId } from "react";
 import { Alert, Text, TouchableOpacity, View, Pressable, StyleSheet, Platform } from "react-native";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
 import GlassSurface from "@/components/ui/GlassSurface";
 import GoogleIcon from "@/components/ui/GoogleIcon";
+import { DISPLAY_FONT_FAMILY } from "@/components/ui/DisplayNumber";
 
 WebBrowser.maybeCompleteAuthSession();
+
+function HeroAurora({ accentColor, secondaryColor }: { accentColor: string; secondaryColor: string }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const emeraldId = `heroEmerald${uid}`;
+  const goldId = `heroGold${uid}`;
+
+  return (
+    <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Defs>
+        {/* emerald bloom — top-left */}
+        <RadialGradient id={emeraldId} cx="0.30" cy="0.0" r="0.85">
+          <Stop offset="0" stopColor={secondaryColor} stopOpacity={0.5} />
+          <Stop offset="1" stopColor={secondaryColor} stopOpacity={0} />
+        </RadialGradient>
+        {/* gold bloom — top-right */}
+        <RadialGradient id={goldId} cx="1.0" cy="0.2" r="0.75">
+          <Stop offset="0" stopColor={accentColor} stopOpacity={0.42} />
+          <Stop offset="1" stopColor={accentColor} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${emeraldId})`} />
+      <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${goldId})`} />
+    </Svg>
+  );
+}
 
 export default function SignIn() {
   const { theme } = useTheme();
@@ -65,39 +92,52 @@ export default function SignIn() {
       {/* Inner Pressable absorbs taps so they don't bubble to the backdrop */}
       <Pressable onPress={() => {}} style={styles.cardWrapper}>
         <GlassSurface tier="card" style={styles.card}>
-          <Text style={styles.title}>Sign in to sync</Text>
-          <Text style={styles.subtitle}>
-            Back up your tracker and settings across devices. You can keep using Sirat without an
-            account.
-          </Text>
+          {/* Hero region — aurora glow + headline */}
+          <View style={styles.hero}>
+            <HeroAurora
+              accentColor={colors.accent}
+              secondaryColor={colors.accentSecondary}
+            />
+            <Text style={styles.headline}>{"Sync your\njourney"}</Text>
+          </View>
 
-          {Platform.OS === "ios" && (
-            <TouchableOpacity
-              style={styles.button}
-              accessibilityRole="button"
-              onPress={() => void signInWithApple()}
-            >
-              <Ionicons name="logo-apple" size={20} color={colors.white} />
-              <Text style={styles.buttonText}>Continue with Apple</Text>
-            </TouchableOpacity>
-          )}
+          {/* Body region */}
+          <View style={styles.body}>
+            <Text style={styles.subtitle}>
+              Sign in to back up your tracker & settings across devices.
+            </Text>
 
-          <TouchableOpacity
-            style={styles.button}
-            accessibilityRole="button"
-            onPress={() => void signInWithGoogle()}
-          >
-            <GoogleIcon size={20} />
-            <Text style={styles.buttonText}>Continue with Google</Text>
-          </TouchableOpacity>
+            <View style={styles.stack}>
+              {Platform.OS === "ios" && (
+                <TouchableOpacity
+                  style={styles.appleButton}
+                  accessibilityRole="button"
+                  onPress={() => void signInWithApple()}
+                >
+                  <Ionicons name="logo-apple" size={20} color={colors.primaryDeep} />
+                  <Text style={styles.appleButtonText}>Continue with Apple</Text>
+                </TouchableOpacity>
+              )}
 
-          <TouchableOpacity
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Not now"
-          >
-            <Text style={styles.dismiss}>Not now</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.googleButton}
+                accessibilityRole="button"
+                onPress={() => void signInWithGoogle()}
+              >
+                <GoogleIcon size={19} />
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.notNowButton}
+                onPress={() => router.back()}
+                accessibilityRole="button"
+                accessibilityLabel="Not now"
+              >
+                <Text style={styles.notNowText}>Not now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </GlassSurface>
       </Pressable>
     </Pressable>
@@ -119,38 +159,89 @@ const createStyles = (theme: AppTheme) => {
       maxWidth: 360,
     },
     card: {
-      padding: spacing.xxl,
-      gap: spacing.lg,
+      padding: 0,
+      overflow: "hidden",
+      borderRadius: radii.heroLg,
     },
-    title: {
-      fontSize: 28,
-      fontWeight: "700",
+    // Hero
+    hero: {
+      height: 150,
+      justifyContent: "flex-end",
+      padding: 20,
+      paddingLeft: 24,
+      overflow: "hidden",
+    },
+    headline: {
+      fontFamily: DISPLAY_FONT_FAMILY,
+      fontSize: 27,
+      lineHeight: 29,
       color: colors.white,
+      position: "relative",
+    },
+    // Body
+    body: {
+      paddingHorizontal: 24,
+      paddingTop: 18,
+      paddingBottom: 16,
     },
     subtitle: {
-      fontSize: 15,
+      fontSize: 13.5,
+      lineHeight: 20,
       color: withOpacity(colors.white, 0.6),
-      marginBottom: spacing.sm,
     },
-    button: {
+    stack: {
+      marginTop: 14,
+      gap: 11,
+    },
+    // Apple button — solid light pill
+    appleButton: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       gap: 10,
-      paddingVertical: 14,
+      height: 52,
       borderRadius: radii.row,
-      borderWidth: 1,
-      borderColor: colors.primaryBorder,
+      backgroundColor: colors.white,
+      // soft glow per mockup B
+      shadowColor: colors.white,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.5,
+      shadowRadius: 15,
+      elevation: 8,
     },
-    buttonText: {
-      fontSize: 16,
+    appleButtonText: {
+      fontSize: 15.5,
+      fontWeight: "600",
+      color: colors.primaryDeep,
+    },
+    // Google button — frosted glass
+    googleButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      height: 52,
+      borderRadius: radii.row,
+      backgroundColor: withOpacity(colors.white, 0.06),
+      borderWidth: 1,
+      borderColor: withOpacity(colors.white, 0.16),
+    },
+    googleButtonText: {
+      fontSize: 15.5,
       fontWeight: "600",
       color: colors.white,
     },
-    dismiss: {
-      textAlign: "center",
-      color: withOpacity(colors.white, 0.6),
-      marginTop: spacing.sm,
+    // Not now — full-width ghost, big touch target
+    notNowButton: {
+      height: 50,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: radii.row,
+    },
+    notNowText: {
+      fontSize: 15,
+      fontWeight: "500",
+      color: withOpacity(colors.white, 0.62),
     },
   });
 };
