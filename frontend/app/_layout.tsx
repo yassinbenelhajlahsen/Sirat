@@ -205,8 +205,9 @@ function RootLayoutContent() {
     otaCheckInFlightRef.current = true;
 
     try {
-      // Skip OTA checks entirely in Expo Go.
-      if (Constants.appOwnership === "expo") return;
+      // checkForUpdateAsync() throws in development builds and Expo Go (both
+      // __DEV__), and when expo-updates isn't enabled. Skip in all those cases.
+      if (__DEV__ || !Updates.isEnabled) return;
 
       const update = await Updates.checkForUpdateAsync();
       if (!update.isAvailable) return;
@@ -264,7 +265,7 @@ function RootLayoutContent() {
 
     try {
       // Right before reloading, re-check and fetch to avoid restarting into a stale OTA.
-      if (Constants.appOwnership !== "expo") {
+      if (!__DEV__ && Updates.isEnabled) {
         const latestUpdate = await Updates.checkForUpdateAsync();
         if (latestUpdate.isAvailable) {
           await Updates.fetchUpdateAsync();
