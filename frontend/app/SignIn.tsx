@@ -134,7 +134,7 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
       backgroundColor: isLightTheme
         ? withOpacity(colors.black, 0.24)
-        : withOpacity(colors.black, 0.58),
+        : withOpacity(colors.black, 0.70),
       justifyContent: "center",
       alignItems: "center",
       padding: 24,
