@@ -5,12 +5,12 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useCallback, useEffect } from "react";
-import { Alert, Text, TouchableOpacity, View, StyleSheet, Platform } from "react-native";
+import { Alert, Text, TouchableOpacity, View, Pressable, StyleSheet, Platform } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
-import Screen from "@/components/ui/Screen";
+import GlassSurface from "@/components/ui/GlassSurface";
 import GoogleIcon from "@/components/ui/GoogleIcon";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -61,53 +61,65 @@ export default function SignIn() {
   const { colors } = theme;
 
   return (
-    <Screen safeArea={false}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Sign in to sync</Text>
-        <Text style={styles.subtitle}>
-          Back up your tracker and settings across devices. You can keep using Sirat without an
-          account.
-        </Text>
+    <Pressable style={styles.backdrop} onPress={() => router.back()}>
+      {/* Inner Pressable absorbs taps so they don't bubble to the backdrop */}
+      <Pressable onPress={() => {}} style={styles.cardWrapper}>
+        <GlassSurface tier="card" style={styles.card}>
+          <Text style={styles.title}>Sign in to sync</Text>
+          <Text style={styles.subtitle}>
+            Back up your tracker and settings across devices. You can keep using Sirat without an
+            account.
+          </Text>
 
-        {Platform.OS === "ios" && (
+          {Platform.OS === "ios" && (
+            <TouchableOpacity
+              style={styles.button}
+              accessibilityRole="button"
+              onPress={() => void signInWithApple()}
+            >
+              <Ionicons name="logo-apple" size={20} color={colors.white} />
+              <Text style={styles.buttonText}>Continue with Apple</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={styles.button}
             accessibilityRole="button"
-            onPress={() => void signInWithApple()}
+            onPress={() => void signInWithGoogle()}
           >
-            <Ionicons name="logo-apple" size={20} color={colors.white} />
-            <Text style={styles.buttonText}>Continue with Apple</Text>
+            <GoogleIcon size={20} />
+            <Text style={styles.buttonText}>Continue with Google</Text>
           </TouchableOpacity>
-        )}
 
-        <TouchableOpacity
-          style={styles.button}
-          accessibilityRole="button"
-          onPress={() => void signInWithGoogle()}
-        >
-          <GoogleIcon size={20} />
-          <Text style={styles.buttonText}>Continue with Google</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Not now"
-        >
-          <Text style={styles.dismiss}>Not now</Text>
-        </TouchableOpacity>
-      </View>
-    </Screen>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Not now"
+          >
+            <Text style={styles.dismiss}>Not now</Text>
+          </TouchableOpacity>
+        </GlassSurface>
+      </Pressable>
+    </Pressable>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing, radii } = theme;
   return StyleSheet.create({
-    content: {
+    backdrop: {
       flex: 1,
-      padding: spacing.xxl,
+      backgroundColor: withOpacity(colors.black, 0.55),
       justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.xl,
+    },
+    cardWrapper: {
+      width: "100%",
+      maxWidth: 360,
+    },
+    card: {
+      padding: spacing.xxl,
       gap: spacing.lg,
     },
     title: {

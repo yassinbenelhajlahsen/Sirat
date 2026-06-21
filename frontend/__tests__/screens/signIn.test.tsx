@@ -42,6 +42,12 @@ jest.mock("expo-linear-gradient", () => {
     ),
   };
 });
+jest.mock("@/components/ui/GlassSurface", () => {
+  const { View } = require("react-native");
+  return ({ children, style }: { children: React.ReactNode; style?: object }) => (
+    <View style={style}>{children}</View>
+  );
+});
 
 const mockUseTheme = useTheme as jest.Mock;
 
@@ -111,5 +117,11 @@ describe("SignIn screen", () => {
       expect(alertSpy).toHaveBeenCalledWith("Sign-in failed", "Something went wrong. Please try again."),
     );
     alertSpy.mockRestore();
+  });
+
+  it("tapping Not now calls router.back()", () => {
+    const { getByLabelText } = render(<SignIn />);
+    fireEvent.press(getByLabelText("Not now"));
+    expect(mockBack).toHaveBeenCalledTimes(1);
   });
 });

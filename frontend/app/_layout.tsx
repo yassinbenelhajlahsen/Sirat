@@ -407,7 +407,7 @@ function RootLayoutContent() {
                 />
                 <Stack.Screen
                   name="SignIn"
-                  options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
+                  options={{ presentation: "transparentModal", animation: "fade", headerShown: false }}
                 />
                 <Stack.Screen name="Tracker" options={{ animation: "slide_from_right" }} />
               </Stack>
