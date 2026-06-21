@@ -24,7 +24,8 @@
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
     "express-rate-limit": "^8.3.0",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "prisma": "^6.19.3"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
@@ -38,7 +39,6 @@
     "@typescript-eslint/parser": "^6.7.2",
     "eslint": "^8.50.0",
     "jest": "^30.2.0",
-    "prisma": "^6.19.3",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
     "tsx": "^4.1.0",
