@@ -55,10 +55,10 @@ async function writeDoc(
 }
 
 export async function syncDomains(userId: string, payload: SyncPayload): Promise<SyncResponse> {
+  await ensureUser(userId);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await ensureUser(userId);
 
     const merged: Record<string, unknown> = {};
     const incomingByDomain = payload as Record<string, unknown>;

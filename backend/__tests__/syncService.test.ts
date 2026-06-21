@@ -4,16 +4,27 @@ const mockConnect: jest.Mock = jest.fn();
 const mockPoolQuery: jest.Mock = jest.fn();
 
 describe("syncService.syncDomains", () => {
+  const mockGetUser: jest.Mock = jest.fn();
+
+  const wellFormedClerkUser = {
+    primaryEmailAddressId: "e1",
+    emailAddresses: [{ id: "e1", emailAddress: "a@b.com" }],
+    firstName: "Test",
+    lastName: "User",
+  };
+
   beforeEach(() => {
     jest.resetModules();
     mockConnect.mockReset();
     mockPoolQuery.mockReset();
+    mockGetUser.mockReset();
+    (mockGetUser as any).mockResolvedValue(wellFormedClerkUser);
     jest.unstable_mockModule("../src/db/pool.js", () => ({
       pool: { connect: mockConnect, query: mockPoolQuery },
     }));
     // ensureUser calls clerkClient — mock it to avoid network calls
     jest.unstable_mockModule("@clerk/express", () => ({
-      clerkClient: { users: { getUser: jest.fn() } },
+      clerkClient: { users: { getUser: mockGetUser } },
     }));
   });
 
@@ -94,9 +105,10 @@ describe("syncService.syncDomains", () => {
       release: jest.fn(),
     };
     (mockConnect as any).mockResolvedValue(client);
-    // ensureUser: INSERT returns new row; Clerk call handled by @clerk/express mock (no-op)
+    // ensureUser: INSERT returns new row → Clerk called (resolves well-formed user) → UPDATE
     (mockPoolQuery as any)
-      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] });
+      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] })
+      .mockResolvedValueOnce({ rows: [] });
     const { syncDomains } = await import("../src/services/syncService.js");
 
     await expect(syncDomains("user_abc", {})).rejects.toThrow("db down");
@@ -114,9 +126,10 @@ describe("syncService.syncDomains", () => {
       release: jest.fn(),
     };
     (mockConnect as any).mockResolvedValue(client);
-    // ensureUser: INSERT returns new row; Clerk call handled by @clerk/express mock (no-op)
+    // ensureUser: INSERT returns new row → Clerk called (resolves well-formed user) → UPDATE
     (mockPoolQuery as any)
-      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] });
+      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] })
+      .mockResolvedValueOnce({ rows: [] });
     const { syncDomains } = await import("../src/services/syncService.js");
 
     await expect(syncDomains("user_abc", {})).rejects.toThrow("db down");
