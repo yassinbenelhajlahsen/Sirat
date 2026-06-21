@@ -58,7 +58,7 @@ export async function syncDomains(userId: string, payload: SyncPayload): Promise
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await ensureUser(client, userId);
+    await ensureUser(userId);
 
     const merged: Record<string, unknown> = {};
     const incomingByDomain = payload as Record<string, unknown>;

@@ -1,13 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const mockConnect: jest.Mock = jest.fn();
+const mockPoolQuery: jest.Mock = jest.fn();
 
 describe("syncService.syncDomains", () => {
   beforeEach(() => {
     jest.resetModules();
     mockConnect.mockReset();
+    mockPoolQuery.mockReset();
     jest.unstable_mockModule("../src/db/pool.js", () => ({
-      pool: { connect: mockConnect },
+      pool: { connect: mockConnect, query: mockPoolQuery },
+    }));
+    // ensureUser calls clerkClient — mock it to avoid network calls
+    jest.unstable_mockModule("@clerk/express", () => ({
+      clerkClient: { users: { getUser: jest.fn() } },
     }));
   });
 
@@ -41,6 +47,10 @@ describe("syncService.syncDomains", () => {
       prayer_log: { "2026-06-19": { fajr: { value: "missed", updatedAt: 5 } } },
     });
     (mockConnect as any).mockResolvedValue(client);
+    // ensureUser: INSERT returns new row (no profile), then UPDATE
+    (mockPoolQuery as any)
+      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] })
+      .mockResolvedValueOnce({ rows: [] });
     const { syncDomains } = await import("../src/services/syncService.js");
 
     const result = await syncDomains("user_abc", {
@@ -58,12 +68,19 @@ describe("syncService.syncDomains", () => {
   it("opens a transaction, ensures the user, commits, and releases", async () => {
     const { client, log } = fakeClient({});
     (mockConnect as any).mockResolvedValue(client);
+    // ensureUser: INSERT returns new row (no profile), then UPDATE
+    (mockPoolQuery as any)
+      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] })
+      .mockResolvedValueOnce({ rows: [] });
     const { syncDomains } = await import("../src/services/syncService.js");
 
     await syncDomains("user_abc", {});
 
     expect(log).toContain("BEGIN");
-    expect(log.some((l) => l.includes("INSERT INTO users"))).toBe(true);
+    // ensureUser now runs via pool.query (outside transaction) — check pool was called
+    expect(mockPoolQuery.mock.calls.some((c: unknown[]) =>
+      (c[0] as string).includes("INSERT INTO users"),
+    )).toBe(true);
     expect(log).toContain("COMMIT");
     expect(client.release).toHaveBeenCalledTimes(1);
   });
@@ -77,6 +94,9 @@ describe("syncService.syncDomains", () => {
       release: jest.fn(),
     };
     (mockConnect as any).mockResolvedValue(client);
+    // ensureUser: INSERT returns new row; Clerk call handled by @clerk/express mock (no-op)
+    (mockPoolQuery as any)
+      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] });
     const { syncDomains } = await import("../src/services/syncService.js");
 
     await expect(syncDomains("user_abc", {})).rejects.toThrow("db down");
@@ -94,6 +114,9 @@ describe("syncService.syncDomains", () => {
       release: jest.fn(),
     };
     (mockConnect as any).mockResolvedValue(client);
+    // ensureUser: INSERT returns new row; Clerk call handled by @clerk/express mock (no-op)
+    (mockPoolQuery as any)
+      .mockResolvedValueOnce({ rows: [{ email: null, name: null }] });
     const { syncDomains } = await import("../src/services/syncService.js");
 
     await expect(syncDomains("user_abc", {})).rejects.toThrow("db down");
