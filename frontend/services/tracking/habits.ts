@@ -120,3 +120,7 @@ export async function deleteHabit(id: string): Promise<void> {
   );
   await persist(next);
 }
+
+export async function replaceAllHabits(habits: Habit[]): Promise<void> {
+  await persist(habits);
+}

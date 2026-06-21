@@ -74,3 +74,13 @@ export async function setHabitDone(
   }
   emit(dateKey);
 }
+
+export async function replaceHabitLog(log: HabitLog): Promise<void> {
+  cache = log;
+  try {
+    await AsyncStorage.setItem(HABIT_LOG_STORAGE_KEY, JSON.stringify(log));
+  } catch {
+    // keep in-memory state even if persistence fails
+  }
+  DeviceEventEmitter.emit(HABIT_LOG_UPDATED_EVENT, { dateKey: null });
+}

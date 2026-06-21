@@ -25,8 +25,8 @@ export function usePrayerLog(dateKey: string) {
     reload();
     const sub = DeviceEventEmitter.addListener(
       PRAYER_LOG_UPDATED_EVENT,
-      (payload: { dateKey?: string }) => {
-        if (payload?.dateKey === dateKey) reload();
+      (payload: { dateKey?: string | null }) => {
+        if (payload?.dateKey == null || payload.dateKey === dateKey) reload();
       },
     );
     return () => {
