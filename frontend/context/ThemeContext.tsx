@@ -8,9 +8,11 @@ import {
   useMemo,
   useState,
 } from "react";
+import { DeviceEventEmitter } from "react-native";
 
 import {
   APP_THEME_STORAGE_KEY,
+  THEME_CHANGED_EVENT,
   AppTheme,
   ThemeName,
   defaultTheme,
@@ -58,9 +60,18 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     setThemeName(nextTheme);
     try {
       await AsyncStorage.setItem(APP_THEME_STORAGE_KEY, nextTheme);
+      DeviceEventEmitter.emit(THEME_CHANGED_EVENT);
     } catch (error) {
       console.error("Failed to persist app theme preference", error);
     }
+  }, []);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener(THEME_CHANGED_EVENT, async () => {
+      const stored = await AsyncStorage.getItem(APP_THEME_STORAGE_KEY);
+      if (isThemeName(stored)) setThemeName(stored);
+    });
+    return () => sub.remove();
   }, []);
 
   const theme = useMemo(() => themeMap[themeName] ?? defaultTheme, [themeName]);
