@@ -15,6 +15,13 @@ jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
   return { ...actual, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
 });
+jest.mock("@/hooks/useAuthState", () => ({
+  useAuthState: () => ({ isLoaded: true, isSignedIn: true, userId: "u1", email: null }),
+}));
+jest.mock("@/services/auth/authPrompts", () => ({
+  isHomeCardDismissed: () => Promise.resolve(true),
+  dismissHomeCard: () => Promise.resolve(),
+}));
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: () => ({
     prayerTimes: [{ label: "Fajr", time: "5:12 AM" }],

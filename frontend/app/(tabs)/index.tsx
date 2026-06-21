@@ -5,6 +5,9 @@ import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useAuthState } from "@/hooks/useAuthState";
+import SignInCard from "@/components/home/SignInCard";
+import { isHomeCardDismissed, dismissHomeCard } from "@/services/auth/authPrompts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlassSurface from "@/components/ui/GlassSurface";
@@ -57,6 +60,14 @@ export default function Home() {
   const { statuses, setStatus, clearStatus } = usePrayerLog(todayKey);
   const stats = useTrackingStats();
   const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
+
+  const { isLoaded, isSignedIn } = useAuthState();
+  const [signInCardDismissed, setSignInCardDismissed] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    isHomeCardDismissed().then((dismissed) => { if (mounted) setSignInCardDismissed(dismissed); });
+    return () => { mounted = false; };
+  }, []);
 
   const greeting = getGreeting(today);
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
@@ -112,6 +123,18 @@ export default function Home() {
           <GlassSurface tier="row" radius={theme.radii.row} style={styles.bannerCard}>
             <Headline color={colors.accent}>{banner}</Headline>
           </GlassSurface>
+        )}
+
+        {isLoaded && !isSignedIn && !signInCardDismissed && (
+          <View style={styles.signInCardSlot}>
+            <SignInCard
+              onPress={() => router.push("/SignIn")}
+              onDismiss={() => {
+                setSignInCardDismissed(true);
+                void dismissHomeCard();
+              }}
+            />
+          </View>
         )}
 
         {/* Header: greeting + location + settings gear */}
@@ -259,5 +282,6 @@ const createStyles = (theme: AppTheme) => {
     streakChipText: { fontWeight: "700" },
     flame: { fontSize: 13 },
     duaSection: { position: "relative", marginTop: spacing.lg },
+    signInCardSlot: { marginTop: spacing.md },
   });
 };

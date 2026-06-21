@@ -20,6 +20,13 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 // Provide deterministic prayer times so the arc renders passed prayers.
+jest.mock("@/hooks/useAuthState", () => ({
+  useAuthState: () => ({ isLoaded: true, isSignedIn: true, userId: "u1", email: null }),
+}));
+jest.mock("@/services/auth/authPrompts", () => ({
+  isHomeCardDismissed: () => Promise.resolve(true),
+  dismissHomeCard: () => Promise.resolve(),
+}));
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: () => ({
     prayerTimes: [
