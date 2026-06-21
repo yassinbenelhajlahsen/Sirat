@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.1.0",
+    version: "1.1.1",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
