@@ -17,7 +17,7 @@ describe("useAuthState", () => {
   it("maps a signed-in Clerk state", () => {
     mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true, userId: "user_1" });
     mockUseUser.mockReturnValue({
-      user: { primaryEmailAddress: { emailAddress: "a@b.com" } },
+      user: { primaryEmailAddress: { emailAddress: "a@b.com" }, firstName: "Ali" },
     });
     const { result } = renderHook(() => useAuthState());
     expect(result.current).toEqual({
@@ -25,10 +25,11 @@ describe("useAuthState", () => {
       isSignedIn: true,
       userId: "user_1",
       email: "a@b.com",
+      firstName: "Ali",
     });
   });
 
-  it("maps a signed-out state with null email", () => {
+  it("maps a signed-out state with null email and null firstName", () => {
     mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: false, userId: null });
     mockUseUser.mockReturnValue({ user: null });
     const { result } = renderHook(() => useAuthState());
@@ -37,6 +38,16 @@ describe("useAuthState", () => {
       isSignedIn: false,
       userId: null,
       email: null,
+      firstName: null,
     });
+  });
+
+  it("returns null firstName when user has no firstName set", () => {
+    mockUseAuth.mockReturnValue({ isLoaded: true, isSignedIn: true, userId: "user_2" });
+    mockUseUser.mockReturnValue({
+      user: { primaryEmailAddress: { emailAddress: "b@c.com" }, firstName: null },
+    });
+    const { result } = renderHook(() => useAuthState());
+    expect(result.current.firstName).toBeNull();
   });
 });

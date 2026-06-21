@@ -1,4 +1,4 @@
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { act, render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import { defaultTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -15,8 +15,9 @@ jest.mock("@clerk/expo", () => ({
 jest.mock("@clerk/expo/apple", () => ({
   useSignInWithApple: () => ({ startAppleAuthenticationFlow: mockStartApple }),
 }));
+const mockUseAuthState = jest.fn();
 jest.mock("@/hooks/useAuthState", () => ({
-  useAuthState: () => ({ isLoaded: true, isSignedIn: false, userId: null, email: null }),
+  useAuthState: () => mockUseAuthState(),
 }));
 jest.mock("@/context/ThemeContext", () => ({
   useTheme: jest.fn(),
@@ -58,6 +59,7 @@ describe("SignIn screen", () => {
     mockBack.mockReset();
     mockStartApple.mockReset();
     mockUseTheme.mockReturnValue({ theme: defaultTheme });
+    mockUseAuthState.mockReturnValue({ isLoaded: true, isSignedIn: false, userId: null, email: null, firstName: null });
   });
 
   it("renders Apple and Google options on iOS", () => {
@@ -68,23 +70,31 @@ describe("SignIn screen", () => {
   });
 
   it("starts the Google SSO flow and activates the session", async () => {
+    mockSetActive.mockImplementation(async () => {
+      mockUseAuthState.mockReturnValue({ isLoaded: true, isSignedIn: true, userId: "u1", email: null, firstName: null });
+    });
     mockStartSSOFlow.mockResolvedValue({ createdSessionId: "sess_1", setActive: mockSetActive });
-    const { getByText } = render(<SignIn />);
+    const { getByText, rerender } = render(<SignIn />);
     fireEvent.press(getByText("Continue with Google"));
     await waitFor(() => expect(mockStartSSOFlow).toHaveBeenCalledTimes(1));
     expect(mockStartSSOFlow).toHaveBeenCalledWith(
       expect.objectContaining({ strategy: "oauth_google" }),
     );
     await waitFor(() => expect(mockSetActive).toHaveBeenCalledWith({ session: "sess_1" }));
+    await act(async () => { rerender(<SignIn />); });
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
   });
 
   it("calls startAppleAuthenticationFlow and activates the session on Apple sign-in", async () => {
+    mockSetActive.mockImplementation(async () => {
+      mockUseAuthState.mockReturnValue({ isLoaded: true, isSignedIn: true, userId: "u1", email: null, firstName: null });
+    });
     mockStartApple.mockResolvedValue({ createdSessionId: "sess_2", setActive: mockSetActive });
-    const { getByText } = render(<SignIn />);
+    const { getByText, rerender } = render(<SignIn />);
     fireEvent.press(getByText("Continue with Apple"));
     await waitFor(() => expect(mockStartApple).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mockSetActive).toHaveBeenCalledWith({ session: "sess_2" }));
+    await act(async () => { rerender(<SignIn />); });
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
   });
 

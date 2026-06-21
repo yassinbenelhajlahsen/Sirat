@@ -61,7 +61,7 @@ export default function Home() {
   const stats = useTrackingStats();
   const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
-  const { isLoaded, isSignedIn } = useAuthState();
+  const { isLoaded, isSignedIn, firstName } = useAuthState();
   const [showCard, setShowCard] = useState(false);
   useEffect(() => {
     let mounted = true;
@@ -77,7 +77,8 @@ export default function Home() {
     return () => { mounted = false; };
   }, [isLoaded, isSignedIn]);
 
-  const greeting = getGreeting(today);
+  const baseGreeting = getGreeting(today);
+  const displayName = isSignedIn && firstName && firstName.length < 10 ? firstName : null;
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric", month: "long", year: "numeric",
   }).format(today);
@@ -149,7 +150,8 @@ export default function Home() {
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
             <Caption color={colors.accent} style={styles.eyebrow}>{islamicDate}</Caption>
-            <LargeTitle>{greeting}</LargeTitle>
+            <LargeTitle>{displayName ? `${baseGreeting},` : baseGreeting}</LargeTitle>
+            {displayName && <LargeTitle>{displayName}.</LargeTitle>}
             {locationLabel ? (
               <View style={styles.locationRow}>
                 <Ionicons name="location-outline" size={14} color={withOpacity(colors.white, 0.6)} />

@@ -162,6 +162,7 @@ describe("Settings account integration", () => {
       isSignedIn: true,
       userId: "u1",
       email: "a@b.com",
+      firstName: null,
     });
   });
 
@@ -171,6 +172,7 @@ describe("Settings account integration", () => {
       isSignedIn: false,
       userId: null,
       email: null,
+      firstName: null,
     });
 
     const { getByLabelText } = render(<Settings />);

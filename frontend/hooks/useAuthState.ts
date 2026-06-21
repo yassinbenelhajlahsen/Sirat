@@ -5,6 +5,7 @@ export type AuthState = {
   isSignedIn: boolean;
   userId: string | null;
   email: string | null;
+  firstName: string | null;
 };
 
 export function useAuthState(): AuthState {
@@ -15,5 +16,6 @@ export function useAuthState(): AuthState {
     isSignedIn: Boolean(isSignedIn),
     userId: userId ?? null,
     email: user?.primaryEmailAddress?.emailAddress ?? null,
+    firstName: user?.firstName ?? null,
   };
 }
