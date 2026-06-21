@@ -407,7 +407,14 @@ function RootLayoutContent() {
                 />
                 <Stack.Screen
                   name="SignIn"
-                  options={{ presentation: "transparentModal", animation: "fade", headerShown: false }}
+                  options={{
+                    presentation: "transparentModal",
+                    animation: "fade",
+                    headerShown: false,
+                    // Override the global opaque contentStyle so the dimmed
+                    // screen behind shows through (a real transparent overlay).
+                    contentStyle: { backgroundColor: "transparent" },
+                  }}
                 />
                 <Stack.Screen name="Tracker" options={{ animation: "slide_from_right" }} />
               </Stack>
