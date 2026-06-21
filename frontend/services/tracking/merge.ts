@@ -1,4 +1,4 @@
-import type { Cell, Habit, HabitLog, PrayerLog } from "./types";
+import type { Cell, Habit, HabitLog, PrayerLog, SettingsEnvelope } from "./types";
 
 // Last-write-wins by updatedAt. On an exact tie, the LOCAL value is kept —
 // local is the source of truth in our offline-first model; an equal-stamped
@@ -41,6 +41,19 @@ export function mergeHabitLogs(local: HabitLog, remote: HabitLog): HabitLog {
       if (cell) day[id] = cell;
     }
     out[dateKey] = day;
+  }
+  return out;
+}
+
+export function mergeSettings(
+  local: SettingsEnvelope,
+  remote: SettingsEnvelope,
+): SettingsEnvelope {
+  const out: SettingsEnvelope = {};
+  const keys = new Set([...Object.keys(local), ...Object.keys(remote)]);
+  for (const k of keys) {
+    const cell = pickCell(local[k], remote[k]);
+    if (cell) out[k] = cell;
   }
   return out;
 }

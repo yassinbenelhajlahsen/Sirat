@@ -102,4 +102,13 @@ describe("syncMerge", () => {
     const incoming = { theme: { value: "light", updatedAt: 10 } };
     expect(mergeSettings(stored, incoming).theme).toEqual({ value: "dark", updatedAt: 10 });
   });
+
+  it("mergeSettings keeps higher updatedAt and keeps stored on tie", () => {
+    const stored = { theme: { value: "dark", updatedAt: 10 } };
+    const incoming = { theme: { value: "light", updatedAt: 10 }, prayerSettings: { value: { method: 2 }, updatedAt: 5 } };
+    expect(mergeSettings(stored, incoming)).toEqual({
+      theme: { value: "dark", updatedAt: 10 },
+      prayerSettings: { value: { method: 2 }, updatedAt: 5 },
+    });
+  });
 });
