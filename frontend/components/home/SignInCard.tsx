@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { withOpacity, type AppTheme } from "@/constants/theme";
-import { useTheme } from "@/context/ThemeContext";
 import { useMemo } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { Caption } from "@/components/ui/Text";
+
+import GlassSurface from "@/components/ui/GlassSurface";
+import { Body, Caption } from "@/components/ui/Text";
+import { withOpacity, type AppTheme } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 type Props = {
   onPress: () => void;
@@ -12,7 +14,7 @@ type Props = {
 
 export default function SignInCard({ onPress, onDismiss }: Props) {
   const { theme } = useTheme();
-  const { colors, spacing } = theme;
+  const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
@@ -20,43 +22,60 @@ export default function SignInCard({ onPress, onDismiss }: Props) {
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel="Sign in to sync"
-      activeOpacity={0.7}
-      style={styles.row}
+      activeOpacity={0.85}
     >
-      <Ionicons name="cloud-upload-outline" size={14} color={withOpacity(colors.accent, 0.8)} style={styles.icon} />
-      <Caption color={withOpacity(colors.white, 0.6)} style={styles.label}>
-        Sign in to sync
-      </Caption>
-      <TouchableOpacity
-        onPress={onDismiss}
-        accessibilityRole="button"
-        accessibilityLabel="Dismiss"
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        style={styles.dismiss}
-      >
-        <Ionicons name="close" size={12} color={withOpacity(colors.white, 0.35)} />
-      </TouchableOpacity>
+      <GlassSurface tier="row" radius={theme.radii.card} style={styles.card}>
+        <View style={styles.iconTile}>
+          <Ionicons name="cloud-upload-outline" size={20} color={colors.accent} />
+        </View>
+
+        <View style={styles.text}>
+          <Body color={colors.white} style={styles.title}>
+            Sign in to sync
+          </Body>
+          <Caption color={withOpacity(colors.white, 0.6)} style={styles.subtitle}>
+            Back up your tracker &amp; settings across devices.
+          </Caption>
+        </View>
+
+        <TouchableOpacity
+          onPress={onDismiss}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss"
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.dismiss}
+        >
+          <Ionicons name="close" size={18} color={withOpacity(colors.white, 0.4)} />
+        </TouchableOpacity>
+      </GlassSurface>
     </TouchableOpacity>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing } = theme;
+  const { colors, spacing, radii } = theme;
   return StyleSheet.create({
-    row: {
+    card: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.sm,
-      backgroundColor: withOpacity(colors.white, 0.04),
-      borderRadius: theme.radii.pill,
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      marginBottom: spacing.md,
       borderWidth: 1,
-      borderColor: withOpacity(colors.primaryBorder, 0.4),
-      alignSelf: "flex-start",
-      marginBottom: spacing.sm,
+      borderColor: withOpacity(colors.accent, 0.22),
     },
-    icon: { marginRight: 5 },
-    label: { fontSize: 12 },
-    dismiss: { marginLeft: spacing.sm },
+    iconTile: {
+      width: 42,
+      height: 42,
+      borderRadius: radii.chip,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: withOpacity(colors.accent, 0.14),
+    },
+    text: { flex: 1 },
+    title: { fontWeight: "600" },
+    subtitle: { marginTop: 2 },
+    dismiss: { alignSelf: "flex-start", padding: 2 },
   });
 };

@@ -17,7 +17,7 @@ jest.mock("@/components/ui/GlassSurface", () => {
 jest.mock("@/components/ui/Text", () => {
   const { Text } = require("react-native");
   return {
-    Headline: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
+    Body: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
     Caption: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
   };
 });
