@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id
+  email         String?
+  name          String?
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  syncDocuments SyncDocument[]
+
+  @@map("users")
+}
+
+model SyncDocument {
+  userId    String   @map("user_id")
+  domain    String
+  doc       Json     @default("{}")
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, domain])
+  @@map("sync_documents")
+}
