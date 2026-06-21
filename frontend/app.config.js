@@ -17,7 +17,6 @@ export default {
       userInterfaceStyle: "dark",
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",
-      buildNumber: "1.0.6",
       teamId: "5AN795CL7Z",
       infoPlist: {
         CFBundleDisplayName: "Sirat",
