@@ -1,10 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DeviceEventEmitter } from "react-native";
 
 import {
   clearMissedFast,
   getMissedFastDays,
   markFastAsMissed,
+  replaceMissedFastDays,
   wasFastMissed,
+  RAMADAN_TRACKER_UPDATED_EVENT,
 } from "@/services/ramadanTracker";
 
 describe("services/ramadanTracker", () => {
@@ -31,5 +34,13 @@ describe("services/ramadanTracker", () => {
     const map = await getMissedFastDays();
     expect(map).toEqual({ "2026-03-02": true });
     await expect(wasFastMissed(new Date(2026, 2, 1))).resolves.toBe(false);
+  });
+
+  it("replaceMissedFastDays overwrites and emits", async () => {
+    const emit = jest.spyOn(DeviceEventEmitter, "emit");
+    const map = { "2026-03-15": true };
+    await replaceMissedFastDays(map);
+    expect(await getMissedFastDays()).toEqual(map);
+    expect(emit).toHaveBeenCalledWith(RAMADAN_TRACKER_UPDATED_EVENT);
   });
 });
