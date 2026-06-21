@@ -1,8 +1,17 @@
 # User Accounts & Cloud Sync — Design
 
-**Date:** 2026-06-19
-**Status:** Approved (brainstorming) — pending implementation plan
-**Branch context:** builds on the tracking feature (`feat/habit-tracker`)
+**Date:** 2026-06-19 (updated 2026-06-20)
+**Status:** Phase 1 (backend) and Phase 2 (frontend auth) shipped — **Phase 3 (sync engine) pending**
+**Branch context:** builds on the tracking feature (`feat/habit-tracker`); auth work on `feat/auth`
+
+> **Update 2026-06-20:** The implemented backend deviates from the original
+> brainstorm in one material way — **Prisma Migrate replaced the planned
+> "lightweight SQL-file migration runner."** The schema lives in
+> `backend/prisma/schema.prisma` and is applied via `prisma migrate deploy`.
+> Request-path queries for the `users` / `sync_documents` tables still use raw
+> `pg` exactly as designed below; only the migration mechanism changed. All
+> sections below have been reconciled with the shipped code. See
+> **Implementation status** at the end for the per-section diff.
 
 ## Goal
 
@@ -76,25 +85,43 @@ A user is at most **4 rows** in `sync_documents` (one JSONB doc per domain).
 
 ## Data model (Postgres)
 
-```sql
--- Clerk user id is the primary key (text, e.g. "user_2abc…")
-CREATE TABLE users (
-  id          TEXT PRIMARY KEY,
-  email       TEXT,           -- cached from JWT claims, optional
-  name        TEXT,           -- cached from JWT claims, optional
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+The schema is defined in **`backend/prisma/schema.prisma`** (source of truth) and
+materialized by Prisma Migrate. The generated SQL is equivalent to the design
+below; column names use snake_case via Prisma `@map`. **Note:** these two tables
+are still *queried* with raw `pg` (see "DB query boundary"), Prisma owns only
+their schema/migrations.
 
--- One JSONB document per (user, domain). domain ∈
--- {'prayer_log','habits','habit_log','settings'}
-CREATE TABLE sync_documents (
-  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  domain      TEXT NOT NULL,
-  doc         JSONB NOT NULL DEFAULT '{}'::jsonb,
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, domain)
-);
+```prisma
+// Clerk user id is the primary key (text, e.g. "user_2abc…")
+model User {
+  id            String         @id
+  email         String?        // cached from JWT claims, optional (NULL in Phase 1)
+  name          String?        // cached from JWT claims, optional (NULL in Phase 1)
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  syncDocuments SyncDocument[]
+  @@map("users")
+}
+
+// One JSONB document per (user, domain). domain ∈
+// {'prayer_log','habits','habit_log','settings'}
+model SyncDocument {
+  userId    String   @map("user_id")
+  domain    String
+  doc       Json     @default("{}")
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([userId, domain])
+  @@map("sync_documents")
+}
 ```
+
+> **DB query boundary (documented in `backend/AGENTS.md`):** existing tables
+> (`users`, `sync_documents`) are queried with raw `pg` via `src/db/pool.ts`
+> (incl. the `FOR UPDATE` sync transaction). **New** feature tables use the
+> Prisma Client singleton in `src/db/prisma.ts`. When the Prisma client starts
+> serving request-path queries, cap its pool with `?connection_limit=` on the
+> URL so the Prisma pool plus the raw `pg` pool stay under Railway's Postgres
+> connection limit.
 
 Domain doc shapes:
 - `prayer_log` → `PrayerLog` = `Record<dateKey, Partial<Record<PrayerName, Cell<PrayerStatus>>>>`
@@ -136,9 +163,12 @@ Converges across devices and is safe to retry.
 > into a bug later.
 
 **Shared merge code:** `frontend/services/tracking/merge.ts` is ~60 lines and
-lives in `frontend/`. The monorepo has no shared workspace, so the backend gets
-a **deliberate copy** of the merge functions plus a **shared test vector** that
-both sides run, preventing drift.
+lives in `frontend/`. The monorepo has no shared workspace, so the backend has a
+**deliberate copy** in `backend/src/utils/syncMerge.ts`
+(`mergePrayerLogs` / `mergeHabitLogs` / `mergeHabits` / `mergeSettings`) plus a
+**shared test vector** that both sides run, preventing drift. The server-side
+`mergeSettings` already exists; Phase 3 adds the frontend settings-merge
+counterpart and must wire it into the shared test vector (see Testing).
 
 ## Frontend: auth
 
@@ -207,10 +237,12 @@ Theme / prayer settings are currently raw, unstamped values. To LWW-merge them:
 
 ## Testing
 
-- **Backend:** port the existing merge tests; add `/api/sync` endpoint tests
-  (test Postgres or `pg-mem`); auth-middleware test with a mocked JWKS;
-  `DELETE /api/account` test. Add `pg` + a lightweight migration runner
-  (SQL files + runner).
+- **Backend (done in Phase 1):** ported merge tests live in
+  `backend/src/utils/syncMerge.ts` tests; `/api/sync` endpoint tests;
+  auth-middleware test; `DELETE /api/account` test. Schema/migrations handled
+  by **Prisma Migrate** (`prisma/schema.prisma` + `prisma/migrations/`), not a
+  hand-rolled runner — the custom SQL-file runner from the brainstorm was
+  removed.
 - **Frontend:** sync-engine tests (single-flight, debounce, online/offline
   guard); settings-stamping tests; adapter `applyMerged` tests — following the
   existing Babel-jest static-mock pattern (no dynamic `import()`).
@@ -222,7 +254,11 @@ Theme / prayer settings are currently raw, unstamped values. To LWW-merge them:
 
 ## Infra / config
 
-- **Railway:** add the Postgres plugin + `DATABASE_URL`. Add `pg` to the backend.
+- **Railway:** add the Postgres plugin + `DATABASE_URL`. Backend deps:
+  `pg` (raw queries) **plus** `prisma` + `@prisma/client` — both in
+  `dependencies` (not devDeps) so `prisma migrate deploy` runs at production
+  boot. `postinstall` runs `prisma generate`; `start` runs
+  `prisma migrate deploy && node dist/index.js`.
 - **Secrets:** `CLERK_SECRET_KEY` (backend — JWKS verify + admin delete),
   `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (frontend).
 - **CLAUDE.md:** add `sync:settings_meta_v1` and `sync:last_synced_v1` to the
@@ -240,12 +276,19 @@ native modules).
 
 ## Phasing (each independently shippable)
 
-1. **Backend foundation** — Postgres, migrations, Clerk `requireAuth`, `users`
-   table, `POST /api/sync` + merge, `DELETE /api/account`. (Railway deploy.)
-2. **Frontend auth** — `ClerkProvider`, sign-in screen, optional-login UX,
-   account / sign-out / delete in settings. **(Submission gate — new binary.)**
-3. **Sync engine** — adapters, triggers, settings stamping, sync-status
-   indicator. (Largely OTA after Phase 2 is live.)
+1. ✅ **Backend foundation (shipped)** — Postgres via Prisma Migrate, Clerk
+   `requireAuth`, `users` table (`ensureUser` upsert on first sync),
+   `POST /api/sync` + transactional merge, `DELETE /api/account`. (Railway
+   deploy.)
+2. ✅ **Frontend auth (shipped)** — `ClerkProvider`, `SignIn.tsx` screen,
+   optional-login UX (`SignInCard`), account / sign-out / delete via
+   `useAccountActions`. **(Submission gate — new binary.)**
+3. ⏳ **Sync engine (next — this is what Phase 3 builds)** — `frontend/services/sync/`
+   does not exist yet. Build the per-domain adapters, triggers, settings
+   stamping (`settingsRegistry.ts`), and sync-status indicator. The backend
+   `POST /api/sync` contract and the auth plumbing (`getAuthToken`,
+   `useAuthState`, `apiFetch` Bearer attach) it consumes are already live.
+   (Largely OTA — adds no native modules.)
 
 ## Risks / tradeoffs accepted
 
@@ -255,3 +298,46 @@ native modules).
 - **Merge logic duplicated** across frontend/backend (no shared workspace),
   mitigated by a shared test vector.
 - Server/client **tie-break asymmetry** documented above.
+
+## Implementation status (2026-06-20)
+
+What the shipped code looks like, so Phase 3 builds on facts rather than the
+brainstorm. Deviations from the original design are flagged **[DEVIATION]**.
+
+**Phase 1 — backend (shipped):**
+- Schema: `backend/prisma/schema.prisma` (`User`, `SyncDocument`). **[DEVIATION]**
+  Prisma Migrate (`prisma/migrations/`: `0_init`, `1_drop_legacy_migrations`)
+  replaced the planned SQL-file runner; the custom runner and legacy
+  `_migrations` table were removed.
+- DB layer: raw `pg` pool `src/db/pool.ts`; Prisma singleton `src/db/prisma.ts`
+  (for *future* tables only). Query boundary documented in `backend/AGENTS.md`.
+- Sync: `routes/sync.ts` → `controllers/syncController.ts` →
+  `services/syncService.ts` (raw `pg`, `BEGIN` / `SELECT … FOR UPDATE` /
+  `INSERT … ON CONFLICT … DO UPDATE` / `COMMIT`). Merge in `utils/syncMerge.ts`.
+  Domains in `types/sync.ts`: `prayer_log`, `habits`, `habit_log`, `settings`.
+- Users: `services/userService.ts` `ensureUser()` upserts the Clerk id on first
+  sync. `email`/`name` are NULL in the shipped Phase 1; **Phase 3 extends
+  `ensureUser` to populate them from Clerk** (`clerkClient.users.getUser`) when
+  the row is new or those columns are still null — captured server-side so it
+  survives Apple's once-only name delivery. Columns stay nullable (Apple/Google
+  may not always provide a name).
+- Account delete: `routes/account.ts` → `services/accountService.ts` —
+  `DELETE FROM users` (cascades) + `clerkClient.users.deleteUser`, 404 treated
+  as success.
+- Auth: `middleware/requireAuth.ts` using `getAuth()` from `@clerk/express`
+  (paired with `clerkMiddleware()`). **[Note]** verification is via Clerk's
+  Express SDK, not a hand-rolled JWKS check as the brainstorm sketched — same
+  result, less code.
+- Sync route: own `express.json({ limit: "1mb" })` (global stays 16KB, bypassed
+  for `/api/sync` in `index.ts`); `syncLimiter` 120 / 15 min.
+
+**Phase 2 — frontend auth (shipped):**
+- `ClerkProvider` in `app/_layout.tsx`; `app/SignIn.tsx` (Apple + Google);
+  `components/home/SignInCard.tsx` (dismissible "Sign in to sync").
+- Adapters Phase 3 consumes: `services/auth/authToken.ts` (`getAuthToken()`),
+  `hooks/useAuthState.ts`, `hooks/useAccountActions.ts`. `apiFetch` already
+  attaches the Bearer token.
+
+**Phase 3 — sync engine (NOT started):** `frontend/services/sync/` does not
+exist. Everything in "Frontend: sync engine" and "Frontend: settings stamping"
+above is still to build. The backend contract it targets is live and unchanged.
