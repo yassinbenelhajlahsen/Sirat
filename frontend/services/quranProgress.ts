@@ -28,16 +28,18 @@ export async function getLastReadAyahIndex(): Promise<number | null> {
 }
 
 export async function saveLastReadAyahIndex(index: number): Promise<void> {
+  let saved = false;
   try {
     if (!Number.isFinite(index) || index < 0) {
       return;
     }
     const normalizedIndex = Math.floor(index);
     await AsyncStorage.setItem(LAST_READ_INDEX_KEY, String(normalizedIndex));
-    DeviceEventEmitter.emit(QURAN_PROGRESS_UPDATED_EVENT);
+    saved = true;
   } catch {
     /** Unable to persist progress; silently ignore for now. */
   }
+  if (saved) DeviceEventEmitter.emit(QURAN_PROGRESS_UPDATED_EVENT);
 }
 
 export async function getLastReadSurahAndAyah(): Promise<StoredPosition | null> {
@@ -62,6 +64,7 @@ export async function saveLastReadSurahAndAyah(
   surahNumber: number,
   ayahNumber: number
 ): Promise<void> {
+  let saved = false;
   try {
     const normalizedSurah = Math.floor(surahNumber);
     const normalizedAyah = Math.floor(ayahNumber);
@@ -78,10 +81,11 @@ export async function saveLastReadSurahAndAyah(
       ayahNumber: normalizedAyah,
     };
     await AsyncStorage.setItem(LAST_READ_POSITION_KEY, JSON.stringify(payload));
-    DeviceEventEmitter.emit(QURAN_PROGRESS_UPDATED_EVENT);
+    saved = true;
   } catch {
     /** Unable to persist progress; silently ignore for now. */
   }
+  if (saved) DeviceEventEmitter.emit(QURAN_PROGRESS_UPDATED_EVENT);
 }
 
 export type QuranProgress = {
