@@ -1,7 +1,7 @@
 # User Accounts & Cloud Sync — Design
 
-**Date:** 2026-06-19 (updated 2026-06-20)
-**Status:** Phase 1 (backend) and Phase 2 (frontend auth) shipped — **Phase 3 (sync engine) pending**
+**Date:** 2026-06-19 (updated 2026-06-21)
+**Status:** Phase 1 (backend), Phase 2 (frontend auth), and Phase 3 (sync engine) **all shipped**
 **Branch context:** builds on the tracking feature (`feat/habit-tracker`); auth work on `feat/auth`
 
 > **Update 2026-06-20:** The implemented backend deviates from the original
@@ -283,12 +283,12 @@ native modules).
 2. ✅ **Frontend auth (shipped)** — `ClerkProvider`, `SignIn.tsx` screen,
    optional-login UX (`SignInCard`), account / sign-out / delete via
    `useAccountActions`. **(Submission gate — new binary.)**
-3. ⏳ **Sync engine (next — this is what Phase 3 builds)** — `frontend/services/sync/`
-   does not exist yet. Build the per-domain adapters, triggers, settings
-   stamping (`settingsRegistry.ts`), and sync-status indicator. The backend
-   `POST /api/sync` contract and the auth plumbing (`getAuthToken`,
-   `useAuthState`, `apiFetch` Bearer attach) it consumes are already live.
-   (Largely OTA — adds no native modules.)
+3. ✅ **Sync engine (shipped)** — `frontend/services/sync/` built and tested.
+   Per-domain adapters (tracker + settings), triggers (sign-in, foreground,
+   debounced change events), settings stamping (`settingsRegistry.ts`,
+   `sync:settings_meta_v1` sidecar), sync-status indicator (`useSyncStatus`,
+   `sync:last_synced_v1`), and single-flight/feedback-loop guard
+   (`isApplyingRemote()`) are all live. (OTA — no native modules added.)
 
 ## Risks / tradeoffs accepted
 
@@ -338,6 +338,16 @@ brainstorm. Deviations from the original design are flagged **[DEVIATION]**.
   `hooks/useAuthState.ts`, `hooks/useAccountActions.ts`. `apiFetch` already
   attaches the Bearer token.
 
-**Phase 3 — sync engine (NOT started):** `frontend/services/sync/` does not
-exist. Everything in "Frontend: sync engine" and "Frontend: settings stamping"
-above is still to build. The backend contract it targets is live and unchanged.
+**Phase 3 — sync engine (shipped):** `frontend/services/sync/` is live.
+Key implementation notes vs. the design:
+- `ensureUser` in `userService.ts` now populates `email`/`name` from Clerk
+  (`clerkClient.users.getUser`) when the row is new or those columns are null —
+  captures the name server-side to survive Apple's once-only delivery.
+- **Quran reading mode is out of scope on this branch** (no service exists for
+  `quran:reading-mode` on `feat/auth`); it can be added in a follow-up.
+- Settings stamping wires into **added change events** on theme, bookmarks,
+  quran progress, ramadan tracker, and `writePrayerSettings` — services were not
+  modified internally; the sync engine subscribes to the events they now emit.
+- Feedback-loop guard: `isApplyingRemote()` in the sync engine gates both
+  stamp-bumps and debounced re-syncs during `applyMerged`, preventing an
+  apply→event→sync→apply ping-pong.

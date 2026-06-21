@@ -72,6 +72,7 @@ See `AGENTS.md` for full architecture details. Key points:
 - **Routes:** `/Tracker` is a stack route (registered in `app/_layout.tsx`) reached from Home's "View tracker & habits" affordance.
 - **Habit frequency:** `HabitFrequency` is `{type:"daily"}` or `{type:"weekly", days:number[]}` where `days` are weekday indices (0=Sun..6=Sat, from `Date.getDay()`). `isHabitDueOnDate`/`frequencyLabel` live in `@/utils/habitFrequency`. Legacy `{type:"weekly", timesPerWeek}` habits migrate to Daily on read in `services/tracking/habits.ts` (no `updatedAt` bump). Habits are checked off for **today** from the Tracker rows (due days only) and for **any date** from the Calendar checklist; both filter by `isHabitDueOnDate`.
 - **Auth:** Identity via Clerk (`@clerk/expo` v3.5.2) with Apple + Google sign-in only. The ONLY direct Clerk touch points are `services/auth/authToken.ts` (non-hook token getter), `hooks/useAuthState.ts`, `hooks/useAccountActions.ts`, `ClerkProvider` wrapper in `app/_layout.tsx`, and the `SignIn.tsx` screen — everything else consumes those adapters. Env var `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (frontend); backend uses `CLERK_SECRET_KEY` + `CLERK_PUBLISHABLE_KEY`. Sign-in is optional; the app works fully signed-out. **Native-build requirement:** Clerk + `expo-secure-store` are native modules → Phase 2 requires a new EAS build and App Store submission, not OTA.
+- **Sync:** The sync engine lives in `frontend/services/sync/`. It runs only when the user is signed in and online, pushing the 4 domains (`prayer_log`, `habits`, `habit_log`, `settings`) to `POST /api/sync` and applying the merged response locally. Device-specific keys (`notif_*`, mosque/prayer-times caches) never sync. Settings stamping uses a sidecar key `sync:settings_meta_v1`; last sync time persists in `sync:last_synced_v1`.
 - **Tests:** When adding/removing test suites, update `frontend/__tests__/README.md`. Frontend Jest uses `jest-silent-reporter` + `summary` reporters. Backend Jest uses `ts-jest` with ESM preset and suppresses console output during tests. Test files that mock `react-native-safe-area-context` must include `useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 })` alongside `SafeAreaView`/`SafeAreaProvider`, or screens using the hook throw
 
 ### AsyncStorage Keys
@@ -87,6 +88,8 @@ Versioned keys — do not rename without migrating all references.
 **Quran:** `quran:bookmarks`, `quran_display_modes`, `quran:last-read:index`, `quran:last-read:position`
 
 **Tracking:** `tracking:prayer_log_v1` (prayer status cells), `tracking:habits_v1` (habit definitions), `tracking:habit_log_v1` (habit completion cells). Values stored as `Cell<T>` = `{ value, updatedAt }` for sync LWW; habits carry `updatedAt` + optional `deletedAt` tombstone.
+
+**Sync:** `sync:settings_meta_v1` (per-setting LWW stamps `Record<settingKey, updatedAt>`), `sync:last_synced_v1` (last successful sync epoch-ms)
 
 **Other:** `dua_history_v1` (dua request history), `ramadan_tracker_v1` (missed fast days map), `mosques_[lat]_[lng]` (dynamically keyed mosque cache)
 
