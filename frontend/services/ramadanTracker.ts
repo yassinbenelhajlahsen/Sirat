@@ -1,8 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DeviceEventEmitter } from "react-native";
 import { Holiday } from "./holidayService";
 
 // Storage key (versioned)
 const RAMADAN_TRACKER_KEY = "ramadan_tracker_v1";
+
+export const RAMADAN_TRACKER_UPDATED_EVENT = "RAMADAN_TRACKER_UPDATED";
 
 // Buffer days before/after Ramadan for universal compatibility
 const RAMADAN_BUFFER_DAYS = 3;
@@ -50,6 +53,7 @@ export async function markFastAsMissed(date: Date): Promise<void> {
     const map = await getMissedFastDays();
     map[dateKey(date)] = true;
     await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
+    DeviceEventEmitter.emit(RAMADAN_TRACKER_UPDATED_EVENT);
   } catch (e) {
     console.error("Failed to mark missed fast:", e);
     throw e;
@@ -66,10 +70,16 @@ export async function clearMissedFast(date: Date): Promise<void> {
     const key = dateKey(date);
     delete map[key];
     await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
+    DeviceEventEmitter.emit(RAMADAN_TRACKER_UPDATED_EVENT);
   } catch (e) {
     console.error("Failed to clear missed fast:", e);
     throw e;
   }
+}
+
+export async function replaceMissedFastDays(map: Record<string, boolean>): Promise<void> {
+  await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
+  DeviceEventEmitter.emit(RAMADAN_TRACKER_UPDATED_EVENT);
 }
 
 /**

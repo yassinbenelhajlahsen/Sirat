@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DeviceEventEmitter } from "react-native";
 
 import type { PrayerSettings } from "../prayerTimes";
 import {
@@ -120,6 +121,11 @@ export async function writeSeenKeys(keys: string[]) {
 
 export async function clearScheduleStorage() {
   await AsyncStorage.multiRemove([STORAGE_SCHEDULE_IDS, STORAGE_SEEN_KEYS]);
+}
+
+export async function writePrayerSettings(value: unknown): Promise<void> {
+  await AsyncStorage.setItem("prayerSettings", JSON.stringify(value));
+  DeviceEventEmitter.emit("settingsChanged", value);
 }
 
 export function buildEffectiveSettings(

@@ -98,3 +98,9 @@ export async function clearPrayerStatus(
   await persist(log);
   emit(dateKey);
 }
+
+export async function replacePrayerLog(log: PrayerLog): Promise<void> {
+  cache = log;
+  await persist(log);
+  DeviceEventEmitter.emit(PRAYER_LOG_UPDATED_EVENT, { dateKey: null });
+}

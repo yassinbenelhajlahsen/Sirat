@@ -5,6 +5,9 @@ import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useAuthState } from "@/hooks/useAuthState";
+import SignInCard from "@/components/home/SignInCard";
+import { shouldShowHomeCard, markHomeCardShown, dismissHomeCard } from "@/services/auth/authPrompts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlassSurface from "@/components/ui/GlassSurface";
@@ -58,7 +61,24 @@ export default function Home() {
   const stats = useTrackingStats();
   const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
-  const greeting = getGreeting(today);
+  const { isLoaded, isSignedIn, firstName } = useAuthState();
+  const [showCard, setShowCard] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    if (isLoaded && !isSignedIn) {
+      shouldShowHomeCard().then((show) => {
+        if (!mounted) return;
+        if (show) {
+          setShowCard(true);
+          void markHomeCardShown();
+        }
+      });
+    }
+    return () => { mounted = false; };
+  }, [isLoaded, isSignedIn]);
+
+  const baseGreeting = getGreeting(today);
+  const displayName = isSignedIn && firstName && firstName.length < 10 ? firstName : null;
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric", month: "long", year: "numeric",
   }).format(today);
@@ -114,11 +134,24 @@ export default function Home() {
           </GlassSurface>
         )}
 
+        {showCard && (
+          <View style={styles.signInCardSlot}>
+            <SignInCard
+              onPress={() => router.push("/SignIn")}
+              onDismiss={() => {
+                setShowCard(false);
+                void dismissHomeCard();
+              }}
+            />
+          </View>
+        )}
+
         {/* Header: greeting + location + settings gear */}
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
             <Caption color={colors.accent} style={styles.eyebrow}>{islamicDate}</Caption>
-            <LargeTitle>{greeting}</LargeTitle>
+            <LargeTitle>{displayName ? `${baseGreeting},` : baseGreeting}</LargeTitle>
+            {displayName && <LargeTitle>{displayName}.</LargeTitle>}
             {locationLabel ? (
               <View style={styles.locationRow}>
                 <Ionicons name="location-outline" size={14} color={withOpacity(colors.white, 0.6)} />
@@ -259,5 +292,6 @@ const createStyles = (theme: AppTheme) => {
     streakChipText: { fontWeight: "700" },
     flame: { fontSize: 13 },
     duaSection: { position: "relative", marginTop: spacing.lg },
+    signInCardSlot: { marginTop: spacing.md },
   });
 };

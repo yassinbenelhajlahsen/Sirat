@@ -40,3 +40,6 @@ export type Habit = {
 
 /** dateKey -> habitId -> done cell. */
 export type HabitLog = Record<string, Record<string, Cell<boolean>>>;
+
+/** settingKey -> stamped value. Mirrors backend SettingsEnvelope. */
+export type SettingsEnvelope = Record<string, Cell<unknown>>;

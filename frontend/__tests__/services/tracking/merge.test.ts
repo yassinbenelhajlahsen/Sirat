@@ -1,4 +1,4 @@
-import { mergePrayerLogs, mergeHabitLogs, mergeHabits } from "@/services/tracking/merge";
+import { mergePrayerLogs, mergeHabitLogs, mergeHabits, mergeSettings } from "@/services/tracking/merge";
 import type { Habit } from "@/services/tracking/types";
 
 describe("tracking/merge", () => {
@@ -60,5 +60,28 @@ describe("tracking/merge", () => {
     expect(merged).toHaveLength(1);
     expect(merged[0].id).toBe("h1");
     expect(merged[0].name).toBe("Local Only");
+  });
+});
+
+describe("mergeSettings", () => {
+  it("keeps the higher updatedAt per key", () => {
+    const local = { theme: { value: "dark", updatedAt: 10 } };
+    const remote = { theme: { value: "light", updatedAt: 20 } };
+    expect(mergeSettings(local, remote)).toEqual({ theme: { value: "light", updatedAt: 20 } });
+  });
+
+  it("keeps local on an exact tie", () => {
+    const local = { theme: { value: "dark", updatedAt: 10 } };
+    const remote = { theme: { value: "light", updatedAt: 10 } };
+    expect(mergeSettings(local, remote).theme).toEqual({ value: "dark", updatedAt: 10 });
+  });
+
+  it("unions keys present on only one side", () => {
+    const local = { theme: { value: "dark", updatedAt: 10 } };
+    const remote = { prayerSettings: { value: { method: 2 }, updatedAt: 5 } };
+    expect(mergeSettings(local, remote)).toEqual({
+      theme: { value: "dark", updatedAt: 10 },
+      prayerSettings: { value: { method: 2 }, updatedAt: 5 },
+    });
   });
 });

@@ -1,5 +1,6 @@
 import { DeviceEventEmitter } from "react-native";
 import { getVersionHeaders } from "./appVersion";
+import { getAuthToken } from "./auth/authToken";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -46,11 +47,13 @@ export async function apiFetch<T>(
     url += `?${qs}`;
   }
 
+  const token = await getAuthToken();
   const res = await fetch(url, {
     method: options?.method ?? "GET",
     headers: {
       "Content-Type": "application/json",
       ...getVersionHeaders(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body:
       options?.body !== undefined ? JSON.stringify(options.body) : undefined,

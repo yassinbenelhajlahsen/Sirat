@@ -9,6 +9,8 @@ import duaRoutes from "./routes/dua.js";
 import holidayRoutes from "./routes/holiday.js";
 import mosqueRoutes from "./routes/mosque.js";
 import prayerTimesRoutes from "./routes/prayerTimes.js";
+import syncRoutes from "./routes/sync.js";
+import accountRoutes from "./routes/account.js";
 
 const app = express();
 
@@ -25,7 +27,12 @@ const resolveTrustProxy = (): boolean | number | string => {
 app.set("trust proxy", resolveTrustProxy());
 
 // Middleware
-app.use(express.json({ limit: "16kb" }));
+// /api/sync has its own 1MB parser on the router; skip the global 16KB parser for those paths.
+const defaultJsonParser = express.json({ limit: "16kb" });
+app.use((req, res, next) => {
+  if (req.path === "/api/sync" || req.path.startsWith("/api/sync/")) return next();
+  return defaultJsonParser(req, res, next);
+});
 app.use(
   cors({
     origin: [
@@ -48,6 +55,8 @@ app.use("/api/dua", duaRoutes);
 app.use("/api/mosque", mosqueRoutes);
 app.use("/api/prayer-times", prayerTimesRoutes);
 app.use("/api/holidays", holidayRoutes);
+app.use("/api/sync", syncRoutes);
+app.use("/api/account", accountRoutes);
 
 // Root health check
 app.get("/", (req, res) => {

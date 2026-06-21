@@ -17,6 +17,14 @@ const mockUseRamadanTracker = jest.fn();
 const mockGetHolidayMapForYear = jest.fn();
 const mockDateKeyFromDate = jest.fn();
 
+jest.mock("@clerk/expo", () => ({
+  ClerkProvider: ({ children }: { children: any }) => children,
+  useAuth: () => ({ isLoaded: true, isSignedIn: false, userId: null }),
+  useUser: () => ({ user: null }),
+  useSSO: () => ({ startSSOFlow: jest.fn() }),
+  getClerkInstance: () => ({ session: null }),
+}));
+jest.mock("@clerk/expo/token-cache", () => ({ tokenCache: {} }));
 jest.mock("@expo/vector-icons", () => {
   const React = require("react");
   const { View } = require("react-native");

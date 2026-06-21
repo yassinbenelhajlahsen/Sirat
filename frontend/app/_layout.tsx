@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
 import { Ionicons } from "@expo/vector-icons";
 import { Fraunces_700Bold } from "@expo-google-fonts/fraunces";
 import { Asset } from "expo-asset";
@@ -31,11 +33,14 @@ import SplashScreen from "@/components/SplashScreen";
 import UpdateModal from "@/components/UpdateModal";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
 import { getVersionHeaders } from "@/services/appVersion";
+import { useSyncEngine } from "@/hooks/useSyncEngine";
 
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
 const LAUNCH_BACKGROUND_COLOR = "#0E1117";
 SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
+
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 // Storage keys and events used elsewhere in your app
 export const PRAYER_SETTINGS_KEY = "prayerSettings";
@@ -163,13 +168,16 @@ export async function runInitialAppSync(
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <RootLayoutContent />
-    </ThemeProvider>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <ThemeProvider>
+        <RootLayoutContent />
+      </ThemeProvider>
+    </ClerkProvider>
   );
 }
 
 function RootLayoutContent() {
+  useSyncEngine();
   const { theme, isHydrated } = useTheme();
   const backgroundColor = isHydrated
     ? theme.colors.primaryDark
@@ -199,8 +207,9 @@ function RootLayoutContent() {
     otaCheckInFlightRef.current = true;
 
     try {
-      // Skip OTA checks entirely in Expo Go.
-      if (Constants.appOwnership === "expo") return;
+      // checkForUpdateAsync() throws in development builds and Expo Go (both
+      // __DEV__), and when expo-updates isn't enabled. Skip in all those cases.
+      if (__DEV__ || !Updates.isEnabled) return;
 
       const update = await Updates.checkForUpdateAsync();
       if (!update.isAvailable) return;
@@ -258,7 +267,7 @@ function RootLayoutContent() {
 
     try {
       // Right before reloading, re-check and fetch to avoid restarting into a stale OTA.
-      if (Constants.appOwnership !== "expo") {
+      if (!__DEV__ && Updates.isEnabled) {
         const latestUpdate = await Updates.checkForUpdateAsync();
         if (latestUpdate.isAvailable) {
           await Updates.fetchUpdateAsync();
@@ -398,6 +407,17 @@ function RootLayoutContent() {
                 <Stack.Screen
                   name="Settings"
                   options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
+                />
+                <Stack.Screen
+                  name="SignIn"
+                  options={{
+                    presentation: "transparentModal",
+                    animation: "fade",
+                    headerShown: false,
+                    // Override the global opaque contentStyle so the dimmed
+                    // screen behind shows through (a real transparent overlay).
+                    contentStyle: { backgroundColor: "transparent" },
+                  }}
                 />
                 <Stack.Screen name="Tracker" options={{ animation: "slide_from_right" }} />
               </Stack>

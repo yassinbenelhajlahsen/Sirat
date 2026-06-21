@@ -44,6 +44,8 @@ See `AGENTS.md` for full architecture details. Key points:
 
 **Monorepo layout:** `frontend/` (Expo 54 / React Native 0.81 / Expo Router 6), `backend/` (Express 4 + TypeScript API proxy), `docs/` (GitHub Pages site at `sirat.dev`), `plans/` (planning docs).
 
+> **`docs/` vs `devDocs/`:** `docs/` is ONLY the public landing-page site deployed to GitHub Pages (`sirat.dev`) — never put internal/dev docs there. All internal design specs and implementation plans live under `devDocs/superpowers/` (`devDocs/superpowers/specs/`, `devDocs/superpowers/plans/`).
+
 **Frontend patterns:**
 - Screens in `app/(tabs)/` are thin — they delegate to hooks and services
 - Business logic lives in `services/`, with modular sub-directories (`prayer-times/`, `notifications/`) orchestrated by facade files (`prayerTimes.ts`, `notificationService.ts`)
@@ -59,6 +61,7 @@ See `AGENTS.md` for full architecture details. Key points:
 - Production mode strips internal error messages from API responses (debug locally for full details)
 - JSON body limit: 16KB
 - Minimum version gate: `minVersionGate` middleware (registered after CORS, before routes) logs in monitor mode (`ENFORCE_MIN_VERSION=false`, the default) and blocks with 426 in enforcement mode. `GET /api/app/version` and health endpoints are always exempt.
+- **Migrations:** Prisma Migrate (`prisma/schema.prisma`, `prisma/migrations/`); `npm run migrate` = `prisma migrate deploy`, chained into `start`. Existing `users`/`sync_documents` queries stay raw `pg` (`src/db/pool.ts`); new tables use the `PrismaClient` singleton (`src/db/prisma.ts`). When the Prisma client starts serving request-path queries, cap its pool with a `?connection_limit=` URL param so it plus the raw `pg` pool stay under Railway's Postgres connection limit.
 
 ## Key Conventions
 
@@ -68,6 +71,8 @@ See `AGENTS.md` for full architecture details. Key points:
 - **Display font:** Large stat numerals use Fraunces via `@/components/ui/DisplayNumber` (`DISPLAY_FONT_FAMILY = "Fraunces_700Bold"`, loaded in `app/_layout.tsx`). The streak flame 🔥 is the only emoji; all other icons are Ionicons.
 - **Routes:** `/Tracker` is a stack route (registered in `app/_layout.tsx`) reached from Home's "View tracker & habits" affordance.
 - **Habit frequency:** `HabitFrequency` is `{type:"daily"}` or `{type:"weekly", days:number[]}` where `days` are weekday indices (0=Sun..6=Sat, from `Date.getDay()`). `isHabitDueOnDate`/`frequencyLabel` live in `@/utils/habitFrequency`. Legacy `{type:"weekly", timesPerWeek}` habits migrate to Daily on read in `services/tracking/habits.ts` (no `updatedAt` bump). Habits are checked off for **today** from the Tracker rows (due days only) and for **any date** from the Calendar checklist; both filter by `isHabitDueOnDate`.
+- **Auth:** Identity via Clerk (`@clerk/expo` v3.5.2) with Apple + Google sign-in only. The ONLY direct Clerk touch points are `services/auth/authToken.ts` (non-hook token getter), `hooks/useAuthState.ts`, `hooks/useAccountActions.ts`, `ClerkProvider` wrapper in `app/_layout.tsx`, and the `SignIn.tsx` screen — everything else consumes those adapters. Env var `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (frontend); backend uses `CLERK_SECRET_KEY` + `CLERK_PUBLISHABLE_KEY`. Sign-in is optional; the app works fully signed-out. **Native-build requirement:** Clerk + `expo-secure-store` are native modules → Phase 2 requires a new EAS build and App Store submission, not OTA.
+- **Sync:** The sync engine lives in `frontend/services/sync/`. It runs only when the user is signed in and online, pushing the 4 domains (`prayer_log`, `habits`, `habit_log`, `settings`) to `POST /api/sync` and applying the merged response locally. Device-specific keys (`notif_*`, mosque/prayer-times caches) never sync. Settings stamping uses a sidecar key `sync:settings_meta_v1`; last sync time persists in `sync:last_synced_v1`. **Known limitation:** the `settings` domain merges each setting as a whole value under one LWW stamp. For the two *accumulating collections* (`quranBookmarks`, `ramadanTracker`) this means concurrent additions on two offline devices can lose entries (the lower-stamped device's whole list is discarded on merge) — acceptable for now; revisit with per-item `Cell`-keyed merge (like `habitLog`) if it bites. The tracker domains (prayer log, habits, habit log) already merge per-cell and are unaffected.
 - **Tests:** When adding/removing test suites, update `frontend/__tests__/README.md`. Frontend Jest uses `jest-silent-reporter` + `summary` reporters. Backend Jest uses `ts-jest` with ESM preset and suppresses console output during tests. Test files that mock `react-native-safe-area-context` must include `useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 })` alongside `SafeAreaView`/`SafeAreaProvider`, or screens using the hook throw
 
 ### AsyncStorage Keys
@@ -83,6 +88,8 @@ Versioned keys — do not rename without migrating all references.
 **Quran:** `quran:bookmarks`, `quran_display_modes`, `quran:last-read:index`, `quran:last-read:position`
 
 **Tracking:** `tracking:prayer_log_v1` (prayer status cells), `tracking:habits_v1` (habit definitions), `tracking:habit_log_v1` (habit completion cells). Values stored as `Cell<T>` = `{ value, updatedAt }` for sync LWW; habits carry `updatedAt` + optional `deletedAt` tombstone.
+
+**Sync:** `sync:settings_meta_v1` (per-setting LWW stamps `Record<settingKey, updatedAt>`), `sync:last_synced_v1` (last successful sync epoch-ms)
 
 **Other:** `dua_history_v1` (dua request history), `ramadan_tracker_v1` (missed fast days map), `mosques_[lat]_[lng]` (dynamically keyed mosque cache)
 

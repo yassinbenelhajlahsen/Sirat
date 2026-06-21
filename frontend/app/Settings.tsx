@@ -9,6 +9,7 @@ import Screen from "@/components/ui/Screen";
 import { Caption, Footnote, LargeTitle } from "@/components/ui/Text";
 import PressableScale from "@/components/PressableScale";
 import NotificationSettings from "@/components/NotificationSettings";
+import { AccountSection } from "@/components/settings/AccountSection";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsRow from "@/components/settings/SettingsRow";
 import ThemePicker from "@/components/settings/ThemePicker";
@@ -16,6 +17,7 @@ import PickerDialog from "@/components/settings/PickerDialog";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useAccountActions } from "@/hooks/useAccountActions";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
 import { useSettingsPermissions } from "@/hooks/useSettingsPermissions";
 import CALCULATION_METHODS from "@/utils/calculationMethods";
@@ -33,7 +35,6 @@ import {
   getActiveIconName,
   iconNameForTheme,
 } from "@/services/appIcon";
-
 const METHOD_ITEMS = CALCULATION_METHODS.map((m) => ({
   label: m.name,
   value: m.id,
@@ -46,6 +47,8 @@ export default function Settings() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const haptics = useHaptics();
+
+  const { signOut, deleteAccount } = useAccountActions();
 
   const {
     useLocation,
@@ -131,6 +134,30 @@ export default function Settings() {
             </GlassSurface>
           </PressableScale>
         </View>
+
+        {/* Account */}
+        <AccountSection
+          onSignIn={() => router.push("/SignIn")}
+          onSignOut={() => { void signOut(); }}
+          onDeleteAccount={() =>
+            Alert.alert(
+              "Delete account",
+              "This permanently deletes your account and all synced data. This cannot be undone.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => {
+                    deleteAccount().catch(() => {
+                      Alert.alert("Couldn't delete account", "Something went wrong. Please try again.");
+                    });
+                  },
+                },
+              ],
+            )
+          }
+        />
 
         {/* Appearance */}
         <SettingsSection label="Appearance">

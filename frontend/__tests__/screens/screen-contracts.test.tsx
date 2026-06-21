@@ -101,6 +101,22 @@ jest.mock("@/hooks/useSettingsPermissions", () => ({
   useSettingsPermissions: jest.fn(),
 }));
 
+jest.mock("@/hooks/useAuthState", () => ({
+  useAuthState: jest.fn(() => ({
+    isLoaded: true,
+    isSignedIn: false,
+    userId: null,
+    email: null,
+  })),
+}));
+
+jest.mock("@/hooks/useAccountActions", () => ({
+  useAccountActions: jest.fn(() => ({
+    signOut: jest.fn(),
+    deleteAccount: jest.fn(),
+  })),
+}));
+
 jest.mock("@/components/settings/PickerDialog", () => {
   const { View } = require("react-native");
   return { __esModule: true, default: () => <View /> };
@@ -197,6 +213,13 @@ jest.mock("@/services/holidayService", () => ({
 jest.mock("@/services/getNearbyMosques", () => ({
   getCachedMosques: jest.fn(),
   getNearbyMosques: jest.fn(),
+}));
+
+jest.mock("@/services/auth/authPrompts", () => ({
+  isHomeCardDismissed: () => Promise.resolve(true),
+  dismissHomeCard: () => Promise.resolve(),
+  shouldShowHomeCard: () => Promise.resolve(false),
+  markHomeCardShown: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock("expo-audio", () => ({

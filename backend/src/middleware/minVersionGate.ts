@@ -23,15 +23,6 @@ export function minVersionGate(
   const version = req.headers["x-sirat-app-version"] as string | undefined;
   const platform = req.headers["x-sirat-platform"] as string | undefined;
 
-  if (ENV.ENFORCE_MIN_VERSION !== "true") {
-    // Monitor mode: log and pass through
-    console.log(
-      `[minVersionGate] version=${version ?? "missing"} platform=${platform ?? "missing"} path=${req.path}`,
-    );
-    next();
-    return;
-  }
-
   // Enforcement mode
   const currentVersion = version ?? "unknown";
   const isOutdated =

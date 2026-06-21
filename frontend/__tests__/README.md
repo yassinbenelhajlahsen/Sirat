@@ -136,6 +136,29 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `weekday habits + Tracker check-off (Phase 3.1) testing`
   - `utils/habitFrequency.test.ts` — `frequencyLabel` (weekday list), `isHabitDueOnDate`, `WEEKDAY_SHORT`
   - `services/tracking/habits.migration.test.ts` — legacy `{weekly, timesPerWeek}` habits migrate to Daily on read
+- `user authentication + account management (Phase 2) testing`
+  - `services/auth/authToken.test.ts` — non-hook token getter and Clerk instance initialization
+  - `services/apiClient.auth.test.ts` — bearer token attachment to backend calls
+  - `hooks/useAuthState.test.tsx` — Clerk session state subscription (isLoaded, isSignedIn, userId, email)
+  - `hooks/useAccountActions.test.tsx` — sign-out and account-delete actions
+  - `components/accountSection.test.tsx` — account UI section rendering and action callbacks
+  - `screens/signIn.test.tsx` — SignIn screen: renders both provider buttons, Google/Apple SSO flow invocation, session activation
+  - `screens/settings.account.test.tsx` — Settings account section integration + sign-out/delete confirmation flows
+- `cloud sync engine (Phase 3) testing`
+  - `services/tracking/merge.mergeSettings.test.ts` — shared `mergeSettings` LWW merge cases (drift-guard vector used by both frontend and backend)
+  - `services/sync/replaceSetters.test.ts` — `replacePrayerLog` / `replaceHabitLog` / `replaceHabits` internal setters
+  - `services/sync/settingsMeta.test.ts` — `sync:settings_meta_v1` stamp sidecar read/write and bump-on-event behavior
+  - `services/sync/settingsRegistry.test.ts` — `settingsRegistry.ts` entry shapes: storageKey, read(), applyValue(), changeEvents
+  - `services/sync/settingsAdapter.test.ts` — settings domain adapter `read()` / `applyMerged()` round-trip
+  - `services/sync/trackerAdapters.test.ts` — prayer-log, habits, habit-log adapter `read()` / `applyMerged()` round-trips
+  - `services/sync/syncEngine.test.ts` — single-flight guard, debounce, online/offline guard, sign-in trigger, foreground trigger
+  - `hooks/useSyncEngine.test.ts` — `useSyncEngine` hook: mounts engine on sign-in, tears down on sign-out
+  - `hooks/useSyncStatus.test.ts` — `useSyncStatus` hook: reads `sync:last_synced_v1`, updates on sync events
+  - `services/quranBookmarks.test.ts` — quran bookmarks service (change events emitted for sync stamping)
+  - `services/quranProgress.test.ts` — quran reading-progress service (change events for sync stamping)
+  - `services/ramadanTracker.test.ts` — ramadan tracker service change events for sync stamping
+  - `services/notifications/writePrayerSettings.test.ts` — prayer settings write path change events for sync stamping
+  - `context/themeSync.test.ts` — theme context change event emitted on theme write (sync stamping trigger)
 
 ## Run Tests
 

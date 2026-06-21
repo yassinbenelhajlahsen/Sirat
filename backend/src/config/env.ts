@@ -9,6 +9,10 @@ export const ENV = {
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
   MIN_SUPPORTED_APP_VERSION: process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0",
   ENFORCE_MIN_VERSION: process.env.ENFORCE_MIN_VERSION || "false",
+  DATABASE_URL: process.env.DATABASE_URL || "",
+  SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL || "",
+  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || "",
+  CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || "",
 } as const;
 
 if (!ENV.GOOGLE_MAPS_API_KEY) {
@@ -19,4 +23,12 @@ if (!ENV.OPENAI_API_KEY) {
   console.warn(
     "⚠️  OPENAI_API_KEY is not set. Dua selection will use random fallback.",
   );
+}
+
+if (!ENV.DATABASE_URL) {
+  console.warn("⚠️  DATABASE_URL is not set. Account & sync endpoints will fail.");
+}
+
+if (!ENV.CLERK_SECRET_KEY) {
+  console.warn("⚠️  CLERK_SECRET_KEY is not set. Auth verification will fail.");
 }

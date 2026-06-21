@@ -1,10 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DeviceEventEmitter } from "react-native";
 
 import {
   deleteBookmark,
   getBookmarks,
   getBookmarkKey,
+  replaceBookmarks,
   upsertBookmark,
+  QURAN_BOOKMARKS_UPDATED_EVENT,
 } from "@/services/quranBookmarks";
 
 describe("quranBookmarks", () => {
@@ -180,5 +183,14 @@ describe("quranBookmarks", () => {
 
   it("builds stable bookmark keys", () => {
     expect(getBookmarkKey(2, 255)).toBe("2:255");
+  });
+
+  it("replaceBookmarks overwrites storage and emits", async () => {
+    const emit = jest.spyOn(DeviceEventEmitter, "emit");
+    const list = [{ id: "b1", surahNumber: 2, ayahNumber: 255, ayahGlobalIndex: 262, title: "Ayatul Kursi", createdAt: 1, updatedAt: 1 }];
+    const result = await replaceBookmarks(list);
+    expect(result).toEqual(list);
+    expect(await getBookmarks()).toEqual(list);
+    expect(emit).toHaveBeenCalledWith(QURAN_BOOKMARKS_UPDATED_EVENT);
   });
 });

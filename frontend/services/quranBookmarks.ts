@@ -1,6 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DeviceEventEmitter } from "react-native";
 
 const BOOKMARKS_STORAGE_KEY = "quran:bookmarks";
+
+export const QURAN_BOOKMARKS_UPDATED_EVENT = "QURAN_BOOKMARKS_UPDATED";
 
 export type QuranBookmark = {
   id: string;
@@ -162,6 +165,7 @@ export async function upsertBookmark(
 
   const sorted = sortBookmarks(nextBookmarks);
   await persistBookmarks(sorted);
+  DeviceEventEmitter.emit(QURAN_BOOKMARKS_UPDATED_EVENT);
   return sorted;
 }
 
@@ -179,6 +183,7 @@ export async function deleteBookmark(
   }
 
   await persistBookmarks(next);
+  DeviceEventEmitter.emit(QURAN_BOOKMARKS_UPDATED_EVENT);
   return next;
 }
 
@@ -187,4 +192,10 @@ export function getBookmarkKey(
   ayahNumber: number
 ): string {
   return `${surahNumber}:${ayahNumber}`;
+}
+
+export async function replaceBookmarks(list: QuranBookmark[]): Promise<QuranBookmark[]> {
+  await AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(list));
+  DeviceEventEmitter.emit(QURAN_BOOKMARKS_UPDATED_EVENT);
+  return list;
 }
