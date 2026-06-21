@@ -48,12 +48,25 @@ it("posts payload and records last-synced on success", async () => {
 it("coalesces concurrent calls into a single in-flight sync plus one rerun", async () => {
   mockGetToken.mockResolvedValue("jwt");
   let resolve!: (v: unknown) => void;
+  // First call keeps apiPost pending indefinitely so we can assert before it resolves.
+  // Second call (the rerun) also returns a never-settling promise — that's fine, it's fire-and-forget.
   mockApiPost.mockImplementation(() => new Promise((r) => { resolve = r; }));
+
+  const flush = () => new Promise<void>((r) => setImmediate(r));
+
   const a = syncNow();
-  const b = syncNow(); // should not start a second POST yet
-  expect(mockApiPost).toHaveBeenCalledTimes(1);
+  const b = syncNow(); // coalesces: sets pendingRerun, returns immediately
+
+  // Drain the await chain inside `a` (getAuthToken → isOnline → 4 adapter reads → apiPost)
+  await flush();
+
+  expect(mockApiPost).toHaveBeenCalledTimes(1); // b did NOT start a second POST
+
   resolve({ prayer_log: {}, habits: [], habit_log: {}, settings: {}, syncedAt: "2026-06-20T00:00:00.000Z" });
-  await a; await b;
-  // one rerun fired because b arrived mid-flight
+  await a;
+  await b;
+
+  // pendingRerun set by b fires exactly one more sync (fire-and-forget void syncNow)
+  await flush();
   expect(mockApiPost).toHaveBeenCalledTimes(2);
 });
