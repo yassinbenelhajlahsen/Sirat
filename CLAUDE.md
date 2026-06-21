@@ -61,6 +61,7 @@ See `AGENTS.md` for full architecture details. Key points:
 - Production mode strips internal error messages from API responses (debug locally for full details)
 - JSON body limit: 16KB
 - Minimum version gate: `minVersionGate` middleware (registered after CORS, before routes) logs in monitor mode (`ENFORCE_MIN_VERSION=false`, the default) and blocks with 426 in enforcement mode. `GET /api/app/version` and health endpoints are always exempt.
+- **Migrations:** Prisma Migrate (`prisma/schema.prisma`, `prisma/migrations/`); `npm run migrate` = `prisma migrate deploy`, chained into `start`. Existing `users`/`sync_documents` queries stay raw `pg` (`src/db/pool.ts`); new tables use the `PrismaClient` singleton (`src/db/prisma.ts`). When the Prisma client starts serving request-path queries, cap its pool with a `?connection_limit=` URL param so it plus the raw `pg` pool stay under Railway's Postgres connection limit.
 
 ## Key Conventions
 

@@ -91,6 +91,13 @@ Important frontend flows:
 - `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
 - `MIN_SUPPORTED_APP_VERSION` default: `1.0.0` (minimum client version allowed)
 - `ENFORCE_MIN_VERSION` default: `false` (monitor mode — logs but never blocks; set to `true` to enforce)
+- Database migrations: Prisma Migrate. Schema in `backend/prisma/schema.prisma`;
+  migrations in `backend/prisma/migrations/`. Apply with `npm run migrate`
+  (`prisma migrate deploy`); author new ones with `npm run migrate:dev`.
+  `start` runs `prisma migrate deploy` before boot.
+- DB query boundary: existing tables (`users`, `sync_documents`) are queried with
+  raw `pg` via `src/db/pool.ts` (incl. the `FOR UPDATE` sync transaction). New
+  feature tables use the Prisma Client singleton in `src/db/prisma.ts`.
 
 ### Frontend env/config
 - `EXPO_PUBLIC_API_URL` used in `frontend/services/apiClient.ts` (shared API client) and `frontend/app/_layout.tsx` (version check), default `http://localhost:3001`
