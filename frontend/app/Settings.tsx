@@ -35,7 +35,6 @@ import {
   getActiveIconName,
   iconNameForTheme,
 } from "@/services/appIcon";
-
 const METHOD_ITEMS = CALCULATION_METHODS.map((m) => ({
   label: m.name,
   value: m.id,

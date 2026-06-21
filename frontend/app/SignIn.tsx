@@ -46,7 +46,7 @@ export default function SignIn() {
       });
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        router.back();
+        // Navigation is handled by the isSignedIn useEffect above.
       }
     } catch (err: unknown) {
       const error = err as { code?: string };
@@ -60,7 +60,7 @@ export default function SignIn() {
       const { createdSessionId, setActive } = await startAppleAuthenticationFlow();
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        router.back();
+        // Navigation is handled by the isSignedIn useEffect above.
       }
     } catch (err: unknown) {
       const error = err as { code?: string };
