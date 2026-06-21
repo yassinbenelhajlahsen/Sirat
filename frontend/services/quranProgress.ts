@@ -1,7 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DeviceEventEmitter } from "react-native";
 
 const LAST_READ_INDEX_KEY = "quran:last-read:index";
 const LAST_READ_POSITION_KEY = "quran:last-read:position";
+
+export const QURAN_PROGRESS_UPDATED_EVENT = "QURAN_PROGRESS_UPDATED";
 
 type StoredPosition = {
   surahNumber: number;
@@ -31,6 +34,7 @@ export async function saveLastReadAyahIndex(index: number): Promise<void> {
     }
     const normalizedIndex = Math.floor(index);
     await AsyncStorage.setItem(LAST_READ_INDEX_KEY, String(normalizedIndex));
+    DeviceEventEmitter.emit(QURAN_PROGRESS_UPDATED_EVENT);
   } catch {
     /** Unable to persist progress; silently ignore for now. */
   }
@@ -74,7 +78,26 @@ export async function saveLastReadSurahAndAyah(
       ayahNumber: normalizedAyah,
     };
     await AsyncStorage.setItem(LAST_READ_POSITION_KEY, JSON.stringify(payload));
+    DeviceEventEmitter.emit(QURAN_PROGRESS_UPDATED_EVENT);
   } catch {
     /** Unable to persist progress; silently ignore for now. */
   }
+}
+
+export type QuranProgress = {
+  index: number | null;
+  position: { surahNumber: number; ayahNumber: number } | null;
+};
+
+export async function getQuranProgress(): Promise<QuranProgress> {
+  return {
+    index: await getLastReadAyahIndex(),
+    position: await getLastReadSurahAndAyah(),
+  };
+}
+
+export async function replaceQuranProgress(p: QuranProgress): Promise<void> {
+  if (typeof p.index === "number") await saveLastReadAyahIndex(p.index);
+  if (p.position) await saveLastReadSurahAndAyah(p.position.surahNumber, p.position.ayahNumber);
+  DeviceEventEmitter.emit(QURAN_PROGRESS_UPDATED_EVENT);
 }
