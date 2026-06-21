@@ -26,6 +26,8 @@ jest.mock("@/hooks/useAuthState", () => ({
 jest.mock("@/services/auth/authPrompts", () => ({
   isHomeCardDismissed: () => Promise.resolve(true),
   dismissHomeCard: () => Promise.resolve(),
+  shouldShowHomeCard: () => Promise.resolve(false),
+  markHomeCardShown: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: () => ({

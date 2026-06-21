@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuthState } from "@/hooks/useAuthState";
 import SignInCard from "@/components/home/SignInCard";
-import { isHomeCardDismissed, dismissHomeCard } from "@/services/auth/authPrompts";
+import { shouldShowHomeCard, markHomeCardShown, dismissHomeCard } from "@/services/auth/authPrompts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlassSurface from "@/components/ui/GlassSurface";
@@ -62,12 +62,20 @@ export default function Home() {
   const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
   const { isLoaded, isSignedIn } = useAuthState();
-  const [signInCardDismissed, setSignInCardDismissed] = useState(false);
+  const [showCard, setShowCard] = useState(false);
   useEffect(() => {
     let mounted = true;
-    isHomeCardDismissed().then((dismissed) => { if (mounted) setSignInCardDismissed(dismissed); });
+    if (isLoaded && !isSignedIn) {
+      shouldShowHomeCard().then((show) => {
+        if (!mounted) return;
+        if (show) {
+          setShowCard(true);
+          void markHomeCardShown();
+        }
+      });
+    }
     return () => { mounted = false; };
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const greeting = getGreeting(today);
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
@@ -125,12 +133,12 @@ export default function Home() {
           </GlassSurface>
         )}
 
-        {isLoaded && !isSignedIn && !signInCardDismissed && (
+        {showCard && (
           <View style={styles.signInCardSlot}>
             <SignInCard
               onPress={() => router.push("/SignIn")}
               onDismiss={() => {
-                setSignInCardDismissed(true);
+                setShowCard(false);
                 void dismissHomeCard();
               }}
             />

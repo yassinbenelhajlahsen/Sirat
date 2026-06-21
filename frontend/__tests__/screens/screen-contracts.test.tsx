@@ -218,6 +218,8 @@ jest.mock("@/services/getNearbyMosques", () => ({
 jest.mock("@/services/auth/authPrompts", () => ({
   isHomeCardDismissed: () => Promise.resolve(true),
   dismissHomeCard: () => Promise.resolve(),
+  shouldShowHomeCard: () => Promise.resolve(false),
+  markHomeCardShown: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock("expo-audio", () => ({
