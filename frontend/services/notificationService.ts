@@ -23,6 +23,8 @@ import {
   readPrefs,
   readPrayerSettings,
   readSoundMode,
+  readWindowMap,
+  readWindowOffset,
   writeDayFingerprint,
 } from "./notifications/storage";
 import type { RescheduleReason } from "./notifications/types";
@@ -52,8 +54,19 @@ function buildScheduleFingerprint(params: {
   soundMode: Awaited<ReturnType<typeof readSoundMode>>;
   times: Awaited<ReturnType<typeof getPrayerTimesToday>>;
   effective: Awaited<ReturnType<typeof deriveEffectiveSettings>>;
+  windowPrefs: Awaited<ReturnType<typeof readWindowMap>>;
+  windowOffset: Awaited<ReturnType<typeof readWindowOffset>>;
 }): string {
-  const { dayKey, prefs, cityDisplay, soundMode, times, effective } = params;
+  const {
+    dayKey,
+    prefs,
+    cityDisplay,
+    soundMode,
+    times,
+    effective,
+    windowPrefs,
+    windowOffset,
+  } = params;
 
   const timesFingerprint = JSON.stringify(times.map((t) => [t.label, t.time]));
   const effectiveFingerprint = JSON.stringify({
@@ -67,7 +80,7 @@ function buildScheduleFingerprint(params: {
       : null,
   });
 
-  return `day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}`;
+  return `day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}_${JSON.stringify(windowPrefs)}_${windowOffset}`;
 }
 
 export const NotificationService = {
@@ -113,6 +126,8 @@ export const NotificationService = {
       const { times: todayTimes, effective } = await fetchTodayTimesWithEffective();
       const cityDisplay = await resolveCityDisplay(effective);
       const soundMode = await readSoundMode();
+      const windowPrefs = await readWindowMap();
+      const windowOffset = await readWindowOffset();
 
       const today = yyyymmdd();
       const nextKey = buildScheduleFingerprint({
@@ -122,6 +137,8 @@ export const NotificationService = {
         soundMode,
         times: todayTimes,
         effective,
+        windowPrefs,
+        windowOffset,
       });
       const lastKey = await readDayFingerprint();
 
@@ -136,6 +153,8 @@ export const NotificationService = {
           cityDisplay,
           effective,
           soundMode,
+          windowPrefs,
+          windowOffset,
         });
         await writeDayFingerprint(nextKey);
         return;
@@ -147,6 +166,8 @@ export const NotificationService = {
         cityDisplay,
         effective,
         soundMode,
+        windowPrefs,
+        windowOffset,
       });
     } catch (e) {
       console.warn("rescheduleAll failed:", e);

@@ -24,6 +24,8 @@ type NotificationServiceSetup = {
     readPrefs: jest.Mock;
     readPrayerSettings: jest.Mock;
     readSoundMode: jest.Mock;
+    readWindowMap: jest.Mock;
+    readWindowOffset: jest.Mock;
     writeDayFingerprint: jest.Mock;
   };
 };
@@ -62,6 +64,13 @@ async function loadNotificationService(overrides?:
     readPrefs: jest.fn(async () => defaultPrefs),
     readPrayerSettings: jest.fn(async () => ({ useLocation: true, method: 2, city: null })),
     readSoundMode: jest.fn(async () => "default"),
+    readWindowMap: jest.fn(async () => ({
+      Fajr: false,
+      Dhuhr: true,
+      Asr: false,
+      Maghrib: false,
+    })),
+    readWindowOffset: jest.fn(async () => 15),
     writeDayFingerprint: jest.fn(async () => {}),
   };
 
@@ -102,6 +111,8 @@ async function loadNotificationService(overrides?:
     readPrefs: mocks.readPrefs,
     readPrayerSettings: mocks.readPrayerSettings,
     readSoundMode: mocks.readSoundMode,
+    readWindowMap: mocks.readWindowMap,
+    readWindowOffset: mocks.readWindowOffset,
     writeDayFingerprint: mocks.writeDayFingerprint,
   }));
 
@@ -189,6 +200,22 @@ describe("NotificationService", () => {
     expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
     expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
     expect(mocks.writeDayFingerprint).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes window preferences and offset through to scheduleForHorizon", async () => {
+    const { NotificationService, mocks } = await loadNotificationService({
+      readDayFingerprint: jest.fn(async () => "old-key"),
+    });
+
+    await NotificationService.rescheduleAll("init");
+
+    expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
+    expect(mocks.scheduleForHorizon.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
+        windowOffset: 15,
+      }),
+    );
   });
 
   it("initializes once and wires lifecycle callback", async () => {
