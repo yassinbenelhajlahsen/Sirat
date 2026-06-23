@@ -52,6 +52,7 @@ See `AGENTS.md` for full architecture details. Key points:
 - State: React Context (`ThemeContext`, `QuranAudioProvider`) + local state + AsyncStorage persistence — no Redux/Zustand
 - Cross-screen sync via `DeviceEventEmitter` with exact event names: `settingsChanged`, `NOTIF_PREFS_UPDATED`, `QURAN_DISPLAY_MODES_UPDATED`, `FORCE_UPDATE_REQUIRED`, `PRAYER_LOG_UPDATED`, `HABITS_UPDATED`, `HABIT_LOG_UPDATED`
 - All backend HTTP calls go through `frontend/services/apiClient.ts` (`apiFetch`/`apiPost`) which attaches version headers and intercepts 426 responses
+- Window reminders fire `offset` minutes before the next prayer (Fajr target is Sunrise; no Isha window), are suppressed when the prayer is already logged, and share the iOS 60-notification budget with at-prayer alerts (candidates sorted by fire time in `services/notifications/scheduler.ts`)
 
 **Backend patterns:**
 - Classic routes → controllers → services → utils layered architecture
@@ -83,7 +84,7 @@ Versioned keys — do not rename without migrating all references.
 
 **Prayer:** `prayerSettings` (JSON object), `selectedCity` (legacy city fallback)
 
-**Notifications:** `notif_enabled_v1` (`"1"`/`"0"` strings, not JSON booleans), `notif_os_status_v1`, `notif_schedule_ids_v1`, `notif_daykey_v1`, `notif_seen_keys_v1`, `notif_city_display_loc_v1`, `notif_city_display_man_v1`, `notif_last_manual_city_v1`, `notif_map_v1`, `notif_sound_mode_v1`
+**Notifications:** `notif_enabled_v1` (`"1"`/`"0"` strings, not JSON booleans), `notif_os_status_v1`, `notif_schedule_ids_v1`, `notif_daykey_v1`, `notif_seen_keys_v1`, `notif_city_display_loc_v1`, `notif_city_display_man_v1`, `notif_last_manual_city_v1`, `notif_map_v1`, `notif_sound_mode_v1`, `notif_window_map_v1` (per-window-prayer on/off JSON, keys Fajr/Dhuhr/Asr/Maghrib), `notif_window_offset_v1` (global minutes-before, stored as a string)
 
 **Quran:** `quran:bookmarks`, `quran_display_modes`, `quran:last-read:index`, `quran:last-read:position`
 

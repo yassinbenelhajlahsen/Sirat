@@ -293,7 +293,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                 { color: withOpacity(textColor, 0.72) },
               ]}
             >
-              A heads up before a prayer's time runs out. Sent only if you have
+              A heads up before a prayer&apos;s time runs out. Sent only if you have
               not logged it yet.
             </Text>
           </View>
