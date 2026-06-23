@@ -24,7 +24,7 @@ import {
   WINDOW_PRAYERS,
   type WindowPrayerKey,
   type WindowPrefMap,
-} from "../../utils/notifications/constants";
+} from "@/utils/notifications/constants";
 
 type Candidate = {
   fireDate: Date;
