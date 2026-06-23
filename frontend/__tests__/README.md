@@ -149,7 +149,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/tracking/merge.mergeSettings.test.ts` — shared `mergeSettings` LWW merge cases (drift-guard vector used by both frontend and backend)
   - `services/sync/replaceSetters.test.ts` — `replacePrayerLog` / `replaceHabitLog` / `replaceHabits` internal setters
   - `services/sync/settingsMeta.test.ts` — `sync:settings_meta_v1` stamp sidecar read/write and bump-on-event behavior
-  - `services/sync/settingsRegistry.test.ts` — `settingsRegistry.ts` entry shapes: storageKey, read(), applyValue(), changeEvents
+  - `services/sync/settingsRegistry.test.ts` — `settingsRegistry.ts` entry shapes: storageKey, read(), applyValue(), changeEvents (incl. the four synced notif prefs and their granular per-key change events)
   - `services/sync/settingsAdapter.test.ts` — settings domain adapter `read()` / `applyMerged()` round-trip
   - `services/sync/trackerAdapters.test.ts` — prayer-log, habits, habit-log adapter `read()` / `applyMerged()` round-trips
   - `services/sync/syncEngine.test.ts` — single-flight guard, debounce, online/offline guard, sign-in trigger, foreground trigger

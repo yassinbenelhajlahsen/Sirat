@@ -2,7 +2,23 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DeviceEventEmitter } from "react-native";
 import type { SettingEntry } from "./types";
 import { APP_THEME_STORAGE_KEY, THEME_CHANGED_EVENT } from "@/constants/theme";
-import { writePrayerSettings } from "@/services/notifications/storage";
+import {
+  writePrayerSettings,
+  readPrefs,
+  readSoundMode,
+  readWindowMap,
+  readWindowOffset,
+  writePrefs,
+  writeSoundMode,
+  writeWindowMap,
+  writeWindowOffset,
+} from "@/services/notifications/storage";
+import {
+  NOTIF_MAP_CHANGED_EVENT,
+  NOTIF_SOUND_MODE_CHANGED_EVENT,
+  NOTIF_WINDOW_MAP_CHANGED_EVENT,
+  NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
+} from "@/utils/notifications/constants";
 import {
   getQuranDisplayModes,
   saveQuranDisplayModes,
@@ -75,5 +91,29 @@ export const SETTINGS_REGISTRY: SettingEntry[] = [
     applyValue: async (v) => {
       if (v && typeof v === "object") await replaceMissedFastDays(v as Record<string, boolean>);
     },
+  },
+  {
+    key: "notifPrefs",
+    changeEvent: NOTIF_MAP_CHANGED_EVENT,
+    read: () => readPrefs(),
+    applyValue: (v) => writePrefs(v),
+  },
+  {
+    key: "notifSoundMode",
+    changeEvent: NOTIF_SOUND_MODE_CHANGED_EVENT,
+    read: () => readSoundMode(),
+    applyValue: (v) => writeSoundMode(v),
+  },
+  {
+    key: "notifWindowMap",
+    changeEvent: NOTIF_WINDOW_MAP_CHANGED_EVENT,
+    read: () => readWindowMap(),
+    applyValue: (v) => writeWindowMap(v),
+  },
+  {
+    key: "notifWindowOffset",
+    changeEvent: NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
+    read: () => readWindowOffset(),
+    applyValue: (v) => writeWindowOffset(v),
   },
 ];

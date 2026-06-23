@@ -41,6 +41,15 @@ export const SOUND_SEGMENT_GAP = 10;
 
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
+// Granular per-setting change signals, emitted only on a real edit to that one
+// value (unlike NOTIF_PREFS_UPDATED, which also broadcasts on launch and on
+// master-toggle / OS-permission changes). The sync engine stamps each synced
+// notif setting off its own event so an unrelated change never bumps its stamp.
+export const NOTIF_MAP_CHANGED_EVENT = "NOTIF_MAP_CHANGED";
+export const NOTIF_SOUND_MODE_CHANGED_EVENT = "NOTIF_SOUND_MODE_CHANGED";
+export const NOTIF_WINDOW_MAP_CHANGED_EVENT = "NOTIF_WINDOW_MAP_CHANGED";
+export const NOTIF_WINDOW_OFFSET_CHANGED_EVENT = "NOTIF_WINDOW_OFFSET_CHANGED";
+
 export const DEFAULT_PREFS = PRAYERS.reduce<Record<PrayerKey, boolean>>(
   (acc, key) => {
     acc[key] = true;

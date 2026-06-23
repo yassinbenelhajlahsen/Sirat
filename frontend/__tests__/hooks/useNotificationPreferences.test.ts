@@ -6,7 +6,11 @@ import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 import {
   DEFAULT_PREFS,
   DEFAULT_WINDOW_PREFS,
+  NOTIF_MAP_CHANGED_EVENT,
   NOTIF_PREFS_UPDATED_EVENT,
+  NOTIF_SOUND_MODE_CHANGED_EVENT,
+  NOTIF_WINDOW_MAP_CHANGED_EVENT,
+  NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
   STORAGE_ENABLED,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
@@ -87,7 +91,7 @@ describe("useNotificationPreferences", () => {
       expect.objectContaining({ Fajr: false }),
     );
 
-    expect(emitSpy).toHaveBeenCalledTimes(1);
+    expect(emitSpy).toHaveBeenCalledTimes(2);
     expect(emitSpy).toHaveBeenCalledWith(
       NOTIF_PREFS_UPDATED_EVENT,
       expect.objectContaining({
@@ -96,6 +100,7 @@ describe("useNotificationPreferences", () => {
         prefs: expect.objectContaining({ Fajr: false }),
       }),
     );
+    expect(emitSpy).toHaveBeenCalledWith(NOTIF_MAP_CHANGED_EVENT);
   });
 
   it("updates sound mode and no-ops when selecting the same mode", async () => {
@@ -128,7 +133,7 @@ describe("useNotificationPreferences", () => {
 
     expect(result.current.soundMode).toBe("adhan");
     expect(await AsyncStorage.getItem(STORAGE_SOUND_MODE)).toBe("adhan");
-    expect(emitSpy).toHaveBeenCalledTimes(1);
+    expect(emitSpy).toHaveBeenCalledTimes(2);
     expect(emitSpy).toHaveBeenCalledWith(
       NOTIF_PREFS_UPDATED_EVENT,
       expect.objectContaining({
@@ -136,6 +141,7 @@ describe("useNotificationPreferences", () => {
         soundMode: "adhan",
       }),
     );
+    expect(emitSpy).toHaveBeenCalledWith(NOTIF_SOUND_MODE_CHANGED_EVENT);
   });
 
   it("hydrates window prefs and offset from storage", async () => {
@@ -188,6 +194,7 @@ describe("useNotificationPreferences", () => {
         windowPrefs: expect.objectContaining({ Asr: true }),
       }),
     );
+    expect(emitSpy).toHaveBeenCalledWith(NOTIF_WINDOW_MAP_CHANGED_EVENT);
 
     emitSpy.mockClear();
 
@@ -201,6 +208,7 @@ describe("useNotificationPreferences", () => {
       NOTIF_PREFS_UPDATED_EVENT,
       expect.objectContaining({ windowOffset: 30 }),
     );
+    expect(emitSpy).toHaveBeenCalledWith(NOTIF_WINDOW_OFFSET_CHANGED_EVENT);
   });
 
   it("applies notifStatus overrides and persists emitted state", async () => {

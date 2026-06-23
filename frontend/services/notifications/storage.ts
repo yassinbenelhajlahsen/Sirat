@@ -5,6 +5,8 @@ import type { PrayerSettings } from "../prayerTimes";
 import {
   DEFAULT_WINDOW_OFFSET,
   DEFAULT_WINDOW_PREFS,
+  NOTIF_PREFS_UPDATED_EVENT,
+  PRAYERS,
   STORAGE_ENABLED,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
@@ -173,4 +175,44 @@ export async function readWindowOffset(): Promise<number> {
   return (WINDOW_OFFSET_OPTIONS as readonly number[]).includes(value)
     ? value
     : DEFAULT_WINDOW_OFFSET;
+}
+
+// Sync apply-side writers: persist a merged remote value in the same serialized
+// form the UI hook uses, then emit NOTIF_PREFS_UPDATED so the scheduler
+// reschedules. Each ignores malformed input (the read-side normalizers stay the
+// single source of truth for shape). Values are validated before persisting so
+// a corrupt remote payload can't poison local storage.
+export async function writePrefs(value: unknown): Promise<void> {
+  if (!value || typeof value !== "object") return;
+  const source = value as Record<string, unknown>;
+  const next: PrefMap = { ...DEFAULT_PREFS };
+  for (const key of PRAYERS) {
+    if (typeof source[key] === "boolean") next[key] = source[key] as boolean;
+  }
+  await AsyncStorage.setItem(STORAGE_MAP, JSON.stringify(next));
+  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
+}
+
+export async function writeSoundMode(value: unknown): Promise<void> {
+  if (value !== "default" && value !== "adhan") return;
+  await AsyncStorage.setItem(STORAGE_SOUND_MODE, value);
+  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
+}
+
+export async function writeWindowMap(value: unknown): Promise<void> {
+  if (!value || typeof value !== "object") return;
+  const source = value as Record<string, unknown>;
+  const next: WindowPrefMap = { ...DEFAULT_WINDOW_PREFS };
+  for (const key of WINDOW_PRAYERS) {
+    if (typeof source[key] === "boolean") next[key] = source[key] as boolean;
+  }
+  await AsyncStorage.setItem(STORAGE_WINDOW_MAP, JSON.stringify(next));
+  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
+}
+
+export async function writeWindowOffset(value: unknown): Promise<void> {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!(WINDOW_OFFSET_OPTIONS as readonly number[]).includes(n)) return;
+  await AsyncStorage.setItem(STORAGE_WINDOW_OFFSET, String(n));
+  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
 }

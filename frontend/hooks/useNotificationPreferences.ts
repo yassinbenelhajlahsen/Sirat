@@ -6,7 +6,11 @@ import {
   DEFAULT_PREFS,
   DEFAULT_WINDOW_OFFSET,
   DEFAULT_WINDOW_PREFS,
+  NOTIF_MAP_CHANGED_EVENT,
   NOTIF_PREFS_UPDATED_EVENT,
+  NOTIF_SOUND_MODE_CHANGED_EVENT,
+  NOTIF_WINDOW_MAP_CHANGED_EVENT,
+  NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
   PrayerKey,
   SOUND_OPTIONS,
   SoundMode,
@@ -220,6 +224,7 @@ export function useNotificationPreferences({
         windowPrefs: windowPrefsRef.current,
         windowOffset: windowOffsetRef.current,
       });
+      DeviceEventEmitter.emit(NOTIF_MAP_CHANGED_EVENT);
     },
     [enabled],
   );
@@ -241,6 +246,7 @@ export function useNotificationPreferences({
         windowPrefs: windowPrefsRef.current,
         windowOffset: windowOffsetRef.current,
       });
+      DeviceEventEmitter.emit(NOTIF_SOUND_MODE_CHANGED_EVENT);
     },
     [enabled],
   );
@@ -262,6 +268,7 @@ export function useNotificationPreferences({
         windowPrefs: next,
         windowOffset: windowOffsetRef.current,
       });
+      DeviceEventEmitter.emit(NOTIF_WINDOW_MAP_CHANGED_EVENT);
     },
     [enabled],
   );
@@ -283,6 +290,7 @@ export function useNotificationPreferences({
         windowPrefs: windowPrefsRef.current,
         windowOffset: minutes,
       });
+      DeviceEventEmitter.emit(NOTIF_WINDOW_OFFSET_CHANGED_EVENT);
     },
     [enabled],
   );
