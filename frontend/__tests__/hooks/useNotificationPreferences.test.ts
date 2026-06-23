@@ -5,10 +5,13 @@ import { DeviceEventEmitter } from "react-native";
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 import {
   DEFAULT_PREFS,
+  DEFAULT_WINDOW_PREFS,
   NOTIF_PREFS_UPDATED_EVENT,
   STORAGE_ENABLED,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
+  STORAGE_WINDOW_MAP,
+  STORAGE_WINDOW_OFFSET,
 } from "@/utils/notifications/constants";
 
 describe("useNotificationPreferences", () => {
@@ -132,6 +135,71 @@ describe("useNotificationPreferences", () => {
         enabled: true,
         soundMode: "adhan",
       }),
+    );
+  });
+
+  it("hydrates window prefs and offset from storage", async () => {
+    await AsyncStorage.multiSet([
+      [STORAGE_ENABLED, "1"],
+      [STORAGE_WINDOW_MAP, JSON.stringify({ Dhuhr: true, Sunrise: true })],
+      [STORAGE_WINDOW_OFFSET, "20"],
+    ]);
+
+    const { result } = renderHook(() =>
+      useNotificationPreferences({ notifStatus: null }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+    });
+
+    expect(result.current.windowPrefs).toEqual({
+      ...DEFAULT_WINDOW_PREFS,
+      Dhuhr: true,
+    });
+    expect(result.current.windowOffset).toBe(20);
+  });
+
+  it("persists window preference updates and emits payload", async () => {
+    await AsyncStorage.setItem(STORAGE_ENABLED, "1");
+    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
+
+    const { result } = renderHook(() =>
+      useNotificationPreferences({ notifStatus: null }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+      expect(result.current.enabled).toBe(true);
+    });
+
+    emitSpy.mockClear();
+
+    await act(async () => {
+      await result.current.setWindowPreference("Asr", true);
+    });
+
+    expect(
+      JSON.parse((await AsyncStorage.getItem(STORAGE_WINDOW_MAP)) || "{}"),
+    ).toEqual(expect.objectContaining({ Asr: true }));
+    expect(emitSpy).toHaveBeenCalledWith(
+      NOTIF_PREFS_UPDATED_EVENT,
+      expect.objectContaining({
+        windowPrefs: expect.objectContaining({ Asr: true }),
+      }),
+    );
+
+    emitSpy.mockClear();
+
+    await act(async () => {
+      await result.current.setWindowOffset(30);
+    });
+
+    expect(await AsyncStorage.getItem(STORAGE_WINDOW_OFFSET)).toBe("30");
+    expect(result.current.windowOffset).toBe(30);
+    expect(emitSpy).toHaveBeenCalledWith(
+      NOTIF_PREFS_UPDATED_EVENT,
+      expect.objectContaining({ windowOffset: 30 }),
     );
   });
 

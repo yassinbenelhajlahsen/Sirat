@@ -4,6 +4,8 @@ import { DeviceEventEmitter } from "react-native";
 
 import {
   DEFAULT_PREFS,
+  DEFAULT_WINDOW_OFFSET,
+  DEFAULT_WINDOW_PREFS,
   NOTIF_PREFS_UPDATED_EVENT,
   PrayerKey,
   SOUND_OPTIONS,
@@ -11,6 +13,12 @@ import {
   STORAGE_ENABLED,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
+  STORAGE_WINDOW_MAP,
+  STORAGE_WINDOW_OFFSET,
+  WINDOW_OFFSET_OPTIONS,
+  WINDOW_PRAYERS,
+  WindowPrayerKey,
+  WindowPrefMap,
 } from "../utils/notifications/constants";
 
 const SAFE_DEFAULT_SOUND: SoundMode = "default";
@@ -37,10 +45,33 @@ function parseSound(raw: string | null): SoundMode {
     : SAFE_DEFAULT_SOUND;
 }
 
+function parseWindowPrefs(raw: string | null): WindowPrefMap {
+  const next = { ...DEFAULT_WINDOW_PREFS };
+  if (!raw) return next;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    for (const key of WINDOW_PRAYERS) {
+      if (typeof parsed[key] === "boolean") next[key] = parsed[key] as boolean;
+    }
+  } catch {
+    // ignore malformed JSON
+  }
+  return next;
+}
+
+function parseWindowOffset(raw: string | null): number {
+  const value = raw ? parseInt(raw, 10) : NaN;
+  return (WINDOW_OFFSET_OPTIONS as readonly number[]).includes(value)
+    ? value
+    : DEFAULT_WINDOW_OFFSET;
+}
+
 function emitPreferences(payload: {
   enabled: boolean;
   prefs: Record<PrayerKey, boolean>;
   soundMode: SoundMode;
+  windowPrefs: WindowPrefMap;
+  windowOffset: number;
 }) {
   try {
     DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, payload);
@@ -64,6 +95,16 @@ export function useNotificationPreferences({
   const prefsRef = useRef<Record<PrayerKey, boolean>>({ ...DEFAULT_PREFS });
   const soundModeRef = useRef<SoundMode>(SAFE_DEFAULT_SOUND);
 
+  const [windowPrefs, setWindowPrefs] = useState<WindowPrefMap>(() => ({
+    ...DEFAULT_WINDOW_PREFS,
+  }));
+  const [windowOffset, setWindowOffsetState] = useState<number>(
+    DEFAULT_WINDOW_OFFSET,
+  );
+
+  const windowPrefsRef = useRef<WindowPrefMap>({ ...DEFAULT_WINDOW_PREFS });
+  const windowOffsetRef = useRef<number>(DEFAULT_WINDOW_OFFSET);
+
   useEffect(() => {
     let active = true;
     (async () => {
@@ -72,6 +113,8 @@ export function useNotificationPreferences({
           STORAGE_MAP,
           STORAGE_ENABLED,
           STORAGE_SOUND_MODE,
+          STORAGE_WINDOW_MAP,
+          STORAGE_WINDOW_OFFSET,
         ]);
         if (!active) return;
 
@@ -95,6 +138,20 @@ export function useNotificationPreferences({
         const nextSound = parseSound(rawSound ?? null);
         soundModeRef.current = nextSound;
         setSoundMode(nextSound);
+
+        const rawWindowMap = entries.find(
+          ([key]) => key === STORAGE_WINDOW_MAP,
+        )?.[1];
+        const nextWindowPrefs = parseWindowPrefs(rawWindowMap ?? null);
+        windowPrefsRef.current = nextWindowPrefs;
+        setWindowPrefs(nextWindowPrefs);
+
+        const rawWindowOffset = entries.find(
+          ([key]) => key === STORAGE_WINDOW_OFFSET,
+        )?.[1];
+        const nextWindowOffset = parseWindowOffset(rawWindowOffset ?? null);
+        windowOffsetRef.current = nextWindowOffset;
+        setWindowOffsetState(nextWindowOffset);
       } catch {
         // ignore hydration errors
       } finally {
@@ -121,6 +178,14 @@ export function useNotificationPreferences({
   }, [prefs]);
 
   useEffect(() => {
+    windowPrefsRef.current = windowPrefs;
+  }, [windowPrefs]);
+
+  useEffect(() => {
+    windowOffsetRef.current = windowOffset;
+  }, [windowOffset]);
+
+  useEffect(() => {
     if (!loaded) return;
     (async () => {
       try {
@@ -133,6 +198,8 @@ export function useNotificationPreferences({
       enabled,
       prefs: prefsRef.current,
       soundMode: soundModeRef.current,
+      windowPrefs: windowPrefsRef.current,
+      windowOffset: windowOffsetRef.current,
     });
   }, [enabled, loaded]);
 
@@ -150,6 +217,8 @@ export function useNotificationPreferences({
         enabled,
         prefs: next,
         soundMode: soundModeRef.current,
+        windowPrefs: windowPrefsRef.current,
+        windowOffset: windowOffsetRef.current,
       });
     },
     [enabled],
@@ -169,6 +238,50 @@ export function useNotificationPreferences({
         enabled,
         prefs: prefsRef.current,
         soundMode: nextMode,
+        windowPrefs: windowPrefsRef.current,
+        windowOffset: windowOffsetRef.current,
+      });
+    },
+    [enabled],
+  );
+
+  const setWindowPreference = useCallback(
+    async (key: WindowPrayerKey, value: boolean) => {
+      const next = { ...windowPrefsRef.current, [key]: value };
+      windowPrefsRef.current = next;
+      setWindowPrefs(next);
+      try {
+        await AsyncStorage.setItem(STORAGE_WINDOW_MAP, JSON.stringify(next));
+      } catch {
+        // ignore persist errors
+      }
+      emitPreferences({
+        enabled,
+        prefs: prefsRef.current,
+        soundMode: soundModeRef.current,
+        windowPrefs: next,
+        windowOffset: windowOffsetRef.current,
+      });
+    },
+    [enabled],
+  );
+
+  const setWindowOffset = useCallback(
+    async (minutes: number) => {
+      if (minutes === windowOffsetRef.current) return;
+      windowOffsetRef.current = minutes;
+      setWindowOffsetState(minutes);
+      try {
+        await AsyncStorage.setItem(STORAGE_WINDOW_OFFSET, String(minutes));
+      } catch {
+        // ignore persist errors
+      }
+      emitPreferences({
+        enabled,
+        prefs: prefsRef.current,
+        soundMode: soundModeRef.current,
+        windowPrefs: windowPrefsRef.current,
+        windowOffset: minutes,
       });
     },
     [enabled],
@@ -179,7 +292,11 @@ export function useNotificationPreferences({
     enabled,
     prefs,
     soundMode,
+    windowPrefs,
+    windowOffset,
     setPrayerPreference,
     updateSoundMode,
+    setWindowPreference,
+    setWindowOffset,
   };
 }
