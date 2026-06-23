@@ -3,7 +3,7 @@ import type { PrayerKey } from "@/utils/notifications/constants";
 type NotificationServiceSetup = {
   NotificationService: {
     init: () => Promise<void>;
-    rescheduleAll: (reason: "init" | "midnight" | "notif-prefs-changed" | "settings-changed" | "app-foreground") => Promise<void>;
+    rescheduleAll: (reason: "init" | "midnight" | "notif-prefs-changed" | "settings-changed" | "app-foreground" | "prayer-log-changed") => Promise<void>;
     cancelAll: () => Promise<void>;
   };
   lifecycleCallbackRef: { cb?: (reason: any) => void };
@@ -196,6 +196,26 @@ describe("NotificationService", () => {
     mocks.writeDayFingerprint.mockClear();
 
     await NotificationService.rescheduleAll("settings-changed");
+
+    expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
+    expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
+    expect(mocks.writeDayFingerprint).toHaveBeenCalledTimes(1);
+  });
+
+  it("forces rebuild on prayer-log-changed even with unchanged fingerprint", async () => {
+    const { NotificationService, mocks } = await loadNotificationService({
+      readDayFingerprint: jest.fn(async () => "old-key"),
+    });
+
+    await NotificationService.rescheduleAll("init");
+    const fingerprint = mocks.writeDayFingerprint.mock.calls[0][0];
+
+    mocks.readDayFingerprint.mockResolvedValue(fingerprint);
+    mocks.cancelPreviouslyScheduled.mockClear();
+    mocks.scheduleForHorizon.mockClear();
+    mocks.writeDayFingerprint.mockClear();
+
+    await NotificationService.rescheduleAll("prayer-log-changed");
 
     expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
     expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);

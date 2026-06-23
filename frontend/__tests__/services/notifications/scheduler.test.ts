@@ -82,6 +82,8 @@ describe("notifications/scheduler", () => {
 
     expect(cancelAll).toHaveBeenCalledTimes(1);
     expect(cancelOne).toHaveBeenCalledTimes(2);
+    expect(cancelOne).toHaveBeenCalledWith("id-a");
+    expect(cancelOne).toHaveBeenCalledWith("id-b");
     await expect(AsyncStorage.getItem(STORAGE_SCHEDULE_IDS)).resolves.toBeNull();
     await expect(AsyncStorage.getItem(STORAGE_SEEN_KEYS)).resolves.toBeNull();
   });
@@ -219,6 +221,7 @@ describe("notifications/scheduler", () => {
     );
     expect(titles).toContain("Maghrib ending soon");
     expect(titles).not.toContain("Isha ending soon");
+    expect(titles.filter((t) => typeof t === "string" && t.endsWith("ending soon"))).toEqual(["Maghrib ending soon"]);
     resetTestTime();
   });
 

@@ -1,6 +1,7 @@
 import { AppState, DeviceEventEmitter } from "react-native";
 
 import { NOTIF_PREFS_UPDATED_EVENT } from "../../utils/notifications/constants";
+import { PRAYER_LOG_UPDATED_EVENT } from "@/services/tracking/prayerLog";
 import { MIDNIGHT_REFRESH_MINUTES, SETTINGS_CHANGED_EVENT } from "./constants";
 import { msUntilNextLocalMidnightPlus } from "./scheduler";
 import type { RescheduleReason } from "./types";
@@ -31,6 +32,10 @@ export function initNotificationLifecycle(
 
     DeviceEventEmitter.addListener(SETTINGS_CHANGED_EVENT, () => {
       onReschedule("settings-changed");
+    });
+
+    DeviceEventEmitter.addListener(PRAYER_LOG_UPDATED_EVENT, () => {
+      onReschedule("prayer-log-changed");
     });
 
     AppState.addEventListener("change", (state) => {

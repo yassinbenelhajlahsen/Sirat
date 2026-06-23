@@ -45,6 +45,10 @@ function loadLifecycle(): LifecycleSetup {
     msUntilNextLocalMidnightPlus: msUntilNextLocalMidnightPlusMock,
   }));
 
+  jest.doMock("@/services/tracking/prayerLog", () => ({
+    PRAYER_LOG_UPDATED_EVENT: "PRAYER_LOG_UPDATED",
+  }));
+
   const mod = require("@/services/notifications/lifecycle");
 
   return {
@@ -72,7 +76,7 @@ describe("notifications/lifecycle", () => {
 
     setup.initNotificationLifecycle(onReschedule);
 
-    expect(setup.addListenerMock).toHaveBeenCalledTimes(2);
+    expect(setup.addListenerMock).toHaveBeenCalledTimes(3);
     expect(setup.addAppStateListenerMock).toHaveBeenCalledTimes(1);
 
     setup.eventCallbacks.NOTIF_PREFS_UPDATED();
@@ -84,8 +88,19 @@ describe("notifications/lifecycle", () => {
     expect(onReschedule).toHaveBeenCalledWith("app-foreground");
 
     setup.initNotificationLifecycle(onReschedule);
-    expect(setup.addListenerMock).toHaveBeenCalledTimes(2);
+    expect(setup.addListenerMock).toHaveBeenCalledTimes(3);
     expect(setup.addAppStateListenerMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("invokes onReschedule with 'prayer-log-changed' when PRAYER_LOG_UPDATED_EVENT is emitted", async () => {
+    const setup = loadLifecycle();
+    const onReschedule = jest.fn();
+
+    setup.initNotificationLifecycle(onReschedule);
+
+    setup.eventCallbacks.PRAYER_LOG_UPDATED();
+
+    expect(onReschedule).toHaveBeenCalledWith("prayer-log-changed");
   });
 
   it("schedules midnight rollover and re-schedules after firing", async () => {

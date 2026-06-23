@@ -143,7 +143,9 @@ export const NotificationService = {
       const lastKey = await readDayFingerprint();
 
       const shouldForceHeavyRebuild =
-        reason === "notif-prefs-changed" || reason === "settings-changed";
+        reason === "notif-prefs-changed" ||
+        reason === "settings-changed" ||
+        reason === "prayer-log-changed";
 
       if (shouldForceHeavyRebuild || lastKey !== nextKey) {
         await cancelPreviouslyScheduled();

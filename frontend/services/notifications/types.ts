@@ -41,4 +41,5 @@ export type RescheduleReason =
   | "midnight"
   | "notif-prefs-changed"
   | "settings-changed"
-  | "app-foreground";
+  | "app-foreground"
+  | "prayer-log-changed";
