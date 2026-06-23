@@ -108,6 +108,35 @@ export const getNotificationStyles = (theme: AppTheme) => {
       fontWeight: "600",
       color: withOpacity(themeColors.white, 0.85),
     },
+    prayerGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginHorizontal: -5,
+    },
+    gridCell3: { width: "33.333%", padding: 5 },
+    gridCell4: { width: "25%", padding: 5 },
+    prayerCard: {
+      borderRadius: 14,
+      borderCurve: "continuous",
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingVertical: 14,
+      paddingHorizontal: 6,
+      alignItems: "center",
+      gap: 7,
+      overflow: "hidden",
+    },
+    prayerCardPressed: {
+      opacity: 0.85,
+    },
+    prayerCardLabel: {
+      fontSize: 13,
+      fontWeight: "600",
+      letterSpacing: 0.2,
+    },
+    prayerCardStatus: {
+      fontSize: 11,
+      fontWeight: "600",
+    },
     soundCard: {
       marginTop: 14,
       marginBottom: 14,
@@ -137,6 +166,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
     soundSegmentRow: {
       flexDirection: "row",
       marginTop: 18,
+      marginBottom: 10,
       position: "relative",
     },
     soundSegment: {

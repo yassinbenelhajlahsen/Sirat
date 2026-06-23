@@ -3,18 +3,22 @@ import { Animated, Easing } from "react-native";
 
 import { type PrayerKey, type SoundMode } from "../utils/notifications/constants";
 
-const CONTENT_MAX_HEIGHT = 820;
+// Fallback cap used only until the reveal content reports its real height via
+// onLayout. Kept generous so content is never clipped on the first frame.
+const CONTENT_MAX_HEIGHT_FALLBACK = 2000;
 
 type Params = {
   loaded: boolean;
   enabled: boolean;
   soundMode: SoundMode;
+  contentHeight?: number;
 };
 
 export function useNotificationPanelAnimation({
   loaded,
   enabled,
   soundMode,
+  contentHeight,
 }: Params) {
   const headerScale = useRef(new Animated.Value(1)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
@@ -103,7 +107,12 @@ export function useNotificationPanelAnimation({
   });
   const contentMaxHeight = contentAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, CONTENT_MAX_HEIGHT],
+    outputRange: [
+      0,
+      contentHeight && contentHeight > 0
+        ? contentHeight
+        : CONTENT_MAX_HEIGHT_FALLBACK,
+    ],
   });
   const contentScale = contentAnim.interpolate({
     inputRange: [0, 1],

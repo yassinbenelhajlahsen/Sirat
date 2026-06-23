@@ -2,7 +2,7 @@
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -69,6 +69,8 @@ export default function NotificationSettings({ notifStatus }: Props) {
   const { previewing, handlePreviewPress, stopPreview } =
     useAdhanPreview(enabled);
 
+  const [revealHeight, setRevealHeight] = useState(0);
+
   const {
     headerScale,
     bellAnimations,
@@ -79,7 +81,12 @@ export default function NotificationSettings({ notifStatus }: Props) {
     soundIndicator,
     pulseHeader,
     pulsePrayer,
-  } = useNotificationPanelAnimation({ loaded, enabled, soundMode });
+  } = useNotificationPanelAnimation({
+    loaded,
+    enabled,
+    soundMode,
+    contentHeight: revealHeight,
+  });
 
   const { segmentWidth, indicatorTranslateX, onLayout } =
     useNotificationSegmentLayout({
@@ -194,6 +201,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
             },
           ]}
         >
+          <View onLayout={(e) => setRevealHeight(e.nativeEvent.layout.height)}>
           <View style={styles.revealDivider} />
           <View style={styles.prayerSectionHeader}>
             <Text style={[styles.prayerSectionTitle, { color: textColor }]}>
@@ -205,83 +213,75 @@ export default function NotificationSettings({ notifStatus }: Props) {
                 { color: withOpacity(textColor, 0.72) },
               ]}
             >
-              Tap a row to enable or disable reminders for each prayer.
+              Tap a prayer to turn its notification on or off.
             </Text>
           </View>
-          {PRAYERS.map((p) => {
-            const isOn = prefs[p];
-            const anim = bellAnimations[p];
-            const labelColor = !enabled
-              ? rowDisabledTextColor
-              : isOn
-                ? textColor
-                : rowOffTextColor;
-            const indicatorColor = !enabled
-              ? withOpacity(textColor, 0.35)
-              : isOn
-                ? accentColor
-                : rowOffTextColor;
-            const cardBg = !enabled
-              ? pillOffBgColor
-              : isOn
-                ? rowOnBgColor
-                : rowOffBgColor;
-            const cardBorder = !enabled
-              ? dividerColor
-              : isOn
-                ? rowOnBorderColor
-                : rowOffBorderColor;
+          <View style={styles.prayerGrid}>
+            {PRAYERS.map((p) => {
+              const isOn = prefs[p];
+              const anim = bellAnimations[p];
+              const labelColor = !enabled
+                ? rowDisabledTextColor
+                : isOn
+                  ? textColor
+                  : rowOffTextColor;
+              const indicatorColor = !enabled
+                ? withOpacity(textColor, 0.35)
+                : isOn
+                  ? accentColor
+                  : rowOffTextColor;
+              const cardBg = !enabled
+                ? pillOffBgColor
+                : isOn
+                  ? rowOnBgColor
+                  : rowOffBgColor;
+              const cardBorder = !enabled
+                ? dividerColor
+                : isOn
+                  ? rowOnBorderColor
+                  : rowOffBorderColor;
 
-            return (
-              <Animated.View
-                key={p}
-                style={[
-                  styles.rowWrapper,
-                  { transform: [{ scale: anim }], opacity: enabled ? 1 : 0.55 },
-                ]}
-              >
-                <Pressable
-                  onPress={() => {
-                    if (!enabled) return;
-                    togglePrayer(p);
-                  }}
-                  disabled={!enabled}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: isOn, disabled: !enabled }}
-                  accessibilityLabel={`${p} alert`}
-                  style={({ pressed }) => [
-                    styles.rowBase,
-                    styles.rowSurface,
-                    { backgroundColor: cardBg, borderColor: cardBorder },
-                    isOn && enabled ? styles.rowActive : undefined,
-                    pressed && enabled ? styles.rowPressed : undefined,
+              return (
+                <Animated.View
+                  key={p}
+                  style={[
+                    styles.gridCell3,
+                    { transform: [{ scale: anim }], opacity: enabled ? 1 : 0.55 },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.rowLabel,
-                      { color: labelColor },
-                      !enabled ? styles.rowLabelDisabled : undefined,
+                  <Pressable
+                    onPress={() => {
+                      if (!enabled) return;
+                      togglePrayer(p);
+                    }}
+                    disabled={!enabled}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: isOn, disabled: !enabled }}
+                    accessibilityLabel={`${p} alert`}
+                    style={({ pressed }) => [
+                      styles.prayerCard,
+                      { backgroundColor: cardBg, borderColor: cardBorder },
+                      pressed && enabled ? styles.prayerCardPressed : undefined,
                     ]}
                   >
-                    {p}
-                  </Text>
-                  <View style={styles.rowIndicator}>
                     <Ionicons
                       name={isOn ? "notifications" : "notifications-off-outline"}
-                      size={18}
+                      size={20}
                       color={indicatorColor}
                     />
+                    <Text style={[styles.prayerCardLabel, { color: labelColor }]}>
+                      {p}
+                    </Text>
                     <Text
-                      style={[styles.rowIndicatorText, { color: indicatorColor }]}
+                      style={[styles.prayerCardStatus, { color: indicatorColor }]}
                     >
                       {isOn ? "On" : "Off"}
                     </Text>
-                  </View>
-                </Pressable>
-              </Animated.View>
-            );
-          })}
+                  </Pressable>
+                </Animated.View>
+              );
+            })}
+          </View>
           <View style={styles.revealDivider} />
           <View style={styles.prayerSectionHeader}>
             <Text style={[styles.prayerSectionTitle, { color: textColor }]}>
@@ -335,76 +335,68 @@ export default function NotificationSettings({ notifStatus }: Props) {
             })}
           </View>
 
-          {WINDOW_PRAYERS.map((p) => {
-            const isOn = windowPrefs[p];
-            const labelColor = !enabled
-              ? rowDisabledTextColor
-              : isOn
-                ? textColor
-                : rowOffTextColor;
-            const indicatorColor = !enabled
-              ? withOpacity(textColor, 0.35)
-              : isOn
-                ? accentColor
-                : rowOffTextColor;
-            const cardBg = !enabled
-              ? pillOffBgColor
-              : isOn
-                ? rowOnBgColor
-                : rowOffBgColor;
-            const cardBorder = !enabled
-              ? dividerColor
-              : isOn
-                ? rowOnBorderColor
-                : rowOffBorderColor;
+          <View style={styles.prayerGrid}>
+            {WINDOW_PRAYERS.map((p) => {
+              const isOn = windowPrefs[p];
+              const labelColor = !enabled
+                ? rowDisabledTextColor
+                : isOn
+                  ? textColor
+                  : rowOffTextColor;
+              const indicatorColor = !enabled
+                ? withOpacity(textColor, 0.35)
+                : isOn
+                  ? accentColor
+                  : rowOffTextColor;
+              const cardBg = !enabled
+                ? pillOffBgColor
+                : isOn
+                  ? rowOnBgColor
+                  : rowOffBgColor;
+              const cardBorder = !enabled
+                ? dividerColor
+                : isOn
+                  ? rowOnBorderColor
+                  : rowOffBorderColor;
 
-            return (
-              <View
-                key={p}
-                style={[styles.rowWrapper, { opacity: enabled ? 1 : 0.55 }]}
-              >
-                <Pressable
-                  onPress={() => {
-                    if (!enabled) return;
-                    toggleWindowPrayer(p);
-                  }}
-                  disabled={!enabled}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: isOn, disabled: !enabled }}
-                  accessibilityLabel={`${p} window reminder`}
-                  style={({ pressed }) => [
-                    styles.rowBase,
-                    styles.rowSurface,
-                    { backgroundColor: cardBg, borderColor: cardBorder },
-                    isOn && enabled ? styles.rowActive : undefined,
-                    pressed && enabled ? styles.rowPressed : undefined,
-                  ]}
+              return (
+                <View
+                  key={p}
+                  style={[styles.gridCell4, { opacity: enabled ? 1 : 0.55 }]}
                 >
-                  <Text
-                    style={[
-                      styles.rowLabel,
-                      { color: labelColor },
-                      !enabled ? styles.rowLabelDisabled : undefined,
+                  <Pressable
+                    onPress={() => {
+                      if (!enabled) return;
+                      toggleWindowPrayer(p);
+                    }}
+                    disabled={!enabled}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: isOn, disabled: !enabled }}
+                    accessibilityLabel={`${p} window reminder`}
+                    style={({ pressed }) => [
+                      styles.prayerCard,
+                      { backgroundColor: cardBg, borderColor: cardBorder },
+                      pressed && enabled ? styles.prayerCardPressed : undefined,
                     ]}
                   >
-                    {p}
-                  </Text>
-                  <View style={styles.rowIndicator}>
                     <Ionicons
                       name={isOn ? "notifications" : "notifications-off-outline"}
-                      size={18}
+                      size={20}
                       color={indicatorColor}
                     />
+                    <Text style={[styles.prayerCardLabel, { color: labelColor }]}>
+                      {p}
+                    </Text>
                     <Text
-                      style={[styles.rowIndicatorText, { color: indicatorColor }]}
+                      style={[styles.prayerCardStatus, { color: indicatorColor }]}
                     >
                       {isOn ? "On" : "Off"}
                     </Text>
-                  </View>
-                </Pressable>
-              </View>
-            );
-          })}
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
           <View style={[styles.soundCard, { opacity: enabled ? 1 : 0.55 }]}>
             <Text
               style={[styles.soundSectionTitle, { color: textColor }]}
@@ -518,6 +510,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                 )}
               </View>
             )}
+          </View>
           </View>
         </Animated.View>
       </GlassSurface>
