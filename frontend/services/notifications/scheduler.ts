@@ -3,6 +3,9 @@ import { Platform } from "react-native";
 
 import type { PrayerSettings, PrayerTime } from "../prayerTimes";
 import { getPrayerTimesForDate } from "../prayerTimes";
+import { getDayStatuses } from "../tracking/prayerLog";
+import type { PrayerName } from "../tracking/types";
+import { MAX_PENDING_NOTIFICATIONS } from "./constants";
 import {
   clearScheduleStorage,
   readScheduledIds,
@@ -17,6 +20,17 @@ import {
   type PrayerKey,
   type SoundMode,
 } from "./types";
+import {
+  WINDOW_PRAYERS,
+  type WindowPrayerKey,
+  type WindowPrefMap,
+} from "../../utils/notifications/constants";
+
+type Candidate = {
+  fireDate: Date;
+  seenKey: string;
+  content: Notifications.NotificationContentInput;
+};
 
 function parse12hToDate(base: Date, timeStr: string): Date {
   const [hm, ampm] = timeStr.split(" ");
@@ -31,6 +45,11 @@ function parse12hToDate(base: Date, timeStr: string): Date {
 function makeSeenKey(label: PrayerKey, fireDate: Date): string {
   const key = fireDate.toISOString().slice(0, 16);
   return `${label}_${key}`;
+}
+
+function makeWindowSeenKey(label: PrayerKey, fireDate: Date): string {
+  const key = fireDate.toISOString().slice(0, 16);
+  return `window_${label}_${key}`;
 }
 
 function addDays(d: Date, offset: number): Date {
@@ -83,32 +102,44 @@ export async function scheduleForHorizon(params: {
   cityDisplay: string;
   effective: PrayerSettings;
   soundMode: SoundMode;
+  windowPrefs: WindowPrefMap;
+  windowOffset: number;
 }) {
-  const { days, prefs, cityDisplay, effective, soundMode } = params;
+  const {
+    days,
+    prefs,
+    cityDisplay,
+    effective,
+    soundMode,
+    windowPrefs,
+    windowOffset,
+  } = params;
   const now = Date.now();
 
   const seen = new Set<string>(await readSeenKeys());
-  const trackedIds = new Set<string>(await readScheduledIds());
-  const idsToPersist: string[] = Array.from(trackedIds);
+  const idsToPersist: string[] = [...(await readScheduledIds())];
+
+  const iosSound = IOS_SOUND_MAP[soundMode] ?? "default";
+  const triggerSound = Platform.OS === "ios" ? iosSound : "default";
+
+  const anyWindowEnabled = WINDOW_PRAYERS.some((key) => windowPrefs[key]);
+
+  const candidates: Candidate[] = [];
 
   for (let dayOffset = 0; dayOffset < days; dayOffset++) {
     const day = addDays(new Date(), dayOffset);
+    const dayKey = yyyymmdd(day);
     const times: PrayerTime[] = await getPrayerTimesForDate(effective, day);
 
+    // At-prayer-time alerts.
     for (const prayer of times) {
       const label = prayer.label as PrayerKey;
       if (!prefs[label]) continue;
-
       const fireDate = parse12hToDate(day, prayer.time);
       if (fireDate.getTime() <= now) continue;
-
-      const seenKey = makeSeenKey(label, fireDate);
-      if (seen.has(seenKey)) continue;
-
-      const iosSound = IOS_SOUND_MAP[soundMode] ?? "default";
-      const triggerSound = Platform.OS === "ios" ? iosSound : "default";
-
-      const id = await Notifications.scheduleNotificationAsync({
+      candidates.push({
+        fireDate,
+        seenKey: makeSeenKey(label, fireDate),
         content: {
           title: `${PRAYER_EMOJI[label] || "🕌"} ${label} time`,
           body: `${prayer.time} in ${cityDisplay}`,
@@ -119,15 +150,63 @@ export async function scheduleForHorizon(params: {
             label,
             timeLocal: prayer.time,
             city: cityDisplay,
-            dayKey: yyyymmdd(day),
+            dayKey,
           },
         },
-        trigger: { type: "date", date: fireDate } as any,
       });
-
-      seen.add(seenKey);
-      idsToPersist.push(id);
     }
+
+    // Window reminders.
+    if (anyWindowEnabled) {
+      const dayStatuses = await getDayStatuses(dayKey);
+      for (let i = 0; i < times.length; i++) {
+        const label = times[i].label as PrayerKey;
+        if (!WINDOW_PRAYERS.includes(label as WindowPrayerKey)) continue;
+        if (!windowPrefs[label as WindowPrayerKey]) continue;
+        const next = times[i + 1];
+        if (!next) continue;
+        if (dayStatuses[label.toLowerCase() as PrayerName]) continue;
+        const fireDate = new Date(
+          parse12hToDate(day, next.time).getTime() - windowOffset * 60_000,
+        );
+        if (fireDate.getTime() <= now) continue;
+        const verb = next.label === "Sunrise" ? "is" : "begins";
+        candidates.push({
+          fireDate,
+          seenKey: makeWindowSeenKey(label, fireDate),
+          content: {
+            title: `${label} ending soon`,
+            body: `${next.label} ${verb} at ${next.time}, in ${windowOffset} min.`,
+            sound: triggerSound,
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            data: {
+              type: "window_reminder",
+              label,
+              nextLabel: next.label,
+              nextTimeLocal: next.time,
+              offset: windowOffset,
+              dayKey,
+            },
+          },
+        });
+      }
+    }
+  }
+
+  candidates.sort((a, b) => a.fireDate.getTime() - b.fireDate.getTime());
+
+  let remaining = MAX_PENDING_NOTIFICATIONS - idsToPersist.length;
+
+  for (const candidate of candidates) {
+    if (remaining <= 0) break;
+    if (seen.has(candidate.seenKey)) continue;
+    const id = await Notifications.scheduleNotificationAsync({
+      content: candidate.content,
+      trigger: { type: "date", date: candidate.fireDate } as any,
+    });
+    seen.add(candidate.seenKey);
+    idsToPersist.push(id);
+    remaining--;
   }
 
   await writeScheduledIds(idsToPersist);
