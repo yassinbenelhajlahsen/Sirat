@@ -22,7 +22,7 @@ export function AccountSection({ onSignIn, onSignOut, onDeleteAccount }: Props) 
   const syncLabel =
     status === "syncing" ? "Syncing…" :
     status === "error" ? "Sync failed — will retry" :
-    lastSyncedAt ? `Last synced ${new Date(lastSyncedAt).toLocaleString()}` :
+    lastSyncedAt ? `Last synced ${new Date(lastSyncedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}` :
     "Not synced yet";
 
   if (!isSignedIn) {
