@@ -23,12 +23,38 @@ export function deriveEffectiveSettings(
   return buildEffectiveSettings(settings, canUseLocation);
 }
 
-export async function resolveCityDisplay(effective: {
-  useLocation: boolean;
-  city?: {
-    name?: string;
-  } | null;
-}): Promise<string> {
+async function reverseGeocodeToLabel(coords: {
+  latitude: number;
+  longitude: number;
+}): Promise<string | null> {
+  try {
+    const [place] = await Location.reverseGeocodeAsync(coords);
+    if (!place) return null;
+
+    const locality =
+      place.city ||
+      (place as { subregion?: string }).subregion ||
+      (place as { district?: string }).district ||
+      (place as { name?: string }).name ||
+      "";
+
+    const label = String(locality).trim() || "your area";
+    await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_LOC, label);
+    return label;
+  } catch {
+    return null;
+  }
+}
+
+export async function resolveCityDisplay(
+  effective: {
+    useLocation: boolean;
+    city?: {
+      name?: string;
+    } | null;
+  },
+  coords?: { latitude: number; longitude: number },
+): Promise<string> {
   if (!effective.useLocation) {
     const city = effective.city;
     if (city?.name) {
@@ -56,6 +82,11 @@ export async function resolveCityDisplay(effective: {
     return "your area";
   }
 
+  if (coords) {
+    const fromCaller = await reverseGeocodeToLabel(coords);
+    if (fromCaller) return fromCaller;
+  }
+
   try {
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
@@ -64,23 +95,8 @@ export async function resolveCityDisplay(effective: {
     } as any);
 
     if (loc) {
-      const [place] = await Location.reverseGeocodeAsync({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      });
-
-      if (place) {
-        const locality =
-          place.city ||
-          (place as { subregion?: string }).subregion ||
-          (place as { district?: string }).district ||
-          (place as { name?: string }).name ||
-          "";
-
-        const label = String(locality).trim() || "your area";
-        await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_LOC, label);
-        return label;
-      }
+      const label = await reverseGeocodeToLabel(loc.coords);
+      if (label) return label;
     }
   } catch {
     // no-op
@@ -89,23 +105,8 @@ export async function resolveCityDisplay(effective: {
   try {
     const last = await Location.getLastKnownPositionAsync({});
     if (last) {
-      const [place] = await Location.reverseGeocodeAsync({
-        latitude: last.coords.latitude,
-        longitude: last.coords.longitude,
-      });
-
-      if (place) {
-        const locality =
-          place.city ||
-          (place as { subregion?: string }).subregion ||
-          (place as { district?: string }).district ||
-          (place as { name?: string }).name ||
-          "";
-
-        const label = String(locality).trim() || "your area";
-        await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_LOC, label);
-        return label;
-      }
+      const label = await reverseGeocodeToLabel(last.coords);
+      if (label) return label;
     }
   } catch {
     // no-op

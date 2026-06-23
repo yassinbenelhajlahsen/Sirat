@@ -4,6 +4,18 @@ import { AppState, DeviceEventEmitter } from "react-native";
 
 import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
 
+jest.mock("expo-location", () => ({
+  Accuracy: { Balanced: 3 },
+  getForegroundPermissionsAsync: jest.fn(async () => ({ status: "granted" })),
+  requestForegroundPermissionsAsync: jest.fn(async () => ({ status: "granted" })),
+  hasServicesEnabledAsync: jest.fn(async () => true),
+  getCurrentPositionAsync: jest.fn(async () => ({
+    coords: { latitude: 30.04, longitude: 31.23 },
+  })),
+  getLastKnownPositionAsync: jest.fn(async () => null),
+  reverseGeocodeAsync: jest.fn(async () => [{ city: "Cairo", isoCountryCode: "EG" }]),
+}));
+
 jest.mock("@/services/prayerTimes", () => ({
   getPrayerTimesToday: jest.fn(),
 }));
@@ -16,10 +28,14 @@ jest.mock("@/hooks/useNextPrayer", () => ({
 }));
 
 import { getPrayerTimesToday } from "@/services/prayerTimes";
+import * as Location from "expo-location";
 
 const mockGetPrayerTimesToday = getPrayerTimesToday as jest.MockedFunction<
   typeof getPrayerTimesToday
 >;
+
+const mockReverseGeocode = Location.reverseGeocodeAsync as jest.Mock;
+const mockGetLastKnown = Location.getLastKnownPositionAsync as jest.Mock;
 
 describe("useHomePrayerTimes", () => {
   beforeEach(async () => {
@@ -120,5 +136,59 @@ describe("useHomePrayerTimes", () => {
 
     expect(result.current.locationLabel).toBe("Chicago");
     expect(mockGetPrayerTimesToday).toHaveBeenCalledTimes(2);
+  });
+
+  describe("location label fallback (useLocation: true)", () => {
+    beforeEach(async () => {
+      freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
+      await AsyncStorage.setItem(
+        "prayerSettings",
+        JSON.stringify({ useLocation: true, method: 2, city: null }),
+      );
+      mockGetPrayerTimesToday.mockResolvedValue([
+        { label: "Fajr", time: "5:00 AM" },
+        { label: "Dhuhr", time: "12:00 PM" },
+        { label: "Isha", time: "8:00 PM" },
+      ] as any);
+    });
+
+    it("shows the resolved city when reverse geocoding succeeds", async () => {
+      const { result } = renderHook(() => useHomePrayerTimes());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.locationLabel).toBe("Cairo, EG");
+    });
+
+    it("never shows raw coordinates when reverse geocoding fails — falls back to cached city", async () => {
+      await AsyncStorage.setItem("notif_city_display_loc_v1", "Cairo");
+      mockReverseGeocode.mockRejectedValue(new Error("kCLErrorDomain"));
+      mockGetLastKnown.mockResolvedValue(null);
+
+      const { result } = renderHook(() => useHomePrayerTimes());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.locationLabel).not.toMatch(/^Lat /);
+      expect(result.current.locationLabel).toBe("Cairo");
+    });
+
+    it("degrades to 'your area' when geocoding fails and no cache exists", async () => {
+      mockReverseGeocode.mockRejectedValue(new Error("kCLErrorDomain"));
+      mockGetLastKnown.mockResolvedValue(null);
+
+      const { result } = renderHook(() => useHomePrayerTimes());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.locationLabel).not.toMatch(/^Lat /);
+      expect(result.current.locationLabel).toBe("your area");
+    });
   });
 });

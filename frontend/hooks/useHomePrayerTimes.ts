@@ -3,6 +3,8 @@ import * as Location from "expo-location";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, DeviceEventEmitter } from "react-native";
 import { dateKeyFromDate } from "../services/holidayService";
+import { resolveCityDisplay } from "../services/notifications/cityResolver";
+import { STORAGE_CITY_DISPLAY_LOC } from "../services/notifications/constants";
 import { getPrayerTimesToday, PrayerSettings, PrayerTime } from "../services/prayerTimes";
 import CITIES, { City, cityKey } from "../utils/cities";
 import { useNextPrayer } from "./useNextPrayer";
@@ -121,19 +123,19 @@ async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
       longitude: pos.coords.longitude,
     });
     const place = places?.[0];
+    if (!place) throw new Error("no place");
     const city =
-      place?.city ||
-      place?.district ||
-      place?.subregion ||
-      place?.region ||
-      "Your area";
-    const cc = place?.isoCountryCode || place?.country || "";
+      place.city || place.district || place.subregion || place.region;
+    if (!city) throw new Error("no city");
+    const cc = place.isoCountryCode || place.country || "";
     label = `${city}${cc ? ", " + cc : ""}`;
-    country = place?.country || place?.isoCountryCode || undefined;
+    country = place.country || place.isoCountryCode || undefined;
+    await AsyncStorage.setItem(STORAGE_CITY_DISPLAY_LOC, label);
   } catch {
-    const lat = pos.coords.latitude.toFixed(3);
-    const lon = pos.coords.longitude.toFixed(3);
-    label = `Lat ${lat}, Lon ${lon}`;
+    // Reverse geocode is network-backed and rate-limited; on failure fall
+    // back to the shared resolver (last-known position, cached city, then
+    // "your area") instead of ever surfacing raw coordinates.
+    label = await resolveCityDisplay(effective, pos.coords);
   }
 
   return {
