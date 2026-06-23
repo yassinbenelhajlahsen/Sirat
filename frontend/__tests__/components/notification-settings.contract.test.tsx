@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Animated, Linking } from "react-native";
 
 import NotificationSettings from "@/components/NotificationSettings";
-import { type PrayerKey, PRAYERS, type SoundMode } from "@/utils/notifications/constants";
+import { type PrayerKey, PRAYERS, type SoundMode, WINDOW_PRAYERS, WINDOW_OFFSET_OPTIONS } from "@/utils/notifications/constants";
 
 const mockUseNotificationPreferences = jest.fn();
 const mockUseAdhanPreview = jest.fn();
@@ -11,6 +11,8 @@ const mockUseNotificationSegmentLayout = jest.fn();
 
 const setPrayerPreference = jest.fn(async () => {});
 const updateSoundMode = jest.fn(async () => {});
+const setWindowPreference = jest.fn(async () => {});
+const setWindowOffset = jest.fn(async () => {});
 const stopPreview = jest.fn(async () => {});
 const handlePreviewPress = jest.fn();
 const pulseHeader = jest.fn();
@@ -80,6 +82,10 @@ function configureHookMocks({
     soundMode,
     setPrayerPreference,
     updateSoundMode,
+    windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
+    windowOffset: 15,
+    setWindowPreference,
+    setWindowOffset,
   });
 
   mockUseAdhanPreview.mockReturnValue({
@@ -192,5 +198,41 @@ describe("NotificationSettings contract", () => {
     fireEvent.press(getByLabelText("Preview Adhan"));
 
     expect(handlePreviewPress).toHaveBeenCalledWith("adhan");
+  });
+
+  it("renders the window reminders subsection with prayer toggles and offsets", () => {
+    const { getByText, getByLabelText } = render(
+      <NotificationSettings notifStatus="granted" />,
+    );
+
+    expect(getByText("Window reminders")).toBeTruthy();
+    WINDOW_PRAYERS.forEach((p) => {
+      expect(getByLabelText(`${p} window reminder`)).toBeTruthy();
+    });
+    WINDOW_OFFSET_OPTIONS.forEach((n) => {
+      expect(getByLabelText(`${n} minutes before`)).toBeTruthy();
+    });
+  });
+
+  it("wires the window prayer toggle when enabled", async () => {
+    const { getByLabelText } = render(
+      <NotificationSettings notifStatus="granted" />,
+    );
+
+    fireEvent.press(getByLabelText("Asr window reminder"));
+
+    await waitFor(() =>
+      expect(setWindowPreference).toHaveBeenCalledWith("Asr", true),
+    );
+  });
+
+  it("wires the window offset selection when enabled", async () => {
+    const { getByLabelText } = render(
+      <NotificationSettings notifStatus="granted" />,
+    );
+
+    fireEvent.press(getByLabelText("30 minutes before"));
+
+    await waitFor(() => expect(setWindowOffset).toHaveBeenCalledWith(30));
   });
 });

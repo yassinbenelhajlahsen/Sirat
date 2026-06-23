@@ -22,8 +22,11 @@ import {
   PRAYERS,
   SOUND_OPTIONS,
   SOUND_SEGMENT_GAP,
+  WINDOW_OFFSET_OPTIONS,
+  WINDOW_PRAYERS,
   type PrayerKey,
   type SoundMode,
+  type WindowPrayerKey,
 } from "../utils/notifications/constants";
 import { getNotificationStyles } from "../utils/notifications/styles";
 
@@ -55,8 +58,12 @@ export default function NotificationSettings({ notifStatus }: Props) {
     enabled,
     prefs,
     soundMode,
+    windowPrefs,
+    windowOffset,
     setPrayerPreference,
     updateSoundMode,
+    setWindowPreference,
+    setWindowOffset,
   } = useNotificationPreferences({ notifStatus });
 
   const { previewing, handlePreviewPress, stopPreview } =
@@ -87,6 +94,20 @@ export default function NotificationSettings({ notifStatus }: Props) {
       void setPrayerPreference(k, !prefs[k]);
     },
     [prefs, pulsePrayer, setPrayerPreference],
+  );
+
+  const toggleWindowPrayer = useCallback(
+    (k: WindowPrayerKey) => {
+      void setWindowPreference(k, !windowPrefs[k]);
+    },
+    [windowPrefs, setWindowPreference],
+  );
+
+  const handleOffsetChange = useCallback(
+    (minutes: number) => {
+      void setWindowOffset(minutes);
+    },
+    [setWindowOffset],
   );
 
   const handleSoundModeChange = useCallback(
@@ -259,6 +280,129 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   </View>
                 </Pressable>
               </Animated.View>
+            );
+          })}
+          <View style={styles.revealDivider} />
+          <View style={styles.prayerSectionHeader}>
+            <Text style={[styles.prayerSectionTitle, { color: textColor }]}>
+              Window reminders
+            </Text>
+            <Text
+              style={[
+                styles.prayerSectionDescription,
+                { color: withOpacity(textColor, 0.72) },
+              ]}
+            >
+              A heads up before a prayer's time runs out. Sent only if you have
+              not logged it yet.
+            </Text>
+          </View>
+
+          <View style={[styles.soundSegmentRow, { opacity: enabled ? 1 : 0.55 }]}>
+            {WINDOW_OFFSET_OPTIONS.map((minutes, idx) => {
+              const selected = windowOffset === minutes;
+              return (
+                <Pressable
+                  key={minutes}
+                  disabled={!enabled}
+                  onPress={() => enabled && handleOffsetChange(minutes)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected, disabled: !enabled }}
+                  accessibilityLabel={`${minutes} minutes before`}
+                  style={({ pressed }) => [
+                    styles.soundSegment,
+                    {
+                      marginRight:
+                        idx === WINDOW_OFFSET_OPTIONS.length - 1
+                          ? 0
+                          : SOUND_SEGMENT_GAP,
+                      backgroundColor: selected ? accentColor : pillOffBgColor,
+                      borderColor: selected ? accentColor : dividerColor,
+                      opacity: pressed ? 0.9 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.soundSegmentLabel,
+                      { color: selected ? themeColors.onAccent : textColor },
+                    ]}
+                  >
+                    {`${minutes} min`}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {WINDOW_PRAYERS.map((p) => {
+            const isOn = windowPrefs[p];
+            const labelColor = !enabled
+              ? rowDisabledTextColor
+              : isOn
+                ? textColor
+                : rowOffTextColor;
+            const indicatorColor = !enabled
+              ? withOpacity(textColor, 0.35)
+              : isOn
+                ? accentColor
+                : rowOffTextColor;
+            const cardBg = !enabled
+              ? pillOffBgColor
+              : isOn
+                ? rowOnBgColor
+                : rowOffBgColor;
+            const cardBorder = !enabled
+              ? dividerColor
+              : isOn
+                ? rowOnBorderColor
+                : rowOffBorderColor;
+
+            return (
+              <View
+                key={p}
+                style={[styles.rowWrapper, { opacity: enabled ? 1 : 0.55 }]}
+              >
+                <Pressable
+                  onPress={() => {
+                    if (!enabled) return;
+                    toggleWindowPrayer(p);
+                  }}
+                  disabled={!enabled}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: isOn, disabled: !enabled }}
+                  accessibilityLabel={`${p} window reminder`}
+                  style={({ pressed }) => [
+                    styles.rowBase,
+                    styles.rowSurface,
+                    { backgroundColor: cardBg, borderColor: cardBorder },
+                    isOn && enabled ? styles.rowActive : undefined,
+                    pressed && enabled ? styles.rowPressed : undefined,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.rowLabel,
+                      { color: labelColor },
+                      !enabled ? styles.rowLabelDisabled : undefined,
+                    ]}
+                  >
+                    {p}
+                  </Text>
+                  <View style={styles.rowIndicator}>
+                    <Ionicons
+                      name={isOn ? "notifications" : "notifications-off-outline"}
+                      size={18}
+                      color={indicatorColor}
+                    />
+                    <Text
+                      style={[styles.rowIndicatorText, { color: indicatorColor }]}
+                    >
+                      {isOn ? "On" : "Off"}
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
             );
           })}
           <View style={[styles.soundCard, { opacity: enabled ? 1 : 0.55 }]}>
