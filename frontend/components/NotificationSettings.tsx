@@ -71,6 +71,11 @@ export default function NotificationSettings({ notifStatus }: Props) {
 
   const [revealHeight, setRevealHeight] = useState(0);
 
+  const offsetIndex = Math.max(
+    0,
+    (WINDOW_OFFSET_OPTIONS as readonly number[]).indexOf(windowOffset),
+  );
+
   const {
     headerScale,
     bellAnimations,
@@ -79,13 +84,17 @@ export default function NotificationSettings({ notifStatus }: Props) {
     contentMaxHeight,
     contentScale,
     soundIndicator,
+    offsetIndicator,
+    windowPrayerAnimations,
     pulseHeader,
     pulsePrayer,
+    pulseWindowPrayer,
   } = useNotificationPanelAnimation({
     loaded,
     enabled,
     soundMode,
     contentHeight: revealHeight,
+    offsetIndex,
   });
 
   const { segmentWidth, indicatorTranslateX, onLayout } =
@@ -94,6 +103,16 @@ export default function NotificationSettings({ notifStatus }: Props) {
       optionCount: SOUND_OPTIONS.length,
       gap: SOUND_SEGMENT_GAP,
     });
+
+  const {
+    segmentWidth: offsetSegmentWidth,
+    indicatorTranslateX: offsetIndicatorTranslateX,
+    onLayout: offsetOnLayout,
+  } = useNotificationSegmentLayout({
+    soundIndicator: offsetIndicator,
+    optionCount: WINDOW_OFFSET_OPTIONS.length,
+    gap: SOUND_SEGMENT_GAP,
+  });
 
   const togglePrayer = useCallback(
     (k: PrayerKey) => {
@@ -105,9 +124,10 @@ export default function NotificationSettings({ notifStatus }: Props) {
 
   const toggleWindowPrayer = useCallback(
     (k: WindowPrayerKey) => {
+      pulseWindowPrayer(k);
       void setWindowPreference(k, !windowPrefs[k]);
     },
-    [windowPrefs, setWindowPreference],
+    [windowPrefs, pulseWindowPrayer, setWindowPreference],
   );
 
   const handleOffsetChange = useCallback(
@@ -298,7 +318,24 @@ export default function NotificationSettings({ notifStatus }: Props) {
             </Text>
           </View>
 
-          <View style={[styles.soundSegmentRow, { opacity: enabled ? 1 : 0.55 }]}>
+          <View
+            style={[styles.soundSegmentRow, { opacity: enabled ? 1 : 0.55 }]}
+            onLayout={offsetOnLayout}
+          >
+            {offsetSegmentWidth != null && offsetIndicatorTranslateX != null && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.soundSegmentHighlight,
+                  {
+                    width: offsetSegmentWidth,
+                    transform: [{ translateX: offsetIndicatorTranslateX }],
+                    backgroundColor: accentColor,
+                    borderColor: accentColor,
+                  },
+                ]}
+              />
+            )}
             {WINDOW_OFFSET_OPTIONS.map((minutes, idx) => {
               const selected = windowOffset === minutes;
               return (
@@ -316,8 +353,8 @@ export default function NotificationSettings({ notifStatus }: Props) {
                         idx === WINDOW_OFFSET_OPTIONS.length - 1
                           ? 0
                           : SOUND_SEGMENT_GAP,
-                      backgroundColor: selected ? accentColor : pillOffBgColor,
-                      borderColor: selected ? accentColor : dividerColor,
+                      backgroundColor: selected ? "transparent" : pillOffBgColor,
+                      borderColor: selected ? "transparent" : dividerColor,
                       opacity: pressed ? 0.9 : 1,
                     },
                   ]}
@@ -360,9 +397,15 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   : rowOffBorderColor;
 
               return (
-                <View
+                <Animated.View
                   key={p}
-                  style={[styles.gridCell4, { opacity: enabled ? 1 : 0.55 }]}
+                  style={[
+                    styles.gridCell4,
+                    {
+                      transform: [{ scale: windowPrayerAnimations[p] }],
+                      opacity: enabled ? 1 : 0.55,
+                    },
+                  ]}
                 >
                   <Pressable
                     onPress={() => {
@@ -393,7 +436,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                       {isOn ? "On" : "Off"}
                     </Text>
                   </Pressable>
-                </View>
+                </Animated.View>
               );
             })}
           </View>

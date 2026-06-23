@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Animated, Easing } from "react-native";
 
-import { type PrayerKey, type SoundMode } from "../utils/notifications/constants";
+import {
+  type PrayerKey,
+  type SoundMode,
+  type WindowPrayerKey,
+} from "../utils/notifications/constants";
 
 // Fallback cap used only until the reveal content reports its real height via
 // onLayout. Kept generous so content is never clipped on the first frame.
@@ -12,6 +16,7 @@ type Params = {
   enabled: boolean;
   soundMode: SoundMode;
   contentHeight?: number;
+  offsetIndex?: number;
 };
 
 export function useNotificationPanelAnimation({
@@ -19,12 +24,14 @@ export function useNotificationPanelAnimation({
   enabled,
   soundMode,
   contentHeight,
+  offsetIndex,
 }: Params) {
   const headerScale = useRef(new Animated.Value(1)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
   const soundIndicator = useRef(
     new Animated.Value(soundMode === "adhan" ? 1 : 0),
   ).current;
+  const offsetIndicator = useRef(new Animated.Value(offsetIndex ?? 0)).current;
 
   const bellAnimations = useRef<Record<PrayerKey, Animated.Value>>({
     Fajr: new Animated.Value(1),
@@ -34,6 +41,15 @@ export function useNotificationPanelAnimation({
     Maghrib: new Animated.Value(1),
     Isha: new Animated.Value(1),
   }).current;
+
+  const windowPrayerAnimations = useRef<Record<WindowPrayerKey, Animated.Value>>(
+    {
+      Fajr: new Animated.Value(1),
+      Dhuhr: new Animated.Value(1),
+      Asr: new Animated.Value(1),
+      Maghrib: new Animated.Value(1),
+    },
+  ).current;
 
   const initialAnimSet = useRef(false);
 
@@ -62,6 +78,15 @@ export function useNotificationPanelAnimation({
       useNativeDriver: true,
     }).start();
   }, [soundIndicator, soundMode]);
+
+  useEffect(() => {
+    Animated.timing(offsetIndicator, {
+      toValue: offsetIndex ?? 0,
+      duration: 200,
+      easing: Easing.out(Easing.poly(4)),
+      useNativeDriver: true,
+    }).start();
+  }, [offsetIndicator, offsetIndex]);
 
   const pulseHeader = useCallback(() => {
     Animated.sequence([
@@ -100,6 +125,28 @@ export function useNotificationPanelAnimation({
     [bellAnimations],
   );
 
+  const pulseWindowPrayer = useCallback(
+    (key: WindowPrayerKey) => {
+      const anim = windowPrayerAnimations[key];
+      anim.setValue(1);
+      Animated.sequence([
+        Animated.timing(anim, {
+          toValue: 0.9,
+          duration: 90,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 120,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    },
+    [windowPrayerAnimations],
+  );
+
   const contentOpacity = contentAnim;
   const contentTranslateY = contentAnim.interpolate({
     inputRange: [0, 1],
@@ -127,7 +174,10 @@ export function useNotificationPanelAnimation({
     contentMaxHeight,
     contentScale,
     soundIndicator,
+    offsetIndicator,
+    windowPrayerAnimations,
     pulseHeader,
     pulsePrayer,
+    pulseWindowPrayer,
   };
 }

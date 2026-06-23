@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Animated, Linking } from "react-native";
 
 import NotificationSettings from "@/components/NotificationSettings";
-import { type PrayerKey, PRAYERS, type SoundMode, WINDOW_PRAYERS, WINDOW_OFFSET_OPTIONS } from "@/utils/notifications/constants";
+import { type PrayerKey, PRAYERS, type SoundMode, WINDOW_PRAYERS, WINDOW_OFFSET_OPTIONS, type WindowPrayerKey } from "@/utils/notifications/constants";
 
 const mockUseNotificationPreferences = jest.fn();
 const mockUseAdhanPreview = jest.fn();
@@ -17,6 +17,7 @@ const stopPreview = jest.fn(async () => {});
 const handlePreviewPress = jest.fn();
 const pulseHeader = jest.fn();
 const pulsePrayer = jest.fn();
+const pulseWindowPrayer = jest.fn();
 
 jest.mock("@/context/ThemeContext", () => {
   const { defaultTheme } = jest.requireActual("@/constants/theme");
@@ -68,6 +69,12 @@ const buildBellAnimations = (): Record<PrayerKey, Animated.Value> =>
     return acc;
   }, {} as Record<PrayerKey, Animated.Value>);
 
+const buildWindowAnimations = (): Record<WindowPrayerKey, Animated.Value> =>
+  WINDOW_PRAYERS.reduce((acc, prayer) => {
+    acc[prayer] = new Animated.Value(1);
+    return acc;
+  }, {} as Record<WindowPrayerKey, Animated.Value>);
+
 function configureHookMocks({
   loaded = true,
   enabled = true,
@@ -104,8 +111,11 @@ function configureHookMocks({
     contentMaxHeight: new Animated.Value(enabled ? 820 : 0),
     contentScale: new Animated.Value(1),
     soundIndicator,
+    offsetIndicator: new Animated.Value(0),
+    windowPrayerAnimations: buildWindowAnimations(),
     pulseHeader,
     pulsePrayer,
+    pulseWindowPrayer,
   });
 
   mockUseNotificationSegmentLayout.mockReturnValue({
