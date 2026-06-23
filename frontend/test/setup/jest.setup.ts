@@ -1,6 +1,17 @@
 require("react-native-gesture-handler/jestSetup");
 import "@testing-library/jest-native/extend-expect";
 
+// Prevent @clerk/expo from initialising its MessagePort (open handle) in tests.
+// Test files that need specific Clerk behaviour override this with their own jest.mock factory.
+jest.mock("@clerk/expo", () => ({
+  ClerkProvider: ({ children }: { children: any }) => children,
+  useAuth: () => ({ isLoaded: true, isSignedIn: false, userId: null }),
+  useUser: () => ({ user: null }),
+  useSSO: () => ({ startSSOFlow: jest.fn() }),
+  getClerkInstance: () => ({ session: null }),
+}));
+jest.mock("@clerk/expo/token-cache", () => ({ tokenCache: {} }));
+
 declare global {
   // eslint-disable-next-line no-var
   var freezeTestTime: (isoDate: string | Date) => void;
