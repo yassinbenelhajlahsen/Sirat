@@ -3,9 +3,16 @@ import { DeviceEventEmitter } from "react-native";
 
 import type { PrayerSettings } from "../prayerTimes";
 import {
+  DEFAULT_WINDOW_OFFSET,
+  DEFAULT_WINDOW_PREFS,
   STORAGE_ENABLED,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
+  STORAGE_WINDOW_MAP,
+  STORAGE_WINDOW_OFFSET,
+  WINDOW_OFFSET_OPTIONS,
+  WINDOW_PRAYERS,
+  type WindowPrefMap,
 } from "../../utils/notifications/constants";
 import {
   STORAGE_DAYKEY,
@@ -143,4 +150,27 @@ export function buildEffectiveSettings(
   }
 
   return { useLocation: true, method: s.method, city: manualCity as any };
+}
+
+export async function readWindowMap(): Promise<WindowPrefMap> {
+  const raw = await AsyncStorage.getItem(STORAGE_WINDOW_MAP);
+  if (!raw) return { ...DEFAULT_WINDOW_PREFS };
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const next: WindowPrefMap = { ...DEFAULT_WINDOW_PREFS };
+    for (const key of WINDOW_PRAYERS) {
+      if (typeof parsed[key] === "boolean") next[key] = parsed[key] as boolean;
+    }
+    return next;
+  } catch {
+    return { ...DEFAULT_WINDOW_PREFS };
+  }
+}
+
+export async function readWindowOffset(): Promise<number> {
+  const raw = await AsyncStorage.getItem(STORAGE_WINDOW_OFFSET);
+  const value = raw ? parseInt(raw, 10) : NaN;
+  return (WINDOW_OFFSET_OPTIONS as readonly number[]).includes(value)
+    ? value
+    : DEFAULT_WINDOW_OFFSET;
 }

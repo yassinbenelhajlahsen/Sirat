@@ -19,6 +19,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `notification scheduling lifecycle testing`
   - `services/notificationService.test.ts`
   - `services/notifications/*.test.ts`
+  - `services/notifications/windowStorage.test.ts`
 - `prayer times retrieval + caching testing`
   - `services/prayerTimes.test.ts`
   - `services/prayer-times/*.test.ts`

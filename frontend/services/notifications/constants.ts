@@ -18,3 +18,8 @@ const HORIZON_DAYS_ANDROID = 14;
 
 export const HORIZON_DAYS =
   Platform.OS === "ios" ? HORIZON_DAYS_IOS : HORIZON_DAYS_ANDROID;
+
+// iOS keeps only the soonest-firing 64 pending local notifications per app and
+// discards the rest; we budget at 60 (shared across at-prayer alerts and window
+// reminders) to stay safely under the cap. See devDocs window-reminders spec.
+export const MAX_PENDING_NOTIFICATIONS = 60;
