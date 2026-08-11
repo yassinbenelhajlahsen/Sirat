@@ -20,6 +20,10 @@ const ICONS: Record<string, { on: keyof typeof Ionicons.glyphMap; off: keyof typ
 
 const H_MARGIN = 14;
 const PAD = 8;
+// Indicator inset from the pill on all sides. Keeping the horizontal end-gap
+// equal to the vertical gap makes the capsule's round end concentric with the
+// bar's round end (bar radius 32 = capsule radius 25 + 7).
+const INDICATOR_INSET = 7;
 
 export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const { theme } = useTheme();
@@ -32,7 +36,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const count = tabs.length || 1;
   const pillWidth = Math.max(0, width - H_MARGIN * 2);
   const slot = (pillWidth - PAD * 2) / count;
-  const indicatorW = Math.max(0, slot - 8);
+  const indicatorW = Math.max(0, slot + 2 * (PAD - INDICATOR_INSET));
 
   const activeKey = state.routes[state.index]?.key;
   const activeIdx = Math.max(0, tabs.findIndex((r) => r.key === activeKey));
@@ -42,8 +46,8 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
     Animated.spring(translateX, {
       toValue: activeIdx * slot,
       useNativeDriver: true, // translateX is native-thread safe
-      speed: 16,
-      bounciness: 8,
+      speed: 18,
+      bounciness: 2, // near-critically damped: no visible overshoot at the end slots
     }).start();
   }, [activeIdx, slot, translateX]);
 
@@ -126,6 +130,11 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 12 },
   },
-  indicator: { position: "absolute", top: 7, bottom: 7, borderWidth: 1 },
+  indicator: {
+    position: "absolute",
+    top: INDICATOR_INSET,
+    bottom: INDICATOR_INSET,
+    borderWidth: 1,
+  },
   item: { alignItems: "center", justifyContent: "center", minHeight: 44 },
 });
