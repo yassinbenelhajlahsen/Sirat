@@ -887,6 +887,18 @@ describe("Screen contracts", () => {
       });
     });
 
+    it("opens the navigator from the surah title header", async () => {
+      const { getByLabelText, getByText, getByTestId } = render(<QuranScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId("flash-list-mock")).toHaveTextContent("items:2");
+      });
+
+      expect(getByText("NavigatorModal:closed")).toBeTruthy();
+      fireEvent.press(getByLabelText("Choose surah"));
+      expect(getByText("NavigatorModal:open")).toBeTruthy();
+    });
+
     it("wires play button to audio controller", async () => {
       const { getByLabelText, getByTestId } = render(<QuranScreen />);
 

@@ -1302,15 +1302,27 @@ export default function QuranScreen() {
             end={{ x: 0.5, y: 1 }}
             style={[styles.headerBar, { paddingTop: insets.top + 10 }]}
           >
-            <View style={styles.headerText}>
+            <PressableScale
+              style={styles.headerText}
+              onPress={() => openNavigator("surah")}
+              accessibilityRole="button"
+              accessibilityLabel="Choose surah"
+              accessibilityHint="Opens the surah and verse navigator"
+            >
               <View style={styles.headerTitleRow}>
                 <Headline color={themeColors.white}>{currentSurahMeta?.englishName ?? ""}</Headline>
                 <Text style={styles.headerArabic}>{currentSurahMeta?.arabicName ?? ""}</Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={14}
+                  color={themeColors.accent}
+                  style={styles.headerChevron}
+                />
               </View>
               <Caption color={themeColors.accent}>
                 Ayah {currentAyah.ayahNumber} · Juzʾ {currentAyah.juzNumber}
               </Caption>
-            </View>
+            </PressableScale>
             <View style={styles.headerActions}>
               {offlinePillVisible ? (
                 <View style={[styles.ctrl, styles.ctrlOffline]} accessibilityRole="text">
@@ -1445,6 +1457,7 @@ const createStyles = (theme: AppTheme) => {
     },
     headerTitleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
     headerArabic: { fontWeight: "600", fontSize: 16, color: themeColors.accent },
+    headerChevron: { alignSelf: "center" },
     headerActions: { flexDirection: "row", gap: spacing.sm },
     ctrl: {
       width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center",
