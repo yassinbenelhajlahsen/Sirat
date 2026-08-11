@@ -66,15 +66,16 @@ export default function DayDetailPanel({
             {hijri}
           </Caption>
         </View>
-        {holiday ? (
-          <GlassSurface tier="row" radius={theme.radii.pill} style={styles.chip}>
-            <Ionicons name="sparkles-outline" size={13} color={colors.accent} />
-            <Caption color={colors.accent} numberOfLines={1} style={styles.chipText}>
-              {holiday}
-            </Caption>
-          </GlassSurface>
-        ) : null}
       </View>
+
+      {holiday ? (
+        <GlassSurface tier="row" radius={theme.radii.row} style={styles.holidayRow}>
+          <Caption color={withOpacity(colors.white, 0.5)} style={styles.holidayLabel}>
+            Holiday
+          </Caption>
+          <Body color={colors.accent}>{holiday}</Body>
+        </GlassSurface>
+      ) : null}
 
       {isToday && nextPrayer ? (
         <Caption color={withOpacity(colors.white, 0.7)} style={styles.nextLine}>
@@ -156,15 +157,15 @@ const createStyles = (theme: AppTheme) => {
     },
     headerText: { flexShrink: 1 },
     hijri: { marginTop: 2 },
-    chip: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.xs,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.xs + 1,
-      maxWidth: "52%",
+    // Mirrors the PrayerArc card's horizontal padding and eyebrow label so the
+    // holiday text lines up with the arc content below it.
+    holidayRow: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      marginBottom: spacing.md,
+      gap: 2,
     },
-    chipText: { flexShrink: 1 },
+    holidayLabel: { letterSpacing: 1.2, textTransform: "uppercase" },
     nextLine: { marginBottom: spacing.sm },
     stateCard: { padding: spacing.lg },
     stateHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
