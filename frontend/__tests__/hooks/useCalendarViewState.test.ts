@@ -38,7 +38,7 @@ describe("hooks/useCalendarViewState", () => {
     expect(result.current.isViewingToday).toBe(true);
   });
 
-  it("enforces previous/next navigation boundaries to current year through next year", () => {
+  it("enforces previous/next navigation boundaries to last year through two years ahead", () => {
     const { result } = renderHook(() =>
       useCalendarViewState({
         monthParam: undefined,
@@ -49,7 +49,7 @@ describe("hooks/useCalendarViewState", () => {
     const currentYear = result.current.today.getFullYear();
 
     act(() => {
-      result.current.setViewYear(currentYear);
+      result.current.setViewYear(currentYear - 1);
       result.current.setViewMonth(0);
     });
 
@@ -57,7 +57,7 @@ describe("hooks/useCalendarViewState", () => {
     expect(result.current.canGoNext).toBe(true);
 
     act(() => {
-      result.current.setViewYear(currentYear + 1);
+      result.current.setViewYear(currentYear + 2);
       result.current.setViewMonth(11);
     });
 

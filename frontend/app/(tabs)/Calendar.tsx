@@ -15,6 +15,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
+import MonthPickerSheet from "@/components/calendar/MonthPickerSheet";
 import PressableScale from "@/components/PressableScale";
 import HabitChecklist from "@/components/tracking/HabitChecklist";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
@@ -225,6 +226,21 @@ export default function CalendarScreen() {
   const { habits } = useHabits();
   const { done: habitDone, toggle: toggleHabit } = useHabitLog(selectedDayKey);
   const [prayerSheet, setPrayerSheet] = useState<{ name: PrayerName; label: string } | null>(null);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+
+  const openMonthPicker = useCallback(() => {
+    haptics("selection");
+    setMonthPickerOpen(true);
+  }, [haptics]);
+
+  const handleMonthPicked = useCallback(
+    (year: number, month: number) => {
+      setViewYear(year);
+      setViewMonth(month);
+      setMonthPickerOpen(false);
+    },
+    [setViewMonth, setViewYear],
+  );
 
   return (
     <View style={styles.fill}>
@@ -252,9 +268,16 @@ export default function CalendarScreen() {
                 color={canGoPrev ? colors.accent : withOpacity(colors.accent, 0.3)}
               />
             </PressableScale>
-            <Headline>
-              {monthName.slice(0, 3)} {viewYear}
-            </Headline>
+            <PressableScale
+              onPress={openMonthPicker}
+              accessibilityRole="button"
+              accessibilityLabel="Choose month and year"
+              accessibilityHint="Opens the month picker"
+            >
+              <Headline>
+                {monthName.slice(0, 3)} {viewYear}
+              </Headline>
+            </PressableScale>
             <PressableScale
               onPress={handleNextMonth}
               disabled={!canGoNext}
@@ -457,6 +480,16 @@ export default function CalendarScreen() {
         </ScrollView>
       </View>
     </Screen>
+    <MonthPickerSheet
+      visible={monthPickerOpen}
+      viewYear={viewYear}
+      viewMonth={viewMonth}
+      today={today}
+      minDate={minDate}
+      maxDate={maxDate}
+      onSelect={handleMonthPicked}
+      onClose={() => setMonthPickerOpen(false)}
+    />
     <PrayerLogSheet
       visible={prayerSheet !== null}
       prayerName={prayerSheet?.name ?? null}

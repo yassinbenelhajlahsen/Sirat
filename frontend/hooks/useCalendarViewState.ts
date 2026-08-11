@@ -34,8 +34,8 @@ export function useCalendarViewState({
   const initialIsViewingToday =
     initialMonth === today.getMonth() && initialYear === today.getFullYear();
 
-  const minDate = new Date(today.getFullYear(), 0);
-  const maxDate = new Date(today.getFullYear() + 1, 11);
+  const minDate = new Date(today.getFullYear() - 1, 0);
+  const maxDate = new Date(today.getFullYear() + 2, 11);
 
   const [viewYear, setViewYear] = useState(initialYear);
   const [viewMonth, setViewMonth] = useState(initialMonth);

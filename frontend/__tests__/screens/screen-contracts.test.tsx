@@ -932,6 +932,24 @@ describe("Screen contracts", () => {
 
       expect(mockGoToNextMonth).toHaveBeenCalledTimes(1);
     });
+
+    it("opens the month picker from the header label and applies the pick", () => {
+      const viewState = buildCalendarViewState();
+      mockUseCalendarViewState.mockReturnValue(viewState as any);
+
+      const { getByLabelText, queryByText, getByText } = render(
+        <CalendarScreen />,
+      );
+
+      expect(queryByText("Jump to month")).toBeNull();
+      fireEvent.press(getByLabelText("Choose month and year"));
+      expect(getByText("Jump to month")).toBeTruthy();
+
+      fireEvent.press(getByLabelText("Jun 2026"));
+
+      expect(viewState.setViewYear).toHaveBeenCalledWith(2026);
+      expect(viewState.setViewMonth).toHaveBeenCalledWith(5);
+    });
   });
 
   describe("Mosques", () => {

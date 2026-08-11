@@ -62,6 +62,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useRamadanTracker.test.ts`
   - `hooks/useCalendarData.test.ts`
   - `components/day-detail-panel.contract.test.tsx` (calendar inline-agenda day detail — today/other-day/holiday/Ramadan/error states; holiday names render on their own row without a line clamp)
+  - `components/calendar/MonthPickerSheet.test.tsx` (month/year picker bottom sheet — year pills, month grid, out-of-range disabling)
 - `force update gate testing`
   - `services/appVersion.test.ts`
   - `services/apiClient.test.ts`
