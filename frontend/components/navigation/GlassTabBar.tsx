@@ -58,7 +58,13 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   return (
     <View style={[styles.wrap, { bottom: Math.max(insets.bottom, 14) + 6 }]} pointerEvents="box-none">
       <Animated.View style={{ transform: [{ scale: collapseScale }, { translateY: collapseShiftY }] }}>
-        <GlassSurface tier="chrome" radius={theme.radii.pill} style={[styles.pill, { paddingHorizontal: PAD }]}>
+        <GlassSurface
+          tier="chrome"
+          radius={theme.radii.pill}
+          curve="circular"
+          bordered={false}
+          style={[styles.pill, { paddingHorizontal: PAD }]}
+        >
           {/* Smoked-glass scrim: darkens the chrome so it reads as chrome, not content. */}
           <View
             pointerEvents="none"

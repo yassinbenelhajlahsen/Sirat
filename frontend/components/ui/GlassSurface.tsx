@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Platform, StyleProp, View, ViewProps, ViewStyle } from "react-native";
+import { Platform, StyleProp, StyleSheet, View, ViewProps, ViewStyle } from "react-native";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 
 import { useTheme } from "@/context/ThemeContext";
@@ -9,6 +9,13 @@ type Tier = "chrome" | "card" | "row";
 type GlassSurfaceProps = ViewProps & {
   tier?: Tier;
   radius?: number;
+  // Full-capsule surfaces (radius >= height/2) need "circular": the continuous
+  // squircle curve degrades at clamped pill radii and renders an uneven border.
+  curve?: ViewStyle["borderCurve"];
+  // iOS 26 Liquid Glass draws its own specular rim; surfaces that should rely on
+  // it (the tab bar) pass false so the drawn border doesn't double the edge.
+  // The non-glass fallback keeps a hairline for definition either way.
+  bordered?: boolean;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 };
@@ -16,6 +23,8 @@ type GlassSurfaceProps = ViewProps & {
 export default function GlassSurface({
   tier = "card",
   radius,
+  curve = "continuous",
+  bordered = true,
   style,
   children,
   ...rest
@@ -31,7 +40,7 @@ export default function GlassSurface({
 
   const shared: ViewStyle = {
     borderRadius: r,
-    borderCurve: "continuous",
+    borderCurve: curve,
     borderWidth: 1,
     borderColor: m.border,
     overflow: "hidden",
@@ -43,7 +52,7 @@ export default function GlassSurface({
         key={theme.name}
         glassEffectStyle={tier === "chrome" || isLight ? "clear" : "regular"}
         colorScheme={isLight ? "light" : "dark"}
-        style={[shared, style]}
+        style={[shared, !bordered && { borderWidth: 0 }, style]}
         {...rest}
       >
         {children}
@@ -52,7 +61,15 @@ export default function GlassSurface({
   }
 
   return (
-    <View style={[shared, { backgroundColor: m.fill }, style]} {...rest}>
+    <View
+      style={[
+        shared,
+        !bordered && { borderWidth: StyleSheet.hairlineWidth },
+        { backgroundColor: m.fill },
+        style,
+      ]}
+      {...rest}
+    >
       {children}
     </View>
   );
