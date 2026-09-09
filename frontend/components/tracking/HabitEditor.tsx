@@ -1,27 +1,27 @@
 // frontend/components/tracking/HabitEditor.tsx
-import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
+import SectionHeader from "@/components/ui/SectionHeader";
 import SheetBackground from "@/components/ui/SheetBackground";
-import { Caption, Headline, Title3 } from "@/components/ui/Text";
+import SheetHeader from "@/components/ui/SheetHeader";
+import { Caption, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import type { Habit, HabitFrequency } from "@/services/habitTracker";
 import { WEEKDAY_SHORT } from "@/utils/habitFrequency";
 
-type IoniconName = keyof typeof Ionicons.glyphMap;
-
 function EditorSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
   return <SheetBackground {...p} solid />;
 }
 
 // Spoken names so VoiceOver reads "Moon icon", not the glyph id.
-const GLYPHS: { name: IoniconName; label: string }[] = [
+const GLYPHS: { name: AppIconName; label: string }[] = [
   { name: "book-outline", label: "Book" },
   { name: "moon-outline", label: "Moon" },
   { name: "hand-left-outline", label: "Hand" },
@@ -51,7 +51,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
   const tabBarClearance = useTabBarClearance();
 
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState<IoniconName>(GLYPHS[0].name);
+  const [icon, setIcon] = useState<AppIconName>(GLYPHS[0].name);
   const [weekly, setWeekly] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
 
@@ -63,7 +63,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
       setName(initial?.name ?? "");
-      setIcon((initial?.icon as IoniconName) ?? GLYPHS[0].name);
+      setIcon((initial?.icon as AppIconName) ?? GLYPHS[0].name);
       const f = initial?.frequency;
       setWeekly(f?.type === "weekly");
       setSelectedDays(f?.type === "weekly" ? [...f.days] : []);
@@ -153,7 +153,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
       onChange={handleSheetChange}
     >
       <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 16 }]}>
-        <Title3 style={styles.title}>{initial ? "Edit habit" : "New habit"}</Title3>
+        <SheetHeader title={initial ? "Edit habit" : "New habit"} />
 
         <BottomSheetTextInput
           placeholder="Habit name"
@@ -165,20 +165,21 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
           maxFontSizeMultiplier={1.4}
         />
 
-        <Caption color={colors.textTertiary} style={styles.sectionLabel}>ICON</Caption>
+        <SectionHeader title="Icon" />
         <View style={styles.glyphGrid}>
           {GLYPHS.map((g) => {
             const active = g.name === icon;
             return (
               <PressableScale
                 key={g.name}
+                variant="button"
                 onPress={() => setIcon(g.name)}
                 accessibilityRole="button"
                 accessibilityLabel={`${g.label} icon`}
                 accessibilityState={{ selected: active }}
                 style={[styles.glyph, active && styles.glyphActive]}
               >
-                <Ionicons
+                <AppIcon
                   name={g.name}
                   size={20}
                   color={active ? colors.onAccent : colors.textSecondary}
@@ -188,9 +189,10 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
           })}
         </View>
 
-        <Caption color={colors.textTertiary} style={styles.sectionLabel}>FREQUENCY</Caption>
+        <SectionHeader title="Frequency" />
         <View style={styles.freqRow}>
           <PressableScale
+            variant="button"
             onPress={() => setWeekly(false)}
             accessibilityRole="button"
             accessibilityState={{ selected: !weekly }}
@@ -199,6 +201,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
             <Headline color={!weekly ? colors.onAccent : colors.white}>Daily</Headline>
           </PressableScale>
           <PressableScale
+            variant="button"
             onPress={() => setWeekly(true)}
             accessibilityRole="button"
             accessibilityState={{ selected: weekly }}
@@ -216,6 +219,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
                 return (
                   <PressableScale
                     key={label}
+                    variant="button"
                     onPress={() => toggleDay(index)}
                     accessibilityRole="button"
                     accessibilityLabel={`Toggle ${label}`}
@@ -252,53 +256,52 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
+  const isLight = theme.name === "light";
   return StyleSheet.create({
-    body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, gap: spacing.md },
-    title: { marginBottom: spacing.xs },
+    body: { paddingHorizontal: spacing.xl, paddingTop: 0, gap: spacing.md },
     input: {
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.12),
+      backgroundColor: isLight ? withOpacity(colors.black, 0.05) : withOpacity(colors.white, 0.07),
       borderRadius: theme.radii.row,
+      borderCurve: "continuous",
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       minHeight: 48,
       color: colors.white,
       fontSize: 16,
     },
-    sectionLabel: { letterSpacing: 1, marginTop: spacing.xs },
     glyphGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
     glyph: {
-      width: 46,
-      height: 46,
-      borderRadius: 12,
+      width: 44,
+      height: 44,
+      borderRadius: theme.radii.chip,
+      borderCurve: "continuous",
       alignItems: "center",
       justifyContent: "center",
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.1),
+      backgroundColor: withOpacity(colors.white, 0.08),
     },
-    glyphActive: { backgroundColor: colors.accentSecondary, borderColor: colors.accentSecondary },
+    glyphActive: { backgroundColor: colors.accentSecondary },
     freqRow: { flexDirection: "row", gap: spacing.sm },
     freqBtn: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
       minHeight: 44,
-      borderRadius: theme.radii.row,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.12),
+      borderRadius: theme.radii.pill,
+      borderCurve: "circular",
+      backgroundColor: withOpacity(colors.white, 0.08),
     },
-    freqBtnActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+    freqBtnActive: { backgroundColor: colors.accent },
     weekdayRow: { flexDirection: "row", justifyContent: "space-between", gap: spacing.xs },
     weekday: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
       minHeight: 40,
-      borderRadius: theme.radii.chip,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.12),
+      borderRadius: theme.radii.pill,
+      borderCurve: "circular",
+      backgroundColor: withOpacity(colors.white, 0.08),
     },
-    weekdayActive: { backgroundColor: colors.accentSecondary, borderColor: colors.accentSecondary },
+    weekdayActive: { backgroundColor: colors.accentSecondary },
     save: { marginTop: spacing.sm },
   });
 };

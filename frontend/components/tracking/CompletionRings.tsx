@@ -4,7 +4,6 @@ import { StyleSheet, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
 import DisplayNumber from "@/components/ui/DisplayNumber";
-import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -33,11 +32,7 @@ export default function CompletionRings({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <Caption color={colors.textTertiary} style={styles.heading}>
-        THIS MONTH
-      </Caption>
-      <View style={styles.row}>
+    <View style={styles.row}>
         {ORDER.map(({ name, label }) => {
           const value = byPrayer[name] ?? 0;
           const pct = Math.round(value * 100);
@@ -80,17 +75,14 @@ export default function CompletionRings({
               </Caption>
             </View>
           );
-        })}
-      </View>
-    </GlassSurface>
+      })}
+    </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { spacing } = theme;
   return StyleSheet.create({
-    card: { padding: spacing.lg, gap: spacing.md },
-    heading: { letterSpacing: 1.2 },
     row: { flexDirection: "row", justifyContent: "space-between" },
     ring: { alignItems: "center", width: SIZE },
     pctWrap: { position: "absolute", top: 0, width: SIZE, height: SIZE, alignItems: "center", justifyContent: "center" },

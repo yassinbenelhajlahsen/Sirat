@@ -2,35 +2,34 @@ import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import DisplayNumber from "@/components/ui/DisplayNumber";
-import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption } from "@/components/ui/Text";
+import { Headline } from "@/components/ui/Text";
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
+/** The streak sits bare on the canvas: nothing else on the screen outranks it. */
 export default function StreakHero({ streak }: { streak: number }) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <GlassSurface tier="card" radius={theme.radii.heroLg} style={styles.card}>
-      <Text style={styles.flame} accessibilityLabel="Current streak">🔥</Text>
-      <View style={styles.textCol}>
-        <DisplayNumber value={streak} size={64} color={colors.white} />
-        <Caption color={colors.textTertiary} style={styles.label}>
-          DAY STREAK
-        </Caption>
+    <View style={styles.wrap}>
+      <DisplayNumber value={streak} size={72} color={colors.white} />
+      <View style={styles.labelRow}>
+        <Text style={styles.flame} accessibilityLabel="Current streak" maxFontSizeMultiplier={1.2}>
+          🔥
+        </Text>
+        <Headline color={colors.textSecondary}>day streak</Headline>
       </View>
-    </GlassSurface>
+    </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { spacing } = theme;
   return StyleSheet.create({
-    card: { flexDirection: "row", alignItems: "center", gap: spacing.lg, padding: spacing.xl },
-    flame: { fontSize: 40 },
-    textCol: { gap: 2 },
-    label: { letterSpacing: 1.4, textTransform: "uppercase" },
+    wrap: { gap: spacing.xs },
+    labelRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+    flame: { fontSize: 15 },
   });
 };

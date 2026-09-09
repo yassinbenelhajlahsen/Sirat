@@ -10,12 +10,14 @@ import HabitRow from "@/components/tracking/HabitRow";
 import MonthHeatmap from "@/components/tracking/MonthHeatmap";
 import QadaCard from "@/components/tracking/QadaCard";
 import StreakHero from "@/components/tracking/StreakHero";
-import Button from "@/components/ui/Button";
-import IconButton from "@/components/ui/IconButton";
+import GlassSurface from "@/components/ui/GlassSurface";
 import Screen from "@/components/ui/Screen";
-import { Caption, LargeTitle, Title2 } from "@/components/ui/Text";
-import type { AppTheme } from "@/constants/theme";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { Footnote } from "@/components/ui/Text";
+import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useHabitLog, useHabitLogAll } from "@/hooks/useHabitLog";
 import { useHabits } from "@/hooks/useHabits";
 import { useTrackingStats } from "@/hooks/useTrackingStats";
@@ -28,6 +30,7 @@ export default function Tracker() {
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const screenMargin = useScreenMargin();
   const router = useRouter();
 
   const stats = useTrackingStats();
@@ -71,64 +74,69 @@ export default function Tracker() {
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
-          styles.content,
+          { paddingHorizontal: screenMargin },
           { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + 120 },
         ]}
       >
-        <View style={styles.headerRow}>
-          <IconButton
-            icon="chevron-back"
-            variant="plain"
-            color={colors.white}
-            onPress={() => router.back()}
-            accessibilityLabel="Go back"
-            style={styles.backBtn}
-          />
-          <LargeTitle>Tracker</LargeTitle>
+        <ScreenHeader
+          title="Tracker"
+          leadingIcon="chevron-back"
+          onLeadingPress={() => router.back()}
+          leadingAccessibilityLabel="Go back"
+        />
+
+        <View style={styles.streakSlot}>
+          <StreakHero streak={stats?.streak ?? 0} />
         </View>
 
         <View style={styles.section}>
-          <StreakHero streak={stats?.streak ?? 0} />
-          <CompletionRings byPrayer={stats?.completion.byPrayer ?? EMPTY_BY_PRAYER} />
-          {stats ? (
-            <MonthHeatmap scores={stats.dailyScores} year={stats.year} monthIndex0={stats.monthIndex0} />
-          ) : null}
-          <QadaCard count={stats?.qada ?? 0} />
+          <SectionHeader title="This month" />
+          <GlassSurface tier="card" radius={theme.radii.card} style={styles.monthCard}>
+            <CompletionRings byPrayer={stats?.completion.byPrayer ?? EMPTY_BY_PRAYER} />
+            <View style={styles.hairline} />
+            {stats ? (
+              <>
+                <MonthHeatmap scores={stats.dailyScores} year={stats.year} monthIndex0={stats.monthIndex0} />
+                <View style={styles.hairline} />
+              </>
+            ) : null}
+            <QadaCard count={stats?.qada ?? 0} />
+          </GlassSurface>
         </View>
 
-        <View style={styles.habitsHeader}>
-          <Title2>Habits</Title2>
-          <Button
-            label="New habit"
-            icon="add"
-            onPress={() => setEditing({ open: true, habit: null })}
+        <View style={styles.section}>
+          <SectionHeader
+            title="Habits"
+            actionLabel="+ New"
+            onActionPress={() => setEditing({ open: true, habit: null })}
+            actionAccessibilityLabel="New habit"
           />
+          {habits.length === 0 ? (
+            <Footnote color={colors.textTertiary} style={styles.empty}>
+              No habits yet. Tap &quot;+ New&quot; to start.
+            </Footnote>
+          ) : (
+            <GlassSurface tier="row" radius={theme.radii.row} style={styles.habitList}>
+              {habits.map((habit, index) => (
+                <HabitRow
+                  key={habit.id}
+                  habit={habit}
+                  streak={habitStreak(habit, allDone, habit.id, todayKey)}
+                  dueToday={isHabitDueOnDate(habit.frequency, today)}
+                  doneToday={!!doneToday[habit.id]}
+                  onToggleToday={() => void toggleToday(habit.id)}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < habits.length - 1}
+                  onMoveUp={() => move(index, -1)}
+                  onMoveDown={() => move(index, 1)}
+                  onEdit={() => setEditing({ open: true, habit })}
+                  onArchive={() => confirmArchive(habit)}
+                  separated={index > 0}
+                />
+              ))}
+            </GlassSurface>
+          )}
         </View>
-
-        {habits.length === 0 ? (
-          <Caption color={colors.textTertiary} style={styles.empty}>
-            No habits yet. Tap &quot;New habit&quot; to start.
-          </Caption>
-        ) : (
-          <View style={styles.habitList}>
-            {habits.map((habit, index) => (
-              <HabitRow
-                key={habit.id}
-                habit={habit}
-                streak={habitStreak(habit, allDone, habit.id, todayKey)}
-                dueToday={isHabitDueOnDate(habit.frequency, today)}
-                doneToday={!!doneToday[habit.id]}
-                onToggleToday={() => void toggleToday(habit.id)}
-                canMoveUp={index > 0}
-                canMoveDown={index < habits.length - 1}
-                onMoveUp={() => move(index, -1)}
-                onMoveDown={() => move(index, 1)}
-                onEdit={() => setEditing({ open: true, habit })}
-                onArchive={() => confirmArchive(habit)}
-              />
-            ))}
-          </View>
-        )}
       </ScrollView>
 
       <HabitEditor
@@ -148,14 +156,16 @@ export default function Tracker() {
 const EMPTY_BY_PRAYER = { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
 
 const createStyles = (theme: AppTheme) => {
-  const { spacing } = theme;
+  const { colors, spacing } = theme;
   return StyleSheet.create({
-    content: { paddingHorizontal: spacing.xl, gap: spacing.lg },
-    headerRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-    backBtn: { marginLeft: -spacing.sm },
-    section: { gap: spacing.md },
-    habitsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.sm },
-    habitList: { gap: spacing.sm },
+    streakSlot: { marginTop: spacing.lg },
+    section: { marginTop: spacing.xxl },
+    monthCard: { padding: spacing.lg, gap: spacing.lg },
+    hairline: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(colors.white, 0.1),
+    },
+    habitList: { paddingHorizontal: spacing.md },
     empty: { paddingVertical: spacing.xl, textAlign: "center" },
   });
 };

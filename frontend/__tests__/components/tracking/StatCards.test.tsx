@@ -9,7 +9,7 @@ describe("StreakHero", () => {
   it("shows the streak numeral and label", () => {
     const { getByText } = render(wrap(<StreakHero streak={12} />));
     expect(getByText("12")).toBeTruthy();
-    expect(getByText("DAY STREAK")).toBeTruthy();
+    expect(getByText("day streak")).toBeTruthy();
   });
 });
 

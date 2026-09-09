@@ -1,10 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import DisplayNumber from "@/components/ui/DisplayNumber";
-import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption, Headline } from "@/components/ui/Text";
+import { Body, Footnote } from "@/components/ui/Text";
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -14,21 +12,20 @@ export default function QadaCard({ count }: { count: number }) {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <Ionicons name="refresh-circle-outline" size={24} color={colors.accent} />
+    <View style={styles.row}>
       <View style={styles.textCol}>
-        <Headline>Qada</Headline>
-        <Caption color={colors.textTertiary}>Prayers to make up</Caption>
+        <Body>Qada</Body>
+        <Footnote color={colors.textTertiary}>Prayers to make up</Footnote>
       </View>
       <DisplayNumber value={count} size={34} color={colors.accent} />
-    </GlassSurface>
+    </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { spacing } = theme;
   return StyleSheet.create({
-    card: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.lg },
+    row: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 44 },
     textCol: { flex: 1, gap: 2 },
   });
 };

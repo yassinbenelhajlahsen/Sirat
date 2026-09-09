@@ -2,7 +2,6 @@
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
-import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -35,9 +34,6 @@ export default function MonthHeatmap({
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const weeks = useMemo(() => buildWeeks(scores, year, monthIndex0), [scores, year, monthIndex0]);
-  const monthName = new Intl.DateTimeFormat("en-US", { month: "long" }).format(
-    new Date(year, monthIndex0, 1),
-  );
   const monthShort = new Intl.DateTimeFormat("en-US", { month: "short" }).format(
     new Date(year, monthIndex0, 1),
   );
@@ -48,10 +44,7 @@ export default function MonthHeatmap({
       : withOpacity(colors.white, 0.06);
 
   return (
-    <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <Caption color={colors.textTertiary} style={styles.heading}>
-        {monthName}
-      </Caption>
+    <View style={styles.wrap}>
       <View style={styles.grid}>
         {weeks.map((week, wi) => (
           <View key={wi} style={styles.week}>
@@ -78,18 +71,17 @@ export default function MonthHeatmap({
         ))}
         <Caption color={colors.textTertiary}>More</Caption>
       </View>
-    </GlassSurface>
+    </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { spacing } = theme;
   return StyleSheet.create({
-    card: { padding: spacing.lg, gap: spacing.md },
-    heading: { letterSpacing: 1.2 },
+    wrap: { gap: spacing.md },
     grid: { gap: spacing.xs },
     week: { flexDirection: "row", justifyContent: "space-between" },
-    cell: { flex: 1, aspectRatio: 1, marginHorizontal: 2, borderRadius: 6 },
+    cell: { flex: 1, aspectRatio: 1, marginHorizontal: 2, borderRadius: 4 },
     empty: { backgroundColor: "transparent" },
     legend: {
       flexDirection: "row",
@@ -97,6 +89,6 @@ const createStyles = (theme: AppTheme) => {
       justifyContent: "flex-end",
       gap: spacing.xs,
     },
-    legendSwatch: { width: 12, height: 12, borderRadius: 3 },
+    legendSwatch: { width: 12, height: 12, borderRadius: 4 },
   });
 };

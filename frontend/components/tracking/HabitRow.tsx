@@ -1,19 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
 import PressableScale from "@/components/PressableScale";
-import GlassSurface from "@/components/ui/GlassSurface";
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import IconButton from "@/components/ui/IconButton";
-import { Caption, Headline } from "@/components/ui/Text";
+import { Body, Caption, Footnote } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { Habit } from "@/services/habitTracker";
 import { showActionMenu } from "@/utils/actionMenu";
 import { frequencyLabel } from "@/utils/habitFrequency";
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
 
 type Props = {
   habit: Habit;
@@ -27,6 +24,8 @@ type Props = {
   onMoveDown: () => void;
   onEdit: () => void;
   onArchive: () => void;
+  /** Rows after the first draw a hairline inset to the text edge. */
+  separated?: boolean;
 };
 
 /**
@@ -46,6 +45,7 @@ export default function HabitRow({
   onMoveDown,
   onEdit,
   onArchive,
+  separated = false,
 }: Props) {
   const { theme } = useTheme();
   const { colors } = theme;
@@ -79,7 +79,7 @@ export default function HabitRow({
           }}
           style={[styles.action, styles.actionEdit]}
         >
-          <Ionicons name="create-outline" size={20} color={colors.onAccent} />
+          <AppIcon name="create-outline" size={20} color={colors.onAccent} />
           <Caption color={colors.onAccent} style={styles.actionLabel}>Edit</Caption>
         </Pressable>
         <Pressable
@@ -91,7 +91,7 @@ export default function HabitRow({
           }}
           style={[styles.action, styles.actionArchive]}
         >
-          <Ionicons name="archive-outline" size={20} color={colors.onAccent} />
+          <AppIcon name="archive-outline" size={20} color={colors.onAccent} />
           <Caption color={colors.onAccent} style={styles.actionLabel}>Archive</Caption>
         </Pressable>
       </View>
@@ -107,16 +107,17 @@ export default function HabitRow({
       friction={2}
       rightThreshold={40}
     >
-      <GlassSurface tier="row" radius={theme.radii.row} style={styles.row}>
+      <View style={[styles.row, separated && styles.separated]}>
         {dueToday ? (
           <PressableScale
+            variant="button"
             onPress={onToggleToday}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: doneToday }}
             accessibilityLabel={`Mark ${habit.name} done today`}
             style={styles.check}
           >
-            <Ionicons
+            <AppIcon
               name={doneToday ? "checkmark-circle" : "ellipse-outline"}
               size={26}
               color={doneToday ? colors.accentSecondary : colors.iconMuted}
@@ -133,15 +134,15 @@ export default function HabitRow({
           </View>
         )}
         <View style={styles.icon}>
-          <Ionicons name={habit.icon as IoniconName} size={18} color={colors.accentSecondary} />
+          <AppIcon name={habit.icon as AppIconName} size={18} color={colors.accentSecondary} />
         </View>
         <View style={styles.meta}>
-          <Headline numberOfLines={1}>{habit.name}</Headline>
-          <Caption color={colors.textTertiary}>{frequencyLabel(habit.frequency)}</Caption>
+          <Body numberOfLines={1}>{habit.name}</Body>
+          <Footnote color={colors.textTertiary}>{frequencyLabel(habit.frequency)}</Footnote>
         </View>
         <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
           <Text style={styles.flame} maxFontSizeMultiplier={1.2}>🔥</Text>
-          <Caption color={colors.accent} style={styles.streakNum}>{streak}</Caption>
+          <Footnote color={colors.textTertiary} style={styles.streakNum}>{streak}</Footnote>
         </View>
         <IconButton
           icon="ellipsis-horizontal"
@@ -153,7 +154,7 @@ export default function HabitRow({
           accessibilityHint="Edit, reorder or archive this habit"
           onPress={openMenu}
         />
-      </GlassSurface>
+      </View>
     </Swipeable>
   );
 }
@@ -166,9 +167,12 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       gap: spacing.sm,
       paddingVertical: spacing.xs,
-      paddingLeft: spacing.xs,
-      paddingRight: spacing.xs,
       minHeight: 56,
+    },
+    // Inset to the text edge: the 44pt check slot plus the 34pt glyph and gaps.
+    separated: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: withOpacity(colors.white, 0.1),
     },
     check: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
     notDue: {
@@ -177,16 +181,9 @@ const createStyles = (theme: AppTheme) => {
       borderRadius: 999,
       backgroundColor: withOpacity(colors.white, 0.18),
     },
-    icon: {
-      width: 34,
-      height: 34,
-      borderRadius: 10,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: withOpacity(colors.accentSecondary, 0.14),
-    },
+    icon: { width: 28, alignItems: "center", justifyContent: "center" },
     meta: { flex: 1, gap: 2, minWidth: 0 },
-    streak: { flexDirection: "row", alignItems: "center", gap: 3, paddingRight: spacing.xs },
+    streak: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
     flame: { fontSize: 13 },
     streakNum: { fontWeight: "700" },
     actions: { flexDirection: "row", alignItems: "stretch", gap: spacing.sm, paddingLeft: spacing.sm },
@@ -195,8 +192,8 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       justifyContent: "center",
       gap: 2,
-      borderRadius: theme.radii.row,
-      borderCurve: "continuous",
+      borderRadius: theme.radii.pill,
+      borderCurve: "circular",
     },
     actionEdit: { backgroundColor: colors.accent },
     actionArchive: { backgroundColor: colors.danger },

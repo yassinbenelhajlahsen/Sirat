@@ -11,7 +11,6 @@ describe("MonthHeatmap", () => {
     const { getByTestId, getByText } = render(
       wrap(<MonthHeatmap scores={scores} year={2026} monthIndex0={5} />),
     );
-    expect(getByText("June")).toBeTruthy();
     expect(getByTestId("heatcell-1")).toBeTruthy();
     expect(getByTestId("heatcell-30")).toBeTruthy();
   });
