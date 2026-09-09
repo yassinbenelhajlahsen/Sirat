@@ -37,6 +37,10 @@ const THUMB_SIZE = 10;
 const THUMB_KNOCKOUT = 4;
 // Six columns share the card width, so their captions scale less than body text.
 const COLUMN_FONT_SCALE = 1.2;
+// The viewBox carries headroom the dome never uses. Cropping it here (rather
+// than in utils/prayerArc, whose geometry stays canonical) removes the empty
+// band above the arc without moving a single point.
+export const ARC_CROP_TOP = 40;
 
 const STATUS_VALUE: Record<PrayerStatus, string> = {
   prayed: "Marked prayed",
@@ -86,12 +90,15 @@ export default function PrayerArc({
   // SVG, so strokes stay round while the slots still line up with the columns.
   const [wrapWidth, setWrapWidth] = useState(0);
   const scale = wrapWidth > 0 ? wrapWidth / ARC_VIEWBOX.width : 1;
-  const arcHeight = ARC_VIEWBOX.height * scale;
+  const arcHeight = (ARC_VIEWBOX.height - ARC_CROP_TOP) * scale;
   const onArcLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
     if (w > 0 && Math.abs(w - wrapWidth) > 0.5) setWrapWidth(w);
   };
-  const place = (p: { x: number; y: number }) => ({ left: p.x * scale, top: p.y * scale });
+  const place = (p: { x: number; y: number }) => ({
+    left: p.x * scale,
+    top: (p.y - ARC_CROP_TOP) * scale,
+  });
 
   // Gentle breathing shared by the thumb and the "next" ring (scale only; never
   // animate glass opacity). Skipped under Reduce Motion.
@@ -123,16 +130,12 @@ export default function PrayerArc({
   const breathScale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
 
   return (
-    <GlassSurface tier="card" radius={theme.radii.cardLg} style={styles.card}>
-      <Caption color={colors.textTertiary} style={styles.label}>
-        {live ? "TODAY'S PRAYERS" : "PRAYER TIMES"}
-      </Caption>
-
+    <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
       <View style={[styles.arcWrap, { height: arcHeight }]} onLayout={onArcLayout}>
         <Svg
           width="100%"
           height={arcHeight}
-          viewBox={`0 0 ${ARC_VIEWBOX.width} ${ARC_VIEWBOX.height}`}
+          viewBox={`0 ${ARC_CROP_TOP} ${ARC_VIEWBOX.width} ${ARC_VIEWBOX.height - ARC_CROP_TOP}`}
         >
           <Line
             x1={arcPoint(0).x}
@@ -344,8 +347,7 @@ function shortTime(time: string): string {
 const createStyles = (theme: AppTheme) => {
   const { spacing, colors } = theme;
   return StyleSheet.create({
-    card: { padding: spacing.lg, paddingBottom: spacing.md },
-    label: { letterSpacing: 1.2, textTransform: "uppercase", marginBottom: spacing.sm },
+    card: { padding: spacing.md },
     arcWrap: { position: "relative", marginHorizontal: spacing.xs },
     markerSlot: { position: "absolute" },
     thumb: {

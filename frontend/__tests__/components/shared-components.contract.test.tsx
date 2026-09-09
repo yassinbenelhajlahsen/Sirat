@@ -45,7 +45,7 @@ describe("shared component UI contracts", () => {
         <DuaCard onSubmit={jest.fn(async () => {})} />
       );
 
-      expect(getByText("Ask for a Dua")).toBeTruthy();
+      expect(getByText("Ask for a dua")).toBeTruthy();
       expect(getByLabelText("Dua request input")).toBeTruthy();
       expect(getByLabelText("Find dua")).toBeDisabled();
     });

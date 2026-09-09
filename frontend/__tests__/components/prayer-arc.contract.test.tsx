@@ -28,8 +28,8 @@ jest.mock("@/context/ThemeContext", () => {
   return { useTheme: () => ({ theme: defaultTheme }) };
 });
 
-import PrayerArc from "@/components/PrayerArc";
-import { arcPoint } from "@/utils/prayerArc";
+import PrayerArc, { ARC_CROP_TOP } from "@/components/PrayerArc";
+import { ARC_VIEWBOX, arcPoint } from "@/utils/prayerArc";
 
 // Same construction as the component's ARC_PATH.
 const ARC_PATH_D = `M${arcPoint(0).x},${arcPoint(0).y} Q150,2 ${arcPoint(1).x},${arcPoint(1).y}`;
@@ -59,19 +59,23 @@ const TIMES = [
 ];
 
 describe("PrayerArc live vs static", () => {
-  it("shows the live label by default", () => {
-    const { getByText } = render(
+  it("carries no caption title in either mode", () => {
+    const { queryByText, rerender } = render(
       <PrayerArc loading={false} prayerTimes={TIMES as any} nextPrayer={{ label: "Asr", time: "3:42 PM" }} />,
     );
-    expect(getByText("TODAY'S PRAYERS")).toBeTruthy();
+    expect(queryByText("TODAY'S PRAYERS")).toBeNull();
+    rerender(<PrayerArc loading={false} prayerTimes={TIMES as any} nextPrayer={null} live={false} />);
+    expect(queryByText("PRAYER TIMES")).toBeNull();
   });
 
-  it("shows the static label and no next highlight when live=false", () => {
-    const { getByText, queryByText } = render(
+  it("crops the empty band above the dome out of the viewBox", () => {
+    const { UNSAFE_getAllByProps } = render(
       <PrayerArc loading={false} prayerTimes={TIMES as any} nextPrayer={null} live={false} />,
     );
-    expect(getByText("PRAYER TIMES")).toBeTruthy();
-    expect(queryByText("TODAY'S PRAYERS")).toBeNull();
+    const svg = UNSAFE_getAllByProps({
+      viewBox: `0 ${ARC_CROP_TOP} ${ARC_VIEWBOX.width} ${ARC_VIEWBOX.height - ARC_CROP_TOP}`,
+    });
+    expect(svg.length).toBeGreaterThan(0);
   });
 });
 

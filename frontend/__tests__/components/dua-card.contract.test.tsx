@@ -32,8 +32,8 @@ describe("DuaCard contract", () => {
       <DuaCard onSubmit={jest.fn(async () => {})} />
     );
 
-    expect(getByText("Ask for a Dua")).toBeTruthy();
-    expect(getByText("Find Dua")).toBeTruthy();
+    expect(getByText("Ask for a dua")).toBeTruthy();
+    expect(getByText("Find dua")).toBeTruthy();
     expect(getByLabelText("Dua request input")).toBeTruthy();
     expect(getByText("150")).toBeTruthy();
     expect(getByLabelText("Find dua")).toBeDisabled();

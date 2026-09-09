@@ -1,6 +1,6 @@
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption, Subhead, Title2 } from "@/components/ui/Text";
+import { Caption, Footnote, Headline, Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -53,23 +53,23 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
 
   return (
     <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <Title2 style={styles.title}>Ask for a Dua</Title2>
+      <Headline>Ask for a dua</Headline>
       <Subhead color={colors.textSecondary} style={styles.description}>
-        Describe what you need help with, and we will find the perfect dua for
-        you.
+        Describe what you need help with and we will find a dua for you.
       </Subhead>
 
       <View style={styles.chipsRow}>
         {QUICK_PROMPTS.map((prompt) => (
           <PressableScale
             key={prompt.label}
+            variant="button"
             disabled={loading}
             onPress={() => submitRequest(prompt.text)}
             accessibilityRole="button"
             accessibilityLabel={`Ask for a ${prompt.label} dua`}
             style={[styles.chip, loading ? styles.chipDisabled : undefined]}
           >
-            <Caption color={colors.textSecondary} style={styles.chipText}>{prompt.label}</Caption>
+            <Footnote color={colors.textSecondary} style={styles.chipText}>{prompt.label}</Footnote>
           </PressableScale>
         ))}
       </View>
@@ -106,7 +106,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
       </View>
 
       <Button
-        label="Find Dua"
+        label="Find dua"
         size="lg"
         icon="arrow-forward"
         iconPosition="trailing"
@@ -127,25 +127,16 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     card: {
-      marginTop: spacing.xl,
-      padding: spacing.xl,
-      shadowColor: colors.primaryDark,
-      shadowOpacity: isLight ? 0.22 : 0.28,
-      shadowRadius: 20,
-      shadowOffset: { width: 0, height: isLight ? 10 : 12 },
-      elevation: 4,
+      padding: spacing.lg,
       position: "relative",
       zIndex: 1,
-    },
-    title: {
-      letterSpacing: -0.4,
     },
     description: {
       marginTop: spacing.xs,
     },
     chipsRow: {
       flexDirection: "row",
-      gap: 8,
+      gap: spacing.sm,
       marginTop: spacing.md,
     },
     chip: {
@@ -153,12 +144,11 @@ const createStyles = (theme: AppTheme) => {
       minHeight: 36,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: withOpacity(colors.white, 0.06),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.12),
-      borderRadius: 999,
-      paddingVertical: 8,
-      paddingHorizontal: 11,
+      backgroundColor: withOpacity(colors.white, isLight ? 0.05 : 0.1),
+      borderRadius: theme.radii.pill,
+      borderCurve: "circular",
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
     },
     chipText: { fontWeight: "600" },
     chipDisabled: {
@@ -167,22 +157,19 @@ const createStyles = (theme: AppTheme) => {
     inputShell: {
       marginTop: spacing.md,
       backgroundColor: isLight
-        ? withOpacity(colors.primarySurface, 0.65)
-        : withOpacity(colors.white, 0.05),
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(colors.accent, 0.22)
-        : withOpacity(colors.white, 0.12),
+        ? withOpacity(colors.black, 0.05)
+        : withOpacity(colors.white, 0.07),
+      borderRadius: theme.radii.row,
+      borderCurve: "continuous",
       paddingHorizontal: spacing.md,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
     },
+    // Focus raises the fill one step; iOS never rings a field in the tint colour.
     inputShellActive: {
-      borderColor: withOpacity(colors.accent, 0.45),
       backgroundColor: isLight
-        ? withOpacity(colors.primarySurface, 0.8)
-        : withOpacity(colors.white, 0.07),
+        ? withOpacity(colors.black, 0.08)
+        : withOpacity(colors.white, 0.11),
     },
     input: {
       color: colors.white,
@@ -205,11 +192,6 @@ const createStyles = (theme: AppTheme) => {
     },
     submitButton: {
       marginTop: spacing.lg,
-      shadowColor: withOpacity(colors.accent, 0.4),
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
     },
   });
 };

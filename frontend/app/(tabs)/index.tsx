@@ -1,5 +1,4 @@
 // app/(tabs)/index.tsx
-import { Ionicons } from "@expo/vector-icons";
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
@@ -10,12 +9,16 @@ import SignInCard from "@/components/home/SignInCard";
 import { shouldShowHomeCard, markHomeCardShown, dismissHomeCard } from "@/services/auth/authPrompts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
+import DisplayNumber from "@/components/ui/DisplayNumber";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
+import SectionHeader from "@/components/ui/SectionHeader";
 import SkeletonBar from "@/components/ui/SkeletonBar";
-import { Caption, Footnote, Headline, LargeTitle, Title2 } from "@/components/ui/Text";
+import { AppText, Body, Footnote, Headline, Subhead, Title3 } from "@/components/ui/Text";
 import Screen from "@/components/ui/Screen";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { getGreeting } from "@/utils/greeting";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
@@ -32,11 +35,17 @@ import { useTrackingStats } from "@/hooks/useTrackingStats";
 import { dateKeyFromDate } from "@/services/holidayService";
 import type { PrayerName } from "@/services/prayerTracker";
 
+// "5:42 PM" → "5:42": the period is implied by the greeting and the arc.
+function bareTime(time: string): string {
+  return time.split(" ")[0] ?? time;
+}
+
 export default function Home() {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const screenMargin = useScreenMargin();
 
   const router = useRouter();
   const {
@@ -84,6 +93,9 @@ export default function Home() {
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric", month: "long", year: "numeric",
   }).format(today);
+  const gregorianDate = new Intl.DateTimeFormat("en-US", {
+    weekday: "short", month: "short", day: "numeric",
+  }).format(today);
 
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
@@ -97,6 +109,13 @@ export default function Home() {
     ],
   };
 
+  const heroLocation = locationLabel ? (
+    <View style={styles.heroLocation}>
+      <AppIcon name="location-outline" size={13} color={colors.textTertiary} />
+      <Subhead color={colors.textTertiary}>{locationLabel}</Subhead>
+    </View>
+  ) : null;
+
   return (
     <Screen safeArea={false}>
       <ScrollView
@@ -105,7 +124,7 @@ export default function Home() {
         keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={[
-          styles.scrollContent,
+          { paddingHorizontal: screenMargin },
           { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + 120 },
           keyboardHeight > 0 && { paddingBottom: keyboardHeight },
         ]}
@@ -113,13 +132,13 @@ export default function Home() {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} title="Refreshing…" titleColor={colors.accent} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
         }
       >
         {!!banner && (
           <GlassSurface tier="row" radius={theme.radii.row} style={styles.bannerCard} accessibilityRole="alert">
             <View style={styles.bannerRow}>
-              <Ionicons name="alert-circle" size={18} color={colors.accent} />
+              <AppIcon name="alert-circle" size={18} color={colors.accent} />
               <Footnote color={colors.white} style={styles.bannerText}>{banner}</Footnote>
             </View>
             <Button
@@ -146,18 +165,15 @@ export default function Home() {
           </View>
         )}
 
-        {/* Header: greeting + location + settings gear */}
+        {/* Header: greeting, one dated supporting line, settings gear */}
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
-            <Caption color={colors.accent} style={styles.eyebrow}>{islamicDate}</Caption>
-            <LargeTitle>{displayName ? `${baseGreeting},` : baseGreeting}</LargeTitle>
-            {displayName && <LargeTitle>{displayName}.</LargeTitle>}
-            {locationLabel ? (
-              <View style={styles.locationRow}>
-                <Ionicons name="location-outline" size={14} color={colors.textSecondary} />
-                <Headline color={colors.textSecondary}>{locationLabel}</Headline>
-              </View>
-            ) : null}
+            <Headline numberOfLines={1}>
+              {displayName ? `${baseGreeting}, ${displayName}` : baseGreeting}
+            </Headline>
+            <Footnote color={colors.textTertiary} style={styles.headerDate}>
+              {`${gregorianDate} · ${islamicDate} AH`}
+            </Footnote>
           </View>
           <IconButton
             icon="settings-outline"
@@ -168,22 +184,24 @@ export default function Home() {
           />
         </View>
 
-        {/* Hero next-prayer card */}
+        {/* Next prayer, bare on the canvas */}
         {(loading || shouldRenderPrayerSummary || hasPrayerSummary) && (
           <View style={styles.heroSlot}>
             {shouldRenderPrayerSummary ? (
               <Animated.View style={[prayerSummaryAnimatedStyle, { opacity: 1 }]}>
                 {nextPrayer ? (
-                  <GlassSurface tier="card" radius={theme.radii.heroLg} style={styles.heroCard}>
-                    <View style={styles.heroTextCol}>
-                      <Caption color={colors.textTertiary} style={styles.heroLabel}>UP NEXT</Caption>
-                      <Title2>{nextPrayer.label}</Title2>
-                      <Headline color={colors.accent}>{nextPrayer.time}</Headline>
+                  <View style={styles.hero}>
+                    <View style={styles.heroTitleRow}>
+                      <Title3 color={colors.accent}>{nextPrayer.label}</Title3>
+                      {timeLeft ? (
+                        <AppText variant="title3" color={colors.textSecondary} style={styles.heroCountdown}>
+                          {`in ${timeLeft}`}
+                        </AppText>
+                      ) : null}
                     </View>
-                    <View style={styles.heroBadge}>
-                      <Caption color={colors.onAccent} style={styles.heroBadgeText}>in {timeLeft}</Caption>
-                    </View>
-                  </GlassSurface>
+                    <DisplayNumber value={bareTime(nextPrayer.time)} size={72} />
+                    {heroLocation}
+                  </View>
                 ) : nextDayFajr ? (
                   <PressableScale
                     onPress={() =>
@@ -194,32 +212,22 @@ export default function Home() {
                     }
                     accessibilityRole="button"
                     accessibilityLabel="View tomorrow prayer times"
+                    style={styles.hero}
                   >
-                    <GlassSurface tier="card" radius={theme.radii.heroLg} style={styles.heroCard}>
-                      <View style={styles.heroTextCol}>
-                        <Title2 color={colors.accent}>All prayer times have passed</Title2>
-                        <Headline color={colors.textSecondary}>Tap to see tomorrow&apos;s prayer times</Headline>
-                      </View>
-                      <Ionicons name="chevron-forward" size={20} color={colors.iconMuted} />
-                    </GlassSurface>
+                    <Title3 color={colors.accent}>Prayers done for today</Title3>
+                    <Headline color={colors.textSecondary}>
+                      {`Fajr tomorrow at ${bareTime(nextDayFajr)}`}
+                    </Headline>
+                    {heroLocation}
                   </PressableScale>
                 ) : null}
               </Animated.View>
             ) : loading ? (
-              <GlassSurface
-                tier="card"
-                radius={theme.radii.heroLg}
-                style={styles.heroCard}
-                accessible
-                accessibilityLabel="Loading prayer times"
-              >
-                <View style={styles.heroTextCol}>
-                  <SkeletonBar height={12} width={64} />
-                  <SkeletonBar height={22} width={120} />
-                  <SkeletonBar height={16} width={88} />
-                </View>
-                <SkeletonBar height={32} width={84} />
-              </GlassSurface>
+              <View style={styles.hero} accessible accessibilityLabel="Loading prayer times">
+                <SkeletonBar height={20} width={160} />
+                <SkeletonBar height={56} width={200} />
+                <SkeletonBar height={16} width={120} />
+              </View>
             ) : null}
           </View>
         )}
@@ -234,27 +242,28 @@ export default function Home() {
             statuses={statuses}
             onPressPrayer={(name, label) => setSheet({ name, label })}
           />
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Tracker" />
           <PressableScale
+            variant="row"
             onPress={() => router.push("/Tracker")}
             accessibilityRole="button"
             accessibilityLabel="View tracker and habits"
-            style={styles.trackerRow}
           >
-            <View style={styles.streakChip}>
+            <GlassSurface tier="row" radius={theme.radii.row} style={styles.trackerRow}>
               <Text style={styles.flame} maxFontSizeMultiplier={1.2}>🔥</Text>
-              <Caption color={colors.accent} style={styles.streakChipText}>
-                {stats?.streak ?? 0} day streak
-              </Caption>
-            </View>
-            <View style={styles.trackerLink}>
-              <Caption color={colors.textSecondary}>View tracker &amp; habits</Caption>
-              <Ionicons name="chevron-forward" size={14} color={colors.iconMuted} />
-            </View>
+              <Body style={styles.trackerLabel}>{`${stats?.streak ?? 0} day streak`}</Body>
+              <Subhead color={colors.textTertiary}>Tracker &amp; habits</Subhead>
+              <AppIcon name="chevron-forward" size={14} color={colors.iconMuted} />
+            </GlassSurface>
           </PressableScale>
         </View>
 
         {/* Dua section (logic unchanged) */}
-        <View style={styles.duaSection} onLayout={onDuaSectionLayout}>
+        <View style={styles.section} onLayout={onDuaSectionLayout}>
+          <SectionHeader title="Dua" />
           <Animated.View style={duaCardAnimatedStyle}>
             {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
           </Animated.View>
@@ -274,44 +283,31 @@ export default function Home() {
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing } = theme;
+  const { spacing } = theme;
   return StyleSheet.create({
-    scrollContent: { paddingHorizontal: spacing.xl },
     bannerCard: { padding: spacing.md, marginBottom: spacing.lg, gap: spacing.sm },
     bannerRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
     bannerText: { flex: 1 },
     bannerAction: { alignSelf: "flex-start" },
-    headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginTop: spacing.sm },
-    headerText: { flex: 1, paddingRight: spacing.md },
-    eyebrow: { letterSpacing: 1, textTransform: "uppercase", marginBottom: spacing.xs },
-    locationRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: spacing.sm },
-    heroSlot: { marginTop: spacing.xl },
-    heroCard: {
-      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-      padding: spacing.xl,
-      shadowColor: colors.black, shadowOpacity: 0.3, shadowRadius: 22, shadowOffset: { width: 0, height: 12 },
-    },
-    heroTextCol: { gap: 4, flexShrink: 1 },
-    heroLabel: { letterSpacing: 0.5 },
-    heroBadge: {
-      backgroundColor: colors.accent, borderRadius: theme.radii.pill,
-      paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignItems: "center", justifyContent: "center",
-    },
-    heroBadgeText: { fontWeight: "700" },
-    arcSlot: { marginTop: spacing.lg },
+    headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
+    headerText: { flex: 1 },
+    headerDate: { marginTop: 2 },
+    heroSlot: { marginTop: spacing.xxl },
+    hero: { gap: spacing.xs },
+    heroTitleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm, flexWrap: "wrap" },
+    heroCountdown: { fontWeight: "400" },
+    heroLocation: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+    arcSlot: { marginTop: spacing.xxl },
+    section: { marginTop: spacing.xxl },
     trackerRow: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-      marginTop: spacing.sm,
-      minHeight: 44,
-      paddingHorizontal: spacing.xs,
+      gap: spacing.sm,
+      minHeight: 56,
+      paddingHorizontal: spacing.lg,
     },
-    streakChip: { flexDirection: "row", alignItems: "center", gap: 4 },
-    streakChipText: { fontWeight: "700" },
-    flame: { fontSize: 13 },
-    trackerLink: { flexDirection: "row", alignItems: "center", gap: 2 },
-    duaSection: { position: "relative", marginTop: spacing.lg },
-    signInCardSlot: { marginTop: spacing.md },
+    trackerLabel: { flex: 1 },
+    flame: { fontSize: 17 },
+    signInCardSlot: { marginBottom: spacing.md },
   });
 };

@@ -1,10 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
+import AppIcon from "@/components/ui/AppIcon";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Body, Caption } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 type Props = {
@@ -25,9 +25,7 @@ export default function SignInCard({ onPress, onDismiss }: Props) {
       activeOpacity={0.85}
     >
       <GlassSurface tier="row" radius={theme.radii.card} style={styles.card}>
-        <View style={styles.iconTile}>
-          <Ionicons name="cloud-upload-outline" size={20} color={colors.accent} />
-        </View>
+        <AppIcon name="cloud-upload-outline" size={20} color={colors.accent} />
 
         <View style={styles.text}>
           <Body color={colors.white} style={styles.title}>
@@ -45,7 +43,7 @@ export default function SignInCard({ onPress, onDismiss }: Props) {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.dismiss}
         >
-          <Ionicons name="close" size={18} color={colors.iconMuted} />
+          <AppIcon name="close" size={18} color={colors.iconMuted} />
         </TouchableOpacity>
       </GlassSurface>
     </TouchableOpacity>
@@ -53,7 +51,7 @@ export default function SignInCard({ onPress, onDismiss }: Props) {
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing, radii } = theme;
+  const { spacing } = theme;
   return StyleSheet.create({
     card: {
       flexDirection: "row",
@@ -61,17 +59,6 @@ const createStyles = (theme: AppTheme) => {
       gap: spacing.md,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.md,
-      marginBottom: spacing.md,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.22),
-    },
-    iconTile: {
-      width: 42,
-      height: 42,
-      borderRadius: radii.chip,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: withOpacity(colors.accent, 0.14),
     },
     text: { flex: 1 },
     title: { fontWeight: "600" },
