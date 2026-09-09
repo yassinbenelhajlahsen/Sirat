@@ -202,6 +202,7 @@ export default function Home() {
           <SectionHeader title="Tracker" />
           <PressableScale
             variant="row"
+            radius={theme.radii.row}
             onPress={() => router.push("/Tracker")}
             accessibilityRole="button"
             accessibilityLabel="View tracker and habits"

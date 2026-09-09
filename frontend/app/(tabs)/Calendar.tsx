@@ -411,6 +411,7 @@ export default function CalendarScreen() {
               {showRamadanSummary ? (
                 <PressableScale
                   variant="row"
+                  radius={theme.radii.row}
                   onPress={handleRamadanSummaryPress}
                   accessibilityRole="button"
                   accessibilityLabel="Open first missed Ramadan fast date"

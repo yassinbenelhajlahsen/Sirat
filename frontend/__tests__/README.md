@@ -105,7 +105,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/ui/app-icon.test.tsx` — every `IONICON_TO_SF` entry renders an SF Symbol on iOS and the Ionicon on Android; unmapped names fall back on both
   - `components/ui/segmented.test.tsx` — radiogroup/radio roles, selected state, `onChange` value, thumb position per index
   - `components/ui/section-header.test.tsx` — `SectionHeader` (+ action and footer), `ScreenHeader` (title, supporting line, leading control) and `EmptyState` contracts
-  - `components/ui/press-variants.test.tsx` — `PressableScale` `row` renders no transform; `button`/`card` do
+  - `components/ui/press-variants.test.tsx` — `PressableScale` `row` renders no transform; `button`/`card` do; the `row` highlight takes its corners from the `radius` prop, falling back to the pressable's own `borderRadius`
   - `components/ui/aurora.test.tsx` — the exported bloom opacities stay toned down
   - `hooks/useScreenMargin.test.ts` — 16 under 400pt, 20 at 430pt
 - `home prayer arc (horizontal progress thumb) testing`

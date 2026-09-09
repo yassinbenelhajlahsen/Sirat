@@ -27,6 +27,11 @@ type PressableScaleProps = Omit<PressableProps, "style"> & {
   style?: StyleProp<ViewStyle>;
   scaleTo?: number;
   variant?: PressVariant;
+  // The `row` highlight is an absolute overlay on the pressable, so it can only
+  // infer its corners from the pressable's own style. When the rounded surface
+  // is a *child* (a GlassSurface row, say), pass its radius here or the
+  // highlight paints square corners over a rounded row.
+  radius?: number;
 };
 
 const DURATION = 120;
@@ -39,6 +44,7 @@ export default function PressableScale({
   onPressOut,
   scaleTo,
   variant = "card",
+  radius,
   ...rest
 }: PressableScaleProps) {
   const { theme } = useTheme();
@@ -73,7 +79,7 @@ export default function PressableScale({
 
   // Rows highlight instead of moving. The fill is an overlay rather than a
   // background on the pressable itself so a caller's own background survives.
-  const radius = StyleSheet.flatten(style)?.borderRadius;
+  const overlayRadius = radius ?? StyleSheet.flatten(style)?.borderRadius;
 
   return (
     <AnimatedPressable
@@ -94,7 +100,7 @@ export default function PressableScale({
           style={[
             StyleSheet.absoluteFill,
             {
-              borderRadius: radius,
+              borderRadius: overlayRadius,
               backgroundColor: withOpacity(theme.colors.white, 0.06),
               opacity: progress,
             },
