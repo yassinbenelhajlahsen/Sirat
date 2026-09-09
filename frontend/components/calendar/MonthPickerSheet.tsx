@@ -2,13 +2,13 @@
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import PressableScale from "@/components/PressableScale";
 import SheetBackground from "@/components/ui/SheetBackground";
 import { Body, Headline, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { useHaptics } from "@/hooks/useHaptics";
 
 function PickerSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
@@ -43,10 +43,8 @@ export default function MonthPickerSheet({
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
   const haptics = useHaptics();
-  // Mirrors GlassTabBar's layout: bottom offset + pill height + gap.
-  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
+  const tabBarClearance = useTabBarClearance();
 
   const handleIndicatorStyle = useMemo(
     () => ({ backgroundColor: withOpacity(colors.white, 0.3), width: 38 }),

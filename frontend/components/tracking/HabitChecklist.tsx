@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 import PressableScale from "@/components/PressableScale";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Headline, Title3 } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { Habit } from "@/services/habitTracker";
 import { frequencyLabel, isHabitDueOnDate } from "@/utils/habitFrequency";

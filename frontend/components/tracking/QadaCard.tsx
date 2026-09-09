@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 import DisplayNumber from "@/components/ui/DisplayNumber";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Headline } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function QadaCard({ count }: { count: number }) {
@@ -18,7 +18,7 @@ export default function QadaCard({ count }: { count: number }) {
       <Ionicons name="refresh-circle-outline" size={24} color={colors.accent} />
       <View style={styles.textCol}>
         <Headline>Qada</Headline>
-        <Caption color={withOpacity(colors.white, 0.6)}>Prayers to make up</Caption>
+        <Caption color={colors.textTertiary}>Prayers to make up</Caption>
       </View>
       <DisplayNumber value={count} size={34} color={colors.accent} />
     </GlassSurface>

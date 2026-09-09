@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import DisplayNumber from "@/components/ui/DisplayNumber";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function StreakHero({ streak }: { streak: number }) {
@@ -17,7 +17,7 @@ export default function StreakHero({ streak }: { streak: number }) {
       <Text style={styles.flame} accessibilityLabel="Current streak">🔥</Text>
       <View style={styles.textCol}>
         <DisplayNumber value={streak} size={64} color={colors.white} />
-        <Caption color={withOpacity(colors.white, 0.6)} style={styles.label}>
+        <Caption color={colors.textTertiary} style={styles.label}>
           DAY STREAK
         </Caption>
       </View>

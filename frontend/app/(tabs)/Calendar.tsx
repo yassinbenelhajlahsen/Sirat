@@ -10,21 +10,22 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useLocalSearchParams } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 import MonthPickerSheet from "@/components/calendar/MonthPickerSheet";
 import PressableScale from "@/components/PressableScale";
 import HabitChecklist from "@/components/tracking/HabitChecklist";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
+import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
+import IconButton from "@/components/ui/IconButton";
 import Screen from "@/components/ui/Screen";
 import { Body, Caption, Headline, LargeTitle } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { useHabitLog } from "@/hooks/useHabitLog";
 import { useHabits } from "@/hooks/useHabits";
 import { useCalendarData } from "@/hooks/useCalendarData";
@@ -43,7 +44,6 @@ export default function CalendarScreen() {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
   const haptics = useHaptics();
 
   const { month, year, date } = useLocalSearchParams();
@@ -105,7 +105,7 @@ export default function CalendarScreen() {
     initialIsViewingToday,
     isViewingToday,
   });
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarClearance = useTabBarClearance();
 
   // ---- Selected day (inline agenda) ----
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -255,42 +255,37 @@ export default function CalendarScreen() {
             <LargeTitle>Calendar</LargeTitle>
           </View>
           <View style={styles.monthSwitcher}>
-            <PressableScale
+            <IconButton
+              icon="chevron-back"
+              variant="plain"
+              size={40}
+              iconSize={20}
+              color={colors.accent}
               onPress={handlePrevMonth}
               disabled={!canGoPrev}
-              accessibilityRole="button"
               accessibilityLabel="Previous month"
-              style={styles.monthChevron}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={20}
-                color={canGoPrev ? colors.accent : withOpacity(colors.accent, 0.3)}
-              />
-            </PressableScale>
+            />
             <PressableScale
               onPress={openMonthPicker}
               accessibilityRole="button"
               accessibilityLabel="Choose month and year"
               accessibilityHint="Opens the month picker"
+              style={styles.monthLabel}
             >
               <Headline>
                 {monthName.slice(0, 3)} {viewYear}
               </Headline>
             </PressableScale>
-            <PressableScale
+            <IconButton
+              icon="chevron-forward"
+              variant="plain"
+              size={40}
+              iconSize={20}
+              color={colors.accent}
               onPress={handleNextMonth}
               disabled={!canGoNext}
-              accessibilityRole="button"
               accessibilityLabel="Next month"
-              style={styles.monthChevron}
-            >
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={canGoNext ? colors.accent : withOpacity(colors.accent, 0.3)}
-              />
-            </PressableScale>
+            />
           </View>
         </View>
 
@@ -361,6 +356,7 @@ export default function CalendarScreen() {
                             : colors.white
                         }
                         style={styles.dayText}
+                        maxFontSizeMultiplier={1.2}
                       >
                         {day > 0 ? String(day) : ""}
                       </Body>
@@ -381,22 +377,17 @@ export default function CalendarScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.panelContent,
-            { paddingBottom: tabBarHeight + insets.bottom + spacing.lg },
+            { paddingBottom: tabBarClearance + spacing.lg },
           ]}
         >
           {!isViewingToday && (
-            <Animated.View style={{ opacity: backToTodayAnim }}>
-              <PressableScale
+            <Animated.View style={[styles.backToToday, { opacity: backToTodayAnim }]}>
+              <Button
+                label="Back to today"
+                icon="today-outline"
                 onPress={goBackToToday}
-                accessibilityRole="button"
                 accessibilityLabel="Back to current month"
-                style={styles.backToToday}
-              >
-                <Ionicons name="today-outline" size={15} color={colors.onAccent} />
-                <Headline color={colors.onAccent}>
-                  Back to Today
-                </Headline>
-              </PressableScale>
+              />
             </Animated.View>
           )}
 
@@ -416,36 +407,31 @@ export default function CalendarScreen() {
                       {(ramadanSummary?.totalMissed ?? 0) === 1 ? "fast" : "fasts"}
                     </Body>
                     {missedDaysLabel ? (
-                      <Caption color={withOpacity(colors.white, 0.85)}>{missedDaysLabel}</Caption>
+                      <Caption color={colors.textSecondary}>{missedDaysLabel}</Caption>
                     ) : null}
                   </View>
-                  <Ionicons name="arrow-forward-circle-outline" size={20} color={withOpacity(colors.accent, 0.95)} />
+                  <Ionicons name="chevron-forward" size={20} color={colors.iconMuted} />
                 </PressableScale>
               ) : (
                 <View style={styles.ramadanRow}>
                   <Headline color={colors.accent}>Ramadan</Headline>
-                  <Body color={withOpacity(colors.white, 0.7)}>No missed fasts</Body>
+                  <Body color={colors.textSecondary}>No missed fasts</Body>
                 </View>
               )}
 
               {selectedDate && isRamadan ? (
-                <PressableScale
-                  onPress={onToggleMissed}
-                  accessibilityRole="button"
-                  accessibilityLabel={isFastMissed ? "Clear missed fast" : "Mark fast as missed"}
-                  style={[styles.markBtn, isFastMissed ? styles.markBtnOn : null]}
-                >
-                  <Ionicons
-                    name={isFastMissed ? "checkmark-circle" : "ellipse-outline"}
-                    size={16}
-                    color={isFastMissed ? colors.onAccent : colors.accent}
-                  />
-                  <Headline color={isFastMissed ? colors.onAccent : colors.accent}>
-                    {isFastMissed
+                <Button
+                  label={
+                    isFastMissed
                       ? `Day ${selectedDate.getDate()} · marked missed`
-                      : `Mark Day ${selectedDate.getDate()} missed`}
-                  </Headline>
-                </PressableScale>
+                      : `Mark Day ${selectedDate.getDate()} missed`
+                  }
+                  icon={isFastMissed ? "checkmark-circle" : "ellipse-outline"}
+                  variant={isFastMissed ? "primary" : "secondary"}
+                  onPress={onToggleMissed}
+                  accessibilityLabel={isFastMissed ? "Clear missed fast" : "Mark fast as missed"}
+                  style={styles.markBtn}
+                />
               ) : null}
             </GlassSurface>
           )}
@@ -472,7 +458,7 @@ export default function CalendarScreen() {
           ) : (
             <View style={styles.prompt}>
               <Ionicons name="calendar-outline" size={30} color={withOpacity(colors.accent, 0.6)} />
-              <Body color={withOpacity(colors.white, 0.7)} style={styles.promptText}>
+              <Body color={colors.textSecondary} style={styles.promptText}>
                 Tap any day to see its prayer times &amp; events.
               </Body>
             </View>
@@ -517,8 +503,8 @@ const createStyles = (theme: AppTheme) => {
     },
     headerLeft: { flexShrink: 1 },
     eyebrow: { textTransform: "uppercase", letterSpacing: 1 },
-    monthSwitcher: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-    monthChevron: { padding: spacing.xs, minWidth: 32, alignItems: "center" },
+    monthSwitcher: { flexDirection: "row", alignItems: "center" },
+    monthLabel: { minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.xs },
     weekdayRow: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -561,31 +547,12 @@ const createStyles = (theme: AppTheme) => {
     panelContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
     backToToday: {
       alignSelf: "center",
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.xs,
-      backgroundColor: colors.accent,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: theme.radii.pill,
       marginBottom: spacing.lg,
     },
     ramadanCard: { padding: spacing.lg, marginBottom: spacing.lg },
-    ramadanRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    ramadanRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 44 },
     ramadanTextWrap: { flexShrink: 1, gap: 2 },
-    markBtn: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: spacing.sm,
-      marginTop: spacing.md,
-      paddingVertical: spacing.sm + 2,
-      paddingHorizontal: spacing.lg,
-      borderRadius: theme.radii.row,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.4),
-    },
-    markBtnOn: { backgroundColor: colors.accent, borderColor: colors.accent },
+    markBtn: { marginTop: spacing.md },
     prompt: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.huge, gap: spacing.sm },
     promptText: { textAlign: "center", maxWidth: 240 },
   });

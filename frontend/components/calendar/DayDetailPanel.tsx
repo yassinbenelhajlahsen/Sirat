@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import PrayerArc from "@/components/PrayerArc";
+import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Body, Caption, Headline, Title2 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
@@ -70,7 +71,7 @@ export default function DayDetailPanel({
 
       {holiday ? (
         <GlassSurface tier="row" radius={theme.radii.row} style={styles.holidayRow}>
-          <Caption color={withOpacity(colors.white, 0.5)} style={styles.holidayLabel}>
+          <Caption color={colors.textTertiary} style={styles.holidayLabel}>
             Holiday
           </Caption>
           <Body color={colors.accent}>{holiday}</Body>
@@ -78,7 +79,7 @@ export default function DayDetailPanel({
       ) : null}
 
       {isToday && nextPrayer ? (
-        <Caption color={withOpacity(colors.white, 0.7)} style={styles.nextLine}>
+        <Caption color={colors.textSecondary} style={styles.nextLine}>
           Next {nextPrayer.label}
           {timeLeft ? ` · in ${timeLeft}` : ""}
         </Caption>
@@ -92,43 +93,36 @@ export default function DayDetailPanel({
               Problem loading prayer times
             </Headline>
           </View>
-          <Body color={withOpacity(colors.white, 0.9)} style={styles.stateMsg}>
+          <Body color={colors.textSecondary} style={styles.stateMsg}>
             {error.message}
           </Body>
           <View style={styles.stateActions}>
-            <TouchableOpacity
+            <Button
+              label="Try again"
               onPress={onRetry}
-              accessibilityRole="button"
               accessibilityLabel="Retry loading prayer times"
-              style={styles.primaryBtn}
-            >
-              <Headline color={colors.onAccent}>Try again</Headline>
-            </TouchableOpacity>
+            />
             {error.code === "PERMISSION" ? (
-              <TouchableOpacity
+              <Button
+                label="Open Settings"
+                variant="secondary"
                 onPress={onOpenSettings}
-                accessibilityRole="button"
                 accessibilityLabel="Open app settings"
-                style={styles.secondaryBtn}
-              >
-                <Headline color={colors.accent}>Open Settings</Headline>
-              </TouchableOpacity>
+              />
             ) : null}
           </View>
         </GlassSurface>
       ) : !loading && prayerTimes.length === 0 ? (
         <GlassSurface tier="card" radius={theme.radii.card} style={styles.stateCard}>
-          <Body color={withOpacity(colors.white, 0.9)} style={styles.emptyText}>
+          <Body color={colors.textSecondary} style={styles.emptyText}>
             No prayer times available for this date.
           </Body>
-          <TouchableOpacity
+          <Button
+            label="Try again"
             onPress={onRetry}
-            accessibilityRole="button"
             accessibilityLabel="Retry loading prayer times"
-            style={[styles.primaryBtn, styles.emptyBtn]}
-          >
-            <Headline color={colors.onAccent}>Try again</Headline>
-          </TouchableOpacity>
+            style={styles.emptyBtn}
+          />
         </GlassSurface>
       ) : (
         <PrayerArc
@@ -146,7 +140,7 @@ export default function DayDetailPanel({
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing } = theme;
+  const { spacing } = theme;
   return StyleSheet.create({
     headerRow: {
       flexDirection: "row",
@@ -171,19 +165,12 @@ const createStyles = (theme: AppTheme) => {
     stateHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
     stateTitle: { flexShrink: 1 },
     stateMsg: { marginTop: spacing.sm },
-    stateActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 2, marginTop: spacing.md },
-    primaryBtn: {
-      backgroundColor: colors.accent,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg - 2,
-      borderRadius: theme.radii.chip,
-    },
-    secondaryBtn: {
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg - 2,
-      borderRadius: theme.radii.chip,
-      borderWidth: 1,
-      borderColor: colors.accent,
+    stateActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: spacing.sm + 2,
+      marginTop: spacing.md,
     },
     emptyText: { textAlign: "center" },
     emptyBtn: { alignSelf: "center", marginTop: spacing.sm + 2 },
