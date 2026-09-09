@@ -9,7 +9,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
@@ -17,14 +16,18 @@ import MonthPickerSheet from "@/components/calendar/MonthPickerSheet";
 import PressableScale from "@/components/PressableScale";
 import HabitChecklist from "@/components/tracking/HabitChecklist";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
+import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
 import Screen from "@/components/ui/Screen";
-import { Body, Caption, Headline, LargeTitle } from "@/components/ui/Text";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { Body, Caption, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { useHabitLog } from "@/hooks/useHabitLog";
 import { useHabits } from "@/hooks/useHabits";
@@ -45,6 +48,7 @@ export default function CalendarScreen() {
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const haptics = useHaptics();
+  const screenMargin = useScreenMargin();
 
   const { month, year, date } = useLocalSearchParams();
   const { width } = useWindowDimensions();
@@ -246,55 +250,55 @@ export default function CalendarScreen() {
     <View style={styles.fill}>
     <Screen>
       <View style={styles.fill}>
-        {/* Header: title + bare top-right month switcher */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Caption color={withOpacity(colors.accent, 0.92)} style={styles.eyebrow}>
-              Planner
-            </Caption>
-            <LargeTitle>Calendar</LargeTitle>
-          </View>
-          <View style={styles.monthSwitcher}>
-            <IconButton
-              icon="chevron-back"
-              variant="plain"
-              size={40}
-              iconSize={20}
-              color={colors.accent}
-              onPress={handlePrevMonth}
-              disabled={!canGoPrev}
-              accessibilityLabel="Previous month"
-            />
-            <PressableScale
-              onPress={openMonthPicker}
-              accessibilityRole="button"
-              accessibilityLabel="Choose month and year"
-              accessibilityHint="Opens the month picker"
-              style={styles.monthLabel}
-            >
-              <Headline>
-                {monthName.slice(0, 3)} {viewYear}
-              </Headline>
-            </PressableScale>
-            <IconButton
-              icon="chevron-forward"
-              variant="plain"
-              size={40}
-              iconSize={20}
-              color={colors.accent}
-              onPress={handleNextMonth}
-              disabled={!canGoNext}
-              accessibilityLabel="Next month"
-            />
-          </View>
+        {/* Header: Large Title + the month switcher as a trailing accessory */}
+        <View style={[styles.header, { paddingHorizontal: screenMargin }]}>
+          <ScreenHeader
+            title="Calendar"
+            trailing={
+              <View style={styles.monthSwitcher}>
+                <IconButton
+                  icon="chevron-back"
+                  variant="plain"
+                  size={40}
+                  iconSize={20}
+                  color={colors.accent}
+                  onPress={handlePrevMonth}
+                  disabled={!canGoPrev}
+                  accessibilityLabel="Previous month"
+                />
+                <PressableScale
+                  variant="button"
+                  onPress={openMonthPicker}
+                  accessibilityRole="button"
+                  accessibilityLabel="Choose month and year"
+                  accessibilityHint="Opens the month picker"
+                  style={styles.monthLabel}
+                >
+                  <Headline>
+                    {monthName.slice(0, 3)} {viewYear}
+                  </Headline>
+                </PressableScale>
+                <IconButton
+                  icon="chevron-forward"
+                  variant="plain"
+                  size={40}
+                  iconSize={20}
+                  color={colors.accent}
+                  onPress={handleNextMonth}
+                  disabled={!canGoNext}
+                  accessibilityLabel="Next month"
+                />
+              </View>
+            }
+          />
         </View>
 
         {/* Weekday row */}
-        <View style={styles.weekdayRow}>
+        <View style={[styles.weekdayRow, { paddingHorizontal: screenMargin }]}>
           {WEEKDAYS.map((d, i) => (
             <Caption
               key={`${d}-${i}`}
-              color={colors.accent}
+              color={colors.textTertiary}
               style={[styles.weekdayText, { width: dayButtonSize }]}
             >
               {d}
@@ -307,7 +311,7 @@ export default function CalendarScreen() {
           {...panHandlers}
           style={[
             styles.gridWrap,
-            { opacity: fadeAnim, transform: [{ translateX }] },
+            { paddingHorizontal: screenMargin, opacity: fadeAnim, transform: [{ translateX }] },
           ]}
         >
           {loadingHolidays ? (
@@ -335,6 +339,7 @@ export default function CalendarScreen() {
                   return (
                     <PressableScale
                       key={j}
+                      variant="row"
                       onPress={() => selectDay(day)}
                       disabled={navigating || day <= 0}
                       accessibilityRole="button"
@@ -344,22 +349,19 @@ export default function CalendarScreen() {
                       style={[
                         styles.dayButton,
                         { width: dayButtonSize, height: dayButtonSize, borderRadius: dayButtonSize / 2 },
-                        isToday ? styles.dayToday : isSelected ? styles.daySelected : holidayName ? styles.dayHoliday : null,
+                        isToday ? styles.dayToday : isSelected ? styles.daySelected : null,
                       ]}
                     >
                       <Body
                         color={
-                          isToday
-                            ? colors.onAccent
-                            : isSelected || holidayName
-                            ? colors.accent
-                            : colors.white
+                          isToday ? colors.onAccent : isSelected ? colors.accent : colors.white
                         }
                         style={styles.dayText}
                         maxFontSizeMultiplier={1.2}
                       >
                         {day > 0 ? String(day) : ""}
                       </Body>
+                      {holidayName && !isToday ? <View style={styles.holidayDot} /> : null}
                     </PressableScale>
                   );
                 })}
@@ -368,7 +370,7 @@ export default function CalendarScreen() {
           )}
         </Animated.View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { marginHorizontal: screenMargin }]} />
 
         {/* Scrolling day panel */}
         <ScrollView
@@ -377,13 +379,14 @@ export default function CalendarScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.panelContent,
-            { paddingBottom: tabBarClearance + spacing.lg },
+            { paddingHorizontal: screenMargin, paddingBottom: tabBarClearance + spacing.lg },
           ]}
         >
           {!isViewingToday && (
             <Animated.View style={[styles.backToToday, { opacity: backToTodayAnim }]}>
               <Button
                 label="Back to today"
+                variant="secondary"
                 icon="today-outline"
                 onPress={goBackToToday}
                 accessibilityLabel="Back to current month"
@@ -392,16 +395,18 @@ export default function CalendarScreen() {
           )}
 
           {ramadanMonthActive && (
+            <View style={styles.section}>
+            <SectionHeader title="Ramadan" />
             <GlassSurface tier="card" radius={theme.radii.card} style={styles.ramadanCard}>
               {showRamadanSummary ? (
                 <PressableScale
+                  variant="row"
                   onPress={handleRamadanSummaryPress}
                   accessibilityRole="button"
                   accessibilityLabel="Open first missed Ramadan fast date"
                   style={styles.ramadanRow}
                 >
                   <View style={styles.ramadanTextWrap}>
-                    <Headline color={colors.accent}>Ramadan</Headline>
                     <Body color={colors.white}>
                       {ramadanSummary?.totalMissed ?? 0} missed{" "}
                       {(ramadanSummary?.totalMissed ?? 0) === 1 ? "fast" : "fasts"}
@@ -410,11 +415,10 @@ export default function CalendarScreen() {
                       <Caption color={colors.textSecondary}>{missedDaysLabel}</Caption>
                     ) : null}
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.iconMuted} />
+                  <AppIcon name="chevron-forward" size={20} color={colors.iconMuted} />
                 </PressableScale>
               ) : (
                 <View style={styles.ramadanRow}>
-                  <Headline color={colors.accent}>Ramadan</Headline>
                   <Body color={colors.textSecondary}>No missed fasts</Body>
                 </View>
               )}
@@ -434,6 +438,7 @@ export default function CalendarScreen() {
                 />
               ) : null}
             </GlassSurface>
+            </View>
           )}
 
           {selectedDate ? (
@@ -452,12 +457,11 @@ export default function CalendarScreen() {
                 statuses={statuses}
                 onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
               />
-              <View style={{ height: spacing.lg }} />
               <HabitChecklist habits={habits} done={habitDone} date={selectedDate} onToggle={toggleHabit} />
             </>
           ) : (
             <View style={styles.prompt}>
-              <Ionicons name="calendar-outline" size={30} color={withOpacity(colors.accent, 0.6)} />
+              <AppIcon name="calendar-outline" size={30} color={colors.iconMuted} />
               <Body color={colors.textSecondary} style={styles.promptText}>
                 Tap any day to see its prayer times &amp; events.
               </Body>
@@ -493,26 +497,16 @@ const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
     fill: { flex: 1 },
-    header: {
-      flexDirection: "row",
-      alignItems: "flex-end",
-      justifyContent: "space-between",
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.sm,
-      marginBottom: spacing.sm,
-    },
-    headerLeft: { flexShrink: 1 },
-    eyebrow: { textTransform: "uppercase", letterSpacing: 1 },
+    header: { paddingTop: spacing.sm, marginBottom: spacing.sm },
     monthSwitcher: { flexDirection: "row", alignItems: "center" },
     monthLabel: { minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.xs },
     weekdayRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingHorizontal: spacing.xl,
       marginBottom: spacing.xs,
     },
     weekdayText: { textAlign: "center" },
-    gridWrap: { paddingHorizontal: spacing.xl },
+    gridWrap: {},
     loadingWrap: { height: 6 * 44, justifyContent: "center", alignItems: "center" },
     weekRow: {
       flexDirection: "row",
@@ -520,36 +514,30 @@ const createStyles = (theme: AppTheme) => {
       marginVertical: spacing.xs,
     },
     dayButton: { justifyContent: "center", alignItems: "center" },
-    dayToday: {
+    dayToday: { backgroundColor: colors.accent },
+    daySelected: { backgroundColor: withOpacity(colors.accent, 0.18) },
+    // Holidays get a dot under the numeral; a ring would read as "selected".
+    holidayDot: {
+      position: "absolute",
+      bottom: 4,
+      width: 5,
+      height: 5,
+      borderRadius: theme.radii.pill,
       backgroundColor: colors.accent,
-      shadowColor: colors.accent,
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 3,
-    },
-    daySelected: {
-      borderWidth: 2,
-      borderColor: colors.accent,
-      backgroundColor: withOpacity(colors.accent, 0.14),
-    },
-    dayHoliday: {
-      borderWidth: 1.5,
-      borderColor: withOpacity(colors.accent, 0.6),
     },
     dayText: { textAlign: "center" },
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: withOpacity(colors.white, 0.12),
-      marginHorizontal: spacing.xl,
       marginTop: spacing.sm,
     },
-    panelContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
+    panelContent: { paddingTop: spacing.lg },
     backToToday: {
       alignSelf: "center",
       marginBottom: spacing.lg,
     },
-    ramadanCard: { padding: spacing.lg, marginBottom: spacing.lg },
+    section: { marginBottom: spacing.xxl },
+    ramadanCard: { padding: spacing.lg },
     ramadanRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 44 },
     ramadanTextWrap: { flexShrink: 1, gap: 2 },
     markBtn: { marginTop: spacing.md },

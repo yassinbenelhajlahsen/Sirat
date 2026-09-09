@@ -70,15 +70,15 @@ describe("DayDetailPanel", () => {
     expect(getByTestId("prayer-arc")).toHaveTextContent("live");
   });
 
-  it("shows the holiday row when a holiday is present", () => {
+  it("appends the holiday to the supporting line", () => {
     const { getByText } = render(<DayDetailPanel {...baseProps} holiday="Laylat al-Mi'raj" />);
-    expect(getByText("Laylat al-Mi'raj")).toBeTruthy();
+    expect(getByText(" · Laylat al-Mi'raj")).toBeTruthy();
   });
 
   it("renders long holiday names without a line clamp", () => {
     const longName = "Lailat-ul-Bara'ah (Night of Forgiveness, 15th Sha'ban)";
     const { getByText } = render(<DayDetailPanel {...baseProps} holiday={longName} />);
-    expect(getByText(longName).props.numberOfLines).toBeUndefined();
+    expect(getByText(` · ${longName}`).props.numberOfLines).toBeUndefined();
   });
 
   it("shows the error card with a retry action", () => {

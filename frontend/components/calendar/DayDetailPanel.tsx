@@ -1,12 +1,12 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import PrayerArc from "@/components/PrayerArc";
+import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
-import { Body, Caption, Headline, Title2 } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import { AppText, Body, Footnote, Headline, Title2 } from "@/components/ui/Text";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
@@ -49,7 +49,6 @@ export default function DayDetailPanel({
     weekday: "short",
     month: "short",
     day: "numeric",
-    year: "numeric",
   }).format(date);
 
   const hijri = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
@@ -62,33 +61,28 @@ export default function DayDetailPanel({
     <View>
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <Title2 numberOfLines={1}>{isToday ? `Today · ${dateLine}` : dateLine}</Title2>
-          <Caption color={withOpacity(colors.accent, 0.95)} style={styles.hijri}>
+          <Title2 numberOfLines={1}>{isToday ? `Today, ${dateLine}` : dateLine}</Title2>
+          {/* One supporting line: Hijri, then the countdown, then the holiday. */}
+          <Footnote color={colors.textTertiary} style={styles.supporting}>
             {hijri}
-          </Caption>
+            {isToday && nextPrayer ? (
+              <AppText variant="footnote" color={colors.accent}>
+                {` · ${nextPrayer.label}${timeLeft ? ` in ${timeLeft}` : ""}`}
+              </AppText>
+            ) : null}
+            {holiday ? (
+              <AppText variant="footnote" color={colors.textSecondary}>
+                {` · ${holiday}`}
+              </AppText>
+            ) : null}
+          </Footnote>
         </View>
       </View>
-
-      {holiday ? (
-        <GlassSurface tier="row" radius={theme.radii.row} style={styles.holidayRow}>
-          <Caption color={colors.textTertiary} style={styles.holidayLabel}>
-            Holiday
-          </Caption>
-          <Body color={colors.accent}>{holiday}</Body>
-        </GlassSurface>
-      ) : null}
-
-      {isToday && nextPrayer ? (
-        <Caption color={colors.textSecondary} style={styles.nextLine}>
-          Next {nextPrayer.label}
-          {timeLeft ? ` · in ${timeLeft}` : ""}
-        </Caption>
-      ) : null}
 
       {error ? (
         <GlassSurface tier="card" radius={theme.radii.card} style={styles.stateCard}>
           <View style={styles.stateHeader}>
-            <Ionicons name="alert-circle" size={18} color={colors.accent} />
+            <AppIcon name="alert-circle" size={18} color={colors.accent} />
             <Headline color={colors.accent} style={styles.stateTitle}>
               Problem loading prayer times
             </Headline>
@@ -150,17 +144,7 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: spacing.md,
     },
     headerText: { flexShrink: 1 },
-    hijri: { marginTop: 2 },
-    // Mirrors the PrayerArc card's horizontal padding and eyebrow label so the
-    // holiday text lines up with the arc content below it.
-    holidayRow: {
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      marginBottom: spacing.md,
-      gap: 2,
-    },
-    holidayLabel: { letterSpacing: 1.2, textTransform: "uppercase" },
-    nextLine: { marginBottom: spacing.sm },
+    supporting: { marginTop: 2 },
     stateCard: { padding: spacing.lg },
     stateHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
     stateTitle: { flexShrink: 1 },
@@ -169,10 +153,10 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       flexWrap: "wrap",
-      gap: spacing.sm + 2,
+      gap: spacing.md,
       marginTop: spacing.md,
     },
     emptyText: { textAlign: "center" },
-    emptyBtn: { alignSelf: "center", marginTop: spacing.sm + 2 },
+    emptyBtn: { alignSelf: "center", marginTop: spacing.md },
   });
 };

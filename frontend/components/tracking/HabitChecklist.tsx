@@ -1,16 +1,15 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption, Headline, Title3 } from "@/components/ui/Text";
-import type { AppTheme } from "@/constants/theme";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { Body, Footnote } from "@/components/ui/Text";
+import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { Habit } from "@/services/habitTracker";
 import { frequencyLabel, isHabitDueOnDate } from "@/utils/habitFrequency";
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
 
 type Props = {
   habits: Habit[];
@@ -28,51 +27,54 @@ export default function HabitChecklist({ habits, done, date, onToggle }: Props) 
   if (dueHabits.length === 0) return null;
 
   return (
-    <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <Title3 style={styles.title}>Habits</Title3>
-      {dueHabits.map((habit) => {
-        const checked = done[habit.id] === true;
-        return (
-          <PressableScale
-            key={habit.id}
-            onPress={() => onToggle(habit.id)}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked }}
-            accessibilityLabel={`Toggle ${habit.name}`}
-            style={styles.row}
-          >
-            <Ionicons
-              name={checked ? "checkmark-circle" : "ellipse-outline"}
-              size={22}
-              color={checked ? colors.accentSecondary : colors.iconMuted}
-            />
-            <View style={styles.meta}>
-              <Headline numberOfLines={1}>{habit.name}</Headline>
-              <Caption color={colors.textTertiary}>{frequencyLabel(habit.frequency)}</Caption>
-            </View>
-            <Ionicons
-              name={habit.icon as IoniconName}
-              size={16}
-              color={colors.iconMuted}
-            />
-          </PressableScale>
-        );
-      })}
-    </GlassSurface>
+    <View style={styles.section}>
+      <SectionHeader title="Habits" />
+      <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
+        {dueHabits.map((habit, i) => {
+          const checked = done[habit.id] === true;
+          return (
+            <PressableScale
+              key={habit.id}
+              variant="row"
+              onPress={() => onToggle(habit.id)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked }}
+              accessibilityLabel={`Toggle ${habit.name}`}
+              style={[styles.row, i > 0 && styles.separated]}
+            >
+              <AppIcon
+                name={checked ? "checkmark-circle" : "ellipse-outline"}
+                size={22}
+                color={checked ? colors.accentSecondary : colors.iconMuted}
+              />
+              <View style={styles.meta}>
+                <Body numberOfLines={1}>{habit.name}</Body>
+                <Footnote color={colors.textTertiary}>{frequencyLabel(habit.frequency)}</Footnote>
+              </View>
+              <AppIcon name={habit.icon as AppIconName} size={16} color={colors.iconMuted} />
+            </PressableScale>
+          );
+        })}
+      </GlassSurface>
+    </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { spacing } = theme;
+  const { colors, spacing } = theme;
   return StyleSheet.create({
-    card: { padding: spacing.lg, marginBottom: spacing.lg, gap: spacing.sm },
-    title: { marginBottom: spacing.xs },
+    section: { marginTop: spacing.xxl },
+    card: { paddingHorizontal: spacing.lg },
     row: {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.md,
-      paddingVertical: spacing.sm,
-      minHeight: 44,
+      minHeight: 56,
+    },
+    // Inset to the text edge: glyph slot (22) plus its gap.
+    separated: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: withOpacity(colors.white, 0.1),
     },
     meta: { flex: 1, gap: 2 },
   });

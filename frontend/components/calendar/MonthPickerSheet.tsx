@@ -5,7 +5,8 @@ import { StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
 import SheetBackground from "@/components/ui/SheetBackground";
-import { Body, Headline, Title3 } from "@/components/ui/Text";
+import SheetHeader from "@/components/ui/SheetHeader";
+import { Body, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
@@ -120,7 +121,7 @@ export default function MonthPickerSheet({
       onChange={handleSheetChange}
     >
       <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 16 }]}>
-        <Title3 style={styles.title}>Jump to month</Title3>
+        <SheetHeader title="Jump to month" />
 
         <View style={styles.yearRow}>
           {years.map((y) => {
@@ -129,6 +130,7 @@ export default function MonthPickerSheet({
             return (
               <PressableScale
                 key={y}
+                variant="row"
                 onPress={() => {
                   haptics("selection");
                   setYear(y);
@@ -138,13 +140,9 @@ export default function MonthPickerSheet({
                 accessibilityLabel={
                   isThisYear ? `Show months of ${y}, current year` : `Show months of ${y}`
                 }
-                style={[
-                  styles.yearPill,
-                  !active && isThisYear && styles.yearPillThisYear,
-                  active && styles.yearPillActive,
-                ]}
+                style={[styles.yearPill, active && styles.yearPillActive]}
               >
-                <Headline color={active ? colors.onAccent : colors.white}>
+                <Headline color={active ? colors.onAccent : isThisYear ? colors.accent : colors.white}>
                   {String(y)}
                 </Headline>
               </PressableScale>
@@ -161,6 +159,7 @@ export default function MonthPickerSheet({
             return (
               <View key={label} style={styles.monthCellWrap}>
                 <PressableScale
+                  variant="row"
                   onPress={() => handleMonthPress(m)}
                   disabled={!inRange}
                   accessibilityRole="button"
@@ -168,11 +167,7 @@ export default function MonthPickerSheet({
                   accessibilityLabel={
                     isThisMonth ? `${label} ${year}, current month` : `${label} ${year}`
                   }
-                  style={[
-                    styles.monthCell,
-                    !selected && isThisMonth && styles.monthCellThisMonth,
-                    selected && styles.monthCellSelected,
-                  ]}
+                  style={[styles.monthCell, selected && styles.monthCellSelected]}
                 >
                   <Body
                     color={
@@ -200,8 +195,7 @@ export default function MonthPickerSheet({
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
-    title: { marginBottom: spacing.md },
+    body: { paddingHorizontal: spacing.xl, paddingTop: 0 },
     yearRow: {
       flexDirection: "row",
       gap: spacing.sm,
@@ -210,18 +204,13 @@ const createStyles = (theme: AppTheme) => {
     yearPill: {
       flex: 1,
       alignItems: "center",
-      paddingVertical: spacing.sm + 2,
-      borderRadius: theme.radii.row,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.12),
+      justifyContent: "center",
+      minHeight: 40,
+      borderRadius: theme.radii.pill,
+      borderCurve: "circular",
+      backgroundColor: withOpacity(colors.white, 0.08),
     },
-    yearPillActive: {
-      backgroundColor: colors.accent,
-      borderColor: colors.accent,
-    },
-    yearPillThisYear: {
-      borderColor: withOpacity(colors.accent, 0.45),
-    },
+    yearPillActive: { backgroundColor: colors.accent },
     monthGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -235,17 +224,10 @@ const createStyles = (theme: AppTheme) => {
       justifyContent: "center",
       minHeight: 44,
       borderRadius: theme.radii.chip,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.08),
+      borderCurve: "continuous",
+      backgroundColor: withOpacity(colors.white, 0.08),
     },
-    monthCellSelected: {
-      backgroundColor: colors.accent,
-      borderColor: colors.accent,
-    },
-    // Today's month: visible but quieter than the selected fill.
-    monthCellThisMonth: {
-      borderWidth: 1.5,
-      borderColor: withOpacity(colors.accent, 0.6),
-    },
+    // Today's month reads in gold text on the normal fill, never as a border.
+    monthCellSelected: { backgroundColor: colors.accent },
   });
 };

@@ -1,12 +1,13 @@
 // frontend/components/tracking/PrayerLogSheet.tsx
-import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
+import AppIcon from "@/components/ui/AppIcon";
 import SheetBackground from "@/components/ui/SheetBackground";
-import { Headline, Title3 } from "@/components/ui/Text";
+import SheetHeader from "@/components/ui/SheetHeader";
+import { Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
@@ -91,33 +92,40 @@ export default function PrayerLogSheet({
       onChange={handleSheetChange}
     >
       <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 16 }]}>
-      <Title3 style={styles.title}>Log {prayerLabel}</Title3>
-      {OPTIONS.map((opt) => {
+      <SheetHeader title={`Log ${prayerLabel}`} />
+      <View style={styles.group}>
+      {OPTIONS.map((opt, i) => {
         const active = currentStatus === opt.status;
         const color = colors[opt.token];
         return (
           <PressableScale
             key={opt.status}
+            variant="row"
             onPress={() => prayerName && onSelect(opt.status)}
             accessibilityRole="button"
+            accessibilityState={{ selected: active }}
             accessibilityLabel={`Mark ${prayerLabel} ${opt.label}`}
+            style={[styles.row, i > 0 && styles.separated]}
           >
-            <View style={[styles.row, active && { borderColor: withOpacity(color, 0.5) }]}>
-              <View style={[styles.swatch, { backgroundColor: color }]} />
-              <Headline style={styles.rowLabel}>{opt.label}</Headline>
-              {active ? <Ionicons name="checkmark" size={18} color={color} /> : null}
-            </View>
+            <View style={[styles.swatch, { backgroundColor: color }]} />
+            <Headline style={styles.rowLabel}>{opt.label}</Headline>
+            {active ? <AppIcon name="checkmark" size={18} color={colors.accent} /> : null}
           </PressableScale>
         );
       })}
       {currentStatus ? (
-        <PressableScale onPress={onClear} accessibilityRole="button" accessibilityLabel="Clear log">
-          <View style={styles.clearRow}>
-            <Ionicons name="close-circle-outline" size={18} color={colors.textSecondary} />
-            <Headline color={colors.textSecondary} style={styles.rowLabel}>Clear</Headline>
-          </View>
+        <PressableScale
+          variant="row"
+          onPress={onClear}
+          accessibilityRole="button"
+          accessibilityLabel="Clear log"
+          style={[styles.row, styles.separated]}
+        >
+          <AppIcon name="close-circle-outline" size={18} color={colors.textSecondary} />
+          <Headline color={colors.textSecondary} style={styles.rowLabel}>Clear</Headline>
         </PressableScale>
       ) : null}
+      </View>
       </BottomSheetView>
     </BottomSheet>
   );
@@ -126,26 +134,26 @@ export default function PrayerLogSheet({
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    body: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, gap: spacing.sm },
-    title: { marginBottom: spacing.sm },
+    body: { paddingHorizontal: spacing.xl, paddingTop: 0 },
+    group: {
+      borderRadius: theme.radii.row,
+      borderCurve: "continuous",
+      backgroundColor: withOpacity(colors.white, 0.06),
+      overflow: "hidden",
+    },
     row: {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.md,
-      paddingVertical: spacing.md,
+      minHeight: 48,
       paddingHorizontal: spacing.lg,
-      borderRadius: theme.radii.row,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.08),
     },
-    swatch: { width: 14, height: 14, borderRadius: 999 },
+    // Inset to the label edge, iOS grouped-list style.
+    separated: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: withOpacity(colors.white, 0.1),
+    },
+    swatch: { width: 14, height: 14, borderRadius: theme.radii.pill },
     rowLabel: { flex: 1 },
-    clearRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.md,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-    },
   });
 };
