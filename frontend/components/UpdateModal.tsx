@@ -68,28 +68,26 @@ const createStyles = (theme: AppTheme) => {
     overlay: {
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 22,
+      paddingHorizontal: theme.spacing.xxl,
       backgroundColor: isLightTheme
         ? withOpacity(themeColors.black, 0.24)
         : withOpacity(themeColors.black, 0.58),
     },
     card: {
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.45),
+      borderRadius: theme.radii.card,
+      borderCurve: "continuous",
       backgroundColor: isLightTheme
         ? themeColors.primaryLift
         : themeColors.primaryDeep,
-      paddingHorizontal: 18,
-      paddingVertical: 18,
+      padding: theme.spacing.xl,
     },
     description: {
-      marginTop: 10,
+      marginTop: theme.spacing.sm,
     },
     buttonRow: {
       flexDirection: "row",
-      marginTop: 18,
-      gap: 10,
+      marginTop: theme.spacing.xl,
+      gap: theme.spacing.md,
     },
     button: { flex: 1 },
   });

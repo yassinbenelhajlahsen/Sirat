@@ -95,7 +95,7 @@ export default function SignIn() {
                 <AppleAuthenticationButton
                   buttonType={AppleAuthenticationButtonType.CONTINUE}
                   buttonStyle={AppleAuthenticationButtonStyle.WHITE}
-                  cornerRadius={theme.radii.row}
+                  cornerRadius={26}
                   style={styles.appleButton}
                   accessibilityLabel="Continue with Apple"
                   onPress={() => void signInWithApple()}
@@ -140,10 +140,9 @@ const createStyles = (theme: AppTheme) => {
     },
     cardWrapper: { width: "100%", maxWidth: 360 },
     card: {
-      borderRadius: radii.heroLg,
+      borderRadius: radii.card,
+      borderCurve: "continuous",
       overflow: "hidden",
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.2),
     },
     content: {
       paddingTop: spacing.xxxl,

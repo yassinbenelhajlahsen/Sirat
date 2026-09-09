@@ -64,30 +64,28 @@ const createStyles = (theme: AppTheme) => {
   return StyleSheet.create({
     overlay: {
       justifyContent: "center",
-      paddingHorizontal: 22,
+      paddingHorizontal: theme.spacing.xxl,
       backgroundColor: isLightTheme
         ? withOpacity(themeColors.black, 0.72)
         : withOpacity(themeColors.black, 0.88),
       zIndex: 9999,
     },
     card: {
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.45),
+      borderRadius: theme.radii.card,
+      borderCurve: "continuous",
       backgroundColor: isLightTheme
         ? themeColors.primaryLift
         : themeColors.primaryDeep,
-      paddingHorizontal: 18,
-      paddingVertical: 22,
+      padding: theme.spacing.xl,
     },
     description: {
-      marginTop: 10,
+      marginTop: theme.spacing.sm,
     },
     versionInfo: {
-      marginTop: 8,
+      marginTop: theme.spacing.sm,
     },
     updateButton: {
-      marginTop: 20,
+      marginTop: theme.spacing.xl,
     },
   });
 };

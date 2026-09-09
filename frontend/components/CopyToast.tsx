@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
 import { type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import AppIcon from "@/components/ui/AppIcon";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Footnote } from "@/components/ui/Text";
 
@@ -66,9 +66,9 @@ export default function CopyToast({
 
   return (
     <Animated.View style={[styles.positioner, { opacity }]} pointerEvents="none">
-      <GlassSurface tier="chrome" radius={theme.radii.pill} style={styles.pill}>
+      <GlassSurface tier="chrome" radius={theme.radii.pill} curve="circular" style={styles.pill}>
         <View style={styles.inner}>
-          <Ionicons name="checkmark-circle" size={16} color={theme.colors.accent} />
+          <AppIcon name="checkmark-circle" size={16} color={theme.colors.accent} />
           <Footnote color={theme.colors.white}>{message}</Footnote>
         </View>
       </GlassSurface>
@@ -83,19 +83,13 @@ const createStyles = (theme: AppTheme) => {
       bottom: 100,
       alignSelf: "center",
     },
-    pill: {
-      shadowColor: theme.colors.black,
-      shadowOpacity: 0.25,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 8,
-    },
+    pill: {},
     inner: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+      gap: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
     },
   });
 };
