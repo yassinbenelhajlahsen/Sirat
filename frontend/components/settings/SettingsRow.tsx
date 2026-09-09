@@ -1,16 +1,17 @@
 // frontend/components/settings/SettingsRow.tsx
-import { ComponentProps, ReactNode, useMemo } from "react";
+import { ReactNode, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
 import PressableScale from "@/components/PressableScale";
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import { Body, Footnote, Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 
 type SettingsRowProps = {
-  icon: ComponentProps<typeof Ionicons>["name"];
+  /** Optional: rows in an icon-less group (prayer alerts) leave the slot out. */
+  icon?: AppIconName;
   title: string;
   subtitle?: string;
   value?: string;
@@ -47,10 +48,18 @@ export default function SettingsRow({
   const hasValue = !trailing && !!value;
 
   const content = (
-    <View style={[styles.row, !first && styles.divider, disabled && styles.disabled]}>
-      <View style={[styles.iconTile, danger && styles.iconTileDanger]}>
-        <Ionicons name={icon} size={17} color={danger ? colors.danger : colors.accent} />
-      </View>
+    <View style={[styles.row, subtitle ? styles.rowTall : null, disabled && styles.disabled]}>
+      {!first ? (
+        <View
+          pointerEvents="none"
+          style={[styles.separator, icon ? styles.separatorInset : styles.separatorFlush]}
+        />
+      ) : null}
+      {icon ? (
+        <View style={styles.iconSlot}>
+          <AppIcon name={icon} size={20} color={danger ? colors.danger : colors.accent} />
+        </View>
+      ) : null}
       <View style={[styles.textBlock, hasValue && styles.textBlockTight]}>
         <Body color={danger ? colors.danger : colors.white} numberOfLines={1}>
           {title}
@@ -73,12 +82,9 @@ export default function SettingsRow({
             </Subhead>
           ) : null)}
         {showChevron ? (
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={colors.iconMuted}
-            style={styles.chevron}
-          />
+          <View style={styles.chevron}>
+            <AppIcon name="chevron-forward" size={18} color={colors.iconMuted} />
+          </View>
         ) : null}
       </View>
     </View>
@@ -88,7 +94,7 @@ export default function SettingsRow({
 
   return (
     <PressableScale
-      scaleTo={0.98}
+      variant="row"
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
@@ -109,34 +115,31 @@ const createStyles = (theme: AppTheme) => {
     row: {
       flexDirection: "row",
       alignItems: "center",
-      minHeight: 56,
-      paddingVertical: spacing.md,
+      minHeight: 44,
+      paddingVertical: spacing.sm,
       paddingHorizontal: spacing.lg,
       gap: spacing.md,
     },
-    divider: {
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: withOpacity(colors.white, 0.08),
+    rowTall: { minHeight: 56 },
+    // Hairline drawn inside the row so insetting it never shifts the content.
+    separator: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(colors.white, 0.1),
     },
+    // Inset to the text edge: the 16 padding plus the 28 glyph slot and its gap.
+    separatorInset: { left: spacing.lg + 28 + spacing.md },
+    separatorFlush: { left: spacing.lg },
     disabled: { opacity: 0.5 },
-    iconTile: {
-      width: 30,
-      height: 30,
-      borderRadius: 9,
-      borderCurve: "continuous",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: withOpacity(colors.accent, 0.14),
-    },
-    iconTileDanger: {
-      backgroundColor: withOpacity(colors.danger, 0.14),
-    },
+    iconSlot: { width: 28, alignItems: "center", justifyContent: "center" },
     textBlock: { flex: 1, minWidth: 0 },
     textBlockTight: { flex: 0, flexBasis: "auto" },
     subtitle: { marginTop: 2 },
     trailing: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
     trailingFill: { flex: 1, justifyContent: "flex-end", minWidth: 0 },
     value: { flexShrink: 1 },
-    chevron: { marginLeft: 2 },
+    chevron: { marginLeft: spacing.xs },
   });
 };

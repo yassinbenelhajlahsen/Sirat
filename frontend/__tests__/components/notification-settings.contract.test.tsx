@@ -7,7 +7,6 @@ import { type PrayerKey, PRAYERS, type SoundMode, WINDOW_PRAYERS, WINDOW_OFFSET_
 const mockUseNotificationPreferences = jest.fn();
 const mockUseAdhanPreview = jest.fn();
 const mockUseNotificationPanelAnimation = jest.fn();
-const mockUseNotificationSegmentLayout = jest.fn();
 
 const setPrayerPreference = jest.fn(async () => {});
 const updateSoundMode = jest.fn(async () => {});
@@ -45,11 +44,6 @@ jest.mock("@/hooks/useAdhanPreview", () => ({
 jest.mock("@/hooks/useNotificationPanelAnimation", () => ({
   useNotificationPanelAnimation: (...args: unknown[]) =>
     mockUseNotificationPanelAnimation(...args),
-}));
-
-jest.mock("@/hooks/useNotificationSegmentLayout", () => ({
-  useNotificationSegmentLayout: (...args: unknown[]) =>
-    mockUseNotificationSegmentLayout(...args),
 }));
 
 const buildPrefs = (overrides: Partial<Record<PrayerKey, boolean>> = {}) =>
@@ -117,12 +111,6 @@ function configureHookMocks({
     pulsePrayer,
     pulseWindowPrayer,
   });
-
-  mockUseNotificationSegmentLayout.mockReturnValue({
-    segmentWidth: 120,
-    indicatorTranslateX: new Animated.Value(soundMode === "adhan" ? 130 : 0),
-    onLayout: jest.fn(),
-  });
 }
 
 describe("NotificationSettings contract", () => {
@@ -154,25 +142,25 @@ describe("NotificationSettings contract", () => {
       getByLabelText("Open system settings to change notifications")
     );
 
-    expect(pulseHeader).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(openSettingsSpy).toHaveBeenCalledTimes(1));
   });
 
-  it("wires prayer row toggle callback when enabled", async () => {
+  it("wires each prayer alert switch when enabled", async () => {
     configureHookMocks({ enabled: true, prefs: buildPrefs({ Fajr: true }) });
     const { getByLabelText } = render(
       <NotificationSettings notifStatus="granted" />
     );
 
-    fireEvent.press(getByLabelText("Fajr alert"));
+    PRAYERS.forEach((p) => expect(getByLabelText(`${p} alert`)).toBeTruthy());
 
-    expect(pulsePrayer).toHaveBeenCalledWith("Fajr");
+    fireEvent(getByLabelText("Fajr alert"), "valueChange", false);
+
     await waitFor(() =>
       expect(setPrayerPreference).toHaveBeenCalledWith("Fajr", false)
     );
   });
 
-  it("keeps prayer rows non-interactive when notifications are disabled", () => {
+  it("disables the prayer switches when notifications are off", () => {
     configureHookMocks({ enabled: false, prefs: buildPrefs({ Fajr: true }) });
     const { getByLabelText } = render(
       <NotificationSettings notifStatus="denied" />
@@ -181,18 +169,18 @@ describe("NotificationSettings contract", () => {
       includeHiddenElements: true,
     });
 
-    fireEvent.press(fajrAlert);
-
-    expect(fajrAlert.props.accessibilityState.disabled).toBe(true);
-    expect(pulsePrayer).not.toHaveBeenCalled();
+    expect(fajrAlert.props.disabled).toBe(true);
     expect(setPrayerPreference).not.toHaveBeenCalled();
   });
 
-  it("updates sound mode and wires the adhan preview control", async () => {
+  it("updates sound mode and wires the adhan preview action", async () => {
     configureHookMocks({ soundMode: "default", enabled: true });
-    const { getByLabelText, rerender } = render(
+    const { getByLabelText, queryByLabelText, rerender } = render(
       <NotificationSettings notifStatus="granted" />
     );
+
+    // The preview action only appears on the selected Adhan row.
+    expect(queryByLabelText("Preview Adhan")).toBeNull();
 
     fireEvent.press(getByLabelText("System default sound option"));
     expect(stopPreview).not.toHaveBeenCalled();
@@ -210,12 +198,12 @@ describe("NotificationSettings contract", () => {
     expect(handlePreviewPress).toHaveBeenCalledWith("adhan");
   });
 
-  it("renders the window reminders subsection with prayer toggles and offsets", () => {
+  it("renders the window reminders group with switches and the offset control", () => {
     const { getByText, getByLabelText } = render(
       <NotificationSettings notifStatus="granted" />,
     );
 
-    expect(getByText("Window reminders")).toBeTruthy();
+    expect(getByText("WINDOW REMINDERS")).toBeTruthy();
     WINDOW_PRAYERS.forEach((p) => {
       expect(getByLabelText(`${p} window reminder`)).toBeTruthy();
     });
@@ -224,12 +212,12 @@ describe("NotificationSettings contract", () => {
     });
   });
 
-  it("wires the window prayer toggle when enabled", async () => {
+  it("wires the window prayer switch when enabled", async () => {
     const { getByLabelText } = render(
       <NotificationSettings notifStatus="granted" />,
     );
 
-    fireEvent.press(getByLabelText("Asr window reminder"));
+    fireEvent(getByLabelText("Asr window reminder"), "valueChange", true);
 
     await waitFor(() =>
       expect(setWindowPreference).toHaveBeenCalledWith("Asr", true),

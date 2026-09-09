@@ -37,8 +37,6 @@ export const SOUND_OPTIONS: {
   },
 ];
 
-export const SOUND_SEGMENT_GAP = 10;
-
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
 // Granular per-setting change signals, emitted only on a real edit to that one

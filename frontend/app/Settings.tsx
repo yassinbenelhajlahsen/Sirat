@@ -5,7 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import IconButton from "@/components/ui/IconButton";
 import Screen from "@/components/ui/Screen";
-import { Caption, Footnote, LargeTitle } from "@/components/ui/Text";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+import { Footnote, Subhead } from "@/components/ui/Text";
 import NotificationSettings from "@/components/NotificationSettings";
 import { AccountSection } from "@/components/settings/AccountSection";
 import SettingsSection from "@/components/settings/SettingsSection";
@@ -15,6 +16,7 @@ import PickerDialog from "@/components/settings/PickerDialog";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useAccountActions } from "@/hooks/useAccountActions";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
 import { useSettingsPermissions } from "@/hooks/useSettingsPermissions";
@@ -45,6 +47,7 @@ export default function Settings() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const haptics = useHaptics();
+  const screenMargin = useScreenMargin();
 
   const { signOut, deleteAccount } = useAccountActions();
 
@@ -91,7 +94,7 @@ export default function Settings() {
   const cityLabel = city
     ? `${city.name}${city.country ? ", " + city.country : ""}`
     : "Select city";
-  const locationSubtitle =
+  const locationFooter =
     permissionStatus === "granted"
       ? "Using live location. Turn this off to choose a fixed city."
       : "Enable to use your current location. Turn off for manual city mode.";
@@ -102,7 +105,7 @@ export default function Settings() {
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
-          styles.content,
+          { paddingHorizontal: screenMargin },
           {
             paddingTop: spacing.sm,
             paddingBottom: insets.bottom + spacing.xxxl,
@@ -111,25 +114,21 @@ export default function Settings() {
       >
         <View style={styles.grabber} />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Caption color={withOpacity(colors.accent, 0.95)} style={styles.eyebrow}>
-              PREFERENCES
-            </Caption>
-            <LargeTitle>Settings</LargeTitle>
-          </View>
-          <IconButton
-            icon="close"
-            variant="glass"
-            iconSize={20}
-            onPress={() => {
-              haptics("selection");
-              router.back();
-            }}
-            accessibilityLabel="Close settings"
-          />
-        </View>
+        <ScreenHeader
+          title="Settings"
+          trailing={
+            <IconButton
+              icon="close"
+              variant="glass"
+              iconSize={20}
+              onPress={() => {
+                haptics("selection");
+                router.back();
+              }}
+              accessibilityLabel="Close settings"
+            />
+          }
+        />
 
         {/* Account */}
         {/* NEEDS NATIVE BUILD: this Alert (and every other native Alert/Switch)
@@ -171,20 +170,20 @@ export default function Settings() {
               disabled={applyingIcon}
               accessibilityLabel="Match app icon to theme"
               trailing={
-                <Caption color={colors.accent} style={styles.applyText}>
+                <Subhead color={colors.accent} style={styles.applyText}>
                   {applyingIcon ? "…" : "Apply"}
-                </Caption>
+                </Subhead>
               }
             />
           ) : null}
         </SettingsSection>
 
         {/* Prayer Times */}
-        <SettingsSection label="Prayer Times">
+        <SettingsSection label="Prayer times" footer={locationFooter}>
           <SettingsRow
             first
             icon="compass-outline"
-            title="Calculation Method"
+            title="Calculation method"
             value={methodLabel}
             showChevron
             onPress={() => {
@@ -195,7 +194,6 @@ export default function Settings() {
           <SettingsRow
             icon="location-outline"
             title="Use my location"
-            subtitle={locationSubtitle}
             trailing={
               <Switch
                 accessibilityLabel="Use my location"
@@ -222,15 +220,15 @@ export default function Settings() {
           ) : null}
         </SettingsSection>
 
-        {/* Notifications — owns its own section label + glass card (Task 6) */}
+        {/* Notifications owns its own grouped sections */}
         <NotificationSettings notifStatus={notifStatus} />
 
         {/* About */}
         <SettingsSection label="About">
           <SettingsRow first icon="star-outline" title="Rate Sirat" showChevron onPress={rateApp} />
-          <SettingsRow icon="share-outline" title="Share Sirat" showChevron onPress={shareApp} />
-          <SettingsRow icon="shield-checkmark-outline" title="Privacy Policy" showChevron onPress={openPrivacy} />
-          <SettingsRow icon="mail-outline" title="Send Feedback" showChevron onPress={sendFeedback} />
+          <SettingsRow icon="share-social-outline" title="Share Sirat" showChevron onPress={shareApp} />
+          <SettingsRow icon="shield-checkmark-outline" title="Privacy policy" showChevron onPress={openPrivacy} />
+          <SettingsRow icon="mail-outline" title="Send feedback" showChevron onPress={sendFeedback} />
           <SettingsRow
             icon="globe-outline"
             title="Visit website"
@@ -247,7 +245,7 @@ export default function Settings() {
 
       <PickerDialog
         visible={methodModalVisible}
-        title="Calculation Method"
+        title="Calculation method"
         subtitle="Authority used to compute prayer schedules."
         items={METHOD_ITEMS}
         selected={method}
@@ -273,24 +271,16 @@ export default function Settings() {
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    content: { paddingHorizontal: spacing.xl },
     grabber: {
       width: 38,
       height: 5,
-      borderRadius: 999,
+      borderRadius: theme.radii.pill,
       backgroundColor: withOpacity(colors.white, 0.28),
       alignSelf: "center",
       marginTop: spacing.xs,
       marginBottom: spacing.md,
     },
-    header: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-      justifyContent: "space-between",
-    },
-    headerText: { flex: 1, paddingRight: spacing.md },
-    eyebrow: { letterSpacing: 1.4, marginBottom: spacing.xs },
-    applyText: { fontWeight: "700" },
+    applyText: { fontWeight: "600" },
     version: { textAlign: "center", marginTop: spacing.xl },
   });
 };
