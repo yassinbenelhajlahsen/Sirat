@@ -1,6 +1,8 @@
 import CopyToast from "@/components/CopyToast";
+import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption } from "@/components/ui/Text";
+import IconButton from "@/components/ui/IconButton";
+import { Caption, Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -86,6 +88,22 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
     onAnother?.();
   };
 
+  const segment = (key: Mode, label: string) => {
+    const active = mode === key;
+    return (
+      <Pressable
+        onPress={() => setMode(key)}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: active }}
+        style={styles.segmentBtn}
+      >
+        <Caption color={active ? colors.accent : colors.textSecondary} style={styles.segmentText}>
+          {label}
+        </Caption>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={styles.wrapper}>
       <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
@@ -95,15 +113,13 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
               {categoryLabel}
             </Caption>
 
-            <Pressable
+            <IconButton
+              icon="close"
+              size={32}
+              iconSize={18}
               onPress={onClose}
-              hitSlop={8}
-              accessibilityRole="button"
               accessibilityLabel="Close dua details"
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={18} color={colors.white} />
-            </Pressable>
+            />
           </View>
 
           <View style={styles.flourish}>
@@ -112,7 +128,9 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
             <View style={styles.flourishLine} />
           </View>
 
-          <Text style={styles.arabicText}>{dua.arabic}</Text>
+          <Text style={styles.arabicText} maxFontSizeMultiplier={1.3}>
+            {dua.arabic}
+          </Text>
 
           <View style={styles.flourish}>
             <View style={styles.flourishLineShort} />
@@ -122,6 +140,7 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
 
           <View
             style={styles.segment}
+            accessibilityRole="tablist"
             onLayout={(e) => setSegWidth(e.nativeEvent.layout.width)}
           >
             {segWidth > 0 ? (
@@ -132,67 +151,48 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
                 ]}
               />
             ) : null}
-            <Pressable
-              onPress={() => setMode("translation")}
-              accessibilityRole="button"
-              style={styles.segmentBtn}
-            >
-              <Text style={[styles.segmentText, mode === "translation" && styles.segmentTextActive]}>
-                Translation
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setMode("transliteration")}
-              accessibilityRole="button"
-              style={styles.segmentBtn}
-            >
-              <Text style={[styles.segmentText, mode === "transliteration" && styles.segmentTextActive]}>
-                Transliteration
-              </Text>
-            </Pressable>
+            {segment("translation", "Translation")}
+            {segment("transliteration", "Transliteration")}
           </View>
 
-          <Text style={styles.bodyValue}>
+          <Subhead color={colors.white} style={styles.bodyValue}>
             {mode === "translation" ? dua.english : dua.transliteration}
-          </Text>
+          </Subhead>
 
           <View style={styles.referenceRow}>
-            <Text style={styles.referenceLabel}>Reference · </Text>
-            <Text style={styles.referenceValue}>{dua.reference}</Text>
+            <Caption color={colors.textTertiary}>Reference · </Caption>
+            <Caption color={colors.accent} style={styles.referenceValue}>
+              {dua.reference}
+            </Caption>
           </View>
 
           <View style={styles.actions}>
-            <Pressable
+            <Button
+              label="Copy"
+              icon="copy-outline"
+              variant="tonal"
               onPress={handleCopy}
-              accessibilityRole="button"
               accessibilityLabel="Copy dua"
               style={styles.actionButton}
-            >
-              <Ionicons name="copy-outline" size={18} color={withOpacity(colors.white, 0.85)} />
-              <Text style={styles.actionLabel}>Copy</Text>
-            </Pressable>
-
-            <Pressable
+            />
+            <Button
+              label="Share"
+              icon="share-social-outline"
               onPress={handleShare}
-              accessibilityRole="button"
               accessibilityLabel="Share dua"
-              style={[styles.actionButton, styles.actionButtonPrimary]}
-            >
-              <Ionicons name="share-social-outline" size={18} color={colors.onAccent} />
-              <Text style={[styles.actionLabel, styles.actionLabelPrimary]}>Share</Text>
-            </Pressable>
+              style={styles.actionButton}
+            />
           </View>
 
           {onAnother ? (
-            <Pressable
+            <Button
+              label="Find another dua"
+              icon="refresh"
+              variant="ghost"
               onPress={handleAnother}
-              accessibilityRole="button"
               accessibilityLabel="Find another dua"
               style={styles.anotherButton}
-            >
-              <Ionicons name="refresh" size={15} color={withOpacity(colors.white, 0.78)} />
-              <Text style={styles.anotherText}>Find another dua</Text>
-            </Pressable>
+            />
           ) : null}
         </ScrollView>
       </GlassSurface>
@@ -229,16 +229,6 @@ const createStyles = (theme: AppTheme) => {
       letterSpacing: 1.6,
       textTransform: "uppercase",
       fontWeight: "600",
-    },
-    closeButton: {
-      width: 30,
-      height: 30,
-      borderRadius: 999,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: withOpacity(colors.white, 0.1),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.2),
     },
     flourish: {
       flexDirection: "row",
@@ -292,23 +282,15 @@ const createStyles = (theme: AppTheme) => {
     segmentBtn: {
       flex: 1,
       alignItems: "center",
-      paddingVertical: 7,
+      justifyContent: "center",
+      minHeight: 36,
       borderRadius: 9,
       zIndex: 1,
     },
     segmentText: {
-      fontSize: 12,
       fontWeight: "600",
-      color: withOpacity(colors.white, 0.6),
-    },
-    segmentTextActive: {
-      color: colors.accent,
     },
     bodyValue: {
-      color: colors.white,
-      fontSize: 15,
-      fontWeight: "400",
-      lineHeight: 22,
       marginBottom: spacing.md,
     },
     referenceRow: {
@@ -318,14 +300,7 @@ const createStyles = (theme: AppTheme) => {
       justifyContent: "center",
       marginBottom: spacing.lg,
     },
-    referenceLabel: {
-      color: withOpacity(colors.white, 0.5),
-      fontSize: 12,
-      fontWeight: "400",
-    },
     referenceValue: {
-      color: withOpacity(colors.accent, 0.9),
-      fontSize: 12,
       fontWeight: "600",
     },
     actions: {
@@ -334,48 +309,9 @@ const createStyles = (theme: AppTheme) => {
     },
     actionButton: {
       flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-      paddingVertical: spacing.sm + 3,
-      borderRadius: 13,
-      backgroundColor: withOpacity(colors.white, 0.06),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.12),
-    },
-    actionButtonPrimary: {
-      backgroundColor: colors.accent,
-      borderColor: colors.accent,
-      shadowColor: withOpacity(colors.accent, 0.4),
-      shadowOpacity: 0.25,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 5 },
-      elevation: 3,
-    },
-    actionLabel: {
-      color: withOpacity(colors.white, 0.85),
-      fontSize: 13,
-      fontWeight: "700",
-    },
-    actionLabelPrimary: {
-      color: colors.onAccent,
     },
     anotherButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 7,
-      marginTop: spacing.md,
-      paddingVertical: spacing.sm + 3,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.16),
-    },
-    anotherText: {
-      color: withOpacity(colors.white, 0.78),
-      fontSize: 13,
-      fontWeight: "600",
+      marginTop: spacing.sm,
     },
   });
 };

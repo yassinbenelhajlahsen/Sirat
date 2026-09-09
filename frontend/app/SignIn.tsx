@@ -1,24 +1,22 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useSSO } from "@clerk/expo";
 import { useSignInWithApple } from "@clerk/expo/apple";
+import {
+  AppleAuthenticationButton,
+  AppleAuthenticationButtonStyle,
+  AppleAuthenticationButtonType,
+} from "expo-apple-authentication";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
-import { useCallback, useEffect } from "react";
-import {
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useCallback, useEffect, useMemo } from "react";
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import Aurora from "@/components/ui/Aurora";
+import Button from "@/components/ui/Button";
 import GoogleIcon from "@/components/ui/GoogleIcon";
 import { DISPLAY_FONT_FAMILY } from "@/components/ui/DisplayNumber";
+import { Footnote } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -28,7 +26,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function SignIn() {
   const { theme } = useTheme();
   const { colors } = theme;
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { isSignedIn } = useAuthState();
   const { startSSOFlow } = useSSO();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
@@ -84,40 +82,42 @@ export default function SignIn() {
           <Aurora />
 
           <View style={styles.content}>
-            <Text style={styles.headline}>{"Sync your\njourney"}</Text>
-            <Text style={styles.subtitle}>
-              Sign in to back up your tracker &amp; settings across devices.
+            <Text style={styles.headline} maxFontSizeMultiplier={1.2} accessibilityRole="header">
+              {"Sync your\njourney"}
             </Text>
+            <Footnote color={colors.textSecondary}>
+              Sign in to back up your tracker &amp; settings across devices.
+            </Footnote>
 
             <View style={styles.stack}>
               {Platform.OS === "ios" && (
-                <TouchableOpacity
+                // Apple's own control: required styling, localisation and the
+                // "Continue with" wording come for free.
+                <AppleAuthenticationButton
+                  buttonType={AppleAuthenticationButtonType.CONTINUE}
+                  buttonStyle={AppleAuthenticationButtonStyle.WHITE}
+                  cornerRadius={theme.radii.row}
                   style={styles.appleButton}
-                  accessibilityRole="button"
+                  accessibilityLabel="Continue with Apple"
                   onPress={() => void signInWithApple()}
-                >
-                  <Ionicons name="logo-apple" size={20} color={colors.primaryDeep} />
-                  <Text style={styles.appleButtonText}>Continue with Apple</Text>
-                </TouchableOpacity>
+                />
               )}
 
-              <TouchableOpacity
-                style={styles.googleButton}
-                accessibilityRole="button"
+              <Button
+                label="Continue with Google"
+                variant="tonal"
+                size="lg"
+                leading={<GoogleIcon size={19} />}
                 onPress={() => void signInWithGoogle()}
-              >
-                <GoogleIcon size={19} />
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
-              </TouchableOpacity>
+              />
 
-              <TouchableOpacity
-                style={styles.notNowButton}
+              <Button
+                label="Not now"
+                variant="ghost"
+                size="lg"
                 onPress={() => router.back()}
-                accessibilityRole="button"
                 accessibilityLabel="Not now"
-              >
-                <Text style={styles.notNowText}>Not now</Text>
-              </TouchableOpacity>
+              />
             </View>
           </View>
         </View>
@@ -127,7 +127,7 @@ export default function SignIn() {
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, radii } = theme;
+  const { colors, radii, spacing } = theme;
   const isLightTheme = theme.name === "light";
   return StyleSheet.create({
     backdrop: {
@@ -137,7 +137,7 @@ const createStyles = (theme: AppTheme) => {
         : withOpacity(colors.black, 0.70),
       justifyContent: "center",
       alignItems: "center",
-      padding: 24,
+      padding: spacing.xxl,
     },
     cardWrapper: { width: "100%", maxWidth: 360 },
     card: {
@@ -147,69 +147,24 @@ const createStyles = (theme: AppTheme) => {
       borderColor: withOpacity(colors.white, 0.2),
     },
     content: {
-      paddingTop: 32,
-      paddingHorizontal: 24,
-      paddingBottom: 16,
+      paddingTop: spacing.xxxl,
+      paddingHorizontal: spacing.xxl,
+      paddingBottom: spacing.lg,
     },
     headline: {
       fontFamily: DISPLAY_FONT_FAMILY,
       fontSize: 30,
       lineHeight: 32,
       color: colors.white,
-      marginBottom: 12,
-    },
-    subtitle: {
-      fontSize: 13.5,
-      lineHeight: 20,
-      color: withOpacity(colors.white, 0.62),
+      marginBottom: spacing.md,
     },
     stack: {
-      marginTop: 22,
-      gap: 11,
+      marginTop: spacing.xxl,
+      gap: spacing.md,
     },
-    // Apple — solid light pill
     appleButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 10,
       height: 52,
-      borderRadius: radii.row,
-      backgroundColor: colors.white,
-    },
-    appleButtonText: {
-      fontSize: 15.5,
-      fontWeight: "600",
-      color: colors.primaryDeep,
-    },
-    // Google — frosted
-    googleButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 10,
-      height: 52,
-      borderRadius: radii.row,
-      backgroundColor: withOpacity(colors.white, 0.08),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.16),
-    },
-    googleButtonText: {
-      fontSize: 15.5,
-      fontWeight: "600",
-      color: colors.white,
-    },
-    // Not now — full-width ghost, large touch target
-    notNowButton: {
-      height: 50,
-      alignItems: "center",
-      justifyContent: "center",
-      borderRadius: radii.row,
-    },
-    notNowText: {
-      fontSize: 15,
-      fontWeight: "500",
-      color: withOpacity(colors.white, 0.62),
+      width: "100%",
     },
   });
 };

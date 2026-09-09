@@ -33,7 +33,7 @@ export default function SignInCard({ onPress, onDismiss }: Props) {
           <Body color={colors.white} style={styles.title}>
             Sign in to sync
           </Body>
-          <Caption color={withOpacity(colors.white, 0.6)} style={styles.subtitle}>
+          <Caption color={colors.textTertiary} style={styles.subtitle}>
             Back up your tracker &amp; settings across devices.
           </Caption>
         </View>
@@ -45,7 +45,7 @@ export default function SignInCard({ onPress, onDismiss }: Props) {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.dismiss}
         >
-          <Ionicons name="close" size={18} color={withOpacity(colors.white, 0.4)} />
+          <Ionicons name="close" size={18} color={colors.iconMuted} />
         </TouchableOpacity>
       </GlassSurface>
     </TouchableOpacity>

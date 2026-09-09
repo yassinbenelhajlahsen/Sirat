@@ -2,6 +2,8 @@ import { StyleSheet } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 
+// Layout only — text sizes, weights and colours come from the shared AppText
+// variants and semantic tokens at the call site.
 export const getNotificationStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
 
@@ -31,14 +33,15 @@ export const getNotificationStyles = (theme: AppTheme) => {
       backgroundColor: withOpacity(themeColors.accent, 0.14),
     },
     masterText: { flex: 1, minWidth: 0 },
-    masterTitle: { fontSize: 16, fontWeight: "600" },
-    masterSubtitle: {
-      fontSize: 12,
-      marginTop: 2,
-      fontWeight: "400",
+    masterSubtitle: { marginTop: 2 },
+    masterControl: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      minHeight: 44,
+      paddingLeft: 8,
     },
-    masterControl: { flexDirection: "row", alignItems: "center", gap: 4 },
-    masterStatus: { fontSize: 14, fontWeight: "600" },
+    masterStatus: { fontWeight: "600" },
     reveal: { paddingHorizontal: 14, overflow: "hidden" },
     revealDivider: {
       height: StyleSheet.hairlineWidth,
@@ -48,66 +51,8 @@ export const getNotificationStyles = (theme: AppTheme) => {
     prayerSectionHeader: {
       marginBottom: 10,
     },
-    prayerSectionTitle: {
-      fontSize: 14,
-      fontWeight: "600",
-    },
-    prayerSectionDescription: {
-      fontSize: 12,
-      lineHeight: 17,
-      marginTop: 3,
-      fontWeight: "400",
-    },
-    rowWrapper: {
-      marginBottom: 12,
-      borderRadius: 12,
-    },
-    rowBase: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      borderRadius: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-    },
-    rowSurface: {
-      backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
-      borderColor: withOpacity(themeColors.accent, 0.6),
-      shadowColor: withOpacity(themeColors.black, 0.05),
-      shadowOpacity: 0.18,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 5,
-      overflow: "hidden",
-    },
-    rowLabel: {
-      color: withOpacity(themeColors.white, 0.9),
-      fontSize: 16,
-      fontWeight: "600",
-      letterSpacing: 0.2,
-    },
-    rowLabelDisabled: {
-      color: withOpacity(themeColors.white, 0.6),
-    },
-    rowActive: {
-      backgroundColor: withOpacity(themeColors.primaryDeep, 0.4),
-      borderColor: withOpacity(themeColors.accent, 0.4),
-    },
-    rowPressed: {
-      backgroundColor: withOpacity(themeColors.primaryDeep, 0.1),
-    },
-    rowIndicator: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginLeft: 12,
-    },
-    rowIndicatorText: {
-      marginLeft: 8,
-      fontSize: 13,
-      fontWeight: "600",
-      color: withOpacity(themeColors.white, 0.85),
-    },
+    prayerSectionTitle: { fontWeight: "600" },
+    prayerSectionDescription: { marginTop: 3 },
     prayerGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -119,24 +64,19 @@ export const getNotificationStyles = (theme: AppTheme) => {
       borderRadius: 14,
       borderCurve: "continuous",
       borderWidth: StyleSheet.hairlineWidth,
+      minHeight: 88,
       paddingVertical: 14,
       paddingHorizontal: 6,
       alignItems: "center",
-      gap: 7,
+      justifyContent: "center",
+      gap: 6,
       overflow: "hidden",
     },
     prayerCardPressed: {
       opacity: 0.85,
     },
-    prayerCardLabel: {
-      fontSize: 13,
-      fontWeight: "600",
-      letterSpacing: 0.2,
-    },
-    prayerCardStatus: {
-      fontSize: 11,
-      fontWeight: "600",
-    },
+    prayerCardLabel: { fontWeight: "600", letterSpacing: 0.2 },
+    prayerCardStatus: { fontWeight: "600" },
     soundCard: {
       marginTop: 14,
       marginBottom: 14,
@@ -152,17 +92,7 @@ export const getNotificationStyles = (theme: AppTheme) => {
       shadowOffset: { width: 0, height: 12 },
       elevation: 6,
     },
-    soundSectionTitle: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: themeColors.white,
-    },
-    soundSectionSubtitle: {
-      fontSize: 12,
-      fontWeight: "400",
-      marginTop: 6,
-      color: withOpacity(themeColors.white, 0.75),
-    },
+    soundSectionSubtitle: { marginTop: 6 },
     soundSegmentRow: {
       flexDirection: "row",
       marginTop: 18,
@@ -173,16 +103,15 @@ export const getNotificationStyles = (theme: AppTheme) => {
       flex: 1,
       borderWidth: StyleSheet.hairlineWidth,
       borderRadius: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
+      minHeight: 44,
+      paddingVertical: 10,
+      paddingHorizontal: 8,
       alignItems: "center",
+      justifyContent: "center",
       backgroundColor: withOpacity(themeColors.white, 0.05),
       borderColor: withOpacity(themeColors.white, 0.08),
     },
-    soundSegmentLabel: {
-      fontSize: 13,
-      fontWeight: "600",
-    },
+    soundSegmentLabel: { fontWeight: "600" },
     soundSegmentHighlight: {
       position: "absolute",
       top: 0,
@@ -200,27 +129,19 @@ export const getNotificationStyles = (theme: AppTheme) => {
       borderColor: withOpacity(themeColors.white, 0.12),
       backgroundColor: withOpacity(themeColors.white, 0.04),
     },
-    soundDescriptionText: {
-      fontSize: 12,
-      fontWeight: "400",
-      lineHeight: 18,
-      color: withOpacity(themeColors.white, 0.85),
-    },
+    soundDescriptionText: {},
     soundPreviewButton: {
       marginTop: 12,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
+      minHeight: 44,
       borderWidth: StyleSheet.hairlineWidth,
-      borderRadius: 20,
+      borderRadius: 22,
       paddingHorizontal: 18,
       paddingVertical: 10,
     },
-    soundPreviewText: {
-      marginLeft: 8,
-      fontSize: 13,
-      fontWeight: "600",
-    },
+    soundPreviewText: { marginLeft: 8, fontWeight: "600" },
   });
 };
 

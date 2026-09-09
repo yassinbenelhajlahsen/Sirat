@@ -15,6 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import GlassSurface from "@/components/ui/GlassSurface";
+import IconButton from "@/components/ui/IconButton";
 import { Body, Footnote, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -114,33 +115,34 @@ export default function PickerDialog<T extends string | number>({
               <View style={styles.headerText}>
                 <Title3 color={colors.white}>{title}</Title3>
                 {subtitle ? (
-                  <Footnote color={withOpacity(colors.white, 0.6)} style={styles.subtitle}>
+                  <Footnote color={colors.textSecondary} style={styles.subtitle}>
                     {subtitle}
                   </Footnote>
                 ) : null}
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close"
+              <IconButton
+                icon="close"
+                size={36}
+                iconSize={20}
                 onPress={onClose}
-                hitSlop={10}
-              >
-                <Ionicons name="close" size={22} color={withOpacity(colors.white, 0.7)} />
-              </Pressable>
+                accessibilityLabel="Close"
+              />
             </View>
 
             {searchable ? (
               <View style={styles.search}>
-                <Ionicons name="search" size={18} color={withOpacity(colors.white, 0.5)} />
+                <Ionicons name="search" size={18} color={colors.iconMuted} />
                 <TextInput
                   ref={inputRef}
                   placeholder={searchPlaceholder}
-                  placeholderTextColor={withOpacity(colors.white, 0.5)}
+                  placeholderTextColor={colors.textTertiary}
                   value={query}
                   onChangeText={setQuery}
                   autoCorrect={false}
                   autoCapitalize="none"
                   returnKeyType="search"
+                  accessibilityLabel="Search"
+                  maxFontSizeMultiplier={1.4}
                   style={styles.searchInput}
                 />
               </View>
@@ -234,6 +236,7 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+      minHeight: 48,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.xl,
     },

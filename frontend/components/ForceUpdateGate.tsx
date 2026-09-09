@@ -1,7 +1,9 @@
+import Button from "@/components/ui/Button";
+import { Body, Footnote, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import useModalTransition from "@/hooks/useModalTransition";
-import { Animated, Linking, Pressable, StyleSheet, Text } from "react-native";
+import { Animated, Linking, StyleSheet } from "react-native";
 import { useMemo } from "react";
 
 const APP_STORE_URL =
@@ -32,23 +34,24 @@ export default function ForceUpdateGate({
       style={[StyleSheet.absoluteFill, styles.overlay, overlayAnimatedStyle]}
       pointerEvents="auto"
     >
-      <Animated.View style={[styles.card, cardAnimatedStyle]}>
-        <Text style={styles.title}>Update Required</Text>
-        <Text style={styles.description}>
+      <Animated.View style={[styles.card, cardAnimatedStyle]} accessibilityViewIsModal>
+        <Title3 accessibilityRole="header">Update Required</Title3>
+        <Body color={theme.colors.textSecondary} style={styles.description}>
           This version of the app is no longer supported. Please update to
           continue.
-        </Text>
+        </Body>
         {currentVersion ? (
-          <Text style={styles.versionInfo}>
+          <Footnote color={theme.colors.textTertiary} style={styles.versionInfo}>
             Your version: {currentVersion} · Required: {minVersion}
-          </Text>
+          </Footnote>
         ) : null}
-        <Pressable
-          style={styles.updateButton}
+        <Button
+          label="Update Now"
+          size="lg"
+          icon="logo-apple-appstore"
           onPress={() => Linking.openURL(APP_STORE_URL)}
-        >
-          <Text style={styles.updateLabel}>Update Now</Text>
-        </Pressable>
+          style={styles.updateButton}
+        />
       </Animated.View>
     </Animated.View>
   );
@@ -77,35 +80,14 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: 18,
       paddingVertical: 22,
     },
-    title: {
-      color: themeColors.white,
-      fontWeight: "700",
-      fontSize: 20,
-    },
     description: {
       marginTop: 10,
-      color: withOpacity(themeColors.white, 0.78),
-      fontWeight: "400",
-      fontSize: 15,
-      lineHeight: 21,
     },
     versionInfo: {
       marginTop: 8,
-      color: withOpacity(themeColors.white, 0.5),
-      fontWeight: "400",
-      fontSize: 13,
     },
     updateButton: {
       marginTop: 20,
-      alignItems: "center",
-      borderRadius: 12,
-      paddingVertical: 13,
-      backgroundColor: themeColors.accent,
-    },
-    updateLabel: {
-      color: themeColors.onAccent,
-      fontWeight: "600",
-      fontSize: 15,
     },
   });
 };

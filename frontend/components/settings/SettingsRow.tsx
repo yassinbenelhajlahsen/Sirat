@@ -56,7 +56,7 @@ export default function SettingsRow({
           {title}
         </Body>
         {subtitle ? (
-          <Footnote color={withOpacity(colors.white, 0.55)} style={styles.subtitle}>
+          <Footnote color={colors.textTertiary} style={styles.subtitle}>
             {subtitle}
           </Footnote>
         ) : null}
@@ -65,7 +65,7 @@ export default function SettingsRow({
         {trailing ??
           (value ? (
             <Subhead
-              color={withOpacity(colors.white, 0.55)}
+              color={colors.textTertiary}
               numberOfLines={1}
               style={styles.value}
             >
@@ -76,7 +76,7 @@ export default function SettingsRow({
           <Ionicons
             name="chevron-forward"
             size={18}
-            color={withOpacity(colors.white, 0.35)}
+            color={colors.iconMuted}
             style={styles.chevron}
           />
         ) : null}

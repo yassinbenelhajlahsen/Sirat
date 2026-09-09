@@ -1,19 +1,11 @@
+import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Subhead, Title2 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Keyboard,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Keyboard, StyleSheet, TextInput, View } from "react-native";
 import PressableScale from "./PressableScale";
 
 interface DuaCardProps {
@@ -62,7 +54,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   return (
     <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
       <Title2 style={styles.title}>Ask for a Dua</Title2>
-      <Subhead color={withOpacity(colors.white, 0.7)} style={styles.description}>
+      <Subhead color={colors.textSecondary} style={styles.description}>
         Describe what you need help with, and we will find the perfect dua for
         you.
       </Subhead>
@@ -77,7 +69,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
             accessibilityLabel={`Ask for a ${prompt.label} dua`}
             style={[styles.chip, loading ? styles.chipDisabled : undefined]}
           >
-            <Caption color={withOpacity(colors.white, 0.82)}>{prompt.label}</Caption>
+            <Caption color={colors.textSecondary} style={styles.chipText}>{prompt.label}</Caption>
           </PressableScale>
         ))}
       </View>
@@ -85,7 +77,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
       <View style={[styles.inputShell, (focused || hasInput) && styles.inputShellActive]}>
         <TextInput
           placeholder="e.g., I'm anxious about an exam"
-          placeholderTextColor={withOpacity(colors.white, 0.4)}
+          placeholderTextColor={colors.textTertiary}
           value={userInput}
           onChangeText={setUserInput}
           onFocus={() => setFocused(true)}
@@ -98,46 +90,33 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
           editable={!loading}
           accessibilityLabel="Dua request input"
           accessibilityHint="Describe what you need help with"
+          maxFontSizeMultiplier={1.4}
           style={styles.input}
         />
 
         <View style={styles.metaRow}>
           <Caption
-            color={charactersLeft <= 15 ? colors.accent : withOpacity(colors.white, 0.4)}
+            color={charactersLeft <= 15 ? colors.accent : colors.textTertiary}
             style={styles.characterCount}
+            accessibilityLabel={`${charactersLeft} characters left`}
           >
             {charactersLeft}
           </Caption>
         </View>
       </View>
 
-      <PressableScale
-        disabled={disabled}
+      <Button
+        label="Find Dua"
+        size="lg"
+        icon="arrow-forward"
+        iconPosition="trailing"
         onPress={handleSubmit}
-        accessibilityRole="button"
+        disabled={disabled}
+        loading={loading}
+        loadingLabel="Finding..."
         accessibilityLabel={loading ? "Finding dua" : "Find dua"}
-        style={[styles.submitButton, disabled ? styles.submitButtonDisabled : undefined]}
-      >
-        {loading ? (
-          <>
-            <ActivityIndicator color={withOpacity(colors.white, 0.5)} size="small" />
-            <Text style={[styles.submitText, styles.submitTextDisabled, styles.submitTextLoading]}>
-              Finding...
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={[styles.submitText, disabled ? styles.submitTextDisabled : undefined]}>
-              Find Dua
-            </Text>
-            <Ionicons
-              name="arrow-forward"
-              size={16}
-              color={disabled ? withOpacity(colors.white, 0.35) : colors.onAccent}
-            />
-          </>
-        )}
-      </PressableScale>
+        style={styles.submitButton}
+      />
     </GlassSurface>
   );
 }
@@ -171,7 +150,9 @@ const createStyles = (theme: AppTheme) => {
     },
     chip: {
       flex: 1,
+      minHeight: 36,
       alignItems: "center",
+      justifyContent: "center",
       backgroundColor: withOpacity(colors.white, 0.06),
       borderWidth: 1,
       borderColor: withOpacity(colors.white, 0.12),
@@ -179,6 +160,7 @@ const createStyles = (theme: AppTheme) => {
       paddingVertical: 8,
       paddingHorizontal: 11,
     },
+    chipText: { fontWeight: "600" },
     chipDisabled: {
       opacity: 0.5,
     },
@@ -222,38 +204,12 @@ const createStyles = (theme: AppTheme) => {
       textAlign: "right",
     },
     submitButton: {
-      backgroundColor: colors.accent,
-      borderRadius: 14,
-      paddingVertical: spacing.md,
-      alignItems: "center",
-      justifyContent: "center",
-      flexDirection: "row",
       marginTop: spacing.lg,
       shadowColor: withOpacity(colors.accent, 0.4),
       shadowOpacity: 0.3,
       shadowRadius: 12,
       shadowOffset: { width: 0, height: 6 },
       elevation: 4,
-    },
-    submitButtonDisabled: {
-      backgroundColor: withOpacity(colors.white, 0.07),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.1),
-      shadowOpacity: 0,
-      elevation: 0,
-    },
-    submitText: {
-      color: colors.onAccent,
-      fontSize: typography.bodyLg,
-      fontWeight: "700",
-      marginRight: 6,
-    },
-    submitTextLoading: {
-      marginLeft: spacing.sm,
-      marginRight: 0,
-    },
-    submitTextDisabled: {
-      color: withOpacity(colors.white, 0.35),
     },
   });
 };

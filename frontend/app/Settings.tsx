@@ -1,13 +1,11 @@
 import { useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import GlassSurface from "@/components/ui/GlassSurface";
+import IconButton from "@/components/ui/IconButton";
 import Screen from "@/components/ui/Screen";
 import { Caption, Footnote, LargeTitle } from "@/components/ui/Text";
-import PressableScale from "@/components/PressableScale";
 import NotificationSettings from "@/components/NotificationSettings";
 import { AccountSection } from "@/components/settings/AccountSection";
 import SettingsSection from "@/components/settings/SettingsSection";
@@ -121,21 +119,23 @@ export default function Settings() {
             </Caption>
             <LargeTitle>Settings</LargeTitle>
           </View>
-          <PressableScale
+          <IconButton
+            icon="close"
+            variant="glass"
+            iconSize={20}
             onPress={() => {
               haptics("selection");
               router.back();
             }}
-            accessibilityRole="button"
             accessibilityLabel="Close settings"
-          >
-            <GlassSurface tier="chrome" radius={22} style={styles.closeChip}>
-              <Ionicons name="close" size={20} color={withOpacity(colors.white, 0.85)} />
-            </GlassSurface>
-          </PressableScale>
+          />
         </View>
 
         {/* Account */}
+        {/* NEEDS NATIVE BUILD: this Alert (and every other native Alert/Switch)
+            renders dark even on the Light theme while app.config.js pins
+            ios.userInterfaceStyle to "dark". Flip it to "automatic" and drive
+            Appearance.setColorScheme from ThemeContext in the next binary. */}
         <AccountSection
           onSignIn={() => router.push("/SignIn")}
           onSignOut={() => { void signOut(); }}
@@ -204,11 +204,7 @@ export default function Settings() {
                   haptics("light");
                   void handleLocationToggle(val);
                 }}
-                trackColor={{
-                  false: colors.grayDark,
-                  true: theme.name === "light" ? "#DABA69" : colors.accent,
-                }}
-                thumbColor={useLocation ? "#FFFFFF" : colors.grayMuted}
+                trackColor={{ false: colors.grayDark, true: colors.accent }}
               />
             }
           />
@@ -244,7 +240,7 @@ export default function Settings() {
           />
         </SettingsSection>
 
-        <Footnote color={withOpacity(colors.white, 0.4)} style={styles.version}>
+        <Footnote color={colors.textTertiary} style={styles.version}>
           Sirat {getAppVersion()}
         </Footnote>
       </ScrollView>
@@ -294,12 +290,6 @@ const createStyles = (theme: AppTheme) => {
     },
     headerText: { flex: 1, paddingRight: spacing.md },
     eyebrow: { letterSpacing: 1.4, marginBottom: spacing.xs },
-    closeChip: {
-      width: 40,
-      height: 40,
-      alignItems: "center",
-      justifyContent: "center",
-    },
     applyText: { fontWeight: "700" },
     version: { textAlign: "center", marginTop: spacing.xl },
   });

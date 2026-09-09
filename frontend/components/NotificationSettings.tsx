@@ -1,19 +1,13 @@
 // frontend/components/NotificationSettings.tsx
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Animated,
-  Linking,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Animated, Linking, Pressable, View } from "react-native";
 
 import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption } from "@/components/ui/Text";
+import { Caption, Footnote, Headline, Subhead } from "@/components/ui/Text";
 import { useAdhanPreview } from "../hooks/useAdhanPreview";
 import { useNotificationPanelAnimation } from "../hooks/useNotificationPanelAnimation";
 import { useNotificationPreferences } from "../hooks/useNotificationPreferences";
@@ -41,6 +35,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
   const { theme } = useTheme();
   const themeColors = theme.colors;
   const styles = useMemo(() => getNotificationStyles(theme), [theme]);
+  const reduceMotion = useReducedMotion();
 
   const textColor = themeColors.white;
   const accentColor = themeColors.accent;
@@ -50,8 +45,8 @@ export default function NotificationSettings({ notifStatus }: Props) {
   const rowOnBorderColor = withOpacity(themeColors.accent, 0.75);
   const rowOffBgColor = withOpacity(themeColors.white, 0.03);
   const rowOffBorderColor = withOpacity(themeColors.white, 0.12);
-  const rowOffTextColor = withOpacity(themeColors.white, 0.65);
-  const rowDisabledTextColor = withOpacity(themeColors.white, 0.4);
+  const rowOffTextColor = themeColors.textSecondary;
+  const rowDisabledTextColor = themeColors.textDisabled;
 
   const {
     loaded,
@@ -95,6 +90,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
     soundMode,
     contentHeight: revealHeight,
     offsetIndex,
+    reduceMotion,
   });
 
   const { segmentWidth, indicatorTranslateX, onLayout } =
@@ -149,6 +145,64 @@ export default function NotificationSettings({ notifStatus }: Props) {
   const selectedSoundOption =
     SOUND_OPTIONS.find((option) => option.id === soundMode) ?? SOUND_OPTIONS[0];
 
+  // One prayer toggle card; used for both alert and window-reminder grids.
+  const renderPrayerCard = (
+    label: string,
+    isOn: boolean,
+    anim: Animated.Value,
+    cellStyle: object,
+    accessibilityLabel: string,
+    onToggle: () => void,
+  ) => {
+    const labelColor = !enabled
+      ? rowDisabledTextColor
+      : isOn
+        ? textColor
+        : rowOffTextColor;
+    const indicatorColor = !enabled
+      ? themeColors.textDisabled
+      : isOn
+        ? accentColor
+        : rowOffTextColor;
+    const cardBg = !enabled ? pillOffBgColor : isOn ? rowOnBgColor : rowOffBgColor;
+    const cardBorder = !enabled ? dividerColor : isOn ? rowOnBorderColor : rowOffBorderColor;
+
+    return (
+      <Animated.View
+        key={label}
+        style={[cellStyle, { transform: [{ scale: anim }], opacity: enabled ? 1 : 0.55 }]}
+      >
+        <Pressable
+          onPress={() => {
+            if (!enabled) return;
+            onToggle();
+          }}
+          disabled={!enabled}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: isOn, disabled: !enabled }}
+          accessibilityLabel={accessibilityLabel}
+          style={({ pressed }) => [
+            styles.prayerCard,
+            { backgroundColor: cardBg, borderColor: cardBorder },
+            pressed && enabled ? styles.prayerCardPressed : undefined,
+          ]}
+        >
+          <Ionicons
+            name={isOn ? "notifications" : "notifications-off-outline"}
+            size={20}
+            color={indicatorColor}
+          />
+          <Footnote color={labelColor} style={styles.prayerCardLabel} numberOfLines={1}>
+            {label}
+          </Footnote>
+          <Caption color={indicatorColor} style={styles.prayerCardStatus}>
+            {isOn ? "On" : "Off"}
+          </Caption>
+        </Pressable>
+      </Animated.View>
+    );
+  };
+
   return (
     <View style={styles.section}>
       <Caption color={withOpacity(accentColor, 0.95)} style={styles.sectionLabel}>
@@ -163,14 +217,10 @@ export default function NotificationSettings({ notifStatus }: Props) {
             <Ionicons name="notifications-outline" size={17} color={accentColor} />
           </View>
           <View style={styles.masterText}>
-            <Text style={[styles.masterTitle, { color: textColor }]}>
-              Notifications
-            </Text>
-            <Text
-              style={[styles.masterSubtitle, { color: withOpacity(textColor, 0.55) }]}
-            >
+            <Headline color={textColor}>Notifications</Headline>
+            <Caption color={themeColors.textTertiary} style={styles.masterSubtitle}>
               Managed in System Settings.
-            </Text>
+            </Caption>
           </View>
           {!loaded ? (
             <ActivityIndicator size="small" color={accentColor} />
@@ -178,6 +228,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Open system settings to change notifications"
+              accessibilityValue={{ text: enabled ? "On" : "Off" }}
               onPress={async () => {
                 pulseHeader();
                 try {
@@ -191,16 +242,10 @@ export default function NotificationSettings({ notifStatus }: Props) {
                 { opacity: pressed ? 0.85 : 1 },
               ]}
             >
-              <Text
-                style={[styles.masterStatus, { color: withOpacity(textColor, 0.6) }]}
-              >
+              <Subhead color={themeColors.textSecondary} style={styles.masterStatus}>
                 {enabled ? "On" : "Off"}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={withOpacity(textColor, 0.4)}
-              />
+              </Subhead>
+              <Ionicons name="chevron-forward" size={18} color={themeColors.iconMuted} />
             </Pressable>
           )}
         </Animated.View>
@@ -209,6 +254,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
         <Animated.View
           pointerEvents={enabled ? "auto" : "none"}
           accessibilityElementsHidden={!enabled}
+          importantForAccessibility={enabled ? "auto" : "no-hide-descendants"}
           style={[
             styles.reveal,
             {
@@ -224,103 +270,40 @@ export default function NotificationSettings({ notifStatus }: Props) {
           <View onLayout={(e) => setRevealHeight(e.nativeEvent.layout.height)}>
           <View style={styles.revealDivider} />
           <View style={styles.prayerSectionHeader}>
-            <Text style={[styles.prayerSectionTitle, { color: textColor }]}>
+            <Subhead color={textColor} style={styles.prayerSectionTitle} accessibilityRole="header">
               Prayer Alerts
-            </Text>
-            <Text
-              style={[
-                styles.prayerSectionDescription,
-                { color: withOpacity(textColor, 0.72) },
-              ]}
-            >
+            </Subhead>
+            <Caption color={themeColors.textSecondary} style={styles.prayerSectionDescription}>
               Tap a prayer to turn its notification on or off.
-            </Text>
+            </Caption>
           </View>
           <View style={styles.prayerGrid}>
-            {PRAYERS.map((p) => {
-              const isOn = prefs[p];
-              const anim = bellAnimations[p];
-              const labelColor = !enabled
-                ? rowDisabledTextColor
-                : isOn
-                  ? textColor
-                  : rowOffTextColor;
-              const indicatorColor = !enabled
-                ? withOpacity(textColor, 0.35)
-                : isOn
-                  ? accentColor
-                  : rowOffTextColor;
-              const cardBg = !enabled
-                ? pillOffBgColor
-                : isOn
-                  ? rowOnBgColor
-                  : rowOffBgColor;
-              const cardBorder = !enabled
-                ? dividerColor
-                : isOn
-                  ? rowOnBorderColor
-                  : rowOffBorderColor;
-
-              return (
-                <Animated.View
-                  key={p}
-                  style={[
-                    styles.gridCell3,
-                    { transform: [{ scale: anim }], opacity: enabled ? 1 : 0.55 },
-                  ]}
-                >
-                  <Pressable
-                    onPress={() => {
-                      if (!enabled) return;
-                      togglePrayer(p);
-                    }}
-                    disabled={!enabled}
-                    accessibilityRole="switch"
-                    accessibilityState={{ checked: isOn, disabled: !enabled }}
-                    accessibilityLabel={`${p} alert`}
-                    style={({ pressed }) => [
-                      styles.prayerCard,
-                      { backgroundColor: cardBg, borderColor: cardBorder },
-                      pressed && enabled ? styles.prayerCardPressed : undefined,
-                    ]}
-                  >
-                    <Ionicons
-                      name={isOn ? "notifications" : "notifications-off-outline"}
-                      size={20}
-                      color={indicatorColor}
-                    />
-                    <Text style={[styles.prayerCardLabel, { color: labelColor }]}>
-                      {p}
-                    </Text>
-                    <Text
-                      style={[styles.prayerCardStatus, { color: indicatorColor }]}
-                    >
-                      {isOn ? "On" : "Off"}
-                    </Text>
-                  </Pressable>
-                </Animated.View>
-              );
-            })}
+            {PRAYERS.map((p) =>
+              renderPrayerCard(
+                p,
+                prefs[p],
+                bellAnimations[p],
+                styles.gridCell3,
+                `${p} alert`,
+                () => togglePrayer(p),
+              ),
+            )}
           </View>
           <View style={styles.revealDivider} />
           <View style={styles.prayerSectionHeader}>
-            <Text style={[styles.prayerSectionTitle, { color: textColor }]}>
+            <Subhead color={textColor} style={styles.prayerSectionTitle} accessibilityRole="header">
               Window reminders
-            </Text>
-            <Text
-              style={[
-                styles.prayerSectionDescription,
-                { color: withOpacity(textColor, 0.72) },
-              ]}
-            >
+            </Subhead>
+            <Caption color={themeColors.textSecondary} style={styles.prayerSectionDescription}>
               A heads up before a prayer&apos;s time runs out. Sent only if you have
               not logged it yet.
-            </Text>
+            </Caption>
           </View>
 
           <View
             style={[styles.soundSegmentRow, { opacity: enabled ? 1 : 0.55 }]}
             onLayout={offsetOnLayout}
+            accessibilityRole="radiogroup"
           >
             {offsetSegmentWidth != null && offsetIndicatorTranslateX != null && (
               <Animated.View
@@ -359,104 +342,39 @@ export default function NotificationSettings({ notifStatus }: Props) {
                     },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.soundSegmentLabel,
-                      { color: selected ? themeColors.onAccent : textColor },
-                    ]}
+                  <Footnote
+                    color={selected ? themeColors.onAccent : textColor}
+                    style={styles.soundSegmentLabel}
+                    numberOfLines={1}
                   >
                     {`${minutes} min`}
-                  </Text>
+                  </Footnote>
                 </Pressable>
               );
             })}
           </View>
 
           <View style={styles.prayerGrid}>
-            {WINDOW_PRAYERS.map((p) => {
-              const isOn = windowPrefs[p];
-              const labelColor = !enabled
-                ? rowDisabledTextColor
-                : isOn
-                  ? textColor
-                  : rowOffTextColor;
-              const indicatorColor = !enabled
-                ? withOpacity(textColor, 0.35)
-                : isOn
-                  ? accentColor
-                  : rowOffTextColor;
-              const cardBg = !enabled
-                ? pillOffBgColor
-                : isOn
-                  ? rowOnBgColor
-                  : rowOffBgColor;
-              const cardBorder = !enabled
-                ? dividerColor
-                : isOn
-                  ? rowOnBorderColor
-                  : rowOffBorderColor;
-
-              return (
-                <Animated.View
-                  key={p}
-                  style={[
-                    styles.gridCell4,
-                    {
-                      transform: [{ scale: windowPrayerAnimations[p] }],
-                      opacity: enabled ? 1 : 0.55,
-                    },
-                  ]}
-                >
-                  <Pressable
-                    onPress={() => {
-                      if (!enabled) return;
-                      toggleWindowPrayer(p);
-                    }}
-                    disabled={!enabled}
-                    accessibilityRole="switch"
-                    accessibilityState={{ checked: isOn, disabled: !enabled }}
-                    accessibilityLabel={`${p} window reminder`}
-                    style={({ pressed }) => [
-                      styles.prayerCard,
-                      { backgroundColor: cardBg, borderColor: cardBorder },
-                      pressed && enabled ? styles.prayerCardPressed : undefined,
-                    ]}
-                  >
-                    <Ionicons
-                      name={isOn ? "notifications" : "notifications-off-outline"}
-                      size={20}
-                      color={indicatorColor}
-                    />
-                    <Text style={[styles.prayerCardLabel, { color: labelColor }]}>
-                      {p}
-                    </Text>
-                    <Text
-                      style={[styles.prayerCardStatus, { color: indicatorColor }]}
-                    >
-                      {isOn ? "On" : "Off"}
-                    </Text>
-                  </Pressable>
-                </Animated.View>
-              );
-            })}
+            {WINDOW_PRAYERS.map((p) =>
+              renderPrayerCard(
+                p,
+                windowPrefs[p],
+                windowPrayerAnimations[p],
+                styles.gridCell4,
+                `${p} window reminder`,
+                () => toggleWindowPrayer(p),
+              ),
+            )}
           </View>
           <View style={[styles.soundCard, { opacity: enabled ? 1 : 0.55 }]}>
-            <Text
-              style={[styles.soundSectionTitle, { color: textColor }]}
-              accessibilityRole="header"
-            >
+            <Headline color={textColor} accessibilityRole="header">
               Adhan sound
-            </Text>
-            <Text
-              style={[
-                styles.soundSectionSubtitle,
-                { color: withOpacity(textColor, 0.75) },
-              ]}
-            >
+            </Headline>
+            <Caption color={themeColors.textSecondary} style={styles.soundSectionSubtitle}>
               Choose the alert sound for prayer reminders.
-            </Text>
+            </Caption>
 
-            <View style={styles.soundSegmentRow} onLayout={onLayout}>
+            <View style={styles.soundSegmentRow} onLayout={onLayout} accessibilityRole="radiogroup">
               {segmentWidth != null && indicatorTranslateX != null && (
                 <Animated.View
                   pointerEvents="none"
@@ -492,14 +410,13 @@ export default function NotificationSettings({ notifStatus }: Props) {
                       },
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.soundSegmentLabel,
-                        { color: selected ? themeColors.onAccent : textColor },
-                      ]}
+                    <Footnote
+                      color={selected ? themeColors.onAccent : textColor}
+                      style={styles.soundSegmentLabel}
+                      numberOfLines={1}
                     >
                       {option.label}
-                    </Text>
+                    </Footnote>
                   </Pressable>
                 );
               })}
@@ -514,14 +431,9 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.soundDescriptionText,
-                    { color: withOpacity(textColor, 0.85) },
-                  ]}
-                >
+                <Caption color={themeColors.textSecondary} style={styles.soundDescriptionText}>
                   {selectedSoundOption.description}
-                </Text>
+                </Caption>
                 {selectedSoundOption.id === "adhan" && (
                   <Pressable
                     disabled={!enabled}
@@ -530,6 +442,7 @@ export default function NotificationSettings({ notifStatus }: Props) {
                     }
                     accessibilityRole="button"
                     accessibilityLabel={`Preview ${selectedSoundOption.label}`}
+                    accessibilityState={{ disabled: !enabled }}
                     style={({ pressed }) => [
                       styles.soundPreviewButton,
                       {
@@ -546,9 +459,9 @@ export default function NotificationSettings({ notifStatus }: Props) {
                       size={16}
                       color={accentColor}
                     />
-                    <Text style={[styles.soundPreviewText, { color: accentColor }]}>
+                    <Footnote color={accentColor} style={styles.soundPreviewText}>
                       {previewing === "adhan" ? "Stop preview" : "Play preview"}
-                    </Text>
+                    </Footnote>
                   </Pressable>
                 )}
               </View>

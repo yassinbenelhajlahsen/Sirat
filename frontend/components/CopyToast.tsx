@@ -7,7 +7,9 @@ import { useTheme } from "@/context/ThemeContext";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Footnote } from "@/components/ui/Text";
 
-const AUTO_DISMISS_MS = 1500;
+// Long enough to read at a glance without blocking anything (the toast is
+// non-interactive), short enough not to linger.
+const AUTO_DISMISS_MS = 2500;
 const FADE_DURATION_MS = 200;
 
 type CopyToastProps = {

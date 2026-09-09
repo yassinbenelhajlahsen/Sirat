@@ -1,7 +1,9 @@
+import Button from "@/components/ui/Button";
+import { Body, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import useModalTransition from "@/hooks/useModalTransition";
-import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useMemo } from "react";
 
 type UpdateModalProps = {
@@ -35,25 +37,22 @@ export default function UpdateModal({
       statusBarTranslucent
     >
       <Animated.View style={[styles.overlay, overlayAnimatedStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onLater} />
-        <Animated.View style={[styles.card, cardAnimatedStyle]}>
-          <Text style={styles.title}>Update Ready</Text>
-          <Text style={styles.description}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onLater} accessibilityLabel="Dismiss" />
+        <Animated.View style={[styles.card, cardAnimatedStyle]} accessibilityViewIsModal>
+          <Title3 accessibilityRole="header">Update Ready</Title3>
+          <Body color={theme.colors.textSecondary} style={styles.description}>
             A new version is available. Restart now to apply it.
-          </Text>
+          </Body>
           <View style={styles.buttonRow}>
-            <Pressable style={styles.laterButton} onPress={onLater}>
-              <Text style={styles.laterLabel}>Later</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.restartButton, isRestarting && styles.buttonDisabled]}
+            <Button label="Later" variant="tonal" onPress={onLater} style={styles.button} />
+            <Button
+              label="Restart"
               onPress={onRestart}
               disabled={isRestarting}
-            >
-              <Text style={styles.restartLabel}>
-                {isRestarting ? "Restarting..." : "Restart"}
-              </Text>
-            </Pressable>
+              loading={isRestarting}
+              loadingLabel="Restarting..."
+              style={styles.button}
+            />
           </View>
         </Animated.View>
       </Animated.View>
@@ -84,51 +83,14 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: 18,
       paddingVertical: 18,
     },
-    title: {
-      color: themeColors.white,
-      fontWeight: "700",
-      fontSize: 20,
-    },
     description: {
       marginTop: 10,
-      color: withOpacity(themeColors.white, 0.78),
-      fontWeight: "400",
-      fontSize: 15,
-      lineHeight: 21,
     },
     buttonRow: {
       flexDirection: "row",
       marginTop: 18,
       gap: 10,
     },
-    laterButton: {
-      flex: 1,
-      alignItems: "center",
-      borderRadius: 12,
-      paddingVertical: 12,
-      backgroundColor: isLightTheme
-        ? themeColors.primarySurfaceAlt
-        : withOpacity(themeColors.white, 0.08),
-    },
-    laterLabel: {
-      color: themeColors.white,
-      fontWeight: "600",
-      fontSize: 15,
-    },
-    restartButton: {
-      flex: 1,
-      alignItems: "center",
-      borderRadius: 12,
-      paddingVertical: 12,
-      backgroundColor: themeColors.accent,
-    },
-    restartLabel: {
-      color: themeColors.onAccent,
-      fontWeight: "600",
-      fontSize: 15,
-    },
-    buttonDisabled: {
-      opacity: 0.7,
-    },
+    button: { flex: 1 },
   });
 };

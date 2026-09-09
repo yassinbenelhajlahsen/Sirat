@@ -17,6 +17,8 @@ type Params = {
   soundMode: SoundMode;
   contentHeight?: number;
   offsetIndex?: number;
+  /** When true every transition snaps instead of animating (OS Reduce Motion). */
+  reduceMotion?: boolean;
 };
 
 export function useNotificationPanelAnimation({
@@ -25,6 +27,7 @@ export function useNotificationPanelAnimation({
   soundMode,
   contentHeight,
   offsetIndex,
+  reduceMotion = false,
 }: Params) {
   const headerScale = useRef(new Animated.Value(1)).current;
   const contentAnim = useRef(new Animated.Value(0)).current;
@@ -56,7 +59,7 @@ export function useNotificationPanelAnimation({
   useEffect(() => {
     if (!loaded) return;
 
-    if (!initialAnimSet.current) {
+    if (!initialAnimSet.current || reduceMotion) {
       contentAnim.setValue(enabled ? 1 : 0);
       initialAnimSet.current = true;
       return;
@@ -68,27 +71,38 @@ export function useNotificationPanelAnimation({
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [contentAnim, enabled, loaded]);
+  }, [contentAnim, enabled, loaded, reduceMotion]);
 
   useEffect(() => {
+    const toValue = soundMode === "adhan" ? 1 : 0;
+    if (reduceMotion) {
+      soundIndicator.setValue(toValue);
+      return;
+    }
     Animated.timing(soundIndicator, {
-      toValue: soundMode === "adhan" ? 1 : 0,
+      toValue,
       duration: 200,
       easing: Easing.out(Easing.poly(4)),
       useNativeDriver: true,
     }).start();
-  }, [soundIndicator, soundMode]);
+  }, [reduceMotion, soundIndicator, soundMode]);
 
   useEffect(() => {
+    const toValue = offsetIndex ?? 0;
+    if (reduceMotion) {
+      offsetIndicator.setValue(toValue);
+      return;
+    }
     Animated.timing(offsetIndicator, {
-      toValue: offsetIndex ?? 0,
+      toValue,
       duration: 200,
       easing: Easing.out(Easing.poly(4)),
       useNativeDriver: true,
     }).start();
-  }, [offsetIndicator, offsetIndex]);
+  }, [offsetIndicator, offsetIndex, reduceMotion]);
 
   const pulseHeader = useCallback(() => {
+    if (reduceMotion) return;
     Animated.sequence([
       Animated.timing(headerScale, {
         toValue: 0.96,
@@ -101,10 +115,11 @@ export function useNotificationPanelAnimation({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [headerScale]);
+  }, [headerScale, reduceMotion]);
 
   const pulsePrayer = useCallback(
     (key: PrayerKey) => {
+      if (reduceMotion) return;
       const anim = bellAnimations[key];
       anim.setValue(1);
       Animated.sequence([
@@ -122,11 +137,12 @@ export function useNotificationPanelAnimation({
         }),
       ]).start();
     },
-    [bellAnimations],
+    [bellAnimations, reduceMotion],
   );
 
   const pulseWindowPrayer = useCallback(
     (key: WindowPrayerKey) => {
+      if (reduceMotion) return;
       const anim = windowPrayerAnimations[key];
       anim.setValue(1);
       Animated.sequence([
@@ -144,7 +160,7 @@ export function useNotificationPanelAnimation({
         }),
       ]).start();
     },
-    [windowPrayerAnimations],
+    [reduceMotion, windowPrayerAnimations],
   );
 
   const contentOpacity = contentAnim;

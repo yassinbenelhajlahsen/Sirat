@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
 import SettingsRow from "@/components/settings/SettingsRow";
+import { Caption } from "@/components/ui/Text";
 import SettingsSection from "@/components/settings/SettingsSection";
 
 type Props = {
@@ -63,8 +64,8 @@ export function AccountSection({ onSignIn, onSignOut, onDeleteAccount }: Props) 
         onPress={onDeleteAccount}
         accessibilityLabel="Delete account"
       />
-      <View style={styles.syncRow}>
-        <Text style={styles.syncLabel}>{syncLabel}</Text>
+      <View style={styles.syncRow} accessibilityLiveRegion="polite">
+        <Caption color={theme.colors.textTertiary}>{syncLabel}</Caption>
       </View>
     </SettingsSection>
   );
@@ -77,9 +78,5 @@ const createStyles = (theme: AppTheme) =>
       paddingVertical: theme.spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: withOpacity(theme.colors.white, 0.08),
-    },
-    syncLabel: {
-      fontSize: 11,
-      color: withOpacity(theme.colors.white, 0.4),
     },
   });

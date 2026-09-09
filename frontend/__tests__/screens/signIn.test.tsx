@@ -31,6 +31,21 @@ jest.mock("react-native-safe-area-context", () => ({
 jest.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: jest.fn(),
 }));
+// The native Sign in with Apple control renders no text of its own; stand in
+// with a pressable that exposes the same label and wording.
+jest.mock("expo-apple-authentication", () => {
+  const React = require("react");
+  const { Pressable, Text } = require("react-native");
+  return {
+    AppleAuthenticationButton: ({ onPress, accessibilityLabel }: any) => (
+      <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel} onPress={onPress}>
+        <Text>Continue with Apple</Text>
+      </Pressable>
+    ),
+    AppleAuthenticationButtonType: { SIGN_IN: 0, CONTINUE: 1 },
+    AppleAuthenticationButtonStyle: { WHITE: 0, WHITE_OUTLINE: 1, BLACK: 2 },
+  };
+});
 jest.mock("expo-auth-session", () => ({
   makeRedirectUri: jest.fn(() => "sirat://sso-callback"),
 }));
