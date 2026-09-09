@@ -8,7 +8,14 @@ import GlassSurface from "@/components/ui/GlassSurface";
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
-import { expandTabBar, tabBarCollapse } from "@/utils/tabBarChrome";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import {
+  TAB_BAR_HEIGHT,
+  expandTabBar,
+  setTabBarReduceMotion,
+  tabBarBottomOffset,
+  tabBarCollapse,
+} from "@/utils/tabBarChrome";
 
 const ICONS: Record<string, { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap; label: string }> = {
   index: { on: "home", off: "home-outline", label: "Home" },
@@ -31,6 +38,10 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const haptic = useHaptics();
   const { width } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
+  useEffect(() => {
+    setTabBarReduceMotion(reduceMotion);
+  }, [reduceMotion]);
 
   const tabs = state.routes.filter((r) => ICONS[r.name]);
   const count = tabs.length || 1;
@@ -43,13 +54,17 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
 
   const translateX = useRef(new Animated.Value(activeIdx * slot)).current;
   useEffect(() => {
+    if (reduceMotion) {
+      translateX.setValue(activeIdx * slot);
+      return;
+    }
     Animated.spring(translateX, {
       toValue: activeIdx * slot,
       useNativeDriver: true, // translateX is native-thread safe
       speed: 18,
       bounciness: 2, // near-critically damped: no visible overshoot at the end slots
     }).start();
-  }, [activeIdx, slot, translateX]);
+  }, [activeIdx, reduceMotion, slot, translateX]);
 
   // Reset to full size whenever the active tab changes, so each tab opens expanded.
   useEffect(() => {
@@ -60,7 +75,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const collapseShiftY = tabBarCollapse.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
 
   return (
-    <View style={[styles.wrap, { bottom: Math.max(insets.bottom, 14) + 6 }]} pointerEvents="box-none">
+    <View style={[styles.wrap, { bottom: tabBarBottomOffset(insets.bottom) }]} pointerEvents="box-none">
       <Animated.View style={{ transform: [{ scale: collapseScale }, { translateY: collapseShiftY }] }}>
         <GlassSurface
           tier="chrome"
@@ -121,7 +136,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   wrap: { position: "absolute", left: H_MARGIN, right: H_MARGIN },
   pill: {
-    height: 64,
+    height: TAB_BAR_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
