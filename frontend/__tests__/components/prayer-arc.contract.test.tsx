@@ -29,6 +29,10 @@ jest.mock("@/context/ThemeContext", () => {
 });
 
 import PrayerArc from "@/components/PrayerArc";
+import { arcPoint } from "@/utils/prayerArc";
+
+// Same construction as the component's ARC_PATH.
+const ARC_PATH_D = `M${arcPoint(0).x},${arcPoint(0).y} Q150,2 ${arcPoint(1).x},${arcPoint(1).y}`;
 
 const FULL = [
   { label: "Fajr", time: "5:00 AM" },
@@ -100,6 +104,29 @@ describe("PrayerArc contract", () => {
     expect(getByTestId("arc-thumb")).toBeTruthy();
     expect(UNSAFE_queryAllByProps({ name: "sunny" })).toHaveLength(0);
     expect(UNSAFE_queryAllByProps({ name: "moon" })).toHaveLength(0);
+  });
+
+  it("draws the full grey arc again after switching from a live day to a static one", () => {
+    const { rerender, UNSAFE_getAllByProps } = render(
+      <PrayerArc
+        loading={false}
+        prayerTimes={FULL}
+        nextPrayer={{ label: "Maghrib", time: "6:00 PM" }}
+        now={NOW}
+      />,
+    );
+    // The svg mock yields a composite and a host node per Path, so count "some".
+    const dashedBase = UNSAFE_getAllByProps({ strokeWidth: 2 }).filter(
+      (n) => typeof n.props.strokeDasharray === "string" && n.props.strokeDasharray.startsWith("0 "),
+    );
+    expect(dashedBase.length).toBeGreaterThan(0);
+
+    rerender(
+      <PrayerArc loading={false} prayerTimes={FULL} nextPrayer={null} live={false} now={NOW} />,
+    );
+    const base = UNSAFE_getAllByProps({ strokeWidth: 2 }).filter((n) => n.props.d === ARC_PATH_D);
+    expect(base.length).toBeGreaterThan(0);
+    base.forEach((n) => expect(n.props.strokeDasharray).toBeUndefined());
   });
 
   it("shows no thumb for a static (non-today) timeline or while loading", () => {

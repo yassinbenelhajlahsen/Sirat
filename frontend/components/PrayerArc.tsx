@@ -143,7 +143,12 @@ export default function PrayerArc({
             strokeWidth={1}
             strokeDasharray="3 4"
           />
+          {/* Keyed by mode: react-native-svg keeps a removed strokeDasharray on
+              the native view, so switching from a live day (dashed knockout)
+              to a static day (solid) would otherwise leave the passed segment
+              missing. Remounting guarantees a clean solid path. */}
           <Path
+            key={progressT != null ? "remaining" : "full"}
             d={ARC_PATH}
             fill="none"
             stroke={withOpacity(colors.white, 0.22)}
