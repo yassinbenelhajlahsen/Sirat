@@ -619,7 +619,6 @@ const buildHomePrayerState = (overrides: Record<string, unknown> = {}) => ({
 const buildDuaInteraction = (overrides: Record<string, unknown> = {}) => ({
   selectedDua: null,
   duaLoading: false,
-  duaSwapAnim: new Animated.Value(1),
   submitDua: mockSubmitDua,
   closeDua: mockCloseDua,
   ...overrides,

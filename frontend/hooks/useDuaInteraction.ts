@@ -1,69 +1,57 @@
 import { getAnotherDua, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
-import { useCallback, useRef, useState } from "react";
-import { Alert, Animated, Easing } from "react-native";
+import { useCallback, useState } from "react";
+import { Alert } from "react-native";
 
+/**
+ * The dua card swap is deliberately un-animated.
+ *
+ * Both cards are `GlassSurface`, and iOS Liquid Glass samples what is behind it
+ * through its own layer — it cannot do that under an animated ancestor. A
+ * GlassView mounted beneath either group opacity *or* a non-identity transform
+ * renders as nothing, and it does not recover once the animation settles. So a
+ * crossfade here costs the arriving card its container permanently, which is
+ * the bug this replaced: close a dua result and the "Ask for a dua" card came
+ * back with its content sitting straight on the gradient.
+ *
+ * If the motion is wanted back, it has to move *inside* each card — the glass
+ * container static, its contents fading — never onto the wrapper.
+ */
 export function useDuaInteraction() {
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
   const [duaLoading, setDuaLoading] = useState(false);
-  const duaSwapAnim = useRef(new Animated.Value(1)).current;
 
-  const runDuaTransition = useCallback(
-    (nextDua: Dua | null) => {
-      Animated.timing(duaSwapAnim, {
-        toValue: 0,
-        duration: 170,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }).start(() => {
-        setSelectedDua(nextDua);
-        duaSwapAnim.setValue(0);
-        Animated.spring(duaSwapAnim, {
-          toValue: 1,
-          speed: 15,
-          bounciness: 10,
-          useNativeDriver: true,
-        }).start();
-      });
-    },
-    [duaSwapAnim],
-  );
-
-  const submitDua = useCallback(
-    async (userRequest: string) => {
-      try {
-        setDuaLoading(true);
-        const dua = await requestDua(userRequest);
-        runDuaTransition(dua);
-        await saveDuaToHistory(dua);
-      } catch (err: unknown) {
-        const message =
-          err && typeof err === "object" && "message" in err
-            ? String((err as { message?: unknown }).message ?? "")
-            : "";
-        Alert.alert("Error", message || "Failed to find a dua");
-      } finally {
-        setDuaLoading(false);
-      }
-    },
-    [runDuaTransition],
-  );
+  const submitDua = useCallback(async (userRequest: string) => {
+    try {
+      setDuaLoading(true);
+      const dua = await requestDua(userRequest);
+      setSelectedDua(dua);
+      await saveDuaToHistory(dua);
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message?: unknown }).message ?? "")
+          : "";
+      Alert.alert("Error", message || "Failed to find a dua");
+    } finally {
+      setDuaLoading(false);
+    }
+  }, []);
 
   const closeDua = useCallback(() => {
-    runDuaTransition(null);
-  }, [runDuaTransition]);
+    setSelectedDua(null);
+  }, []);
 
   const anotherDua = useCallback(() => {
     if (!selectedDua) return;
     const next = getAnotherDua(selectedDua.category, selectedDua.id);
     if (next) {
-      runDuaTransition(next);
+      setSelectedDua(next);
     }
-  }, [selectedDua, runDuaTransition]);
+  }, [selectedDua]);
 
   return {
     selectedDua,
     duaLoading,
-    duaSwapAnim,
     submitDua,
     closeDua,
     anotherDua,

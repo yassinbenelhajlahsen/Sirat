@@ -3,7 +3,7 @@ import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuthState } from "@/hooks/useAuthState";
 import SignInCard from "@/components/home/SignInCard";
 import { shouldShowHomeCard, markHomeCardShown, dismissHomeCard } from "@/services/auth/authPrompts";
@@ -44,7 +44,7 @@ export default function Home() {
     prayerTimes, nextPrayer, nextDayFajr, timeLeft,
     loading, refreshing, banner, locationLabel, coords, refresh,
   } = useHomePrayerTimes();
-  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
+  const { selectedDua, duaLoading, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
 
   const handleSubmitDua = useCallback(async (userRequest: string) => {
@@ -89,14 +89,6 @@ export default function Home() {
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
   const tomorrowParam = encodeURIComponent(tomorrow.toISOString());
-
-  const duaCardAnimatedStyle = {
-    opacity: duaSwapAnim,
-    transform: [
-      { translateY: duaSwapAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) },
-      { scale: duaSwapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
-    ],
-  };
 
   return (
     <Screen safeArea={false}>
@@ -219,9 +211,7 @@ export default function Home() {
         {/* Dua section (logic unchanged) */}
         <View style={styles.section} onLayout={onDuaSectionLayout}>
           <SectionHeader title="Dua" />
-          <Animated.View style={duaCardAnimatedStyle}>
-            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
-          </Animated.View>
+          {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
         </View>
       </ScrollView>
       <PrayerLogSheet

@@ -110,4 +110,38 @@ describe("hooks/useDuaInteraction", () => {
       expect(result.current.selectedDua).toBeNull();
     });
   });
+
+  // Both dua cards are GlassSurface, and iOS Liquid Glass renders as nothing
+  // under an animated ancestor (group opacity or a transform) without ever
+  // recovering. The swap must therefore stay synchronous and undriven.
+  it("swaps and closes without driving any animation", async () => {
+    const dua: Dua = {
+      id: 42,
+      category: "General",
+      arabic: "arabic",
+      english: "english",
+      transliteration: "translit",
+      reference: "ref",
+      source: "source",
+    };
+
+    mockRequestDua.mockResolvedValue(dua);
+    mockSaveDuaToHistory.mockResolvedValue();
+
+    const { result } = renderHook(() => useDuaInteraction());
+
+    await act(async () => {
+      await result.current.submitDua("need dua");
+    });
+    expect(result.current.selectedDua).toEqual(dua);
+
+    act(() => {
+      result.current.closeDua();
+    });
+
+    // Synchronous: no transition to wait on.
+    expect(result.current.selectedDua).toBeNull();
+    expect(Animated.timing).not.toHaveBeenCalled();
+    expect(Animated.spring).not.toHaveBeenCalled();
+  });
 });

@@ -84,6 +84,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `end to end like user flows testing`
   - `flows/home-settings-refresh.flow.test.tsx`
   - `flows/dua-request-history.flow.test.tsx`
+  - `hooks/useDuaInteraction.test.ts` — includes the guard that the dua swap drives no animation (Liquid Glass renders as nothing under an animated ancestor)
   - `flows/quran-display-mode.flow.test.tsx`
   - `flows/calendar-missed-fast.flow.test.tsx`
   - `flows/nearby-mosques-refresh.flow.test.tsx`
