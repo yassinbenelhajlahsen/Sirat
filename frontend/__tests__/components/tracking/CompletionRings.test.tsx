@@ -23,4 +23,15 @@ describe("CompletionRings", () => {
     expect(getByText("86")).toBeTruthy();
     expect(getByText("100")).toBeTruthy();
   });
+
+  it("groups each ring into one spoken label", () => {
+    const { getByTestId } = render(
+      wrap(
+        <CompletionRings
+          byPrayer={{ fajr: 0.86, dhuhr: 0.97, asr: 0.65, maghrib: 1, isha: 0.5 }}
+        />,
+      ),
+    );
+    expect(getByTestId("ring-asr").props.accessibilityLabel).toBe("Asr: 65% logged this month");
+  });
 });

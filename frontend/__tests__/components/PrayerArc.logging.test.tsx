@@ -56,6 +56,24 @@ describe("PrayerArc logging mode", () => {
     expect(onPress).toHaveBeenCalledWith("fajr", "Fajr");
   });
 
+  it("exposes the logged status to assistive tech without changing the label", () => {
+    const { getByLabelText } = render(
+      wrap(
+        <PrayerArc
+          loading={false}
+          prayerTimes={TIMES}
+          nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          live
+          logging
+          statuses={{ fajr: "prayed" }}
+          onPressPrayer={jest.fn()}
+        />,
+      ),
+    );
+    expect(getByLabelText("Log Fajr").props.accessibilityValue).toEqual({ text: "Marked prayed" });
+    expect(getByLabelText("Log Dhuhr").props.accessibilityValue).toEqual({ text: "Not logged" });
+  });
+
   it("does not crash and renders nothing loggable for Sunrise", () => {
     const { queryByLabelText } = render(
       wrap(

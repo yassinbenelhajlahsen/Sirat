@@ -3,9 +3,7 @@ import { Share } from "react-native";
 
 import DuaCard from "@/components/DuaCard";
 import DuaResultCard from "@/components/DuaResultCard";
-import PrayerTimesList from "@/components/PrayerTimesList";
 import type { Dua } from "@/services/duaService";
-import type { PrayerTime } from "@/services/prayerTimes";
 
 jest.mock("@/context/ThemeContext", () => {
   const { defaultTheme } = jest.requireActual("@/constants/theme");
@@ -18,9 +16,6 @@ jest.mock("@expo/vector-icons", () => {
   const { Text } = require("react-native");
   return {
     Ionicons: ({ name }: { name: string }) => <Text>{`icon:${name}`}</Text>,
-    MaterialCommunityIcons: ({ name }: { name: string }) => (
-      <Text>{`mc-icon:${name}`}</Text>
-    ),
   };
 });
 
@@ -105,22 +100,4 @@ describe("shared component UI contracts", () => {
       );
     });
   });
-
-  describe("PrayerTimesList", () => {
-    it("renders prayer rows and uses fallback icon for unknown labels", () => {
-      const prayerTimes: PrayerTime[] = [
-        { label: "Fajr", time: "5:11 AM" },
-        { label: "Qiyam", time: "2:15 AM" },
-      ];
-      const { getByText } = render(
-        <PrayerTimesList loading={false} prayerTimes={prayerTimes} />
-      );
-
-      expect(getByText("Fajr")).toBeTruthy();
-      expect(getByText("5:11 AM")).toBeTruthy();
-      expect(getByText("mc-icon:moon-waning-crescent")).toBeTruthy();
-      expect(getByText("mc-icon:time-outline")).toBeTruthy();
-    });
-  });
-
 });

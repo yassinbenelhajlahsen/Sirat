@@ -34,7 +34,7 @@ export default function CompletionRings({
 
   return (
     <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <Caption color={withOpacity(colors.white, 0.6)} style={styles.heading}>
+      <Caption color={colors.textTertiary} style={styles.heading}>
         THIS MONTH
       </Caption>
       <View style={styles.row}>
@@ -43,7 +43,13 @@ export default function CompletionRings({
           const pct = Math.round(value * 100);
           const offset = CIRC * (1 - Math.max(0, Math.min(1, value)));
           return (
-            <View key={name} style={styles.ring} testID={`ring-${name}`}>
+            <View
+              key={name}
+              style={styles.ring}
+              testID={`ring-${name}`}
+              accessible
+              accessibilityLabel={`${label}: ${pct}% logged this month`}
+            >
               <Svg width={SIZE} height={SIZE}>
                 <Circle
                   cx={SIZE / 2}
@@ -69,7 +75,7 @@ export default function CompletionRings({
               <View style={styles.pctWrap} pointerEvents="none">
                 <DisplayNumber value={pct} size={14} color={colors.white} />
               </View>
-              <Caption color={withOpacity(colors.white, 0.6)} style={styles.label}>
+              <Caption color={colors.textTertiary} style={styles.label}>
                 {label}
               </Caption>
             </View>

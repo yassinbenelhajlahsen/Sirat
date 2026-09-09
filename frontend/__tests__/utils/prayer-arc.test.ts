@@ -1,7 +1,9 @@
 import {
   ARC_PRAYER_ORDER,
+  THUMB_ABSORB_UNITS,
   arcLength,
   arcPoint,
+  isMarkerAbsorbed,
   parsePrayerTime,
   prayerSlotT,
   prayerStates,
@@ -93,6 +95,31 @@ describe("parsePrayerTime", () => {
   it("returns null for junk", () => {
     expect(parsePrayerTime("", base)).toBeNull();
     expect(parsePrayerTime("nope", base)).toBeNull();
+  });
+});
+
+describe("isMarkerAbsorbed", () => {
+  it("hides a slot dot the thumb is sitting on", () => {
+    expect(isMarkerAbsorbed(0.4, 0.4)).toBe(true);
+    // Just past Dhuhr: the thumb still covers the dot.
+    expect(isMarkerAbsorbed(0.4, 0.4 + 0.01)).toBe(true);
+  });
+
+  it("keeps dots the thumb has clearly moved away from", () => {
+    // 0.1 in t is ~25 viewBox units along x, well past the absorb radius.
+    expect(isMarkerAbsorbed(0.4, 0.5)).toBe(false);
+    expect(isMarkerAbsorbed(0.4, 0.3)).toBe(false);
+  });
+
+  it("never absorbs without a thumb", () => {
+    expect(isMarkerAbsorbed(0.4, null)).toBe(false);
+  });
+
+  it("uses a radius that clears both marker sizes", () => {
+    // Passed dot 7pt + thumb 10pt: half-widths sum to 8.5pt, so 8 units keeps
+    // them from ever overlapping by more than a hairline.
+    expect(THUMB_ABSORB_UNITS).toBeGreaterThanOrEqual(8);
+    expect(THUMB_ABSORB_UNITS).toBeLessThan(25);
   });
 });
 

@@ -94,6 +94,17 @@ export function parsePrayerTime(timeStr: string, baseDate: Date): Date | null {
   return d;
 }
 
+// Slot dots this close (viewBox units) to the progress thumb are hidden so the
+// thumb visibly "absorbs" a just-passed prayer instead of stacking on its dot.
+export const THUMB_ABSORB_UNITS = 8;
+
+export function isMarkerAbsorbed(slotT: number, progressT: number | null): boolean {
+  if (progressT == null) return false;
+  const a = arcPoint(slotT);
+  const b = arcPoint(progressT);
+  return Math.hypot(a.x - b.x, a.y - b.y) < THUMB_ABSORB_UNITS;
+}
+
 export type SunMarker = { t: number; isNight: boolean };
 
 // Where the sun/moon sits on the arc for `now`. Interpolates between the

@@ -88,6 +88,30 @@ describe("PrayerArc contract", () => {
     expect(getByText("6:00")).toBeTruthy();
   });
 
+  it("marks live progress with a thumb instead of a sun/moon glyph", () => {
+    const { getByTestId, UNSAFE_queryAllByProps } = render(
+      <PrayerArc
+        loading={false}
+        prayerTimes={FULL}
+        nextPrayer={{ label: "Maghrib", time: "6:00 PM" }}
+        now={NOW}
+      />,
+    );
+    expect(getByTestId("arc-thumb")).toBeTruthy();
+    expect(UNSAFE_queryAllByProps({ name: "sunny" })).toHaveLength(0);
+    expect(UNSAFE_queryAllByProps({ name: "moon" })).toHaveLength(0);
+  });
+
+  it("shows no thumb for a static (non-today) timeline or while loading", () => {
+    const stat = render(
+      <PrayerArc loading={false} prayerTimes={FULL} nextPrayer={null} live={false} now={NOW} />,
+    );
+    expect(stat.queryByTestId("arc-thumb")).toBeNull();
+
+    const loading = render(<PrayerArc loading prayerTimes={FULL} nextPrayer={null} now={NOW} />);
+    expect(loading.queryByTestId("arc-thumb")).toBeNull();
+  });
+
   it("renders a loading state with placeholder times and no crash", () => {
     const { queryByText, getByText } = render(
       <PrayerArc loading prayerTimes={[]} nextPrayer={null} now={NOW} />,

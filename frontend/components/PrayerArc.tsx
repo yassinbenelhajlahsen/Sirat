@@ -1,39 +1,48 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  DimensionValue,
   Easing,
+  LayoutChangeEvent,
   Pressable,
   StyleSheet,
   View,
 } from "react-native";
 import Svg, { Line, Path } from "react-native-svg";
 
+import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption } from "@/components/ui/Text";
-import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import { BREATH_HALF_CYCLE } from "@/constants/motion";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
 import {
   ARC_VIEWBOX,
   arcLength,
   arcPoint,
+  isMarkerAbsorbed,
   prayerStates,
   sunMarker,
-  type ArcPrayer,
+  type PrayerState,
 } from "@/utils/prayerArc";
 import { prayerNameForArcLabel } from "@/utils/prayerLabel";
 
-const ARC_H = ARC_VIEWBOX.height;
 const ARC_PATH = `M${arcPoint(0).x},${arcPoint(0).y} Q150,2 ${arcPoint(1).x},${arcPoint(1).y}`;
 const TOTAL_LEN = arcLength(1);
+// The progress thumb is the terminus of the gold stroke. The grey "remaining"
+// arc restarts this many viewBox units past it so no line runs through it.
+const THUMB_SIZE = 10;
+const THUMB_KNOCKOUT = 4;
+// Six columns share the card width, so their captions scale less than body text.
+const COLUMN_FONT_SCALE = 1.2;
 
-const leftPct = (x: number): DimensionValue =>
-  `${(x / ARC_VIEWBOX.width) * 100}%` as DimensionValue;
+const STATUS_VALUE: Record<PrayerStatus, string> = {
+  prayed: "Marked prayed",
+  late: "Marked late",
+  missed: "Marked missed",
+};
 
 type PrayerArcProps = {
   loading: boolean;
@@ -59,23 +68,39 @@ export default function PrayerArc({
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const reduceMotion = useReducedMotion();
 
   const prayers = useMemo(
     () => prayerStates(prayerTimes, live ? (nextPrayer?.label ?? null) : null),
     [prayerTimes, nextPrayer, live],
   );
-  const sun = useMemo(
+  const progress = useMemo(
     () => (loading || !live ? null : sunMarker(prayerTimes, now ?? new Date())),
     [loading, live, prayerTimes, now],
   );
-  const sunPoint = sun ? arcPoint(sun.t) : null;
-  const progressLen = sun ? arcLength(sun.t) : 0;
+  const progressT = progress?.t ?? null;
+  const thumbPoint = progressT != null ? arcPoint(progressT) : null;
+  const progressLen = progressT != null ? arcLength(progressT) : 0;
 
-  // Gentle breathing of the sun/moon and the "next" ring (scale only — matches
-  // the hero badge; never animate opacity of glass).
+  // Scale the dome uniformly from the measured width instead of stretching the
+  // SVG, so strokes stay round while the slots still line up with the columns.
+  const [wrapWidth, setWrapWidth] = useState(0);
+  const scale = wrapWidth > 0 ? wrapWidth / ARC_VIEWBOX.width : 1;
+  const arcHeight = ARC_VIEWBOX.height * scale;
+  const onArcLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0 && Math.abs(w - wrapWidth) > 0.5) setWrapWidth(w);
+  };
+  const place = (p: { x: number; y: number }) => ({ left: p.x * scale, top: p.y * scale });
+
+  // Gentle breathing shared by the thumb and the "next" ring (scale only; never
+  // animate glass opacity). Skipped under Reduce Motion.
   const breath = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (!live) return;
+    if (!live || reduceMotion) {
+      breath.setValue(0);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(breath, {
@@ -94,21 +119,20 @@ export default function PrayerArc({
     );
     loop.start();
     return () => loop.stop();
-  }, [breath, live]);
+  }, [breath, live, reduceMotion]);
   const breathScale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
 
   return (
     <GlassSurface tier="card" radius={theme.radii.cardLg} style={styles.card}>
-      <Caption color={withOpacity(colors.white, 0.5)} style={styles.label}>
+      <Caption color={colors.textTertiary} style={styles.label}>
         {live ? "TODAY'S PRAYERS" : "PRAYER TIMES"}
       </Caption>
 
-      <View style={styles.arcWrap}>
+      <View style={[styles.arcWrap, { height: arcHeight }]} onLayout={onArcLayout}>
         <Svg
           width="100%"
-          height={ARC_H}
-          viewBox={`0 0 ${ARC_VIEWBOX.width} ${ARC_H}`}
-          preserveAspectRatio="none"
+          height={arcHeight}
+          viewBox={`0 0 ${ARC_VIEWBOX.width} ${ARC_VIEWBOX.height}`}
         >
           <Line
             x1={arcPoint(0).x}
@@ -124,8 +148,11 @@ export default function PrayerArc({
             fill="none"
             stroke={withOpacity(colors.white, 0.22)}
             strokeWidth={2}
+            strokeDasharray={
+              progressT != null ? `0 ${progressLen + THUMB_KNOCKOUT} ${TOTAL_LEN}` : undefined
+            }
           />
-          {sun ? (
+          {progressT != null ? (
             <Path
               d={ARC_PATH}
               fill="none"
@@ -137,75 +164,78 @@ export default function PrayerArc({
           ) : null}
         </Svg>
 
-        {prayers.map((p) => (
-          <Marker
-            key={p.label}
-            prayer={live ? p : { ...p, state: "upcoming" }}
-            colors={colors}
-            slot={styles.markerSlot}
-            breathScale={breathScale}
-            dim={loading}
-          />
-        ))}
+        {prayers.map((p) => {
+          const state: PrayerState = live ? p.state : "upcoming";
+          if (state === "passed" && isMarkerAbsorbed(p.t, progressT)) return null;
+          return (
+            <Marker
+              key={p.label}
+              state={state}
+              position={place(p.point)}
+              colors={colors}
+              slot={styles.markerSlot}
+              breathScale={breathScale}
+              dim={loading}
+            />
+          );
+        })}
 
-        {sunPoint ? (
+        {thumbPoint ? (
           <Animated.View
-            style={[
-              styles.markerSlot,
-              { left: leftPct(sunPoint.x), top: sunPoint.y, transform: [{ scale: breathScale }] },
-            ]}
+            testID="arc-thumb"
+            style={[styles.markerSlot, place(thumbPoint), { transform: [{ scale: breathScale }] }]}
             pointerEvents="none"
           >
-            <Ionicons
-              name={sun?.isNight ? "moon" : "sunny"}
-              size={22}
-              color={colors.accent}
-              style={styles.sunGlyph}
-            />
+            <View style={styles.thumb} />
           </Animated.View>
         ) : null}
       </View>
 
       <View style={styles.row}>
         {prayers.map((p) => {
-          const state = live ? p.state : "upcoming";
+          const state: PrayerState = live ? p.state : "upcoming";
           const nameColor =
             state === "next"
               ? colors.accent
-              : withOpacity(colors.white, state === "passed" ? 0.4 : 0.75);
+              : state === "passed"
+                ? colors.textTertiary
+                : colors.textSecondary;
           const timeColor =
-            state === "next"
-              ? colors.accent
-              : withOpacity(colors.white, state === "passed" ? 0.4 : 1);
+            state === "next" ? colors.accent : state === "passed" ? colors.textTertiary : colors.white;
 
-          if (!logging) {
-            return (
-              <View key={p.label} style={styles.col}>
-                <Caption color={nameColor} numberOfLines={1} style={styles.name}>
-                  {p.label}
-                </Caption>
-                <Caption color={timeColor} numberOfLines={1} style={styles.time}>
-                  {p.time ? shortTime(p.time) : "—"}
-                </Caption>
-              </View>
-            );
-          }
-
-          const name = prayerNameForArcLabel(p.label);
+          const name = logging ? prayerNameForArcLabel(p.label) : null;
           const loggable = logging && name != null && (!live || state === "passed" || state === "next");
           const status = name ? statuses?.[name] : undefined;
 
           const column = (
             <View style={styles.col}>
-              <Caption color={nameColor} numberOfLines={1} style={styles.name}>
+              <Caption
+                color={nameColor}
+                numberOfLines={1}
+                maxFontSizeMultiplier={COLUMN_FONT_SCALE}
+                style={styles.name}
+              >
                 {p.label}
               </Caption>
-              <Caption color={timeColor} numberOfLines={1} style={styles.time}>
+              <Caption
+                color={timeColor}
+                numberOfLines={1}
+                maxFontSizeMultiplier={COLUMN_FONT_SCALE}
+                style={styles.time}
+              >
                 {p.time ? shortTime(p.time) : "—"}
               </Caption>
               {name ? <PrayerStatusDot status={status} loggable={loggable} /> : null}
             </View>
           );
+
+          if (!logging) {
+            return (
+              <View key={p.label} style={styles.colWrap}>
+                {column}
+              </View>
+            );
+          }
 
           return loggable && onPressPrayer ? (
             <Pressable
@@ -213,12 +243,16 @@ export default function PrayerArc({
               onPress={() => onPressPrayer(name!, p.label)}
               accessibilityRole="button"
               accessibilityLabel={`Log ${p.label}`}
-              style={{ flex: 1 }}
+              accessibilityValue={{ text: status ? STATUS_VALUE[status] : "Not logged" }}
+              accessibilityHint="Opens the prayer log"
+              style={styles.colWrap}
             >
               {column}
             </Pressable>
           ) : (
-            <View key={p.label} style={{ flex: 1 }}>{column}</View>
+            <View key={p.label} style={styles.colWrap}>
+              {column}
+            </View>
           );
         })}
       </View>
@@ -227,25 +261,24 @@ export default function PrayerArc({
 }
 
 function Marker({
-  prayer,
+  state,
+  position,
   colors,
   slot,
   breathScale,
   dim,
 }: {
-  prayer: ArcPrayer;
+  state: PrayerState;
+  position: { left: number; top: number };
   colors: AppTheme["colors"];
   slot: object;
   breathScale: Animated.AnimatedInterpolation<number>;
   dim: boolean;
 }) {
-  const { point, state } = prayer;
-  const pos = { left: leftPct(point.x), top: point.y };
-
   if (state === "next" && !dim) {
     return (
       <Animated.View
-        style={[slot, pos, { transform: [{ scale: breathScale }] }]}
+        style={[slot, position, { transform: [{ scale: breathScale }] }]}
         pointerEvents="none"
       >
         <View
@@ -265,7 +298,7 @@ function Marker({
 
   if (state === "upcoming") {
     return (
-      <View style={[slot, pos]} pointerEvents="none">
+      <View style={[slot, position]} pointerEvents="none">
         <View
           style={{
             width: 9,
@@ -282,7 +315,7 @@ function Marker({
   }
 
   return (
-    <View style={[slot, pos]} pointerEvents="none">
+    <View style={[slot, position]} pointerEvents="none">
       <View
         style={{
           width: 7,
@@ -304,20 +337,28 @@ function shortTime(time: string): string {
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { spacing } = theme;
+  const { spacing, colors } = theme;
   return StyleSheet.create({
     card: { padding: spacing.lg, paddingBottom: spacing.md },
     label: { letterSpacing: 1.2, textTransform: "uppercase", marginBottom: spacing.sm },
-    arcWrap: { position: "relative", height: ARC_H, marginHorizontal: spacing.xs },
+    arcWrap: { position: "relative", marginHorizontal: spacing.xs },
     markerSlot: { position: "absolute" },
-    sunGlyph: {
-      marginLeft: -11,
-      marginTop: -11,
-      textShadowColor: withOpacity(theme.colors.accent, 0.8),
-      textShadowRadius: 8,
+    thumb: {
+      width: THUMB_SIZE,
+      height: THUMB_SIZE,
+      marginLeft: -THUMB_SIZE / 2,
+      marginTop: -THUMB_SIZE / 2,
+      borderRadius: 999,
+      backgroundColor: colors.accent,
+      shadowColor: colors.accent,
+      shadowOpacity: 0.85,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 4,
     },
     row: { flexDirection: "row", marginTop: spacing.xs },
-    col: { flex: 1, alignItems: "center", gap: 2 },
+    colWrap: { flex: 1, minHeight: 44, justifyContent: "center" },
+    col: { alignItems: "center", gap: 2 },
     name: { fontSize: 13 },
     time: { fontWeight: "700", fontSize: 14 },
   });

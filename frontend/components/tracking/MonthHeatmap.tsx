@@ -9,6 +9,8 @@ import { useTheme } from "@/context/ThemeContext";
 
 type Cell = { day: number; score: number } | null;
 
+const LEGEND_STEPS = [0.25, 0.5, 0.75, 1];
+
 function buildWeeks(scores: number[], year: number, monthIndex0: number): Cell[][] {
   const firstWeekday = new Date(year, monthIndex0, 1).getDay(); // 0 = Sunday
   const cells: Cell[] = [];
@@ -36,10 +38,18 @@ export default function MonthHeatmap({
   const monthName = new Intl.DateTimeFormat("en-US", { month: "long" }).format(
     new Date(year, monthIndex0, 1),
   );
+  const monthShort = new Intl.DateTimeFormat("en-US", { month: "short" }).format(
+    new Date(year, monthIndex0, 1),
+  );
+
+  const cellColor = (score: number) =>
+    score > 0
+      ? withOpacity(colors.accentSecondary, 0.18 + score * 0.72)
+      : withOpacity(colors.white, 0.06);
 
   return (
     <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
-      <Caption color={withOpacity(colors.white, 0.6)} style={styles.heading}>
+      <Caption color={colors.textTertiary} style={styles.heading}>
         {monthName}
       </Caption>
       <View style={styles.grid}>
@@ -50,15 +60,9 @@ export default function MonthHeatmap({
                 <View
                   key={ci}
                   testID={`heatcell-${cell.day}`}
-                  style={[
-                    styles.cell,
-                    {
-                      backgroundColor:
-                        cell.score > 0
-                          ? withOpacity(colors.accentSecondary, 0.18 + cell.score * 0.72)
-                          : withOpacity(colors.white, 0.06),
-                    },
-                  ]}
+                  accessible
+                  accessibilityLabel={`${monthShort} ${cell.day}: ${Math.round(cell.score * 100)}% of prayers logged`}
+                  style={[styles.cell, { backgroundColor: cellColor(cell.score) }]}
                 />
               ) : (
                 <View key={ci} style={[styles.cell, styles.empty]} />
@@ -66,6 +70,13 @@ export default function MonthHeatmap({
             )}
           </View>
         ))}
+      </View>
+      <View style={styles.legend} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <Caption color={colors.textTertiary}>Less</Caption>
+        {LEGEND_STEPS.map((step) => (
+          <View key={step} style={[styles.legendSwatch, { backgroundColor: cellColor(step) }]} />
+        ))}
+        <Caption color={colors.textTertiary}>More</Caption>
       </View>
     </GlassSurface>
   );
@@ -80,5 +91,12 @@ const createStyles = (theme: AppTheme) => {
     week: { flexDirection: "row", justifyContent: "space-between" },
     cell: { flex: 1, aspectRatio: 1, marginHorizontal: 2, borderRadius: 6 },
     empty: { backgroundColor: "transparent" },
+    legend: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: spacing.xs,
+    },
+    legendSwatch: { width: 12, height: 12, borderRadius: 3 },
   });
 };

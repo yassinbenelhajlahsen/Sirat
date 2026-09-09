@@ -15,4 +15,18 @@ describe("MonthHeatmap", () => {
     expect(getByTestId("heatcell-1")).toBeTruthy();
     expect(getByTestId("heatcell-30")).toBeTruthy();
   });
+
+  it("describes each day for screen readers and shows a legend", () => {
+    const scores = Array.from({ length: 30 }, () => 0.6);
+    const { getByTestId, getByText } = render(
+      wrap(<MonthHeatmap scores={scores} year={2026} monthIndex0={5} />),
+    );
+    expect(getByTestId("heatcell-12").props.accessibilityLabel).toBe(
+      "Jun 12: 60% of prayers logged",
+    );
+    // The legend is decorative for screen readers (each cell already speaks
+    // its value), so it is hidden from the accessibility tree on purpose.
+    expect(getByText("Less", { includeHiddenElements: true })).toBeTruthy();
+    expect(getByText("More", { includeHiddenElements: true })).toBeTruthy();
+  });
 });
