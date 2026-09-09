@@ -1,7 +1,6 @@
 import { ClerkProvider } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { Ionicons } from "@expo/vector-icons";
-import { Fraunces_700Bold } from "@expo-google-fonts/fraunces";
 import { Asset } from "expo-asset";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
@@ -184,10 +183,7 @@ function RootLayoutContent() {
     ? theme.colors.primaryDark
     : LAUNCH_BACKGROUND_COLOR;
 
-  const [fontsLoaded] = useFonts({
-    ...Ionicons.font,
-    Fraunces_700Bold,
-  });
+  const [fontsLoaded] = useFonts({ ...Ionicons.font });
 
   const [showSplash, setShowSplash] = useState(true);
   const [initialSynced, setInitialSynced] = useState(false);

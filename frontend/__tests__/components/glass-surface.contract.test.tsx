@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { render } from "@testing-library/react-native";
 
 jest.mock("@/context/ThemeContext", () => {
@@ -20,6 +20,28 @@ describe("GlassSurface", () => {
     );
     expect(getByText("hi")).toBeTruthy();
     expect(getByTestId("surface")).toBeTruthy();
+  });
+
+  it("leaves the rim to the glass unless a border is asked for", () => {
+    mockApiAvailable.mockReturnValue(true);
+    const { getByTestId, rerender } = render(
+      <GlassSurface tier="card" testID="surface"><Text>hi</Text></GlassSurface>,
+    );
+    expect(StyleSheet.flatten(getByTestId("surface").props.style).borderWidth).toBe(0);
+    rerender(
+      <GlassSurface tier="card" bordered testID="surface"><Text>hi</Text></GlassSurface>,
+    );
+    expect(StyleSheet.flatten(getByTestId("surface").props.style).borderWidth).toBe(1);
+  });
+
+  it("keeps a hairline in the non-glass fallback", () => {
+    mockApiAvailable.mockReturnValue(false);
+    const { getByTestId } = render(
+      <GlassSurface tier="card" testID="surface"><Text>hi</Text></GlassSurface>,
+    );
+    expect(StyleSheet.flatten(getByTestId("surface").props.style).borderWidth).toBe(
+      StyleSheet.hairlineWidth,
+    );
   });
 
   it("falls back to a frosted surface when the glass API is unavailable", () => {

@@ -1,13 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
 import { ReactNode, useMemo } from "react";
 import { ActivityIndicator, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import { Footnote, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
 
 export type ButtonVariant = "primary" | "secondary" | "tonal" | "ghost" | "danger";
 // md is the 44pt HIG default; lg for full-width sheet CTAs; sm only for
@@ -19,7 +17,7 @@ export type ButtonProps = {
   onPress?: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
-  icon?: IoniconName;
+  icon?: AppIconName;
   iconPosition?: "leading" | "trailing";
   /** Custom leading node (e.g. a brand mark) when an Ionicon won't do. */
   leading?: ReactNode;
@@ -63,14 +61,14 @@ export default function Button({
   const glyph = loading ? (
     <ActivityIndicator size="small" color={palette.text} />
   ) : icon ? (
-    <Ionicons name={icon} size={iconSize} color={palette.text} />
+    <AppIcon name={icon} size={iconSize} color={palette.text} />
   ) : (
     leading ?? null
   );
 
   return (
     <PressableScale
-      scaleTo={0.97}
+      variant="button"
       onPress={onPress}
       disabled={inactive}
       accessibilityRole="button"
@@ -107,13 +105,10 @@ function variantPalette(theme: AppTheme, variant: ButtonVariant) {
     case "primary":
       return { bg: colors.accent, border: "transparent", text: colors.onAccent };
     case "secondary":
-      return { bg: "transparent", border: colors.accent, text: colors.accent };
+      // Tinted fill, not an outline: iOS signals a secondary action with colour.
+      return { bg: withOpacity(colors.accent, 0.16), border: "transparent", text: colors.accent };
     case "tonal":
-      return {
-        bg: withOpacity(colors.white, 0.07),
-        border: withOpacity(colors.white, 0.14),
-        text: colors.white,
-      };
+      return { bg: withOpacity(colors.white, 0.1), border: "transparent", text: colors.white };
     case "danger":
       return { bg: "transparent", border: "transparent", text: colors.danger };
     case "ghost":
@@ -129,8 +124,8 @@ const createStyles = (theme: AppTheme) =>
       alignItems: "center",
       justifyContent: "center",
       gap: theme.spacing.sm,
-      borderRadius: theme.radii.row,
-      borderCurve: "continuous",
+      borderRadius: theme.radii.pill,
+      borderCurve: "circular",
     },
     glyph: { alignItems: "center", justifyContent: "center" },
     smLabel: { fontWeight: "600" },

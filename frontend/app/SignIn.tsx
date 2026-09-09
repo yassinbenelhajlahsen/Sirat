@@ -9,14 +9,13 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useCallback, useEffect, useMemo } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import Aurora from "@/components/ui/Aurora";
 import Button from "@/components/ui/Button";
 import GoogleIcon from "@/components/ui/GoogleIcon";
-import { DISPLAY_FONT_FAMILY } from "@/components/ui/DisplayNumber";
-import { Footnote } from "@/components/ui/Text";
+import { Footnote, Title1 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -82,9 +81,9 @@ export default function SignIn() {
           <Aurora />
 
           <View style={styles.content}>
-            <Text style={styles.headline} maxFontSizeMultiplier={1.2} accessibilityRole="header">
+            <Title1 style={styles.headline} maxFontSizeMultiplier={1.2} accessibilityRole="header">
               {"Sync your\njourney"}
-            </Text>
+            </Title1>
             <Footnote color={colors.textSecondary}>
               Sign in to back up your tracker &amp; settings across devices.
             </Footnote>
@@ -151,13 +150,7 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: spacing.xxl,
       paddingBottom: spacing.lg,
     },
-    headline: {
-      fontFamily: DISPLAY_FONT_FAMILY,
-      fontSize: 30,
-      lineHeight: 32,
-      color: colors.white,
-      marginBottom: spacing.md,
-    },
+    headline: { marginBottom: spacing.md },
     stack: {
       marginTop: spacing.xxl,
       gap: spacing.md,

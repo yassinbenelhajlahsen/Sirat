@@ -1,13 +1,14 @@
-import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useEffect, useRef } from "react";
 import { Animated, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import {
   TAB_BAR_HEIGHT,
@@ -17,7 +18,7 @@ import {
   tabBarCollapse,
 } from "@/utils/tabBarChrome";
 
-const ICONS: Record<string, { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap; label: string }> = {
+const ICONS: Record<string, { on: AppIconName; off: AppIconName; label: string }> = {
   index: { on: "home", off: "home-outline", label: "Home" },
   Quran: { on: "book", off: "book-outline", label: "Quran" },
   Qibla: { on: "compass", off: "compass-outline", label: "Qibla" },
@@ -25,7 +26,6 @@ const ICONS: Record<string, { on: keyof typeof Ionicons.glyphMap; off: keyof typ
   Calendar: { on: "today", off: "today-outline", label: "Calendar" },
 };
 
-const H_MARGIN = 14;
 const PAD = 8;
 // Indicator inset from the pill on all sides. Keeping the horizontal end-gap
 // equal to the vertical gap makes the capsule's round end concentric with the
@@ -38,6 +38,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const haptic = useHaptics();
   const { width } = useWindowDimensions();
+  const hMargin = useScreenMargin();
   const reduceMotion = useReducedMotion();
   useEffect(() => {
     setTabBarReduceMotion(reduceMotion);
@@ -45,7 +46,7 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
 
   const tabs = state.routes.filter((r) => ICONS[r.name]);
   const count = tabs.length || 1;
-  const pillWidth = Math.max(0, width - H_MARGIN * 2);
+  const pillWidth = Math.max(0, width - hMargin * 2);
   const slot = (pillWidth - PAD * 2) / count;
   const indicatorW = Math.max(0, slot + 2 * (PAD - INDICATOR_INSET));
 
@@ -75,7 +76,10 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const collapseShiftY = tabBarCollapse.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
 
   return (
-    <View style={[styles.wrap, { bottom: tabBarBottomOffset(insets.bottom) }]} pointerEvents="box-none">
+    <View
+      style={[styles.wrap, { left: hMargin, right: hMargin, bottom: tabBarBottomOffset(insets.bottom) }]}
+      pointerEvents="box-none"
+    >
       <Animated.View style={{ transform: [{ scale: collapseScale }, { translateY: collapseShiftY }] }}>
         <GlassSurface
           tier="chrome"
@@ -99,7 +103,6 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
                 left: PAD + (slot - indicatorW) / 2,
                 borderRadius: theme.radii.pill,
                 backgroundColor: withOpacity(colors.white, 0.22),
-                borderColor: withOpacity(colors.white, 0.3),
                 transform: [{ translateX }],
               },
             ]}
@@ -122,7 +125,12 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
                 style={[styles.item, { width: slot }]}
               >
                 <View style={{ transform: [{ scale: focused ? 1.12 : 1 }] }}>
-                  <Ionicons name={focused ? meta.on : meta.off} size={22} color={focused ? colors.accent : withOpacity(colors.white, 0.55)} />
+                  <AppIcon
+                    name={focused ? meta.on : meta.off}
+                    size={22}
+                    weight="medium"
+                    color={focused ? colors.accent : withOpacity(colors.white, 0.55)}
+                  />
                 </View>
               </Pressable>
             );
@@ -134,22 +142,21 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: "absolute", left: H_MARGIN, right: H_MARGIN },
+  wrap: { position: "absolute" },
   pill: {
     height: TAB_BAR_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: "#000",
-    shadowOpacity: 0.4,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
   },
   indicator: {
     position: "absolute",
     top: INDICATOR_INSET,
     bottom: INDICATOR_INSET,
-    borderWidth: 1,
   },
   item: { alignItems: "center", justifyContent: "center", minHeight: 44 },
 });

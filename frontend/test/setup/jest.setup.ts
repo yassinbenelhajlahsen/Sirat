@@ -67,6 +67,12 @@ jest.mock(
   { virtual: true },
 );
 
+// expo-symbols has no JS-side renderer in tests; render the Ionicons fallback so
+// icon assertions stay stable. The AppIcon suite overrides this to assert symbols.
+jest.mock("expo-symbols", () => ({
+  SymbolView: ({ fallback }: { fallback?: unknown }) => fallback ?? null,
+}));
+
 jest.mock("expo-blur", () => {
   const { View } = require("react-native");
   return {

@@ -44,8 +44,11 @@ export const spacing = {
   xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32, huge: 40,
 } as const;
 
+// iOS geometry: one card radius (24) for every large surface, 16 for rows,
+// 12 for chips. `cardLg`/`heroLg` are kept as aliases so existing call sites
+// keep compiling; nested corners stay concentric (inner = outer - padding).
 export const radii = {
-  chip: 10, row: 14, card: 18, cardLg: 20, hero: 24, heroLg: 26, pill: 999,
+  chip: 12, row: 16, card: 24, cardLg: 24, hero: 24, heroLg: 24, sheet: 24, pill: 999,
 } as const;
 
 export const typography = {
@@ -73,7 +76,7 @@ export const type: Record<TypeStyleName, TypeStyle> = {
   title2: { fontSize: 22, lineHeight: 28, fontWeight: "700" },
   title3: { fontSize: 20, lineHeight: 25, fontWeight: "600" },
   headline: { fontSize: 17, lineHeight: 22, fontWeight: "600" },
-  body: { fontSize: 17, lineHeight: 24, fontWeight: "400" },
+  body: { fontSize: 17, lineHeight: 22, fontWeight: "400" },
   callout: { fontSize: 16, lineHeight: 21, fontWeight: "400" },
   subhead: { fontSize: 15, lineHeight: 20, fontWeight: "400" },
   footnote: { fontSize: 13, lineHeight: 18, fontWeight: "400" },
@@ -108,7 +111,7 @@ export function buildMaterials(colors: AppColors, isLight: boolean): Materials {
   const solidBase = isLight ? colors.primaryLift : colors.primarySurface;
   return {
     chrome: { fill: withOpacity(tintBase, isLight ? 0.06 : 0.1), border: withOpacity(tintBase, isLight ? 0.1 : 0.18), blur: 26, solid: withOpacity(solidBase, isLight ? 0.97 : 0.95) },
-    card:   { fill: withOpacity(tintBase, isLight ? 0.05 : 0.07), border: withOpacity(tintBase, isLight ? 0.08 : 0.13), blur: 18, solid: withOpacity(solidBase, isLight ? 0.96 : 0.92) },
+    card:   { fill: withOpacity(tintBase, isLight ? 0.07 : 0.07), border: withOpacity(tintBase, isLight ? 0.08 : 0.13), blur: 18, solid: withOpacity(solidBase, isLight ? 0.96 : 0.92) },
     row:    { fill: withOpacity(tintBase, isLight ? 0.04 : 0.05), border: withOpacity(tintBase, isLight ? 0.07 : 0.09), blur: 0,  solid: withOpacity(solidBase, isLight ? 0.93 : 0.86) },
   };
 }

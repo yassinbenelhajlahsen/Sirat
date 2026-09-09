@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import type { BottomSheetBackgroundProps } from "@gorhom/bottom-sheet";
 
-import { withOpacity } from "@/constants/theme";
+import { radii, withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 type Props = BottomSheetBackgroundProps & {
@@ -26,6 +26,13 @@ type Props = BottomSheetBackgroundProps & {
 //
 // When `solid` is true (Quran sheets), an always-opaque gradient is shown
 // regardless of snap position. The glass sheen is layered on top on iOS 26.
+// iOS 26 glass draws its own top rim; only the flat fallbacks need a hairline.
+function hairline(white: string, glass: boolean) {
+  return glass
+    ? { borderTopWidth: 0 }
+    : { borderTopWidth: StyleSheet.hairlineWidth, borderColor: withOpacity(white, 0.12) };
+}
+
 export default function SheetBackground({
   style,
   animatedIndex,
@@ -57,7 +64,7 @@ export default function SheetBackground({
       <View
         testID={testID}
         pointerEvents="none"
-        style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+        style={[style, styles.bg, hairline(colors.white, false)]}
       >
         <LinearGradient
           colors={[colors.primaryDeep, colors.primary]}
@@ -74,7 +81,7 @@ export default function SheetBackground({
       <View
         testID={testID}
         pointerEvents="none"
-        style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+        style={[style, styles.bg, hairline(colors.white, glass)]}
       >
         {glass ? (
           <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
@@ -100,7 +107,7 @@ export default function SheetBackground({
     <View
       testID={testID}
       pointerEvents="none"
-      style={[style, styles.bg, { borderColor: withOpacity(colors.white, 0.12) }]}
+      style={[style, styles.bg, hairline(colors.white, glass)]}
     >
       {glass ? (
         <GlassView glassEffectStyle="regular" style={StyleSheet.absoluteFill} />
@@ -126,9 +133,9 @@ export default function SheetBackground({
 
 const styles = StyleSheet.create({
   bg: {
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    borderTopWidth: 1,
+    borderTopLeftRadius: radii.sheet,
+    borderTopRightRadius: radii.sheet,
+    borderCurve: "continuous",
     overflow: "hidden",
   },
 });

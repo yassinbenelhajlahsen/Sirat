@@ -12,9 +12,9 @@ type GlassSurfaceProps = ViewProps & {
   // Full-capsule surfaces (radius >= height/2) need "circular": the continuous
   // squircle curve degrades at clamped pill radii and renders an uneven border.
   curve?: ViewStyle["borderCurve"];
-  // iOS 26 Liquid Glass draws its own specular rim; surfaces that should rely on
-  // it (the tab bar) pass false so the drawn border doesn't double the edge.
-  // The non-glass fallback keeps a hairline for definition either way.
+  // iOS 26 Liquid Glass draws its own specular rim, so nothing draws a border
+  // on top of it by default. The non-glass fallback keeps a hairline for
+  // definition. Pass `bordered` explicitly to force (or drop) the drawn edge.
   bordered?: boolean;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -24,7 +24,7 @@ export default function GlassSurface({
   tier = "card",
   radius,
   curve = "continuous",
-  bordered = true,
+  bordered,
   style,
   children,
   ...rest
@@ -41,7 +41,6 @@ export default function GlassSurface({
   const shared: ViewStyle = {
     borderRadius: r,
     borderCurve: curve,
-    borderWidth: 1,
     borderColor: m.border,
     overflow: "hidden",
   };
@@ -52,7 +51,7 @@ export default function GlassSurface({
         key={theme.name}
         glassEffectStyle={tier === "chrome" || isLight ? "clear" : "regular"}
         colorScheme={isLight ? "light" : "dark"}
-        style={[shared, !bordered && { borderWidth: 0 }, style]}
+        style={[shared, { borderWidth: bordered ? 1 : 0 }, style]}
         {...rest}
       >
         {children}
@@ -64,7 +63,7 @@ export default function GlassSurface({
     <View
       style={[
         shared,
-        !bordered && { borderWidth: StyleSheet.hairlineWidth },
+        { borderWidth: bordered ? 1 : StyleSheet.hairlineWidth },
         { backgroundColor: m.fill },
         style,
       ]}

@@ -1,18 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
-type IoniconName = keyof typeof Ionicons.glyphMap;
-
 export type IconButtonVariant = "glass" | "tonal" | "plain" | "primary";
 
 export type IconButtonProps = {
-  icon: IoniconName;
+  icon: AppIconName;
   accessibilityLabel: string;
   onPress?: () => void;
   onLongPress?: () => void;
@@ -49,11 +47,12 @@ export default function IconButton({
   const hitSlop = Math.max(0, Math.ceil((ICON_BUTTON_MIN_TARGET - size) / 2));
   const glyphColor =
     color ?? (variant === "primary" ? colors.onAccent : withOpacity(colors.white, 0.9));
-  const glyph = <Ionicons name={icon} size={iconSize ?? Math.round(size * 0.46)} color={glyphColor} />;
+  const glyph = <AppIcon name={icon} size={iconSize ?? Math.round(size * 0.46)} color={glyphColor} />;
   const dims = { width: size, height: size, borderRadius: size / 2 };
 
   return (
     <PressableScale
+      variant="button"
       onPress={onPress}
       onLongPress={onLongPress}
       disabled={disabled}
@@ -89,11 +88,7 @@ const createStyles = (theme: AppTheme) => {
   const { colors } = theme;
   return StyleSheet.create({
     center: { alignItems: "center", justifyContent: "center" },
-    tonal: {
-      backgroundColor: withOpacity(colors.white, 0.1),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.white, 0.18),
-    },
+    tonal: { backgroundColor: withOpacity(colors.white, 0.1) },
     primary: { backgroundColor: colors.accent },
     disabled: { opacity: 0.45 },
   });
