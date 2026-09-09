@@ -1,5 +1,4 @@
-// app/components/SplashScreen.tsx
-import { darkTheme, radii, withOpacity, type AppTheme } from "@/constants/theme";
+import { darkTheme, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,11 +12,31 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
+
+import SplashAtmosphere from "@/components/SplashAtmosphere";
 import Aurora from "@/components/ui/Aurora";
+import { Caption, Footnote, LargeTitle } from "@/components/ui/Text";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import hadiths from "../assets/data/hadiths.json";
 
 const LAST_SPLASH_KEY = "lastSplashDate";
+
+/** Stands in for the daily hadith on every launch after the first of the day. */
+const BISMILLAH = {
+  arabic: "بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ",
+  english: "In the name of God, the Most Gracious, the Most Merciful",
+  source: "",
+};
+
+/**
+ * The wordmark sits at a fixed fraction of the screen height rather than in a
+ * flex slot, so it lands in exactly the same place whether or not the hadith is
+ * present. A repeat launch is then the same screen with the passage removed,
+ * not a differently-composed one.
+ */
+const WORDMARK_TOP_RATIO = 0.3;
 
 type Props = {
   // When true, start the fade out and call onFinished at the end
@@ -26,20 +45,19 @@ type Props = {
   onReadyToHideNative?: () => void;
   // Called after fade out completes so parent can render the app
   onFinished?: () => void;
-  // New: only render text after fonts are loaded to avoid wrong measurements
-  fontsReady?: boolean;
 };
 
 export default function SplashScreen({
   ready,
   onReadyToHideNative,
   onFinished,
-  fontsReady = true,
 }: Props) {
   const { theme, isHydrated } = useTheme();
   const splashTheme = isHydrated ? theme : darkTheme;
   const themeColors = splashTheme.colors;
   const styles = useMemo(() => createStyles(splashTheme), [splashTheme]);
+  const screenMargin = useScreenMargin();
+  const { height } = useWindowDimensions();
 
   const [hadith, setHadith] = useState<{
     arabic: string;
@@ -84,6 +102,21 @@ export default function SplashScreen({
     const today = (hadiths as any[]).find((h) => h.day === day) || null;
     setHadith(today);
   }, []);
+
+  // The passage slot is never empty. On the first launch of the day it carries
+  // the day's hadith; otherwise the Bismillah stands in, so the composition —
+  // and the gold rule beside it — is complete on every launch.
+  const passage = isFirstLaunchToday && hadith ? hadith : BISMILLAH;
+
+  const hijriDate = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date()),
+    [],
+  );
 
   // Entrance profile: richer on first launch, lighter on repeat launches
   useEffect(() => {
@@ -131,6 +164,20 @@ export default function SplashScreen({
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }),
+          // The standing passage is part of the composition, not an extra, so
+          // it comes in with the wordmark rather than after it.
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 220,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateY, {
+            toValue: 0,
+            duration: 240,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
         ]);
 
     animation.start(() => {
@@ -142,7 +189,7 @@ export default function SplashScreen({
   // Fade out once app is ready and intro has had enough time to read cleanly
   useEffect(() => {
     if (!ready) return;
-    const minVisibleMs = isFirstLaunchToday ? 1600 : 600;
+    const minVisibleMs = isFirstLaunchToday ? 1600 : 1600;
     const elapsed = Date.now() - startedAtMs.current;
     const waitForMinVisible = Math.max(0, minVisibleMs - elapsed);
     const waitForIntro = introFinished.current
@@ -179,11 +226,6 @@ export default function SplashScreen({
     onReadyToHideNative?.();
   };
 
-  const englishQuoted = useMemo(() => {
-    if (!hadith?.english) return "";
-    return `“${hadith.english}”`;
-  }, [hadith]);
-
   return (
     <LinearGradient
       colors={[
@@ -195,100 +237,67 @@ export default function SplashScreen({
       end={{ x: 1, y: 1 }}
       style={styles.gradient}
       onLayout={handleLayout}
+      testID="splash-root"
     >
-      {/* Ambient aurora background */}
+      {/* Ambient aurora background, then the splash-only atmosphere on top */}
       <Aurora />
+      <SplashAtmosphere />
 
       <Animated.View
+        testID="splash-anchor"
         style={[
           styles.container,
-          {
-            opacity,
-            transform: [{ scale }],
-          },
+          { paddingHorizontal: screenMargin, paddingTop: height * WORDMARK_TOP_RATIO },
+          { opacity, transform: [{ scale }] },
         ]}
       >
-        {/* Logo/Title Section with glow effect */}
-        <Animated.View
-          style={[
-            styles.logoContainer,
-            {
-              opacity: logoOpacity,
-              transform: [{ scale }],
-            },
-          ]}
-        >
-          {/* Subtle glow behind text */}
-          <View style={styles.glowContainer}>
-            <Text
-              style={[styles.appName, styles.glowText]}
-              allowFontScaling={false}
+        {/* The rule runs beside the wordmark on every launch, so when the
+            passage arrives below it reads as one system rather than a gold bar
+            appearing out of nowhere once a day. */}
+        <Animated.View style={[styles.masthead, { opacity: logoOpacity }]}>
+          <View style={[styles.rule, styles.mastheadRule]} />
+          <View style={styles.mastheadText}>
+            <LargeTitle testID="splash-wordmark" maxFontSizeMultiplier={1}>
+              Sirat
+            </LargeTitle>
+            <Footnote color={themeColors.textTertiary} style={styles.tagline}>
+              The path to your deen
+            </Footnote>
+            <Caption
+              testID="splash-hijri"
+              color={themeColors.accent}
+              style={styles.hijri}
+              maxFontSizeMultiplier={1.2}
             >
-              Sirat{" "}
-            </Text>
+              {hijriDate.toUpperCase()}
+            </Caption>
           </View>
-          <Text style={styles.appName} allowFontScaling={false}>
-            Sirat{" "}
-          </Text>
-          <Text style={styles.tagline} allowFontScaling={false}>
-            The Path to Your Deen
-          </Text>
         </Animated.View>
 
-        {/* Hadith Content Section */}
+        <View style={styles.spacer} />
+
+        {/* Marked in the margin the way a read passage is. */}
         <Animated.View
+          testID="splash-passage"
           style={[
-            styles.hadithContainer,
-            {
-              opacity: contentOpacity,
-              transform: [{ translateY }],
-            },
+            styles.passage,
+            { opacity: contentOpacity, transform: [{ translateY }] },
           ]}
         >
-          {/* Only render variable-length text when fonts are ready */}
-          {isFirstLaunchToday && fontsReady ? (
-            hadith ? (
-              <View style={styles.hadithContent}>
-                {/* Decorative top ornament */}
-                <View style={styles.ornament} />
-
-                {/* Arabic */}
-                <Text style={styles.arabic} allowFontScaling={false}>
-                  {hadith.arabic}
-                </Text>
-
-                <View style={styles.divider} />
-
-                {/* English with subtle background card */}
-                <View style={styles.englishCard}>
-                  <Text
-                    style={styles.english}
-                    numberOfLines={3}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.9}
-                  >
-                    {englishQuoted}
-                  </Text>
-                </View>
-
-                {hadith?.source ? (
-                  <Text style={styles.source} allowFontScaling={false}>
-                    {hadith.source}
-                  </Text>
-                ) : null}
-
-                {/* Decorative bottom ornament */}
-                <View style={styles.ornament} />
-              </View>
-            ) : (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading hadith...</Text>
-              </View>
-            )
-          ) : (
-            // keep layout stable but invisible while fonts load
-            <View style={{ height: 140 }} />
-          )}
+          <View style={styles.rule} />
+          <View style={styles.passageText}>
+            <Text style={styles.arabic} allowFontScaling={false}>
+              {passage.arabic}
+            </Text>
+            <Footnote color={themeColors.textSecondary} style={styles.english}>
+              {passage.english}
+            </Footnote>
+            {passage.source ? (
+              <Caption color={themeColors.accent} style={styles.source}>
+                {passage.source}
+              </Caption>
+            ) : null}
+          </View>
         </Animated.View>
       </Animated.View>
     </LinearGradient>
@@ -296,131 +305,70 @@ export default function SplashScreen({
 }
 
 const createStyles = (theme: AppTheme) => {
-  const themeColors = theme.colors;
+  const { colors, spacing } = theme;
 
   return StyleSheet.create({
     gradient: {
       flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
     },
     container: {
       flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      width: "100%",
+      paddingBottom: spacing.huge + spacing.xxxl,
     },
-    logoContainer: {
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 80,
+    masthead: {
+      flexDirection: "row",
+      alignItems: "stretch",
+      gap: spacing.lg,
     },
-    glowContainer: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      alignItems: "center",
-      justifyContent: "center",
+    // Quieter than the passage's rule: this one is structure, that one is a mark.
+    mastheadRule: {
+      opacity: 0.55,
     },
-    glowText: {
-      opacity: 0.3,
-      textShadowColor: themeColors.accent,
-      textShadowOffset: { width: 0, height: 0 },
-      textShadowRadius: 30,
-    },
-    appName: {
-      color: themeColors.accent,
-      fontSize: 64,
-      fontWeight: "700",
-      marginBottom: 8,
-      letterSpacing: 1,
-      paddingHorizontal: 8,
-      lineHeight: 72,
-      textShadowColor: withOpacity(themeColors.black, 0.2),
-      textShadowOffset: { width: 0, height: 2 },
-      textShadowRadius: 4,
-      ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
+    mastheadText: {
+      flex: 1,
     },
     tagline: {
-      color: themeColors.white,
-      opacity: 0.9,
-      fontSize: 17, // iOS standard body size
-      fontWeight: "400",
-      letterSpacing: 0.3,
-      textShadowColor: withOpacity(themeColors.black, 0.15),
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
-      ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
+      marginTop: spacing.xs,
     },
-    hadithContainer: {
-      width: "88%",
-      maxWidth: 420,
-      alignItems: "center",
+    hijri: {
+      marginTop: spacing.md,
+      letterSpacing: 1.5,
+      fontWeight: "700",
     },
-    hadithContent: {
-      width: "100%",
-      alignItems: "center",
-      // Removed glass effect background
-      paddingVertical: 32,
+    spacer: {
+      flex: 1,
     },
-    ornament: {
-      width: 40,
-      height: 3,
-      backgroundColor: themeColors.accent,
-      borderRadius: radii.pill,
-      opacity: 0.6,
-      marginVertical: 12,
+    passage: {
+      flexDirection: "row",
+      alignItems: "stretch",
+      gap: spacing.lg,
     },
+    // The marked-passage rule. The one place accent earns a decorative role.
+    rule: {
+      width: 2,
+      borderRadius: 2,
+      backgroundColor: colors.accent,
+      opacity: 0.85,
+    },
+    passageText: {
+      flex: 1,
+    },
+    // Arabic needs more leading than the Latin scale allows or the diacritics
+    // collide with the line above.
     arabic: {
-      color: themeColors.white,
-      fontSize: 28,
-      textAlign: "center",
-      lineHeight: 42,
-      marginVertical: 12,
+      fontSize: 24,
+      lineHeight: 40,
+      color: colors.textPrimary,
+      textAlign: "right",
       writingDirection: "rtl",
-      letterSpacing: 0.5,
       ...(Platform.OS === "android" ? { includeFontPadding: false } : null),
-    },
-    divider: {
-      width: 50,
-      height: 2,
-      backgroundColor: themeColors.accent,
-      marginVertical: 20,
-      borderRadius: radii.pill,
-      opacity: 0.5,
-    },
-    englishCard: {
-      width: "100%",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
     },
     english: {
-      color: themeColors.accent,
-      fontSize: 16,
-      textAlign: "center",
-      fontWeight: "600",
-      lineHeight: 24,
-      letterSpacing: 0.2,
+      marginTop: spacing.md,
     },
     source: {
-      marginTop: 16,
-      color: withOpacity(themeColors.white, 0.7),
-      fontSize: 12,
-      textAlign: "center",
-      fontWeight: "400",
-      letterSpacing: 0.5,
-    },
-    loadingContainer: {
-      paddingVertical: 60,
-      alignItems: "center",
-    },
-    loadingText: {
-      color: withOpacity(themeColors.accent, 0.8),
-      fontSize: 15,
-      fontWeight: "400",
-      letterSpacing: 0.3,
+      marginTop: spacing.md,
+      letterSpacing: 0.4,
     },
   });
 };

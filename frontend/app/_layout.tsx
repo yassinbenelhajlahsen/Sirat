@@ -445,7 +445,6 @@ function RootLayoutContent() {
           >
             <SplashScreen
               ready={splashReady}
-              fontsReady={fontsLoaded}
               onReadyToHideNative={hideNativeSplash}
               onFinished={() => setShowSplash(false)}
             />
