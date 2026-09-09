@@ -4,9 +4,9 @@ import { StyleSheet, View } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
-import { Title3, Subhead, Headline } from "@/components/ui/Text";
-import PressableScale from "../PressableScale";
+import { Title3, Subhead } from "@/components/ui/Text";
 
 type QuranCompletionCardProps = {
   onBackToTop: () => void;
@@ -26,16 +26,10 @@ function QuranCompletionCard({ onBackToTop }: QuranCompletionCardProps) {
       <Title3 style={styles.title}>
         You have reached the end of the Quran
       </Title3>
-      <Subhead color={withOpacity(theme.colors.white, 0.85)} style={styles.subtitle}>
+      <Subhead color={theme.colors.textSecondary} style={styles.subtitle}>
         May this journey of recitation bring you continued blessings.
       </Subhead>
-      <PressableScale
-        accessibilityRole="button"
-        style={styles.backToTopButton}
-        onPress={onBackToTop}
-      >
-        <Headline color={theme.colors.onAccent}>Back to Top</Headline>
-      </PressableScale>
+      <Button label="Back to top" icon="arrow-up" onPress={onBackToTop} />
     </GlassSurface>
   );
 }
@@ -72,12 +66,6 @@ const createStyles = (theme: AppTheme) => {
     subtitle: {
       textAlign: "center",
       marginBottom: 20,
-    },
-    backToTopButton: {
-      backgroundColor: colors.accent,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: theme.radii.pill,
     },
   });
 };

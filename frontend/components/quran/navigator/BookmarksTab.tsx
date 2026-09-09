@@ -7,11 +7,11 @@ import {
   InteractionManager,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
+import { Caption, Footnote, Subhead } from "@/components/ui/Text";
 import { radii, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { QuranBookmark } from "@/services/quranBookmarks";
@@ -136,19 +136,19 @@ const BookmarkRow = memo(function BookmarkRow({
           style={styles.deleteAction}
           onPress={handleDelete}
           accessibilityRole="button"
-          accessibilityLabel="Delete bookmark"
+          accessibilityLabel={`Delete bookmark ${item.title}`}
         >
           <View style={styles.deleteActionContent}>
             <Ionicons
               name="trash-outline"
               size={18}
-              color={themeColors.white}
+              color={themeColors.onAccent}
             />
           </View>
         </Pressable>
       </Animated.View>
     ),
-    [deleteActionOpacity, handleDelete, styles, themeColors]
+    [deleteActionOpacity, handleDelete, item.title, styles, themeColors]
   );
 
   return (
@@ -171,7 +171,13 @@ const BookmarkRow = memo(function BookmarkRow({
         activeOffsetX={[-12, 12]}
         failOffsetY={[-12, 12]}
       >
-        <PressableScale style={styles.bookmarkButton} onPress={handleSelect}>
+        <PressableScale
+          style={styles.bookmarkButton}
+          onPress={handleSelect}
+          accessibilityRole="button"
+          accessibilityLabel={`Open bookmark ${item.title}`}
+          accessibilityHint="Swipe left to delete"
+        >
           <View style={styles.bookmarkRowInner}>
             <View style={styles.bookmarkIconCircle}>
               <Ionicons
@@ -181,11 +187,13 @@ const BookmarkRow = memo(function BookmarkRow({
               />
             </View>
             <View style={styles.bookmarkContent}>
-              <Text style={styles.bookmarkTitle}>{item.title}</Text>
-              <Text style={styles.bookmarkMeta}>
+              <Subhead color={themeColors.white} style={styles.bookmarkTitle}>
+                {item.title}
+              </Subhead>
+              <Caption color={themeColors.accent}>
                 {item.bookmark.surahNumber}:{item.bookmark.ayahNumber}
                 {item.surahArabic ? ` · ${item.surahArabic}` : ""}
-              </Text>
+              </Caption>
             </View>
           </View>
         </PressableScale>
@@ -206,7 +214,6 @@ function BookmarksTab({
 }: BookmarksTabProps) {
   const { theme } = useTheme();
   const themeColors = theme.colors;
-  const isLight = theme.name === "light";
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const trimmedQuery = bookmarkSearchQuery.trim();
@@ -231,13 +238,11 @@ function BookmarksTab({
           <BottomSheetTextInput
             style={styles.searchInput}
             placeholder="Search bookmarks..."
-            placeholderTextColor={
-              isLight
-                ? withOpacity(themeColors.grayDark, 0.85)
-                : withOpacity(themeColors.white, 0.5)
-            }
+            placeholderTextColor={themeColors.textTertiary}
             value={bookmarkSearchQuery}
             onChangeText={onBookmarkSearchQueryChange}
+            accessibilityLabel="Search bookmarks"
+            maxFontSizeMultiplier={1.4}
           />
           <View style={styles.bookmarkList}>
             {visibleBookmarks.map((item) => (
@@ -253,16 +258,18 @@ function BookmarksTab({
             ))}
           </View>
           {trimmedQuery && visibleBookmarks.length === 0 ? (
-            <Text style={styles.bookmarkEmptyText}>No bookmark found.</Text>
+            <Footnote color={themeColors.textSecondary} style={styles.bookmarkEmptyText}>
+              No bookmark found.
+            </Footnote>
           ) : null}
-          <Text style={styles.bookmarkSwipeHint}>
-            Swipe right to delete a bookmark.
-          </Text>
+          <Caption color={themeColors.textTertiary}>
+            Swipe left on a bookmark to delete it.
+          </Caption>
         </View>
       ) : (
-        <Text style={styles.bookmarkEmptyText}>
-          Double tap an Ayah to make your first bookmark.
-        </Text>
+        <Footnote color={themeColors.textSecondary} style={styles.bookmarkEmptyText}>
+          Tap an ayah and choose Bookmark to save your first one.
+        </Footnote>
       )}
     </BottomSheetScrollView>
   );
@@ -290,11 +297,12 @@ const createStyles = (theme: AppTheme) => {
     searchInput: {
       paddingHorizontal: 16,
       paddingVertical: 12,
+      minHeight: 48,
       borderRadius: 15,
       backgroundColor: isLight
         ? withOpacity(themeColors.primarySurface, 0.95)
         : withOpacity(themeColors.white, 0.09),
-      color: isLight ? themeColors.offWhite : themeColors.white,
+      color: themeColors.white,
       fontSize: 15,
       marginBottom: 12,
       borderWidth: 1,
@@ -313,6 +321,7 @@ const createStyles = (theme: AppTheme) => {
     bookmarkButton: {
       paddingVertical: 13,
       paddingHorizontal: 14,
+      minHeight: 56,
       borderRadius: radii.row,
       borderCurve: "continuous",
       backgroundColor: withOpacity(themeColors.white, 0.05),
@@ -338,31 +347,14 @@ const createStyles = (theme: AppTheme) => {
     },
     bookmarkContent: {
       flex: 1,
+      gap: 2,
     },
     bookmarkTitle: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 15,
       fontWeight: "600",
-      marginBottom: 3,
-    },
-    bookmarkMeta: {
-      color: themeColors.accent,
-      fontSize: 12,
-      marginBottom: 2,
     },
     bookmarkEmptyText: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.92)
-        : withOpacity(themeColors.white, 0.7),
-      fontSize: 13,
       paddingVertical: 6,
       textAlign: "center",
-    },
-    bookmarkSwipeHint: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.88)
-        : withOpacity(themeColors.white, 0.62),
-      fontSize: 12,
     },
     deleteActionContainer: {
       justifyContent: "center",
@@ -370,9 +362,8 @@ const createStyles = (theme: AppTheme) => {
       paddingLeft: 20,
     },
     deleteAction: {
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.72)
-        : "#fd0000ff",
+      backgroundColor: themeColors.danger,
+      minWidth: 56,
       paddingVertical: 17,
       paddingHorizontal: 17,
       borderRadius: radii.row,
@@ -380,10 +371,6 @@ const createStyles = (theme: AppTheme) => {
       marginRight: 4,
       alignItems: "center",
       justifyContent: "center",
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryOutline, 0.88)
-        : withOpacity(themeColors.white, 0.22),
     },
     deleteActionContent: {
       flexDirection: "row",

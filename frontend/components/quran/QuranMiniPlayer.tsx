@@ -6,15 +6,14 @@ import {
   Animated,
   Pressable,
   StyleSheet,
-  Text,
   View,
   type GestureResponderEvent,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import GlassSurface from "@/components/ui/GlassSurface";
+import { Caption, Subhead } from "@/components/ui/Text";
 import PressableScale from "../PressableScale";
 
 const PROGRESS_POLL_INTERVAL_MS = 500;
@@ -54,11 +53,8 @@ export function QuranMiniPlayer({
   const themeColors = theme.colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const insets = useSafeAreaInsets();
-  // Tab bar sits at bottom: Math.max(insets.bottom, 14) + 6 with height 64.
-  // Its top edge is at Math.max(insets.bottom, 14) + 70 from the screen bottom.
-  // Add an 8px gap so the mini player clears it cleanly.
-  const TAB_BAR_CLEARANCE = Math.max(insets.bottom, 14) + 78;
+  // Rests just above the floating glass tab bar.
+  const TAB_BAR_CLEARANCE = useTabBarClearance();
   const [duration, setDuration] = useState(playbackDuration);
   const [position, setPosition] = useState(playbackPosition);
   const router = useRouter();
@@ -210,16 +206,17 @@ export function QuranMiniPlayer({
       >
         <GlassSurface tier="chrome" radius={theme.radii.cardLg} style={styles.innerContainer}>
           <View style={styles.textSection}>
-            <Text
+            <Subhead
+              color={themeColors.white}
               style={styles.surahName}
               numberOfLines={1}
               accessibilityRole="header"
             >
               {surahName ?? ""}
-            </Text>
-            <Text style={styles.remainingLabel}>
+            </Subhead>
+            <Caption color={themeColors.textSecondary} style={styles.remainingLabel}>
               Time remaining · {formattedRemaining}
-            </Text>
+            </Caption>
           </View>
           <View style={styles.controls}>
             <Pressable
@@ -284,13 +281,9 @@ const createStyles = (theme: AppTheme) => {
       marginRight: 12,
     },
     surahName: {
-      color: themeColors.white,
-      fontSize: 15,
       fontWeight: "600",
     },
     remainingLabel: {
-      color: withOpacity(themeColors.white, 0.8),
-      fontSize: 12,
       marginTop: 2,
     },
     controls: {

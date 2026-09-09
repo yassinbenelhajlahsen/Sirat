@@ -1,6 +1,7 @@
 import { memo, useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
+import { Footnote } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -24,6 +25,8 @@ const TAB_ITEMS: readonly {
 
 function NavigatorTabs({ selectedTab, onSelectTab }: NavigatorTabsProps) {
   const { theme } = useTheme();
+  const themeColors = theme.colors;
+  const isLight = theme.name === "light";
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
@@ -40,9 +43,18 @@ function NavigatorTabs({ selectedTab, onSelectTab }: NavigatorTabsProps) {
               onPress={() => onSelectTab(item.key)}
               scaleTo={0.94}
             >
-              <Text style={[styles.segmentLabel, isActive && styles.segmentLabelActive]}>
+              <Footnote
+                color={
+                  isActive
+                    ? isLight
+                      ? themeColors.offWhite
+                      : themeColors.onAccent
+                    : themeColors.textSecondary
+                }
+                style={styles.segmentLabel}
+              >
                 {item.label}
-              </Text>
+              </Footnote>
             </PressableScale>
           );
         })}
@@ -71,6 +83,7 @@ const createStyles = (theme: AppTheme) => {
     },
     segment: {
       flex: 1,
+      minHeight: 40,
       paddingVertical: 9,
       borderRadius: theme.radii.pill,
       alignItems: "center",
@@ -85,15 +98,8 @@ const createStyles = (theme: AppTheme) => {
       elevation: 8,
     },
     segmentLabel: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.95)
-        : withOpacity(themeColors.white, 0.8),
-      fontSize: 13,
       fontWeight: "600",
       letterSpacing: 0.3,
-    },
-    segmentLabelActive: {
-      color: isLight ? themeColors.offWhite : themeColors.onAccent,
     },
   });
 };

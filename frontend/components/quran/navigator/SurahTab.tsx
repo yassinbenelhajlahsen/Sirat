@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetFlatList, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -5,12 +6,13 @@ import {
   ListRenderItem,
   StyleProp,
   StyleSheet,
-  Text,
+  TextStyle,
   View,
   ViewStyle,
   useWindowDimensions,
 } from "react-native";
 
+import { Body, Callout, Caption, Footnote, Subhead } from "@/components/ui/Text";
 import { radii, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { NormalizedSurahMeta } from "@/services/quranData";
@@ -73,6 +75,9 @@ function SurahTab({
   const themeColors = theme.colors;
   const isLight = theme.name === "light";
   const styles = useMemo(() => createStyles(theme), [theme]);
+  // Gold reads poorly at small sizes on the cream canvas; the darker outline
+  // tone is the Light theme's accent for text.
+  const accentText = isLight ? themeColors.primaryOutline : themeColors.accent;
 
   const trimmedQuery = surahSearchQuery.trim();
   const hasQuery = trimmedQuery.length > 0;
@@ -135,16 +140,26 @@ function SurahTab({
   // Shared tile markup for both the virtualized list and the Popular grid.
   const renderTile = useCallback(
     (item: SurahItem, style: StyleProp<ViewStyle>, onPress: () => void) => (
-      <PressableScale key={item.surahNumber} style={style} onPress={onPress}>
+      <PressableScale
+        key={item.surahNumber}
+        style={style}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.englishName}, surah ${item.surahNumber}, ${item.ayahCount} ayat`}
+      >
         <View style={styles.surahTileRow}>
-          <Text style={styles.surahNumber}>{item.surahNumber}</Text>
-          <Text style={styles.surahArabic}>{item.arabicName}</Text>
+          <Footnote color={accentText} style={styles.surahNumber}>
+            {item.surahNumber}
+          </Footnote>
+          <Body color={accentText}>{item.arabicName}</Body>
         </View>
-        <Text style={styles.surahEnglish}>{item.englishName}</Text>
-        <Text style={styles.surahMeta}>{item.ayahCount} ayāt</Text>
+        <Subhead color={themeColors.white} style={styles.surahEnglish}>
+          {item.englishName}
+        </Subhead>
+        <Caption color={themeColors.textTertiary}>{item.ayahCount} ayāt</Caption>
       </PressableScale>
     ),
-    [styles],
+    [accentText, styles, themeColors.textTertiary, themeColors.white],
   );
 
   const renderItem = useCallback<ListRenderItem<SurahItem>>(
@@ -179,43 +194,51 @@ function SurahTab({
   const hasSearchResults =
     hasQuery && (ayahSearchResults.length > 0 || juzSearchResult !== null);
 
+  const sectionHeading = (label: string, extraStyle?: StyleProp<TextStyle>) => (
+    <Footnote color={themeColors.textSecondary} style={[styles.sectionHeading, extraStyle]}>
+      {label}
+    </Footnote>
+  );
+
   const searchResultsHeader = hasSearchResults ? (
     <View style={styles.headerContainer}>
       {ayahSearchResults.length > 0 ? (
         <View style={styles.ayahResultsContainer}>
-          <Text style={styles.sectionHeading}>Verse Matches</Text>
+          {sectionHeading("Verse Matches")}
           {ayahSearchResults.map((result) => (
             <PressableScale
               key={`${result.surahNumber}:${result.ayahNumber}`}
               style={styles.ayahResultTile}
+              accessibilityRole="button"
               onPress={() =>
                 handleSelectAyah(result.surahNumber, result.ayahNumber)
               }
             >
-              <Text style={styles.ayahResultMeta}>
+              <Caption color={accentText} style={styles.ayahResultMeta}>
                 {result.surahEnglishName} {result.surahNumber}:
                 {result.ayahNumber}
-              </Text>
-              <Text style={styles.ayahResultText} numberOfLines={2}>
+              </Caption>
+              <Footnote color={themeColors.textSecondary} numberOfLines={2}>
                 {result.englishText}
-              </Text>
+              </Footnote>
             </PressableScale>
           ))}
         </View>
       ) : null}
       {juzSearchResult ? (
         <View style={styles.ayahResultsContainer}>
-          <Text style={styles.sectionHeading}>Juz Match</Text>
+          {sectionHeading("Juz Match")}
           <PressableScale
             style={styles.ayahResultTile}
+            accessibilityRole="button"
             onPress={() => handleSelectJuz(juzSearchResult.juzNumber)}
           >
-            <Text style={styles.ayahResultMeta}>
+            <Caption color={accentText} style={styles.ayahResultMeta}>
               Juz {juzSearchResult.juzNumber}
-            </Text>
-            <Text style={styles.ayahResultText} numberOfLines={1}>
+            </Caption>
+            <Footnote color={themeColors.textSecondary} numberOfLines={1}>
               Jump directly to Juz {juzSearchResult.juzNumber}
-            </Text>
+            </Footnote>
           </PressableScale>
         </View>
       ) : null}
@@ -228,20 +251,25 @@ function SurahTab({
         <PressableScale
           style={styles.continueCard}
           accessibilityRole="button"
+          accessibilityLabel={`Continue reading ${lastRead.englishName}, ayah ${lastRead.ayahNumber}`}
           onPress={() =>
             handleSelectAyah(lastRead.surahNumber, lastRead.ayahNumber)
           }
         >
-          <Text style={styles.continueLabel}>Continue reading</Text>
+          <Caption color={accentText} style={styles.continueLabel}>
+            Continue reading
+          </Caption>
           <View style={styles.continueTitleRow}>
-            <Text style={styles.continueTitle}>{lastRead.englishName}</Text>
-            <Text style={styles.continueArabic}>{lastRead.arabicName}</Text>
+            <Callout color={themeColors.white} style={styles.continueTitle}>
+              {lastRead.englishName}
+            </Callout>
+            <Body color={accentText}>{lastRead.arabicName}</Body>
           </View>
-          <Text style={styles.continueMeta}>Ayah {lastRead.ayahNumber}</Text>
+          <Caption color={themeColors.textTertiary}>Ayah {lastRead.ayahNumber}</Caption>
         </PressableScale>
       ) : null}
 
-      <Text style={styles.sectionHeading}>Popular</Text>
+      {sectionHeading("Popular")}
       {popularRows.map((row, rowIndex) => (
         <View key={`popular-row-${rowIndex}`} style={styles.popularRow}>
           {row.map((item, i) =>
@@ -255,17 +283,17 @@ function SurahTab({
       ))}
 
       {showAllSurahs ? (
-        <Text style={[styles.sectionHeading, styles.allHeading]}>
-          All Sūrahs
-        </Text>
+        sectionHeading("All Sūrahs", styles.allHeading)
       ) : (
         <PressableScale
           style={styles.allButton}
           accessibilityRole="button"
           onPress={() => setShowAllSurahs(true)}
         >
-          <Text style={styles.allButtonText}>All Sūrahs</Text>
-          <Text style={styles.allButtonChevron}>›</Text>
+          <Subhead color={themeColors.white} style={styles.allButtonText}>
+            All Sūrahs
+          </Subhead>
+          <Ionicons name="chevron-forward" size={16} color={accentText} />
         </PressableScale>
       )}
     </View>
@@ -278,13 +306,11 @@ function SurahTab({
       <BottomSheetTextInput
         style={styles.searchInput}
         placeholder="Search verses or 2:255"
-        placeholderTextColor={
-          isLight
-            ? withOpacity(themeColors.grayDark, 0.86)
-            : withOpacity(themeColors.white, 0.5)
-        }
+        placeholderTextColor={themeColors.textTertiary}
         value={surahSearchQuery}
         onChangeText={onSurahSearchQueryChange}
+        accessibilityLabel="Search the Quran"
+        maxFontSizeMultiplier={1.4}
       />
     </View>
   );
@@ -305,9 +331,9 @@ function SurahTab({
         ListEmptyComponent={
           showEmptyState
             ? () => (
-                <Text style={styles.emptyStateText}>
+                <Subhead color={themeColors.textSecondary} style={styles.emptyStateText}>
                   No matching verses or surahs.
-                </Text>
+                </Subhead>
               )
             : null
         }
@@ -364,14 +390,13 @@ const createStyles = (theme: AppTheme) => {
       borderWidth: 1,
       borderColor: withOpacity(themeColors.accent, isLight ? 0.4 : 0.35),
       marginBottom: 16,
+      gap: 2,
     },
     continueLabel: {
-      color: isLight ? themeColors.primaryOutline : themeColors.accent,
-      fontSize: 12,
       fontWeight: "600",
       textTransform: "uppercase",
       letterSpacing: 0.4,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     continueTitleRow: {
       flexDirection: "row",
@@ -379,20 +404,7 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
     },
     continueTitle: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 16,
       fontWeight: "700",
-    },
-    continueArabic: {
-      color: themeColors.accent,
-      fontSize: 17,
-    },
-    continueMeta: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.94)
-        : withOpacity(themeColors.white, 0.6),
-      fontSize: 12,
-      marginTop: 2,
     },
     popularRow: {
       flexDirection: "row",
@@ -404,7 +416,8 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 13,
+      gap: 4,
+      minHeight: 48,
       borderRadius: radii.row,
       borderCurve: "continuous",
       backgroundColor: withOpacity(themeColors.white, 0.05),
@@ -413,24 +426,12 @@ const createStyles = (theme: AppTheme) => {
       marginTop: 2,
     },
     allButtonText: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 14,
       fontWeight: "600",
-    },
-    allButtonChevron: {
-      color: themeColors.accent,
-      fontSize: 18,
-      marginLeft: 6,
-      marginTop: -2,
     },
     headerContainer: {
       marginBottom: 14,
     },
     sectionHeading: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.95)
-        : withOpacity(themeColors.white, 0.86),
-      fontSize: 13,
       fontWeight: "600",
       marginTop: 12,
       marginBottom: 8,
@@ -446,31 +447,24 @@ const createStyles = (theme: AppTheme) => {
       borderCurve: "continuous",
       paddingHorizontal: 14,
       paddingVertical: 11,
+      minHeight: 48,
       borderWidth: 1,
       borderColor: mat.border,
       marginBottom: 9,
     },
     ayahResultMeta: {
-      color: isLight ? themeColors.primaryOutline : themeColors.accent,
-      fontSize: 12,
       fontWeight: "600",
       marginBottom: 4,
-    },
-    ayahResultText: {
-      color: isLight
-        ? withOpacity(themeColors.offWhite, 0.88)
-        : withOpacity(themeColors.white, 0.84),
-      fontSize: 13,
-      lineHeight: 18,
     },
     searchInput: {
       paddingHorizontal: 16,
       paddingVertical: 12,
+      minHeight: 48,
       borderRadius: 15,
       backgroundColor: isLight
         ? withOpacity(themeColors.primarySurface, 0.95)
         : withOpacity(themeColors.white, 0.09),
-      color: isLight ? themeColors.offWhite : themeColors.white,
+      color: themeColors.white,
       fontSize: 15,
       borderWidth: 1,
       borderColor: isLight
@@ -507,32 +501,14 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: 4,
     },
     surahNumber: {
-      color: themeColors.accent,
-      fontSize: 13,
       fontWeight: "700",
     },
     surahEnglish: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 15,
       fontWeight: "600",
       marginBottom: 3,
     },
-    surahArabic: {
-      color: themeColors.accent,
-      fontSize: 17,
-    },
-    surahMeta: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.94)
-        : withOpacity(themeColors.white, 0.55),
-      fontSize: 11,
-    },
     emptyStateText: {
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.92)
-        : withOpacity(themeColors.white, 0.7),
       textAlign: "center",
-      fontSize: 14,
       paddingVertical: 12,
     },
   });

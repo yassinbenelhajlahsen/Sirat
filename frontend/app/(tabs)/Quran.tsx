@@ -1,9 +1,11 @@
 import Aurora from "@/components/ui/Aurora";
-import { Caption, Headline } from "@/components/ui/Text";
+import { Body, Caption, Footnote, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useTheme } from "@/context/ThemeContext";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
+import { useQuranTextScale } from "@/hooks/useQuranTextScale";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import {
   QuranBookmark,
@@ -35,7 +37,6 @@ import { setIsAudioActiveAsync } from "expo-audio";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AccessibilityInfo,
   Alert,
   Animated,
   AppState,
@@ -43,7 +44,6 @@ import {
   Clipboard,
   InteractionManager,
   StyleSheet,
-  Text,
   View,
   ViewToken,
 } from "react-native";
@@ -401,6 +401,8 @@ export default function QuranScreen() {
   const showArabic = isModeEnabled("arabic");
   const showEnglish = isModeEnabled("english");
   const showTransliteration = isModeEnabled("transliteration");
+  const { textScale } = useQuranTextScale();
+  const reduceMotion = useReducedMotion();
 
   const [bookmarks, setBookmarks] = useState<QuranBookmark[]>([]);
   const [bookmarkModalContext, setBookmarkModalContext] = useState<{
@@ -706,20 +708,16 @@ export default function QuranScreen() {
   // Calm entrance fade-in when list becomes ready; skipped when Reduce Motion is on.
   useEffect(() => {
     if (!listReady) return;
-    AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
-      if (reduced) {
-        listOpacity.setValue(1);
-        return;
-      }
-      Animated.timing(listOpacity, {
-        toValue: 1,
-        duration: TIMING_ENTER,
-        useNativeDriver: true,
-      }).start();
-    }).catch(() => {
+    if (reduceMotion) {
       listOpacity.setValue(1);
-    });
-  }, [listReady, listOpacity]);
+      return;
+    }
+    Animated.timing(listOpacity, {
+      toValue: 1,
+      duration: TIMING_ENTER,
+      useNativeDriver: true,
+    }).start();
+  }, [listReady, listOpacity, reduceMotion]);
 
   useEffect(() => {
     if (displayModeAnchorInteractionRef.current) {
@@ -759,7 +757,9 @@ export default function QuranScreen() {
   }, []);
 
   useEffect(() => {
-    const displayModeSignature = `${showArabic ? "1" : "0"}${showEnglish ? "1" : "0"}${showTransliteration ? "1" : "0"}`;
+    // Text size changes row heights the same way toggling a text block does,
+    // so it re-anchors the top visible ayah too.
+    const displayModeSignature = `${showArabic ? "1" : "0"}${showEnglish ? "1" : "0"}${showTransliteration ? "1" : "0"}@${textScale}`;
     if (displayModeSignatureRef.current === null) {
       displayModeSignatureRef.current = displayModeSignature;
       return;
@@ -819,6 +819,7 @@ export default function QuranScreen() {
     showArabic,
     showEnglish,
     showTransliteration,
+    textScale,
   ]);
 
   const handleViewableItemsChanged = useCallback(
@@ -1133,7 +1134,9 @@ export default function QuranScreen() {
     }
   }, [bookmarkSearchQuery, navigatorOpen, surahSearchQuery]);
 
-  const handleAyahDoubleTap = useCallback(
+  // Bookmark action from the inline ayah row. An already-bookmarked ayah opens
+  // the Bookmarks tab so the user can rename or remove it.
+  const handleAyahBookmark = useCallback(
     (ayah: NormalizedAyah, ayahGlobalIndex: number, ayahKey: string) => {
       const existing = bookmarkMap.get(ayahKey);
       if (existing) {
@@ -1179,10 +1182,12 @@ export default function QuranScreen() {
             showArabic={showArabic}
             showEnglish={showEnglish}
             showTransliteration={showTransliteration}
+            textScale={textScale}
             isBookmarked={bookmarkedAyahKeys.has(ayahKey)}
-            onDoubleTap={() =>
-              handleAyahDoubleTap(item.ayah, item.ayahGlobalIndex, ayahKey)
+            onBookmark={() =>
+              handleAyahBookmark(item.ayah, item.ayahGlobalIndex, ayahKey)
             }
+            onCopy={() => handleAyahLongPress(item.ayah)}
             onLongPress={() => handleAyahLongPress(item.ayah)}
           />
         );
@@ -1192,13 +1197,14 @@ export default function QuranScreen() {
     },
     [
       bookmarkedAyahKeys,
-      handleAyahDoubleTap,
+      handleAyahBookmark,
       handleAyahLongPress,
       scrollToTopAnimated,
       showArabic,
       showEnglish,
       showTransliteration,
       surahMap,
+      textScale,
     ],
   );
 
@@ -1311,7 +1317,9 @@ export default function QuranScreen() {
             >
               <View style={styles.headerTitleRow}>
                 <Headline color={themeColors.white}>{currentSurahMeta?.englishName ?? ""}</Headline>
-                <Text style={styles.headerArabic}>{currentSurahMeta?.arabicName ?? ""}</Text>
+                <Body color={themeColors.accent} style={styles.headerArabic}>
+                  {currentSurahMeta?.arabicName ?? ""}
+                </Body>
                 <Ionicons
                   name="chevron-down"
                   size={14}
@@ -1341,11 +1349,11 @@ export default function QuranScreen() {
                   <Ionicons name={audioIconName} size={18} color={themeColors.onAccent} />
                 </PressableScale>
               )}
-              <PressableScale style={styles.ctrl} onPress={() => openNavigator("surah")} accessibilityRole="button" accessibilityLabel="Navigate">
+              <PressableScale style={styles.ctrl} onPress={() => openNavigator("surah")} accessibilityRole="button" accessibilityLabel="Search" accessibilityHint="Find a surah, ayah, juz, or bookmark" hitSlop={2}>
                 <Ionicons name="search" size={18} color={themeColors.white} />
               </PressableScale>
-              <PressableScale style={styles.ctrl} onPress={() => { closeAllSheets(); setDisplaySettingsOpen(true); }} accessibilityRole="button" accessibilityLabel="Display settings">
-                <Text style={styles.aa}>Aa</Text>
+              <PressableScale style={styles.ctrl} onPress={() => { closeAllSheets(); setDisplaySettingsOpen(true); }} accessibilityRole="button" accessibilityLabel="Display settings" accessibilityHint="Choose which text shows and its size">
+                <Footnote color={themeColors.white} style={styles.aa} maxFontSizeMultiplier={1}>Aa</Footnote>
               </PressableScale>
             </View>
           </LinearGradient>
@@ -1456,9 +1464,10 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
     },
     headerTitleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
-    headerArabic: { fontWeight: "600", fontSize: 16, color: themeColors.accent },
+    headerArabic: { fontWeight: "600" },
     headerChevron: { alignSelf: "center" },
     headerActions: { flexDirection: "row", gap: spacing.sm },
+    // 40pt visual with hitSlop padding the target to 44.
     ctrl: {
       width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center",
       backgroundColor: withOpacity(themeColors.white, 0.1), borderWidth: 1, borderColor: withOpacity(themeColors.white, 0.18),
@@ -1466,7 +1475,7 @@ const createStyles = (theme: AppTheme) => {
     ctrlPlay: { backgroundColor: themeColors.accent, borderColor: themeColors.accent },
     ctrlOffline: { backgroundColor: withOpacity(themeColors.white, 0.08) },
     ctrlDisabled: { opacity: 0.5 },
-    aa: { fontWeight: "700", fontSize: 14, color: themeColors.white },
+    aa: { fontWeight: "700" },
     list: {
       flex: 1,
     },
@@ -1477,16 +1486,6 @@ const createStyles = (theme: AppTheme) => {
     },
     listPlaceholder: {
       flex: 1,
-    },
-    footerNoteContainer: {
-      paddingTop: 6,
-      paddingBottom: 12,
-      alignItems: "center",
-    },
-    footerNote: {
-      color: withOpacity(themeColors.white, 0.65),
-      fontSize: 11,
-      textAlign: "center",
     },
   });
 };

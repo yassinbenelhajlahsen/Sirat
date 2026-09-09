@@ -5,18 +5,26 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
 
 import SheetBackground from "@/components/ui/SheetBackground";
+import SheetHeader from "@/components/ui/SheetHeader";
+import { Caption, Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
+import { useQuranTextScale } from "@/hooks/useQuranTextScale";
 import { QuranDisplayMode } from "@/services/quranDisplayModes";
-
-import PressableScale from "../PressableScale";
+import {
+  QURAN_TEXT_SCALE_LABELS,
+  QURAN_TEXT_SCALE_OPTIONS,
+} from "@/services/quranTextScale";
 
 function DisplaySettingsSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
   return <SheetBackground {...p} solid />;
 }
 
-const SNAP_POINTS = ["40%"];
+// Header + three checkboxes + text-size row. gorhom 5.2 + reanimated 4 doesn't
+// bound content to the snap height, so the content host is capped to match.
+const SNAP_FRACTION = 0.5;
+const SNAP_POINTS = [`${SNAP_FRACTION * 100}%`];
 
 type QuranDisplaySettingsModalProps = {
   visible: boolean;
@@ -42,12 +50,10 @@ export default function QuranDisplaySettingsModal({
 
   const { displayModes, isModeEnabled, toggleDisplayMode } =
     useQuranDisplayModes();
+  const { textScale, setTextScale } = useQuranTextScale();
   const selectedDisplayModeCount = displayModes.length;
   const frame = useSafeAreaFrame();
-  // gorhom 5.2 + reanimated 4 doesn't bound the sheet content to the snap
-  // height, so cap it to the snap fraction of the real window. Matches
-  // SNAP_POINTS ("40%"). See components/quran/navigator/NavigatorModal.tsx.
-  const contentMaxHeight = Math.round(frame.height * 0.4);
+  const contentMaxHeight = Math.round(frame.height * SNAP_FRACTION);
 
   // Stays mounted through the close animation; only unmounts once the sheet
   // reports it has fully closed (onChange === -1), so closing animates instead
@@ -112,24 +118,7 @@ export default function QuranDisplaySettingsModal({
       onChange={handleSheetChange}
     >
       <BottomSheetView style={[styles.content, { maxHeight: contentMaxHeight }]}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Display Text</Text>
-            <Text style={styles.subtitle}>Select which text to show</Text>
-          </View>
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            onPress={onClose}
-            style={styles.dismissButton}
-            scaleTo={0.85}
-          >
-            <View style={styles.dismissIcon}>
-              <View style={[styles.dismissLine, styles.dismissLineFirst]} />
-              <View style={[styles.dismissLine, styles.dismissLineSecond]} />
-            </View>
-          </PressableScale>
-        </View>
+        <SheetHeader title="Display Text" subtitle="Select which text to show" onClose={onClose} />
 
         <View style={styles.displayModeList}>
           {DISPLAY_MODE_OPTIONS.map((option, index) => {
@@ -142,6 +131,7 @@ export default function QuranDisplaySettingsModal({
                 key={option.mode}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked, disabled: isDisabled }}
+                accessibilityHint={isDisabled ? "At least one text must stay on" : undefined}
                 onPress={() => {
                   if (!isDisabled) {
                     handleDisplayModePress(option.mode);
@@ -170,13 +160,42 @@ export default function QuranDisplaySettingsModal({
                     />
                   ) : null}
                 </View>
+                <Subhead color={themeColors.white}>{option.label}</Subhead>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Caption color={themeColors.textTertiary} style={styles.sectionLabel}>
+          TEXT SIZE
+        </Caption>
+        <View style={styles.scaleRow} accessibilityRole="radiogroup">
+          {QURAN_TEXT_SCALE_OPTIONS.map((option) => {
+            const selected = textScale === option;
+            return (
+              <Pressable
+                key={option}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected, selected }}
+                accessibilityLabel={`${QURAN_TEXT_SCALE_LABELS[option]} text`}
+                onPress={() => void setTextScale(option)}
+                style={({ pressed }) => [
+                  styles.scaleCell,
+                  selected ? styles.scaleCellSelected : null,
+                  pressed && !selected ? styles.scaleCellPressed : null,
+                ]}
+              >
                 <Text
+                  allowFontScaling={false}
                   style={[
-                    styles.displayModeLabel,
-                    isDisabled ? styles.displayModeLabelDisabled : null,
+                    styles.scaleGlyph,
+                    {
+                      fontSize: 13 + option * 6,
+                      color: selected ? themeColors.onAccent : themeColors.white,
+                    },
                   ]}
                 >
-                  {option.label}
+                  A
                 </Text>
               </Pressable>
             );
@@ -196,57 +215,6 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: 20,
       paddingBottom: 24,
     },
-    headerRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      paddingTop: 18,
-      marginBottom: 16,
-    },
-    title: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 20,
-      fontWeight: "700",
-    },
-    subtitle: {
-      marginTop: 4,
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.95)
-        : withOpacity(themeColors.white, 0.66),
-      fontSize: 12,
-      letterSpacing: 0.3,
-    },
-    dismissButton: {
-      padding: 8,
-      marginTop: -2,
-      borderRadius: 999,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primarySurfaceAlt, 0.55)
-        : withOpacity(themeColors.white, 0.08),
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.7)
-        : withOpacity(themeColors.white, 0.12),
-    },
-    dismissIcon: {
-      width: 18,
-      height: 18,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    dismissLine: {
-      position: "absolute",
-      width: 18,
-      height: 2,
-      backgroundColor: isLight ? themeColors.offWhite : themeColors.white,
-      borderRadius: 999,
-    },
-    dismissLineFirst: {
-      transform: [{ rotate: "45deg" }],
-    },
-    dismissLineSecond: {
-      transform: [{ rotate: "-45deg" }],
-    },
     displayModeList: {
       borderWidth: 1,
       borderColor: isLight
@@ -258,8 +226,9 @@ const createStyles = (theme: AppTheme) => {
     displayModeRow: {
       flexDirection: "row",
       alignItems: "center",
+      minHeight: 48,
       paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingVertical: 10,
       backgroundColor: isLight
         ? withOpacity(themeColors.primarySurface, 0.9)
         : withOpacity(themeColors.primaryDeep, 0.35),
@@ -296,13 +265,35 @@ const createStyles = (theme: AppTheme) => {
       backgroundColor: themeColors.accent,
       borderColor: themeColors.accent,
     },
-    displayModeLabel: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 15,
-      fontWeight: "400",
+    sectionLabel: {
+      letterSpacing: 1,
+      marginTop: theme.spacing.lg,
+      marginBottom: theme.spacing.sm,
     },
-    displayModeLabelDisabled: {
-      opacity: 0.9,
+    scaleRow: {
+      flexDirection: "row",
+      gap: theme.spacing.sm,
+    },
+    scaleCell: {
+      flex: 1,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: theme.radii.row,
+      borderCurve: "continuous",
+      borderWidth: 1,
+      borderColor: withOpacity(themeColors.white, 0.12),
+      backgroundColor: withOpacity(themeColors.white, 0.05),
+    },
+    scaleCellSelected: {
+      backgroundColor: themeColors.accent,
+      borderColor: themeColors.accent,
+    },
+    scaleCellPressed: {
+      backgroundColor: withOpacity(themeColors.white, 0.1),
+    },
+    scaleGlyph: {
+      fontWeight: "600",
     },
   });
 };

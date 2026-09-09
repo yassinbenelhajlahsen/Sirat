@@ -1,12 +1,8 @@
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo } from "react";
-import {
-  InteractionManager,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { InteractionManager, StyleSheet, View } from "react-native";
 
+import { Subhead } from "@/components/ui/Text";
 import { radii, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -71,8 +67,12 @@ function JuzTab({ onSelectJuz, onClose, bottomInset = 0 }: JuzTabProps) {
                   key={juz}
                   style={[styles.button, !isLast && styles.buttonSpaced]}
                   onPress={() => handleSelect(juz)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Jump to Juz ${juz}`}
                 >
-                  <Text style={styles.buttonText}>Juz {juz}</Text>
+                  <Subhead color={theme.colors.white} style={styles.buttonText}>
+                    Juz {juz}
+                  </Subhead>
                 </PressableScale>
               );
             })}
@@ -87,7 +87,6 @@ export default memo(JuzTab);
 
 const createStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
-  const isLight = theme.name === "light";
 
   return StyleSheet.create({
     scrollView: {
@@ -104,7 +103,8 @@ const createStyles = (theme: AppTheme) => {
     },
     button: {
       flex: 1,
-      paddingVertical: 14,
+      minHeight: 48,
+      paddingVertical: 12,
       paddingHorizontal: 14,
       borderRadius: radii.row,
       borderCurve: "continuous",
@@ -118,9 +118,7 @@ const createStyles = (theme: AppTheme) => {
       marginRight: 12,
     },
     buttonText: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
       fontWeight: "600",
-      fontSize: 14,
     },
   });
 };

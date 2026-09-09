@@ -40,6 +40,11 @@ jest.mock("@/hooks/useQuranDisplayModes", () => ({
   useQuranDisplayModes: jest.fn(),
 }));
 
+const mockSetTextScale = jest.fn(async (v: number) => v);
+jest.mock("@/hooks/useQuranTextScale", () => ({
+  useQuranTextScale: () => ({ textScale: 1, setTextScale: mockSetTextScale, loaded: true }),
+}));
+
 const mockUseQuranDisplayModes = useQuranDisplayModes as jest.MockedFunction<
   typeof useQuranDisplayModes
 >;
@@ -100,6 +105,29 @@ describe("QuranDisplaySettingsModal contract", () => {
     const dismissButton = getAllByRole("button")[0];
     fireEvent.press(dismissButton);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers a reader text size radio group", () => {
+    mockUseQuranDisplayModes.mockReturnValue({
+      displayModes: ["arabic"],
+      isModeEnabled: (mode: string) => mode === "arabic",
+      toggleDisplayMode: jest.fn(),
+    } as any);
+
+    const { getAllByRole, getByLabelText, getByText } = render(
+      <QuranDisplaySettingsModal visible onClose={jest.fn()} />
+    );
+
+    expect(getByText("TEXT SIZE")).toBeTruthy();
+    const radios = getAllByRole("radio");
+    expect(radios).toHaveLength(4);
+    expect(getByLabelText("Default text").props.accessibilityState).toEqual({
+      checked: true,
+      selected: true,
+    });
+
+    fireEvent.press(getByLabelText("Larger text"));
+    expect(mockSetTextScale).toHaveBeenCalledWith(1.3);
   });
 
   it("prevents toggling the last enabled mode while allowing other toggles", () => {

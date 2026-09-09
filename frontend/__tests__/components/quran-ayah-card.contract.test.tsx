@@ -1,4 +1,5 @@
-import { act, fireEvent, render } from "@testing-library/react-native";
+import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import QuranAyahCard from "@/components/quran/QuranAyahCard";
 import type { NormalizedAyah, NormalizedSurahMeta } from "@/services/quranData";
@@ -46,10 +47,6 @@ const surahMeta: NormalizedSurahMeta = {
 };
 
 describe("QuranAyahCard contract", () => {
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   it("renders surah header, ayah content, and bookmark state", () => {
     const { getByText } = render(
       <QuranAyahCard
@@ -85,25 +82,61 @@ describe("QuranAyahCard contract", () => {
     expect(queryByText(ayah.englishText)).toBeNull();
   });
 
-  it("fires onDoubleTap only when a second tap occurs within the allowed interval", () => {
-    jest.useFakeTimers();
-    const onDoubleTap = jest.fn();
-    const { getByLabelText } = render(
-      <QuranAyahCard ayah={ayah} isSurahStart={false} onDoubleTap={onDoubleTap} />
+  it("reveals visible Bookmark and Copy actions on tap and wires them", () => {
+    const onBookmark = jest.fn();
+    const onCopy = jest.fn();
+    const { getByLabelText, queryByLabelText } = render(
+      <QuranAyahCard
+        ayah={ayah}
+        isSurahStart={false}
+        onBookmark={onBookmark}
+        onCopy={onCopy}
+      />
     );
     const ayahPressable = getByLabelText("Ayah 255 from Surah 2");
+    expect(queryByLabelText("Bookmark this ayah")).toBeNull();
+    expect(ayahPressable.props.accessibilityState).toEqual({ expanded: false });
 
     fireEvent.press(ayahPressable);
-    expect(onDoubleTap).not.toHaveBeenCalled();
-
-    act(() => {
-      jest.advanceTimersByTime(200);
+    expect(getByLabelText("Ayah 255 from Surah 2").props.accessibilityState).toEqual({
+      expanded: true,
     });
-    fireEvent.press(ayahPressable);
 
-    expect(onDoubleTap).toHaveBeenCalledTimes(1);
-    act(() => {
-      jest.runOnlyPendingTimers();
-    });
+    fireEvent.press(getByLabelText("Bookmark this ayah"));
+    expect(onBookmark).toHaveBeenCalledTimes(1);
+    // Acting on a row closes it again.
+    expect(queryByLabelText("Copy this ayah")).toBeNull();
+
+    fireEvent.press(getByLabelText("Ayah 255 from Surah 2"));
+    fireEvent.press(getByLabelText("Copy this ayah"));
+    expect(onCopy).toHaveBeenCalledTimes(1);
+  });
+
+  it("labels the bookmark action differently once bookmarked", () => {
+    const { getByLabelText } = render(
+      <QuranAyahCard ayah={ayah} isSurahStart={false} isBookmarked onBookmark={jest.fn()} />
+    );
+    fireEvent.press(getByLabelText("Ayah 255 from Surah 2"));
+    expect(getByLabelText("View bookmark")).toBeTruthy();
+  });
+
+  it("keeps long press as the copy shortcut", () => {
+    const onLongPress = jest.fn();
+    const { getByLabelText } = render(
+      <QuranAyahCard ayah={ayah} isSurahStart={false} onLongPress={onLongPress} />
+    );
+    fireEvent(getByLabelText("Ayah 255 from Surah 2"), "longPress");
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("scales every text block from the reader text size", () => {
+    const { getByText } = render(
+      <QuranAyahCard ayah={ayah} isSurahStart={false} showTransliteration textScale={1.3} />
+    );
+    expect(StyleSheet.flatten(getByText(ayah.arabicText).props.style).fontSize).toBeCloseTo(31 * 1.3);
+    expect(StyleSheet.flatten(getByText(ayah.englishText).props.style).fontSize).toBeCloseTo(15 * 1.3);
+    expect(
+      StyleSheet.flatten(getByText(ayah.transliteration as string).props.style).fontSize,
+    ).toBeCloseTo(14 * 1.3);
   });
 });

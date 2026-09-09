@@ -1,16 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import SheetBackground from "@/components/ui/SheetBackground";
+import SheetHeader from "@/components/ui/SheetHeader";
+import { Callout } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { formatCopyText } from "@/services/quranCopyText";
 import { NormalizedAyah } from "@/services/quranData";
-
-import PressableScale from "../PressableScale";
 
 function CopySheetBackground(p: Parameters<typeof SheetBackground>[0]) {
   return <SheetBackground {...p} solid />;
@@ -45,7 +45,6 @@ export default function QuranCopySheet({
   const [mounted, setMounted] = useState(visible);
   const sheetRef = useRef<BottomSheet>(null);
   const previousVisibleRef = useRef(visible);
-  const insets = useSafeAreaInsets();
 
   // `visible` and `ayah` clear together on close, so keep the last ayah around
   // for the duration of the close animation.
@@ -55,10 +54,9 @@ export default function QuranCopySheet({
   }
   const activeAyah = ayah ?? lastAyahRef.current;
 
-  // The sheet runs full-height to the screen bottom (one continuous surface, no
-  // separate chrome strip), so its content is padded past the floating glass tab
-  // bar. Mirrors GlassTabBar's layout: bottom offset + pill height + gap.
-  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
+  // The sheet runs full-height to the screen bottom, so its content is padded
+  // past the floating glass tab bar.
+  const tabBarClearance = useTabBarClearance();
 
   useEffect(() => {
     if (visible) {
@@ -117,24 +115,7 @@ export default function QuranCopySheet({
       <BottomSheetView
         style={[styles.content, { paddingBottom: tabBarClearance + 24 }]}
       >
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>Copy ayah text</Text>
-          </View>
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            onPress={onClose}
-            style={styles.dismissButton}
-            scaleTo={0.85}
-          >
-            <View style={styles.dismissIcon}>
-              <View style={[styles.dismissLine, styles.dismissLineFirst]} />
-              <View style={[styles.dismissLine, styles.dismissLineSecond]} />
-            </View>
-          </PressableScale>
-        </View>
+        <SheetHeader title={title} subtitle="Copy ayah text" onClose={onClose} />
 
         <View style={styles.optionList}>
           {showArabic ? (
@@ -261,7 +242,7 @@ function CopyRow({
         color={themeColors.accent}
         style={styles.optionIcon}
       />
-      <Text style={[styles.optionLabel, { color: labelColor }]}>{label}</Text>
+      <Callout color={labelColor}>{label}</Callout>
     </Pressable>
   );
 }
@@ -275,65 +256,15 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: 20,
       paddingBottom: 24,
     },
-    headerRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      paddingTop: 18,
-      marginBottom: 16,
-    },
-    title: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 17,
-      fontWeight: "700",
-    },
-    subtitle: {
-      marginTop: 4,
-      color: isLight
-        ? withOpacity(themeColors.grayDark, 0.95)
-        : withOpacity(themeColors.white, 0.6),
-      fontSize: 12,
-      letterSpacing: 0.3,
-    },
-    dismissButton: {
-      padding: 8,
-      marginTop: -2,
-      borderRadius: 999,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primarySurfaceAlt, 0.55)
-        : withOpacity(themeColors.white, 0.08),
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.7)
-        : withOpacity(themeColors.white, 0.12),
-    },
-    dismissIcon: {
-      width: 18,
-      height: 18,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    dismissLine: {
-      position: "absolute",
-      width: 18,
-      height: 2,
-      backgroundColor: isLight ? themeColors.offWhite : themeColors.white,
-      borderRadius: 999,
-    },
-    dismissLineFirst: {
-      transform: [{ rotate: "45deg" }],
-    },
-    dismissLineSecond: {
-      transform: [{ rotate: "-45deg" }],
-    },
     optionList: {
       marginTop: 4,
     },
     optionRow: {
       flexDirection: "row",
       alignItems: "center",
+      minHeight: 48,
       paddingHorizontal: 4,
-      paddingVertical: 15,
+      paddingVertical: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: isLight
         ? withOpacity(themeColors.primaryBorder, 0.5)
@@ -347,10 +278,6 @@ const createStyles = (theme: AppTheme) => {
     },
     optionIcon: {
       marginRight: 12,
-    },
-    optionLabel: {
-      color: isLight ? themeColors.offWhite : themeColors.white,
-      fontSize: 16,
     },
     divider: {
       height: StyleSheet.hairlineWidth,

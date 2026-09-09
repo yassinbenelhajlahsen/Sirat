@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
+import Button from "@/components/ui/Button";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { NormalizedAyah, NormalizedSurahMeta } from "@/services/quranData";
@@ -15,12 +16,26 @@ type QuranAyahCardProps = {
   showEnglish?: boolean;
   showTransliteration?: boolean;
   isBookmarked?: boolean;
-  onDoubleTap?: () => void;
+  /** Reader text size multiplier from the display settings sheet. */
+  textScale?: number;
+  onBookmark?: () => void;
+  onCopy?: () => void;
   onLongPress?: () => void;
 };
 
-const DOUBLE_TAP_INTERVAL_MS = 280;
+// Base reading sizes at textScale = 1.
+const ARABIC_SIZE = 31;
+const ARABIC_LINE = 48;
+const TRANSLIT_SIZE = 14;
+const TRANSLIT_LINE = 22;
+const TRANSLATION_SIZE = 15;
+const TRANSLATION_LINE = 23;
 
+/**
+ * One ayah in the reader. A tap reveals a visible action row (Bookmark, Copy)
+ * so the core actions no longer hide behind double-tap; long press still jumps
+ * straight to the copy sheet as a shortcut.
+ */
 function QuranAyahCard({
   ayah,
   isSurahStart,
@@ -29,7 +44,9 @@ function QuranAyahCard({
   showEnglish = true,
   showTransliteration = false,
   isBookmarked = false,
-  onDoubleTap,
+  textScale = 1,
+  onBookmark,
+  onCopy,
   onLongPress,
 }: QuranAyahCardProps) {
   const { theme } = useTheme();
@@ -42,15 +59,29 @@ function QuranAyahCard({
   const shouldShowEnglish = showEnglish && Boolean(ayah.englishText);
   const shouldShowTransliteration =
     showTransliteration && Boolean(ayah.transliteration);
-  const lastTapRef = useRef(0);
-  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isDoubleTapFeedbackVisible, setIsDoubleTapFeedbackVisible] =
-    useState(false);
+  const hasActions = Boolean(onBookmark || onCopy);
+
+  const [actionsOpen, setActionsOpen] = useState(false);
   const holdScale = useRef(new Animated.Value(1)).current;
+
+  const sized = useMemo(
+    () => ({
+      arabic: { fontSize: ARABIC_SIZE * textScale, lineHeight: ARABIC_LINE * textScale },
+      transliteration: {
+        fontSize: TRANSLIT_SIZE * textScale,
+        lineHeight: TRANSLIT_LINE * textScale,
+      },
+      translation: {
+        fontSize: TRANSLATION_SIZE * textScale,
+        lineHeight: TRANSLATION_LINE * textScale,
+      },
+    }),
+    [textScale],
+  );
 
   const handlePressIn = useCallback(() => {
     Animated.spring(holdScale, {
-      toValue: 0.965,
+      toValue: 0.975,
       speed: 40,
       bounciness: 0,
       useNativeDriver: true,
@@ -66,33 +97,17 @@ function QuranAyahCard({
     }).start();
   }, [holdScale]);
 
-  useEffect(() => {
-    return () => {
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
-    };
-  }, []);
+  const toggleActions = useCallback(() => setActionsOpen((open) => !open), []);
 
-  const handlePress = useCallback(() => {
-    if (!onDoubleTap) {
-      return;
-    }
-    const now = Date.now();
-    if (now - lastTapRef.current <= DOUBLE_TAP_INTERVAL_MS) {
-      lastTapRef.current = 0;
-      setIsDoubleTapFeedbackVisible(true);
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
-      feedbackTimeoutRef.current = setTimeout(() => {
-        setIsDoubleTapFeedbackVisible(false);
-      }, 140);
-      onDoubleTap();
-    } else {
-      lastTapRef.current = now;
-    }
-  }, [onDoubleTap]);
+  const handleBookmark = useCallback(() => {
+    setActionsOpen(false);
+    onBookmark?.();
+  }, [onBookmark]);
+
+  const handleCopy = useCallback(() => {
+    setActionsOpen(false);
+    onCopy?.();
+  }, [onCopy]);
 
   return (
     <View style={styles.container}>
@@ -106,27 +121,27 @@ function QuranAyahCard({
 
       <Animated.View style={{ transform: [{ scale: holdScale }] }}>
         <Pressable
-          style={[
-            styles.ayahBlock,
-            isDoubleTapFeedbackVisible && onDoubleTap ? styles.ayahCardPressed : null,
-          ]}
-          onPress={handlePress}
+          style={[styles.ayahBlock, actionsOpen && hasActions && styles.ayahBlockActive]}
+          onPress={hasActions ? toggleActions : undefined}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           onLongPress={onLongPress}
           delayLongPress={400}
           accessibilityRole="button"
           accessibilityLabel={`Ayah ${ayah.ayahNumber} from Surah ${ayah.surahNumber}`}
+          accessibilityHint={hasActions ? "Shows bookmark and copy actions" : undefined}
+          accessibilityState={hasActions ? { expanded: actionsOpen } : undefined}
         >
           {isBookmarked ? (
             <View style={styles.bookmarkBadge}>
-              <Ionicons name="bookmark" size={18} color={themeColors.danger} />
+              <Ionicons name="bookmark" size={16} color={themeColors.accent} />
             </View>
           ) : null}
           {shouldShowArabic ? (
             <Text
               style={[
                 styles.arabic,
+                sized.arabic,
                 (shouldShowEnglish || shouldShowTransliteration) &&
                   styles.textBlockSpacing,
               ]}
@@ -142,17 +157,44 @@ function QuranAyahCard({
             <Text
               style={[
                 styles.transliteration,
+                sized.transliteration,
                 shouldShowEnglish && styles.textBlockSpacing,
               ]}
+              maxFontSizeMultiplier={1.3}
             >
               {ayah.transliteration}
             </Text>
           ) : null}
           {shouldShowEnglish ? (
-            <Text style={styles.translation}>{ayah.englishText}</Text>
+            <Text style={[styles.translation, sized.translation]} maxFontSizeMultiplier={1.3}>
+              {ayah.englishText}
+            </Text>
           ) : null}
         </Pressable>
       </Animated.View>
+
+      {actionsOpen && hasActions ? (
+        <View style={styles.actionsRow}>
+          {onBookmark ? (
+            <Button
+              label={isBookmarked ? "Bookmarked" : "Bookmark"}
+              icon={isBookmarked ? "bookmark" : "bookmark-outline"}
+              variant={isBookmarked ? "primary" : "tonal"}
+              onPress={handleBookmark}
+              accessibilityLabel={isBookmarked ? "View bookmark" : "Bookmark this ayah"}
+            />
+          ) : null}
+          {onCopy ? (
+            <Button
+              label="Copy"
+              icon="copy-outline"
+              variant="tonal"
+              onPress={handleCopy}
+              accessibilityLabel="Copy this ayah"
+            />
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -180,33 +222,31 @@ const createStyles = (theme: AppTheme) => {
     /* AYAH BLOCK */
     ayahBlock: {
       paddingVertical: theme.spacing.md,
-      paddingHorizontal: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+      borderRadius: theme.radii.row,
+      borderCurve: "continuous",
     },
-
-    ayahCardPressed: {
-      transform: [{ scale: 0.985 }],
-      opacity: 0.95,
+    ayahBlockActive: {
+      backgroundColor: withOpacity(themeColors.white, 0.05),
     },
 
     /* BOOKMARK BADGE */
     bookmarkBadge: {
       position: "absolute",
-      top: 13,
-      left: 13,
-      backgroundColor: withOpacity(themeColors.black, 0.35),
+      top: 10,
+      left: 10,
+      backgroundColor: withOpacity(themeColors.accent, 0.14),
       borderRadius: 999,
       padding: 6,
       borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.08),
+      borderColor: withOpacity(themeColors.accent, 0.3),
     },
 
     /* ARABIC */
     arabic: {
-      fontSize: 31,
       textAlign: "right",
       writingDirection: "rtl",
       color: themeColors.white,
-      lineHeight: 48,
       letterSpacing: 0.2,
     },
 
@@ -216,21 +256,24 @@ const createStyles = (theme: AppTheme) => {
 
     /* TRANSLITERATION */
     transliteration: {
-      fontSize: 14,
-      color: themeColors.white,
-      opacity: 0.75,
-      lineHeight: 22,
+      color: themeColors.textSecondary,
       textAlign: "center",
       fontStyle: "italic",
     },
 
     /* TRANSLATION */
     translation: {
-      fontSize: 15,
       color: themeColors.white,
-      opacity: 0.9,
-      lineHeight: 23,
+      opacity: 0.92,
       textAlign: "left",
+    },
+
+    /* INLINE ACTIONS */
+    actionsRow: {
+      flexDirection: "row",
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
     },
   });
 };

@@ -203,7 +203,7 @@ describe("NavigatorModal contract", () => {
       <NavigatorModal {...buildProps({ visible: false })} />
     );
 
-    expect(queryByText("Navigation")).toBeNull();
+    expect(queryByText("Search")).toBeNull();
   });
 
   it("renders the shell, switches tabs, and wires search/selection callbacks", () => {
@@ -218,8 +218,8 @@ describe("NavigatorModal contract", () => {
       );
     const surahTab = findTabButton("Sūrah");
 
-    expect(getByText("Navigation")).toBeTruthy();
-    expect(getByText("Jump by surah, ayah, juz, or bookmark")).toBeTruthy();
+    expect(getByText("Search")).toBeTruthy();
+    expect(getByText("Find a surah, ayah, juz, or bookmark")).toBeTruthy();
     expect(surahTab).toBeTruthy();
     expect(surahTab.props.accessibilityState).toEqual({ selected: true });
 
