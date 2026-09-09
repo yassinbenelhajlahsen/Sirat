@@ -235,7 +235,7 @@ const createStyles = (theme: AppTheme) => {
       borderTopColor: colors.accent,
     },
     core: { position: "absolute", alignItems: "center", justifyContent: "center", maxWidth: SIZE - 96 },
-    coreLabel: { marginTop: 6, textTransform: "uppercase", letterSpacing: 1.2 },
+    coreLabel: { marginTop: theme.spacing.xs },
     coreKm: { marginTop: 7 },
   });
 };

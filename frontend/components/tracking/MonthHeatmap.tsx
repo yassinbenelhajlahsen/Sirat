@@ -81,7 +81,7 @@ const createStyles = (theme: AppTheme) => {
     wrap: { gap: spacing.md },
     grid: { gap: spacing.xs },
     week: { flexDirection: "row", justifyContent: "space-between" },
-    cell: { flex: 1, aspectRatio: 1, marginHorizontal: 2, borderRadius: 4 },
+    cell: { flex: 1, aspectRatio: 1, marginHorizontal: 2, borderRadius: spacing.xs },
     empty: { backgroundColor: "transparent" },
     legend: {
       flexDirection: "row",
@@ -89,6 +89,6 @@ const createStyles = (theme: AppTheme) => {
       justifyContent: "flex-end",
       gap: spacing.xs,
     },
-    legendSwatch: { width: 12, height: 12, borderRadius: 4 },
+    legendSwatch: { width: 12, height: 12, borderRadius: spacing.xs },
   });
 };

@@ -109,6 +109,9 @@ export default function SettingsRow({
   );
 }
 
+// The fixed glyph slot every row reserves, so separators can inset to the text.
+const GLYPH_SLOT = 28;
+
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
@@ -130,10 +133,10 @@ const createStyles = (theme: AppTheme) => {
       backgroundColor: withOpacity(colors.white, 0.1),
     },
     // Inset to the text edge: the 16 padding plus the 28 glyph slot and its gap.
-    separatorInset: { left: spacing.lg + 28 + spacing.md },
+    separatorInset: { left: spacing.lg + GLYPH_SLOT + spacing.md },
     separatorFlush: { left: spacing.lg },
     disabled: { opacity: 0.5 },
-    iconSlot: { width: 28, alignItems: "center", justifyContent: "center" },
+    iconSlot: { width: GLYPH_SLOT, alignItems: "center", justifyContent: "center" },
     textBlock: { flex: 1, minWidth: 0 },
     textBlockTight: { flex: 0, flexBasis: "auto" },
     subtitle: { marginTop: 2 },

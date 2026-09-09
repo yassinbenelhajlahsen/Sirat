@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -17,6 +16,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { QuranBookmark } from "@/services/quranBookmarks";
 
 import PressableScale from "../../PressableScale";
+import AppIcon from "@/components/ui/AppIcon";
 
 export type BookmarkNavigatorItem = {
   bookmark: QuranBookmark;
@@ -139,11 +139,7 @@ const BookmarkRow = memo(function BookmarkRow({
           accessibilityLabel={`Delete bookmark ${item.title}`}
         >
           <View style={styles.deleteActionContent}>
-            <Ionicons
-              name="trash-outline"
-              size={18}
-              color={themeColors.onAccent}
-            />
+            <AppIcon name="trash-outline" size={18} color={themeColors.onAccent} />
           </View>
         </Pressable>
       </Animated.View>
@@ -172,6 +168,7 @@ const BookmarkRow = memo(function BookmarkRow({
         failOffsetY={[-12, 12]}
       >
         <PressableScale
+          variant="row"
           style={styles.bookmarkButton}
           onPress={handleSelect}
           accessibilityRole="button"
@@ -180,17 +177,13 @@ const BookmarkRow = memo(function BookmarkRow({
         >
           <View style={styles.bookmarkRowInner}>
             <View style={styles.bookmarkIconCircle}>
-              <Ionicons
-                name="bookmark"
-                size={14}
-                color={themeColors.accent}
-              />
+              <AppIcon name="bookmark" size={14} color={themeColors.accent} />
             </View>
             <View style={styles.bookmarkContent}>
               <Subhead color={themeColors.white} style={styles.bookmarkTitle}>
                 {item.title}
               </Subhead>
-              <Caption color={themeColors.accent}>
+              <Caption color={themeColors.textTertiary}>
                 {item.bookmark.surahNumber}:{item.bookmark.ayahNumber}
                 {item.surahArabic ? ` · ${item.surahArabic}` : ""}
               </Caption>

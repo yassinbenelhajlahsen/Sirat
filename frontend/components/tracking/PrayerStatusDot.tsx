@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
+import AppIcon from "@/components/ui/AppIcon";
 import { StyleSheet, View } from "react-native";
 
-import { withOpacity } from "@/constants/theme";
+import { radii, withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { PrayerStatus } from "@/services/prayerTracker";
 
@@ -19,28 +19,28 @@ export default function PrayerStatusDot({ status, loggable }: Props) {
   if (status === "prayed") {
     return (
       <View testID="dot-prayed" style={styles.slot}>
-        <Ionicons name="checkmark-circle" size={SIZE} color={colors.accentSecondary} />
+        <AppIcon name="checkmark-circle" size={SIZE} color={colors.accentSecondary} />
       </View>
     );
   }
   if (status === "late") {
     return (
       <View testID="dot-late" style={styles.slot}>
-        <Ionicons name="time" size={SIZE} color={colors.accent} />
+        <AppIcon name="time" size={SIZE} color={colors.accent} />
       </View>
     );
   }
   if (status === "missed") {
     return (
       <View testID="dot-missed" style={styles.slot}>
-        <Ionicons name="close-circle" size={SIZE} color={colors.danger} />
+        <AppIcon name="close-circle" size={SIZE} color={colors.danger} />
       </View>
     );
   }
   if (loggable) {
     return (
       <View testID="dot-loggable" style={styles.slot}>
-        <Ionicons name="ellipse-outline" size={SIZE} color={colors.iconMuted} />
+        <AppIcon name="ellipse-outline" size={SIZE} color={colors.iconMuted} />
       </View>
     );
   }
@@ -53,5 +53,5 @@ export default function PrayerStatusDot({ status, loggable }: Props) {
 
 const styles = StyleSheet.create({
   slot: { height: SIZE, alignItems: "center", justifyContent: "center" },
-  upcoming: { width: 6, height: 6, borderRadius: 999 },
+  upcoming: { width: 6, height: 6, borderRadius: radii.pill },
 });

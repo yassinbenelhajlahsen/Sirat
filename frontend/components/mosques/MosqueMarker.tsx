@@ -64,8 +64,8 @@ const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
     pin: {
-      borderRadius: 30,
-      padding: 5,
+      borderRadius: theme.radii.pill,
+      padding: spacing.xs,
       borderWidth: 2,
       shadowColor: "#000",
       shadowOpacity: 0.25,
@@ -75,7 +75,7 @@ const createStyles = (theme: AppTheme) => {
     callout: {
       width: 212,
       backgroundColor: colors.primary,
-      borderRadius: 14,
+      borderRadius: theme.radii.row,
       borderWidth: 1,
       borderColor: withOpacity(colors.accent, 0.5),
       padding: spacing.md,
@@ -104,9 +104,9 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       gap: 5,
       backgroundColor: colors.accent,
-      borderRadius: 9,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
+      borderRadius: theme.radii.pill,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
     },
     directionsText: {
       color: colors.onAccent,

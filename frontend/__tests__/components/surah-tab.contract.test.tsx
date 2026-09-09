@@ -74,7 +74,7 @@ describe("SurahTab contract", () => {
 
     expect(getByText("Continue reading")).toBeTruthy();
     expect(getByText("Al-Qamar")).toBeTruthy();
-    expect(getByText("Popular")).toBeTruthy();
+    expect(getByText("POPULAR")).toBeTruthy();
     expect(getByText("All Sūrahs")).toBeTruthy();
 
     // Popular tiles render in the header...
@@ -104,7 +104,7 @@ describe("SurahTab contract", () => {
       />,
     );
 
-    expect(queryByText("Popular")).toBeNull();
+    expect(queryByText("POPULAR")).toBeNull();
     expect(queryByText("Continue reading")).toBeNull();
     expect(getByText("Al-Kahf")).toBeTruthy();
   });

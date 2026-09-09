@@ -91,7 +91,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `utils/greeting.test.ts`
   - `constants/motion.test.ts`
   - `hooks/useHaptics.test.ts`
-  - `components/glass-surface.contract.test.tsx`
+  - `components/glass-surface.contract.test.tsx` — glass vs fallback, and the borderless-over-glass default (hairline in the fallback, 1px when `bordered`)
   - `components/ui-text.contract.test.tsx` — type ramp plus Dynamic Type cap (`TEXT_MAX_FONT_SCALE`)
   - `navigation/glass-tab-bar.contract.test.tsx`
 - `design audit follow-ups (Sept 2026) testing`
@@ -101,6 +101,13 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/nearby-mosques.contract.test.tsx` — inline load error with retry (no Alert), `shouldOfferAreaSearch` gesture/distance gate
   - `components/compass-dial.contract.test.tsx` — themed Kaaba mark replaces the emoji
   - `components/prayer-times-list.contract.test.tsx` was removed with the unused `PrayerTimesList` component
+- `iOS-native polish (Direction A) testing`
+  - `components/ui/app-icon.test.tsx` — every `IONICON_TO_SF` entry renders an SF Symbol on iOS and the Ionicon on Android; unmapped names fall back on both
+  - `components/ui/segmented.test.tsx` — radiogroup/radio roles, selected state, `onChange` value, thumb position per index
+  - `components/ui/section-header.test.tsx` — `SectionHeader` (+ action and footer), `ScreenHeader` (title, supporting line, leading control) and `EmptyState` contracts
+  - `components/ui/press-variants.test.tsx` — `PressableScale` `row` renders no transform; `button`/`card` do
+  - `components/ui/aurora.test.tsx` — the exported bloom opacities stay toned down
+  - `hooks/useScreenMargin.test.ts` — 16 under 400pt, 20 at 430pt
 - `home prayer arc (horizontal progress thumb) testing`
   - `utils/prayer-arc.test.ts` — geometry, states, `sunMarker`, and `isMarkerAbsorbed` (slot dot hidden while the thumb sits on it)
   - `components/prayer-arc.contract.test.tsx` (incl. live vs static/non-today mode, thumb instead of sun/moon glyph)
@@ -113,7 +120,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/settings-row.test.tsx` — SettingsRow press/haptic/disabled behavior
   - `components/theme-picker.test.tsx` — ThemePicker selection + active state
   - `components/picker-dialog.test.tsx` — shared glass picker (search/select/checkmark)
-  - `screens/notification-settings.contract.test.tsx` — now asserts a **button** master row (press), not a Switch
+  - `components/notification-settings.contract.test.tsx` — a button master row (press) plus per-prayer and per-window Switches, the offset Segmented and the sound rows; the `useNotificationSegmentLayout` mock went with the hook
   - `screens/screen-contracts.test.tsx` — dropdown-picker and CitySearchModal mocks removed; city-search-modal.contract.test.tsx suite deleted
 
 - `tracking data layer (Plan 1) testing`
@@ -134,7 +141,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/home-prayer-logging.test.tsx` — logging a prayer from the Home arc persists
   - `components/calendar/DayDetailPanel.logging.test.tsx` — logging a prayer for a past date in the Calendar detail
 - `tracker screen + habits UI (Phase 3) testing`
-  - `components/ui/DisplayNumber.test.tsx` — display-numeral font/style (`DISPLAY_FONT_FAMILY`, size/weight variants)
+  - `components/ui/DisplayNumber.test.tsx` — display numerals use the system face: no `fontFamily`, weight 700, tight tracking, tabular figures
   - `services/tracking/stats.phase3.test.ts` — `unwrapHabitLog` habit-log unwrapping, `monthDailyScores` daily completion scoring
   - `hooks/useHabits.test.ts` — habit definition CRUD, reorder, archive/delete, `HABITS_UPDATED` event
   - `hooks/useHabitLog.test.ts` — habit completion toggle, `HABIT_LOG_UPDATED` event, preload

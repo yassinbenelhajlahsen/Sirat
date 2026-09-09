@@ -5,7 +5,6 @@ import {
   ListRenderItem,
   StyleProp,
   StyleSheet,
-  TextStyle,
   View,
   ViewStyle,
   useWindowDimensions,
@@ -18,6 +17,7 @@ import { NormalizedSurahMeta } from "@/services/quranData";
 
 import PressableScale from "../../PressableScale";
 import AppIcon from "@/components/ui/AppIcon";
+import SectionHeader from "@/components/ui/SectionHeader";
 
 type LastReadAyah = {
   surahNumber: number;
@@ -195,10 +195,10 @@ function SurahTab({
   const hasSearchResults =
     hasQuery && (ayahSearchResults.length > 0 || juzSearchResult !== null);
 
-  const sectionHeading = (label: string, extraStyle?: StyleProp<TextStyle>) => (
-    <Footnote color={themeColors.textSecondary} style={[styles.sectionHeading, extraStyle]}>
-      {label}
-    </Footnote>
+  const sectionHeading = (label: string) => (
+    <View style={styles.sectionHeading}>
+      <SectionHeader title={label} inset={0} />
+    </View>
   );
 
   const searchResultsHeader = hasSearchResults ? (
@@ -287,7 +287,7 @@ function SurahTab({
       ))}
 
       {showAllSurahs ? (
-        sectionHeading("All Sūrahs", styles.allHeading)
+        sectionHeading("All Sūrahs")
       ) : (
         <PressableScale
           variant="row"
@@ -397,8 +397,6 @@ const createStyles = (theme: AppTheme) => {
     },
     continueLabel: {
       fontWeight: "600",
-      textTransform: "uppercase",
-      letterSpacing: 0.4,
       marginBottom: 2,
     },
     continueTitleRow: {
@@ -411,9 +409,6 @@ const createStyles = (theme: AppTheme) => {
     },
     popularRow: {
       flexDirection: "row",
-    },
-    allHeading: {
-      marginTop: 4,
     },
     allButton: {
       flexDirection: "row",
@@ -433,11 +428,7 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: theme.spacing.md,
     },
     sectionHeading: {
-      fontWeight: "600",
       marginTop: theme.spacing.md,
-      marginBottom: theme.spacing.sm,
-      letterSpacing: 0.4,
-      textTransform: "uppercase",
     },
     ayahResultsContainer: {
       marginBottom: theme.spacing.sm,

@@ -12,6 +12,8 @@ type Props = {
   actionLabel?: string;
   onActionPress?: () => void;
   actionAccessibilityLabel?: string;
+  /** Left inset. Defaults to the 16pt grouped-list gutter; 0 inside a padded card. */
+  inset?: number;
   testID?: string;
 };
 
@@ -21,13 +23,14 @@ export default function SectionHeader({
   actionLabel,
   onActionPress,
   actionAccessibilityLabel,
+  inset,
   testID,
 }: Props) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <View style={styles.row} testID={testID}>
+    <View style={[styles.row, inset != null && { marginLeft: inset }]} testID={testID}>
       <Footnote
         accessibilityRole="header"
         color={theme.colors.textTertiary}

@@ -191,7 +191,7 @@ const createStyles = (theme: AppTheme) => {
     flourishDot: {
       width: 5,
       height: 5,
-      borderRadius: 999,
+      borderRadius: theme.radii.pill,
       backgroundColor: withOpacity(colors.accent, 0.5),
     },
     arabicText: {

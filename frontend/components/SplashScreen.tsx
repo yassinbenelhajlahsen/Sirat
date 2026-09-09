@@ -1,5 +1,5 @@
 // app/components/SplashScreen.tsx
-import { darkTheme, withOpacity, type AppTheme } from "@/constants/theme";
+import { darkTheme, radii, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
@@ -369,7 +369,7 @@ const createStyles = (theme: AppTheme) => {
       width: 40,
       height: 3,
       backgroundColor: themeColors.accent,
-      borderRadius: 2,
+      borderRadius: radii.pill,
       opacity: 0.6,
       marginVertical: 12,
     },
@@ -388,7 +388,7 @@ const createStyles = (theme: AppTheme) => {
       height: 2,
       backgroundColor: themeColors.accent,
       marginVertical: 20,
-      borderRadius: 2,
+      borderRadius: radii.pill,
       opacity: 0.5,
     },
     englishCard: {
@@ -411,7 +411,6 @@ const createStyles = (theme: AppTheme) => {
       textAlign: "center",
       fontWeight: "400",
       letterSpacing: 0.5,
-      textTransform: "uppercase",
     },
     loadingContainer: {
       paddingVertical: 60,

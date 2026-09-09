@@ -178,7 +178,7 @@ const createStyles = (theme: AppTheme) => {
     notDue: {
       width: 10,
       height: 10,
-      borderRadius: 999,
+      borderRadius: theme.radii.pill,
       backgroundColor: withOpacity(colors.white, 0.18),
     },
     icon: { width: 28, alignItems: "center", justifyContent: "center" },
