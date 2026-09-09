@@ -1,3 +1,23 @@
+// ---------------------------------------------------------------------------
+// NEEDS NATIVE BUILD — changes queued for the next EAS binary
+//
+// `runtimeVersion.policy` is "appVersion", so an OTA update only reaches the
+// binary whose `version` matches. Do NOT bump `version` for a JS-only release;
+// bump it (and rebuild) only when one of these lands:
+//
+// 1. ios.userInterfaceStyle: "dark" -> "automatic"
+//    Today every native surface (Alert, Switch, ActionSheet fallback, Modal
+//    backdrop, share sheet) is forced dark even on the in-app Light theme.
+//    Pair the flip with `Appearance.setColorScheme(...)` in
+//    context/ThemeContext.tsx (see the NEEDS NATIVE BUILD note there) so native
+//    chrome follows the picked theme, and consider a "System" theme option that
+//    reads `Appearance.getColorScheme()`. The JS-side status bar fix in
+//    app/_layout.tsx and the themed ActionSheetIOS `userInterfaceStyle` in
+//    utils/actionMenu.ts are stopgaps that become redundant afterwards.
+//
+// Search the codebase for "NEEDS NATIVE BUILD" to find every call site that
+// was written around the current plist.
+// ---------------------------------------------------------------------------
 export default {
   expo: {
     name: "Sirat",
@@ -14,6 +34,7 @@ export default {
     newArchEnabled: true,
     platforms: ["ios", "android"],
     ios: {
+      // NEEDS NATIVE BUILD: switch to "automatic" (see header comment).
       userInterfaceStyle: "dark",
       supportsTablet: true,
       bundleIdentifier: "com.yassinbenelhajlahsen.sirat",

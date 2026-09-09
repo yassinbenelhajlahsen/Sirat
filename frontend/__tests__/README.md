@@ -38,6 +38,9 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/quranProgress.test.ts`
   - `services/quranDisplayModes.test.ts`
   - `hooks/useQuranDisplayModes.test.ts`
+  - `services/quranTextScale.test.ts` — reader text size (`quran_text_scale_v1`): defaults, snapping, persistence, update event
+  - `hooks/useQuranTextScale.test.ts`
+  - `components/quran-ayah-card.contract.test.tsx` — tap reveals Bookmark/Copy actions, long-press copy shortcut, text scaling
   - `components/surah-banner.contract.test.tsx`
   - `components/surah-tab.contract.test.tsx` (navigator Surah tab — search-forward default: Continue reading + Popular, "All Sūrahs" reveal, search mode)
 - `quran copy text formatting testing`
@@ -89,13 +92,21 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `constants/motion.test.ts`
   - `hooks/useHaptics.test.ts`
   - `components/glass-surface.contract.test.tsx`
-  - `components/ui-text.contract.test.tsx`
+  - `components/ui-text.contract.test.tsx` — type ramp plus Dynamic Type cap (`TEXT_MAX_FONT_SCALE`)
   - `navigation/glass-tab-bar.contract.test.tsx`
-- `home prayer arc (horizontal sun path) testing`
-  - `utils/prayer-arc.test.ts`
-  - `components/prayer-arc.contract.test.tsx` (incl. live vs static/non-today mode)
+- `design audit follow-ups (Sept 2026) testing`
+  - `constants/theme-text-tokens.test.ts` — `textPrimary/Secondary/Tertiary/Disabled` and `iconMuted` clear WCAG contrast on every theme's canvas
+  - `components/ui/primitives.contract.test.tsx` — shared `Button`, `IconButton` (44pt target + hitSlop), `SheetHeader`, `SkeletonBar`
+  - `hooks/useReducedMotion.test.ts` — mirrors the OS Reduce Motion setting and its live changes
+  - `screens/nearby-mosques.contract.test.tsx` — inline load error with retry (no Alert), `shouldOfferAreaSearch` gesture/distance gate
+  - `components/compass-dial.contract.test.tsx` — themed Kaaba mark replaces the emoji
+  - `components/prayer-times-list.contract.test.tsx` was removed with the unused `PrayerTimesList` component
+- `home prayer arc (horizontal progress thumb) testing`
+  - `utils/prayer-arc.test.ts` — geometry, states, `sunMarker`, and `isMarkerAbsorbed` (slot dot hidden while the thumb sits on it)
+  - `components/prayer-arc.contract.test.tsx` (incl. live vs static/non-today mode, thumb instead of sun/moon glyph)
 - `tab bar scroll-collapse testing`
-  - `utils/tab-bar-chrome.test.ts`
+  - `utils/tab-bar-chrome.test.ts` — collapse decision, shared pill geometry (`tabBarClearanceForInset`), Reduce Motion gate
+  - `hooks/useTabBarClearance.test.ts`
 - `settings liquid-glass redesign testing`
   - `utils/appLinks.test.ts` — About-row link/share/version helpers
   - `components/settings-section.test.tsx` — SettingsSection group rendering
@@ -117,7 +128,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `prayer logging UI (Phase 2) testing`
   - `utils/prayerLabel.test.ts` — maps prayer-arc labels to PrayerName (Sunrise → null)
   - `hooks/usePrayerLog.test.ts` — usePrayerLog hook: load, set/clear, event filtering, unmount cleanup
-  - `components/tracking/PrayerStatusDot.test.tsx` — prayer status indicator dot states
+  - `components/tracking/PrayerStatusDot.test.tsx` — prayer status glyph states (check / clock / cross, not colour-only)
   - `components/tracking/PrayerLogSheet.test.tsx` — prayer logging bottom sheet (Prayed/Late/Missed + Clear)
   - `components/PrayerArc.logging.test.tsx` — PrayerArc logging mode (status dots, tap-to-log, Sunrise excluded)
   - `screens/home-prayer-logging.test.tsx` — logging a prayer from the Home arc persists
@@ -131,7 +142,9 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/tracking/StatCards.test.tsx` — StreakHero + QadaCard stat card rendering
   - `components/tracking/CompletionRings.test.tsx` — animated completion ring display
   - `components/tracking/MonthHeatmap.test.tsx` — monthly prayer completion heatmap grid
-  - `components/tracking/HabitRow.test.tsx` — habit list row: label, frequency badge, streak chip, check/uncheck
+  - `components/tracking/HabitRow.test.tsx` — habit list row: label, frequency badge, streak chip, check/uncheck, swipe Edit/Archive actions, "more" menu options
+  - `components/tracking/MonthHeatmap.test.tsx` — also asserts per-day accessibility labels and the Less/More legend
+  - `utils/action-menu.test.ts` — `showActionMenu` (ActionSheetIOS on iOS, Alert fallback)
   - `components/tracking/HabitEditor.test.tsx` — habit create/edit sheet: name, frequency, icon picker
   - `components/tracking/HabitChecklist.test.tsx` — per-day habit checklist (Calendar integration)
   - `screens/Tracker.test.tsx` — Tracker screen contract: Overview section + Habits section, add-habit flow
