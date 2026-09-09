@@ -362,7 +362,8 @@ const createStyles = (theme: AppTheme) => {
       elevation: 4,
     },
     row: { flexDirection: "row", marginTop: spacing.xs },
-    colWrap: { flex: 1, minHeight: 44, justifyContent: "center" },
+    // Top-aligned so Sunrise (no status glyph) sits level with the other five.
+    colWrap: { flex: 1, minHeight: 44, justifyContent: "flex-start" },
     col: { alignItems: "center", gap: 2 },
     name: { fontSize: 13 },
     time: { fontWeight: "700", fontSize: 14 },
