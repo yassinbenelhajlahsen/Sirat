@@ -111,7 +111,6 @@ export default function Home() {
 
   const heroLocation = locationLabel ? (
     <View style={styles.heroLocation}>
-      <AppIcon name="location-outline" size={13} color={colors.textTertiary} />
       <Subhead color={colors.textTertiary}>{locationLabel}</Subhead>
     </View>
   ) : null;
@@ -199,7 +198,7 @@ export default function Home() {
                         </AppText>
                       ) : null}
                     </View>
-                    <DisplayNumber value={bareTime(nextPrayer.time)} size={72} />
+                    <DisplayNumber value={bareTime(nextPrayer.time)} size={72} flush />
                     {heroLocation}
                   </View>
                 ) : nextDayFajr ? (

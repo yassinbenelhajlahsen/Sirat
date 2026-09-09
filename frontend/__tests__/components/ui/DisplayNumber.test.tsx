@@ -14,5 +14,11 @@ describe("DisplayNumber", () => {
     expect(flat.fontWeight).toBe("700");
     expect(flat.letterSpacing).toBeCloseTo(-1.2, 5);
     expect(flat.fontVariant).toEqual(["tabular-nums"]);
+    expect(flat.marginLeft).toBeUndefined();
+  });
+
+  it("hangs the glyph left when flush, so it optically aligns with copy", () => {
+    const { getByText } = render(wrap(<DisplayNumber value="5:42" size={72} flush />));
+    expect(StyleSheet.flatten(getByText("5:42").props.style).marginLeft).toBe(-3);
   });
 });
