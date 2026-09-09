@@ -14,8 +14,10 @@ type Props = {
   actionLabel?: string;
   onAction?: () => void;
   actionLoading?: boolean;
+  actionAccessibilityLabel?: string;
   secondaryLabel?: string;
   onSecondary?: () => void;
+  secondaryAccessibilityLabel?: string;
   /** Small print next to the secondary action (permissions caveats). */
   note?: string;
   testID?: string;
@@ -29,8 +31,10 @@ export default function EmptyState({
   actionLabel,
   onAction,
   actionLoading = false,
+  actionAccessibilityLabel,
   secondaryLabel,
   onSecondary,
+  secondaryAccessibilityLabel,
   note,
   testID,
 }: Props) {
@@ -53,11 +57,17 @@ export default function EmptyState({
           label={actionLabel}
           onPress={onAction}
           loading={actionLoading}
+          accessibilityLabel={actionAccessibilityLabel}
           style={styles.action}
         />
       ) : null}
       {secondaryLabel && onSecondary ? (
-        <Button label={secondaryLabel} variant="ghost" onPress={onSecondary} />
+        <Button
+          label={secondaryLabel}
+          variant="ghost"
+          onPress={onSecondary}
+          accessibilityLabel={secondaryAccessibilityLabel}
+        />
       ) : null}
       {note ? (
         <Footnote color={theme.colors.textTertiary} style={styles.message}>

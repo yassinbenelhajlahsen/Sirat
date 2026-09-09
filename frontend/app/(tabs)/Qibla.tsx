@@ -1,15 +1,16 @@
 // app/(tabs)/qibla.tsx
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import Screen from "@/components/ui/Screen";
-import Button from "@/components/ui/Button";
-import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption, Headline, LargeTitle, Body } from "@/components/ui/Text";
+import AppIcon from "@/components/ui/AppIcon";
+import EmptyState from "@/components/ui/EmptyState";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+import { Caption, Headline, Body } from "@/components/ui/Text";
 import CompassDial from "@/components/qibla/CompassDial";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
-import { Ionicons } from "@expo/vector-icons";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import * as Location from "expo-location";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +27,7 @@ export default function Qibla() {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const screenMargin = useScreenMargin();
 
   const { rotation, heading, qiblaAngle, distanceKm, accuracy, error, isAligned } = useQibla();
   const haptics = useHaptics();
@@ -109,115 +111,53 @@ export default function Qibla() {
     );
   };
 
-  // ----- Same InfoBanner component used in Mosques -----
-  const InfoBanner = ({
-    icon,
-    title,
-    message,
-    actions,
-    iconColor = colors.white,
-  }: {
-    icon: keyof typeof Ionicons.glyphMap;
-    title: string;
-    message: string;
-    actions?: React.ReactNode;
-    iconColor?: string;
-  }) => (
-    <GlassSurface tier="card" radius={theme.radii.card} style={styles.banner}>
-      <Ionicons name={icon} size={20} color={iconColor} />
-      <View style={styles.bannerBody}>
-        <Headline color={colors.accent}>{title}</Headline>
-        <Body color={colors.white} style={styles.bannerText}>{message}</Body>
-        {actions}
-      </View>
-    </GlassSurface>
-  );
-
-  // ----- Top-of-screen gate like Mosques -----
+  // ----- Top-of-screen gate -----
   if (needLocationGate) {
     const servicesOff = servicesOn === false;
     const denied = permissionStatus === "denied";
-    const undetermined = permissionStatus === "undetermined";
 
     return (
       <Screen>
-        <View style={styles.container}>
-          <View style={styles.headerSection}>
-            <Caption color={withOpacity(colors.accent, 0.9)} style={styles.eyebrow}>
-              Direction
-            </Caption>
-            <LargeTitle style={styles.title}>Qibla Compass</LargeTitle>
-            <Body color={colors.textSecondary} style={styles.subtitle}>
-              Enable location to calculate the direction to the Kaaba.
-            </Body>
-          </View>
+        <View style={[styles.container, { padding: screenMargin }]}>
+          <ScreenHeader title="Qibla" />
           <View style={styles.gateContent}>
             {servicesOff ? (
-              <InfoBanner
+              <EmptyState
                 icon="location"
                 title="Location Services Off"
                 message="Location is required to calculate the Qibla direction."
-                actions={
-                  <View style={styles.row}>
-                    <Button
-                      label="How to turn on"
-                      onPress={openLocationServicesHelp}
-                      accessibilityLabel="How to turn on location services"
-                    />
-                    <Button
-                      label="I turned it on"
-                      variant="secondary"
-                      onPress={requestPermissionAndLoad}
-                      accessibilityLabel="Retry location setup"
-                    />
-                  </View>
-                }
+                actionLabel="How to turn on"
+                onAction={openLocationServicesHelp}
+                actionAccessibilityLabel="How to turn on location services"
+                secondaryLabel="I turned it on"
+                onSecondary={requestPermissionAndLoad}
+                secondaryAccessibilityLabel="Retry location setup"
+                note="Prayer times still work without location. You can use a manual city from Settings."
               />
             ) : denied ? (
-              <InfoBanner
+              <EmptyState
                 icon="location-outline"
-                iconColor={colors.accent}
                 title="Allow Location Access"
                 message="Grant Sirat access to your location to calculate the Qibla direction."
-                actions={
-                  <View style={styles.row}>
-                    <Button
-                      label="Open Settings"
-                      onPress={openDeviceSettings}
-                      accessibilityLabel="Open device settings"
-                    />
-                    <Button
-                      label="Try again"
-                      variant="secondary"
-                      onPress={requestPermissionAndLoad}
-                      accessibilityLabel="Retry location permission"
-                    />
-                  </View>
-                }
+                actionLabel="Open Settings"
+                onAction={openDeviceSettings}
+                actionAccessibilityLabel="Open device settings"
+                secondaryLabel="Try again"
+                onSecondary={requestPermissionAndLoad}
+                secondaryAccessibilityLabel="Retry location permission"
+                note="Prayer times still work without location. You can use a manual city from Settings."
               />
-            ) : undetermined ? (
-              <InfoBanner
-                icon="navigate-outline"
+            ) : (
+              <EmptyState
+                icon="navigate"
                 title="We need your location"
-                message="Tap enable to calculate the direction to the Kaaba. You can disable anytime in Settings."
-                actions={
-                  <View style={styles.row}>
-                    <Button
-                      label="Enable Location"
-                      onPress={requestPermissionAndLoad}
-                      accessibilityLabel="Enable location"
-                    />
-                  </View>
-                }
+                message="Enable location to calculate the direction to the Kaaba. You can turn it off again in Settings."
+                actionLabel="Enable Location"
+                onAction={requestPermissionAndLoad}
+                actionAccessibilityLabel="Enable location"
+                note="Prayer times still work without location. You can use a manual city from Settings."
               />
-            ) : null}
-
-            <GlassSurface tier="row" radius={theme.radii.row} style={styles.infoCard}>
-              <Body color={colors.textSecondary} style={styles.infoText}>
-                Prayer Times still work without location. You can use a manual
-                city from the Settings tab.
-              </Body>
-            </GlassSurface>
+            )}
           </View>
         </View>
       </Screen>
@@ -227,46 +167,22 @@ export default function Qibla() {
   // ----- Normal Qibla UI -----
   return (
     <Screen>
-      <View style={styles.container}>
-        <View style={styles.headerSection}>
-          <Caption color={withOpacity(colors.accent, 0.9)} style={styles.eyebrow}>
-            Direction
-          </Caption>
-          <LargeTitle style={styles.title}>Qibla Compass</LargeTitle>
-          <Body color={colors.textSecondary} style={styles.subtitle}>
-            Keep your phone flat and turn until the Kaaba reaches the top.
-          </Body>
-        </View>
-
-        <View style={styles.statusRow}>
-          <GlassSurface tier="row" radius={theme.radii.pill} style={styles.statusPill}>
-            <Ionicons name="compass-outline" size={15} color={withOpacity(colors.accent, 0.95)} />
-            <Caption color={colors.white}>
-              {accuracy != null && accuracy >= 0
-                ? `Accuracy ±${Math.round(accuracy)}°`
-                : "Calibrating compass..."}
-            </Caption>
-          </GlassSurface>
-          <GlassSurface
-            tier="row"
-            radius={theme.radii.pill}
-            style={[styles.statusPill, isAligned ? styles.statusPillAligned : null]}
-          >
-            <Ionicons
-              name={isAligned ? "checkmark-circle" : "navigate-outline"}
-              size={15}
-              color={isAligned ? colors.accentSecondary : withOpacity(colors.accent, 0.95)}
-            />
-            <Caption color={colors.white}>
-              {isAligned ? "Aligned" : "Adjusting"}
-            </Caption>
-          </GlassSurface>
-        </View>
+      <View style={[styles.container, { padding: screenMargin }]}>
+        <ScreenHeader
+          title="Qibla"
+          subtitle={
+            accuracy != null && accuracy >= 0
+              ? `Keep your phone flat · Accuracy ±${Math.round(accuracy)}°`
+              : "Calibrating compass"
+          }
+        />
 
         <View style={styles.compassArea}>
           {error ? (
             <View style={styles.stateBlock}>
-              <Ionicons name="warning-outline" size={28} color={colors.danger} style={styles.errorIcon} />
+              <View style={styles.errorIcon}>
+                <AppIcon name="warning-outline" size={28} color={colors.danger} />
+              </View>
               <Body color={colors.danger} style={styles.errorText}>{error}</Body>
               <Caption color={colors.textTertiary} style={styles.helperText}>
                 Move your phone in a figure eight to improve compass accuracy.
@@ -293,67 +209,15 @@ export default function Qibla() {
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing } = theme;
+  const { spacing } = theme;
 
   return StyleSheet.create({
-    container: { flex: 1, padding: spacing.xl },
-    gateContent: { flex: 1, marginTop: spacing.md },
-    headerSection: {
-      marginTop: spacing.xs,
-      marginBottom: spacing.md,
-    },
-    eyebrow: {
-      textTransform: "uppercase",
-      letterSpacing: 1,
-    },
-    title: {
-      marginTop: spacing.xs,
-      textShadowColor: withOpacity(colors.black, 0.35),
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
-    },
-    subtitle: { marginTop: spacing.xs },
-    banner: {
-      padding: spacing.md,
-      flexDirection: "row",
-      alignItems: "flex-start",
-    },
-    bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
-    bannerText: {
-      marginTop: spacing.xs,
-    },
-    row: {
-      flexDirection: "row",
-      gap: spacing.sm + 2,
-      marginTop: spacing.md,
-      flexWrap: "wrap",
-    },
-    statusRow: {
-      flexDirection: "row",
-      gap: spacing.sm + 2,
-      marginBottom: spacing.md,
-      flexWrap: "wrap",
-    },
-    statusPill: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.xs,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.xs + 2,
-    },
-    statusPillAligned: { borderColor: withOpacity(colors.accent, 0.6) },
+    container: { flex: 1 },
+    gateContent: { flex: 1, alignItems: "center", justifyContent: "center" },
     compassArea: { flex: 1, alignItems: "center", justifyContent: "center" },
     stateBlock: { alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.lg },
     errorIcon: { marginBottom: spacing.sm },
     errorText: { textAlign: "center" },
     helperText: { marginTop: spacing.md, textAlign: "center" },
-    infoCard: {
-      marginTop: spacing.md,
-      paddingVertical: spacing.sm + 2,
-      paddingHorizontal: spacing.md,
-    },
-    infoText: {
-      textAlign: "center",
-    },
   });
 };

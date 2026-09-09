@@ -1,6 +1,7 @@
 import PressableScale from "@/components/PressableScale";
 import Button from "@/components/ui/Button";
-import { Caption, Headline } from "@/components/ui/Text";
+import IconButton from "@/components/ui/IconButton";
+import { Body, Footnote, Subhead } from "@/components/ui/Text";
 import { type AppTheme, withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -12,6 +13,8 @@ type MosqueRowProps = {
   address: string;
   distanceLabel: string | null;
   selected?: boolean;
+  /** Rows after the first draw a hairline inset to the text edge. */
+  separated?: boolean;
   onPress: () => void;
   onDirections: () => void;
 };
@@ -21,6 +24,7 @@ export default function MosqueRow({
   address,
   distanceLabel,
   selected,
+  separated,
   onPress,
   onDirections,
 }: MosqueRowProps) {
@@ -28,77 +32,90 @@ export default function MosqueRow({
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
-  const meta = distanceLabel ?? "";
-
   return (
     <PressableScale
+      variant="row"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Select ${name}`}
       accessibilityState={{ selected: !!selected }}
-      style={[styles.row, selected && styles.rowSelected]}
+      style={styles.wrap}
     >
-      <View style={styles.glyphCircle}>
-        <FontAwesome5 name="mosque" size={18} color={colors.accent} />
+      {separated ? <View pointerEvents="none" style={styles.separator} /> : null}
+      <View style={styles.row}>
+        <View style={styles.glyphCircle}>
+          <FontAwesome5 name="mosque" size={18} color={colors.accent} />
+        </View>
+
+        <View style={styles.textBlock}>
+          <Body color={colors.white} numberOfLines={1}>
+            {name}
+          </Body>
+          <Footnote color={colors.textTertiary} numberOfLines={1}>
+            {address}
+          </Footnote>
+        </View>
+
+        {distanceLabel ? (
+          <Subhead color={colors.textTertiary}>{distanceLabel}</Subhead>
+        ) : null}
+
+        <IconButton
+          icon="navigate"
+          variant="tonal"
+          size={36}
+          iconSize={16}
+          color={colors.accent}
+          onPress={onDirections}
+          accessibilityLabel={`Directions to ${name}`}
+        />
       </View>
 
-      <View style={styles.textBlock}>
-        <Headline color={colors.white} numberOfLines={1}>
-          {name}
-        </Headline>
-        <Caption color={colors.textTertiary} numberOfLines={1}>
-          {address}
-        </Caption>
-        {meta.length > 0 && (
-          <Caption color={colors.textTertiary}>{meta}</Caption>
-        )}
-      </View>
-
-      <Button
-        label="Directions"
-        icon="navigate"
-        size="sm"
-        onPress={onDirections}
-        accessibilityLabel={`Directions to ${name}`}
-      />
+      {/* The selected row grows a full-width primary action under its text. */}
+      {selected ? (
+        <Button
+          label="Directions"
+          icon="navigate"
+          onPress={onDirections}
+          accessibilityLabel={`Open directions to ${name}`}
+          style={styles.selectedAction}
+        />
+      ) : null}
     </PressableScale>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
+  const GLYPH = 42;
 
   return StyleSheet.create({
+    wrap: { paddingBottom: spacing.sm },
     row: {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm + 4,
+      paddingVertical: spacing.md,
       minHeight: 64,
-      borderRadius: theme.radii.row,
-      borderCurve: "continuous",
-      borderWidth: 1,
-      backgroundColor: withOpacity(colors.white, 0.05),
-      borderColor: withOpacity(colors.white, 0.09),
     },
-    rowSelected: {
-      backgroundColor: withOpacity(colors.accent, 0.08),
-      borderColor: withOpacity(colors.accent, 0.4),
+    // Inset to the text edge: the glyph circle plus its gap.
+    separator: {
+      position: "absolute",
+      top: 0,
+      left: GLYPH + spacing.md,
+      right: 0,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(colors.white, 0.1),
     },
     glyphCircle: {
-      width: 42,
-      height: 42,
-      borderRadius: 999,
+      width: GLYPH,
+      height: GLYPH,
+      borderRadius: theme.radii.pill,
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: withOpacity(colors.accent, 0.16),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.3),
     },
-    textBlock: {
-      flex: 1,
-      gap: 2,
-    },
+    textBlock: { flex: 1, gap: 2 },
+    selectedAction: { marginBottom: spacing.sm },
   });
 };

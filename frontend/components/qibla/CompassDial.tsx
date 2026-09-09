@@ -9,7 +9,8 @@ import Svg, { G, Line, Text as SvgText } from "react-native-svg";
 
 import KaabaMark from "@/components/qibla/KaabaMark";
 import GlassSurface from "@/components/ui/GlassSurface";
-import { Caption, Footnote, Title1, Title3 } from "@/components/ui/Text";
+import DisplayNumber from "@/components/ui/DisplayNumber";
+import { Footnote, Subhead, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -165,14 +166,14 @@ export default function CompassDial({
           <Title3>Facing Makkah</Title3>
         ) : (
           <>
-            <Title1>{`${Math.round(qiblaAngle)}°`}</Title1>
-            <Caption color={colors.textTertiary} style={styles.coreLabel}>
+            <DisplayNumber value={`${Math.round(qiblaAngle)}°`} size={44} />
+            <Subhead color={colors.textTertiary} style={styles.coreLabel}>
               to Makkah
-            </Caption>
+            </Subhead>
           </>
         )}
         {distanceKm != null ? (
-          <Footnote color={colors.accent} style={styles.coreKm}>
+          <Footnote color={colors.textSecondary} style={styles.coreKm}>
             {`${formatKm(distanceKm)} km`}
           </Footnote>
         ) : null}

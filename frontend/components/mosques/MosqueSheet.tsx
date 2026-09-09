@@ -1,7 +1,7 @@
 import BottomSheet, {
   BottomSheetFlatList,
 } from "@gorhom/bottom-sheet";
-import { Headline } from "@/components/ui/Text";
+import { Footnote, Headline } from "@/components/ui/Text";
 import MosqueRow from "@/components/mosques/MosqueRow";
 import SheetBackground from "@/components/ui/SheetBackground";
 import { withOpacity } from "@/constants/theme";
@@ -63,8 +63,13 @@ export default function MosqueSheet({
   function Header() {
     const title = rows.length === 0 ? "No mosques nearby" : "Nearby mosques";
     return (
-      <View style={{ paddingVertical: spacing.lg, gap: spacing.xs }}>
+      <View style={{ paddingVertical: spacing.lg, gap: 2 }}>
         <Headline color={colors.white}>{title}</Headline>
+        {rows.length > 0 ? (
+          <Footnote color={colors.textTertiary}>
+            {`${rows.length} ${rows.length === 1 ? "result" : "results"}`}
+          </Footnote>
+        ) : null}
       </View>
     );
   }
@@ -94,7 +99,7 @@ export default function MosqueSheet({
           data={rows}
           keyExtractor={(m) => m.id}
           ListHeaderComponent={Header}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const km = userLoc
               ? distanceKm(
                   userLoc.latitude,
@@ -110,6 +115,7 @@ export default function MosqueSheet({
                 address={item.address}
                 distanceLabel={distanceLabel}
                 selected={item.id === selectedId}
+                separated={index > 0}
                 onPress={() => onSelect(item)}
                 onDirections={() => onDirections(item)}
               />
@@ -118,7 +124,6 @@ export default function MosqueSheet({
           contentContainerStyle={{
             paddingHorizontal: spacing.xl,
             paddingBottom: spacing.xl,
-            gap: spacing.md,
           }}
         />
       </BottomSheet>

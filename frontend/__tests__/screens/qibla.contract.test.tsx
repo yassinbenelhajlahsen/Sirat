@@ -189,8 +189,7 @@ describe("screens/Qibla contracts", () => {
     await waitFor(() => {
       expect(getByText("Finding direction...")).toBeTruthy();
     });
-    expect(getByText("Calibrating compass...")).toBeTruthy();
-    expect(getByText("Adjusting")).toBeTruthy();
+    expect(getByText("Calibrating compass")).toBeTruthy();
     expect(queryByText("Location Services Off")).toBeNull();
   });
 
@@ -225,8 +224,7 @@ describe("screens/Qibla contracts", () => {
     const { getByText } = render(<QiblaScreen />);
 
     await waitFor(() => {
-      expect(getByText("Accuracy ±2°")).toBeTruthy();
-      expect(getByText("Aligned")).toBeTruthy();
+      expect(getByText("Keep your phone flat · Accuracy ±2°")).toBeTruthy();
     });
     expect(mockHaptics.notificationAsync).toHaveBeenCalledWith(
       Haptics.NotificationFeedbackType.Success,

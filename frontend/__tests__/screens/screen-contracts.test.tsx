@@ -965,7 +965,7 @@ describe("Screen contracts", () => {
       const { getByText } = render(<MosqueScreen />);
 
       await waitFor(() => {
-        expect(getByText("Nearby Mosques")).toBeTruthy();
+        expect(getByText("Mosques")).toBeTruthy();
       });
       expect(getByText("Location Services Off")).toBeTruthy();
       expect(

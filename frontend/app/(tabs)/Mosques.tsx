@@ -1,16 +1,18 @@
+import AppIcon from "@/components/ui/AppIcon";
 import Aurora from "@/components/ui/Aurora";
 import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
-import { Body, Caption, Headline, LargeTitle, Subhead } from "@/components/ui/Text";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+import { Subhead } from "@/components/ui/Text";
 import MosqueMarker from "@/components/mosques/MosqueMarker";
 import MosqueSheet from "@/components/mosques/MosqueSheet";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { distanceKm } from "@/utils/geo";
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
@@ -64,7 +66,7 @@ export function shouldOfferAreaSearch(
 
 export default function MosqueScreen() {
   const { theme } = useTheme();
-  const { colors } = theme;
+  const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const haptic = useHaptics();
@@ -281,33 +283,9 @@ export default function MosqueScreen() {
     return false;
   }, [loading, servicesOn, permissionStatus, location]);
 
-  const InfoBanner = ({
-    icon,
-    title,
-    message,
-    actions,
-    iconColor = colors.white,
-  }: {
-    icon: keyof typeof Ionicons.glyphMap;
-    title: string;
-    message: string;
-    actions?: React.ReactNode;
-    iconColor?: string;
-  }) => (
-    <View style={styles.banner}>
-      <Ionicons name={icon} size={20} color={iconColor} />
-      <View style={styles.bannerBody}>
-        <Headline color={colors.accent}>{title}</Headline>
-        <Body color={colors.white} style={styles.bannerText}>{message}</Body>
-        {actions}
-      </View>
-    </View>
-  );
-
   if (needLocationGate && !loading) {
     const servicesOff = servicesOn === false;
     const denied = permissionStatus === "denied";
-    const undetermined = permissionStatus === "undetermined";
 
     return (
       <LinearGradient
@@ -320,78 +298,43 @@ export default function MosqueScreen() {
 
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.gateContainer}>
-            <GlassSurface tier="card" style={styles.gateCard}>
-              <View style={styles.headerSection}>
-                <Caption color={withOpacity(colors.accent, 0.9)} style={styles.eyebrow}>
-                  Explore
-                </Caption>
-                <LargeTitle style={styles.title}>Nearby Mosques</LargeTitle>
-                <Body color={colors.textSecondary} style={styles.subtitle}>
-                  Enable location to discover masajid around you.
-                </Body>
-              </View>
-              <View style={styles.gateContent}>
-                {servicesOff ? (
-                  <InfoBanner
-                    icon="location"
-                    title="Location Services Off"
-                    message="Location is required to show nearby mosques and center the map."
-                    actions={
-                      <View style={styles.row}>
-                        <Button
-                          label="How to turn on"
-                          onPress={openLocationServicesHelp}
-                          accessibilityLabel="How to turn on location services"
-                        />
-                        <Button
-                          label="I turned it on"
-                          variant="secondary"
-                          onPress={requestPermissionAndLoad}
-                          accessibilityLabel="Retry location setup"
-                        />
-                      </View>
-                    }
-                  />
-                ) : denied ? (
-                  <InfoBanner
-                    icon="location-outline"
-                    iconColor={colors.accent}
-                    title="Allow Location Access"
-                    message="Grant Sirat access to your location for accurate nearby mosque results."
-                    actions={
-                      <View style={styles.row}>
-                        <Button
-                          label="Open Settings"
-                          onPress={openDeviceSettings}
-                          accessibilityLabel="Open device settings"
-                        />
-                        <Button
-                          label="Try again"
-                          variant="secondary"
-                          onPress={requestPermissionAndLoad}
-                          accessibilityLabel="Retry location permission"
-                        />
-                      </View>
-                    }
-                  />
-                ) : undetermined ? (
-                  <InfoBanner
-                    icon="navigate-outline"
-                    title="We need your location"
-                    message="Tap enable to find mosques near you. You can disable anytime in Settings."
-                    actions={
-                      <View style={styles.row}>
-                        <Button
-                          label="Enable Location"
-                          onPress={requestPermissionAndLoad}
-                          accessibilityLabel="Enable location"
-                        />
-                      </View>
-                    }
-                  />
-                ) : null}
-              </View>
-            </GlassSurface>
+            <ScreenHeader title="Mosques" />
+            <View style={styles.gateContent}>
+              {servicesOff ? (
+                <EmptyState
+                  icon="location"
+                  title="Location Services Off"
+                  message="Location is required to show nearby mosques and center the map."
+                  actionLabel="How to turn on"
+                  onAction={openLocationServicesHelp}
+                  actionAccessibilityLabel="How to turn on location services"
+                  secondaryLabel="I turned it on"
+                  onSecondary={requestPermissionAndLoad}
+                  secondaryAccessibilityLabel="Retry location setup"
+                />
+              ) : denied ? (
+                <EmptyState
+                  icon="location-outline"
+                  title="Allow Location Access"
+                  message="Grant Sirat access to your location for accurate nearby mosque results."
+                  actionLabel="Open Settings"
+                  onAction={openDeviceSettings}
+                  actionAccessibilityLabel="Open device settings"
+                  secondaryLabel="Try again"
+                  onSecondary={requestPermissionAndLoad}
+                  secondaryAccessibilityLabel="Retry location permission"
+                />
+              ) : (
+                <EmptyState
+                  icon="navigate"
+                  title="We need your location"
+                  message="Enable location to find mosques near you. You can turn it off again in Settings."
+                  actionLabel="Enable Location"
+                  onAction={requestPermissionAndLoad}
+                  actionAccessibilityLabel="Enable location"
+                />
+              )}
+            </View>
           </View>
         </SafeAreaView>
       </LinearGradient>
@@ -451,7 +394,7 @@ export default function MosqueScreen() {
               radius={999}
               style={styles.searchAreaPill}
             >
-              <Ionicons name="search" size={16} color={colors.white} />
+              <AppIcon name="search" size={16} color={colors.white} />
               <Subhead color={colors.white} style={styles.searchAreaText}>Search this area</Subhead>
             </GlassSurface>
           </TouchableOpacity>
@@ -465,7 +408,7 @@ export default function MosqueScreen() {
         >
           <GlassSurface tier="card" style={styles.errorCard} accessibilityRole="alert">
             <View style={styles.errorRow}>
-              <Ionicons name="alert-circle" size={18} color={colors.accent} />
+              <AppIcon name="alert-circle" size={18} color={colors.accent} />
               <Subhead color={colors.white} style={styles.emptyText}>{loadError}</Subhead>
             </View>
             <Button
@@ -485,7 +428,7 @@ export default function MosqueScreen() {
           pointerEvents="box-none"
         >
           <GlassSurface tier="card" style={styles.emptyCard}>
-            <Ionicons name="search" size={18} color={colors.accent} />
+            <AppIcon name="search" size={18} color={colors.accent} />
             <Subhead color={colors.white} style={styles.emptyText}>
               No mosques found near your current location.
             </Subhead>
@@ -495,10 +438,12 @@ export default function MosqueScreen() {
 
       {(loading || fetchingFresh) && (
         <View
-          style={[styles.spinnerOverlay, { top: insets.top + 12 }]}
+          style={[styles.spinnerWrap, { top: insets.top + spacing.md }]}
           pointerEvents="none"
         >
-          <ActivityIndicator size="small" color={colors.accent} />
+          <GlassSurface tier="chrome" radius={theme.radii.pill} curve="circular" style={styles.spinner}>
+            <ActivityIndicator size="small" color={colors.accent} />
+          </GlassSurface>
         </View>
       )}
 
@@ -546,46 +491,8 @@ const createStyles = (theme: AppTheme) => {
     gateContainer: {
       flex: 1,
       padding: spacing.xl,
-      justifyContent: "center",
     },
-    gateCard: {
-      padding: spacing.xl,
-    },
-    headerSection: {
-      marginTop: spacing.xs,
-      marginBottom: spacing.md,
-    },
-    eyebrow: {
-      fontWeight: "600",
-      textTransform: "uppercase",
-      letterSpacing: 1,
-    },
-    title: {
-      marginTop: spacing.xs,
-    },
-    subtitle: {
-      marginTop: spacing.xs,
-    },
-    banner: {
-      backgroundColor: withOpacity(colors.accent, 0.18),
-      borderWidth: 1,
-      borderColor: withOpacity(colors.accent, 0.35),
-      borderRadius: 14,
-      padding: spacing.md,
-      flexDirection: "row",
-      alignItems: "flex-start",
-    },
-    gateContent: { marginTop: spacing.md },
-    bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
-    bannerText: {
-      marginTop: spacing.xs,
-    },
-    row: {
-      flexDirection: "row",
-      gap: spacing.sm + 2,
-      marginTop: spacing.md,
-      flexWrap: "wrap",
-    },
+    gateContent: { flex: 1, alignItems: "center", justifyContent: "center" },
     searchAreaWrap: {
       position: "absolute",
       left: 0,
@@ -595,7 +502,7 @@ const createStyles = (theme: AppTheme) => {
     searchAreaPill: {
       flexDirection: "row",
       alignItems: "center",
-      gap: spacing.xs + 2,
+      gap: spacing.sm,
       minHeight: 44,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
@@ -627,13 +534,12 @@ const createStyles = (theme: AppTheme) => {
     emptyText: {
       flexShrink: 1,
     },
-    spinnerOverlay: {
-      position: "absolute",
-      right: spacing.lg,
-      backgroundColor: withOpacity(colors.black, 0.35),
-      borderRadius: 14,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.sm,
+    spinnerWrap: { position: "absolute", right: spacing.lg },
+    spinner: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
     },
     recenterWrap: {
       position: "absolute",
