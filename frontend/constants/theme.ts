@@ -29,6 +29,15 @@ export type AppColors = {
   grayMuted: string;
   grayDark: string;
   danger: string;
+  // Semantic text/icon tokens, contrast-checked against each theme's canvas
+  // (WCAG 4.5:1 for text, 3:1 for icons). Prefer these over ad-hoc
+  // `withOpacity(colors.white, x)` for anything that must stay legible: the
+  // same opacity that passes on the dark themes fails on the cream Light theme.
+  textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  textDisabled: string;
+  iconMuted: string;
 };
 
 export const spacing = {
@@ -117,6 +126,32 @@ export type AppTheme = {
   aurora: AuroraColors;
 };
 
+// `white` is the theme's foreground base (near-black on the Light theme), so
+// the same blend needs a higher alpha there to clear 4.5:1 on the cream canvas.
+function buildTextTokens(
+  white: string,
+  isLight: boolean,
+): Pick<
+  AppColors,
+  "textPrimary" | "textSecondary" | "textTertiary" | "textDisabled" | "iconMuted"
+> {
+  return isLight
+    ? {
+        textPrimary: white,
+        textSecondary: withOpacity(white, 0.8),
+        textTertiary: withOpacity(white, 0.68),
+        textDisabled: withOpacity(white, 0.5),
+        iconMuted: withOpacity(white, 0.6),
+      }
+    : {
+        textPrimary: white,
+        textSecondary: withOpacity(white, 0.72),
+        textTertiary: withOpacity(white, 0.55),
+        textDisabled: withOpacity(white, 0.4),
+        iconMuted: withOpacity(white, 0.45),
+      };
+}
+
 const ACCENT_COLORS = {
   accent: "#E8C77A",
   accentGlow: "#00ffcc",
@@ -147,6 +182,7 @@ const defaultColors: AppColors = {
   grayMedium: "#aaa",
   grayMuted: "#888",
   grayDark: "#555",
+  ...buildTextTokens("#ffffff", false),
 };
 
 const darkColors: AppColors = {
@@ -169,6 +205,7 @@ const darkColors: AppColors = {
   grayMedium: "#948B78",
   grayMuted: "#756C5A",
   grayDark: "#595143",
+  ...buildTextTokens("#F4F1E8", false),
 };
 
 const lightColors: AppColors = {
@@ -196,6 +233,7 @@ const lightColors: AppColors = {
   grayMedium: "#69645B",
   grayMuted: "#5E5A52",
   grayDark: "#4A463F",
+  ...buildTextTokens("#1B1B1B", true),
 };
 
 export const defaultTheme: AppTheme = {

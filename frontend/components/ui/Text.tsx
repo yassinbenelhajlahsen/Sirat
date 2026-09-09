@@ -2,6 +2,11 @@ import { Text as RNText, TextProps, StyleProp, TextStyle } from "react-native";
 import type { TypeStyleName } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
+// Dynamic Type is on, capped so the fixed-width layouts (six arc columns, the
+// calendar grid) don't fall apart at the accessibility sizes. Callers that
+// need a tighter cap pass their own `maxFontSizeMultiplier`.
+export const TEXT_MAX_FONT_SCALE = 1.4;
+
 type AppTextProps = TextProps & {
   variant: TypeStyleName;
   color?: string;
@@ -13,7 +18,7 @@ export function AppText({ variant, color, style, ...rest }: AppTextProps) {
   const t = theme.type[variant];
   return (
     <RNText
-      allowFontScaling={false}
+      maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE}
       style={[
         { fontSize: t.fontSize, lineHeight: t.lineHeight, fontWeight: t.fontWeight, color: color ?? theme.colors.white },
         style,

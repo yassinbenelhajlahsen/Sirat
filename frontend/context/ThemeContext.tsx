@@ -56,6 +56,12 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
+  // NEEDS NATIVE BUILD: native UI (Alert, Switch, ActionSheet, Modal backdrop)
+  // ignores this theme and stays dark because app.config.js pins
+  // `ios.userInterfaceStyle: "dark"`. When that flips to "automatic", call
+  // `Appearance.setColorScheme(nextTheme === "light" ? "light" : "dark")` here
+  // so native chrome follows the picked theme. A "System" theme option that
+  // reads `Appearance.getColorScheme()` becomes worthwhile at the same time.
   const setTheme = useCallback(async (nextTheme: ThemeName) => {
     setThemeName(nextTheme);
     try {

@@ -6,7 +6,7 @@ jest.mock("@/context/ThemeContext", () => {
   return { useTheme: () => ({ theme: defaultTheme }) };
 });
 
-import { LargeTitle, Body, Caption } from "@/components/ui/Text";
+import { LargeTitle, Body, Caption, TEXT_MAX_FONT_SCALE } from "@/components/ui/Text";
 
 describe("typed Text", () => {
   it("renders content and applies the ramp font size", () => {
@@ -21,5 +21,15 @@ describe("typed Text", () => {
     const { getByText } = render(<><Body>b</Body><Caption>c</Caption></>);
     expect(getByText("b")).toBeTruthy();
     expect(getByText("c")).toBeTruthy();
+  });
+  it("supports Dynamic Type with a capped multiplier", () => {
+    const { getByText } = render(<Body>scaled</Body>);
+    const node = getByText("scaled");
+    expect(node.props.allowFontScaling).not.toBe(false);
+    expect(node.props.maxFontSizeMultiplier).toBe(TEXT_MAX_FONT_SCALE);
+  });
+  it("lets a caller tighten the multiplier", () => {
+    const { getByText } = render(<Caption maxFontSizeMultiplier={1.2}>tight</Caption>);
+    expect(getByText("tight").props.maxFontSizeMultiplier).toBe(1.2);
   });
 });

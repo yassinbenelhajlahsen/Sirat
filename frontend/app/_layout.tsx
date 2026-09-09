@@ -7,6 +7,7 @@ import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import * as Updates from "expo-updates";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -385,9 +386,17 @@ function RootLayoutContent() {
   const appReady = fontsLoaded && initialSynced && isHydrated;
   const splashReady = appReady;
 
+  // The plist forces UIUserInterfaceStyle=Dark, so without this the Light
+  // theme paints white status-bar text on its cream canvas.
+  // NEEDS NATIVE BUILD: once app.config.js `ios.userInterfaceStyle` is
+  // "automatic", this can drive `Appearance.setColorScheme` from ThemeContext
+  // instead, and native alerts/switches will follow the in-app theme too.
+  const statusBarStyle = theme.name === "light" ? "dark" : "light";
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
+      <StatusBar style={statusBarStyle} animated />
       <PortalProvider>
         {/* Always render app content so it mounts and loads data while splash is visible */}
         <QuranAudioProvider>
