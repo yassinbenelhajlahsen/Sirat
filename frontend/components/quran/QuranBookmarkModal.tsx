@@ -189,6 +189,7 @@ export default QuranBookmarkModal;
 const createStyles = (theme: AppTheme) => {
   const themeColors = theme.colors;
   const { radii } = theme;
+  const isLight = theme.name === "light";
 
   return StyleSheet.create({
     content: {
@@ -203,23 +204,24 @@ const createStyles = (theme: AppTheme) => {
       fontWeight: "600",
     },
     fieldGroup: {
-      marginBottom: 15,
+      marginBottom: theme.spacing.lg,
     },
     fieldLabel: {
-      marginBottom: 7,
+      marginBottom: theme.spacing.sm,
       fontWeight: "600",
-      letterSpacing: 0.35,
+      letterSpacing: 0.4,
     },
     input: {
-      backgroundColor: withOpacity(themeColors.white, 0.05),
+      backgroundColor: isLight
+        ? withOpacity(themeColors.black, 0.05)
+        : withOpacity(themeColors.white, 0.07),
       borderRadius: radii.row,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      borderCurve: "continuous",
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
       minHeight: 48,
       color: themeColors.white,
       fontSize: 15,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.16),
     },
   });
 };

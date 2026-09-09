@@ -1,8 +1,8 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { Caption } from "@/components/ui/Text";
+import { Caption, Footnote } from "@/components/ui/Text";
 
 export default function SurahBanner({
   arabicName,
@@ -20,13 +20,11 @@ export default function SurahBanner({
         <Caption color={theme.colors.accent}>❖</Caption>
         <View style={styles.line} />
       </View>
-      <Caption color={theme.colors.accent} style={styles.arabic}>
+      <Text style={styles.arabic} maxFontSizeMultiplier={1.2}>
         {arabicName}
-      </Caption>
+      </Text>
       {englishName ? (
-        <Caption color={withOpacity(theme.colors.white, 0.85)} style={styles.english}>
-          {englishName}
-        </Caption>
+        <Footnote color={theme.colors.textSecondary}>{englishName}</Footnote>
       ) : null}
       <View style={styles.rule}>
         <View style={styles.line} />
@@ -56,6 +54,12 @@ const createStyles = (theme: AppTheme) =>
       height: 1,
       backgroundColor: withOpacity(theme.colors.accent, 0.5),
     },
-    arabic: { fontSize: 28, fontWeight: "600", lineHeight: 38 },
-    english: { letterSpacing: 1, textTransform: "uppercase" },
+    // Its own style: the 28pt Arabic display line is not a Caption override.
+    arabic: {
+      fontSize: 28,
+      fontWeight: "600",
+      lineHeight: 38,
+      color: theme.colors.accent,
+      textAlign: "center",
+    },
   });

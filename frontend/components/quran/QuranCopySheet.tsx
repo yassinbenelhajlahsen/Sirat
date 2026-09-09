@@ -1,8 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
+import PressableScale from "@/components/PressableScale";
+import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
 import SheetBackground from "@/components/ui/SheetBackground";
 import SheetHeader from "@/components/ui/SheetHeader";
 import { Callout } from "@/components/ui/Text";
@@ -207,7 +208,7 @@ export default function QuranCopySheet({
 }
 
 type CopyRowProps = {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: AppIconName;
   label: string;
   isLast: boolean;
   isGold: boolean;
@@ -227,23 +228,17 @@ function CopyRow({
 }: CopyRowProps) {
   const labelColor = isGold ? themeColors.accent : themeColors.white;
   return (
-    <Pressable
+    <PressableScale
+      variant="row"
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.optionRow,
-        isLast ? styles.optionRowLast : null,
-        pressed ? styles.optionRowPressed : null,
-      ]}
+      style={[styles.optionRow, isLast ? styles.optionRowLast : null]}
     >
-      <Ionicons
-        name={icon}
-        size={20}
-        color={themeColors.accent}
-        style={styles.optionIcon}
-      />
+      <View style={styles.optionIcon}>
+        <AppIcon name={icon} size={20} color={themeColors.accent} />
+      </View>
       <Callout color={labelColor}>{label}</Callout>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -253,38 +248,32 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     content: {
-      paddingHorizontal: 20,
-      paddingBottom: 24,
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.xxl,
     },
     optionList: {
-      marginTop: 4,
+      marginTop: theme.spacing.xs,
     },
     optionRow: {
       flexDirection: "row",
       alignItems: "center",
       minHeight: 48,
-      paddingHorizontal: 4,
-      paddingVertical: 12,
+      paddingVertical: theme.spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: isLight
         ? withOpacity(themeColors.primaryBorder, 0.5)
-        : withOpacity(themeColors.white, 0.08),
-    },
-    optionRowPressed: {
-      opacity: 0.55,
+        : withOpacity(themeColors.white, 0.1),
     },
     optionRowLast: {
       borderBottomWidth: 0,
     },
-    optionIcon: {
-      marginRight: 12,
-    },
+    optionIcon: { width: 28, alignItems: "center", marginRight: theme.spacing.md },
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: isLight
         ? withOpacity(themeColors.primaryBorder, 0.5)
         : withOpacity(themeColors.white, 0.1),
-      marginVertical: 4,
+      marginVertical: theme.spacing.xs,
     },
   });
 };

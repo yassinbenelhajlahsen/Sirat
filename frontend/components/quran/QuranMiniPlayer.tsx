@@ -1,18 +1,12 @@
-import { Ionicons } from "@expo/vector-icons";
 import type { AudioPlayer } from "expo-audio";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  View,
-  type GestureResponderEvent,
-} from "react-native";
+import { Animated, StyleSheet, View, type GestureResponderEvent } from "react-native";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import GlassSurface from "@/components/ui/GlassSurface";
+import IconButton from "@/components/ui/IconButton";
 import { Caption, Subhead } from "@/components/ui/Text";
 import PressableScale from "../PressableScale";
 
@@ -219,36 +213,32 @@ export function QuranMiniPlayer({
             </Caption>
           </View>
           <View style={styles.controls}>
-            <Pressable
-              accessibilityRole="button"
+            <IconButton
+              icon="stop"
+              variant="tonal"
+              size={42}
+              iconSize={18}
+              color={themeColors.white}
               accessibilityLabel="Stop audio"
               accessibilityHint="Stops playback and closes the mini player"
               onPress={handleStop}
-              style={[styles.controlButton, styles.stopButton]}
-            >
-              <Ionicons name="stop" size={18} color={themeColors.white} />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
+            />
+            <IconButton
+              icon={isPlaying ? "pause" : "play"}
+              variant="primary"
+              size={42}
+              iconSize={22}
               accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
               accessibilityHint="Controls the current surah audio playback"
               onPress={onPressControl}
-              style={[styles.controlButton, styles.playButton]}
-            >
-              <Ionicons
-                name={isPlaying ? "pause" : "play"}
-                size={22}
-                color={themeColors.onAccent}
-              />
-            </Pressable>
+            />
+          </View>
+          {/* Progress rides the card's own bottom edge rather than a bar below it. */}
+          <View style={styles.progressTrack} pointerEvents="none">
+            <Animated.View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
           </View>
         </GlassSurface>
       </PressableScale>
-      <View style={styles.progressTrack}>
-        <Animated.View
-          style={[styles.progressFill, { width: `${progress * 100}%` }]}
-        />
-      </View>
     </Animated.View>
   );
 }
@@ -261,24 +251,19 @@ const createStyles = (theme: AppTheme) => {
   return StyleSheet.create({
     wrapper: {
       position: "absolute",
-      left: 16,
-      right: 16,
+      left: theme.spacing.lg,
+      right: theme.spacing.lg,
       bottom: 0,
-      shadowColor: themeColors.black,
-      shadowOpacity: 0.24,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 10,
     },
     innerContainer: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: 14,
+      padding: theme.spacing.md,
     },
     textSection: {
       flex: 1,
-      marginRight: 12,
+      marginRight: theme.spacing.md,
     },
     surahName: {
       fontWeight: "600",
@@ -289,35 +274,15 @@ const createStyles = (theme: AppTheme) => {
     controls: {
       flexDirection: "row",
       alignItems: "center",
-    },
-    controlButton: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: withOpacity(themeColors.white, 0.12),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.22),
-    },
-    stopButton: {
-      marginRight: 8,
-      backgroundColor: withOpacity(themeColors.white, 0.1),
-    },
-    playButton: {
-      backgroundColor: themeColors.accent,
-      borderColor: withOpacity(themeColors.accent, 0.85),
-      shadowColor: withOpacity(themeColors.accent, 0.4),
-      shadowOpacity: 1,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 6,
+      gap: theme.spacing.sm,
     },
     progressTrack: {
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: withOpacity(themeColors.white, 0.18),
-      marginTop: 8,
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: 3,
+      backgroundColor: withOpacity(themeColors.white, 0.12),
       overflow: "hidden",
     },
     progressFill: {

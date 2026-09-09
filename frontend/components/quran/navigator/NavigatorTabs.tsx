@@ -37,11 +37,11 @@ function NavigatorTabs({ selectedTab, onSelectTab }: NavigatorTabsProps) {
           return (
             <PressableScale
               key={item.key}
+              variant="button"
               style={[styles.segment, isActive && styles.segmentActive]}
               accessibilityRole="button"
               accessibilityState={{ selected: isActive }}
               onPress={() => onSelectTab(item.key)}
-              scaleTo={0.94}
             >
               <Footnote
                 color={
@@ -71,31 +71,26 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     container: {
-      paddingHorizontal: 20,
-      paddingBottom: 10,
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.md,
       paddingTop: 2,
     },
     pill: {
       flexDirection: "row",
-      backgroundColor: withOpacity(themeColors.black, 0.22),
+      backgroundColor: withOpacity(themeColors.white, 0.08),
       borderRadius: theme.radii.pill,
-      padding: 3,
+      padding: 2,
     },
     segment: {
       flex: 1,
       minHeight: 40,
-      paddingVertical: 9,
+      paddingVertical: theme.spacing.sm,
       borderRadius: theme.radii.pill,
       alignItems: "center",
       justifyContent: "center",
     },
     segmentActive: {
       backgroundColor: isLight ? themeColors.accentSoft : themeColors.accent,
-      shadowColor: isLight ? themeColors.primaryOutline : themeColors.accent,
-      shadowOpacity: 0.32,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 8,
     },
     segmentLabel: {
       fontWeight: "600",

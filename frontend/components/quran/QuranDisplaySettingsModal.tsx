@@ -1,12 +1,14 @@
-import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
 
+import PressableScale from "@/components/PressableScale";
+import AppIcon from "@/components/ui/AppIcon";
+import SectionHeader from "@/components/ui/SectionHeader";
 import SheetBackground from "@/components/ui/SheetBackground";
 import SheetHeader from "@/components/ui/SheetHeader";
-import { Caption, Subhead } from "@/components/ui/Text";
+import { Body } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
@@ -124,11 +126,11 @@ export default function QuranDisplaySettingsModal({
           {DISPLAY_MODE_OPTIONS.map((option, index) => {
             const checked = isModeEnabled(option.mode);
             const isDisabled = checked && selectedDisplayModeCount === 1;
-            const isLast = index === DISPLAY_MODE_OPTIONS.length - 1;
 
             return (
-              <Pressable
+              <PressableScale
                 key={option.mode}
+                variant="row"
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked, disabled: isDisabled }}
                 accessibilityHint={isDisabled ? "At least one text must stay on" : undefined}
@@ -137,53 +139,39 @@ export default function QuranDisplaySettingsModal({
                     handleDisplayModePress(option.mode);
                   }
                 }}
-                style={({ pressed }) => [
+                style={[
                   styles.displayModeRow,
-                  isLast ? styles.displayModeRowLast : null,
-                  pressed && !isDisabled
-                    ? styles.displayModeRowPressed
-                    : null,
+                  index > 0 ? styles.displayModeRowSeparated : null,
                   isDisabled ? styles.displayModeRowDisabled : null,
                 ]}
               >
-                <View
-                  style={[
-                    styles.displayModeCheckbox,
-                    checked ? styles.displayModeCheckboxChecked : null,
-                  ]}
-                >
-                  {checked ? (
-                    <Ionicons
-                      name="checkmark"
-                      size={14}
-                      color={themeColors.onAccent}
-                    />
-                  ) : null}
-                </View>
-                <Subhead color={themeColors.white}>{option.label}</Subhead>
-              </Pressable>
+                <Body color={themeColors.white} style={styles.displayModeLabel}>
+                  {option.label}
+                </Body>
+                {checked ? (
+                  <AppIcon name="checkmark" size={18} color={themeColors.accent} />
+                ) : null}
+              </PressableScale>
             );
           })}
         </View>
 
-        <Caption color={themeColors.textTertiary} style={styles.sectionLabel}>
-          TEXT SIZE
-        </Caption>
+        <View style={styles.sectionLabel}>
+          <SectionHeader title="Text size" />
+        </View>
+        {/* The Segmented track, but with size-varying "A" glyphs for labels. */}
         <View style={styles.scaleRow} accessibilityRole="radiogroup">
           {QURAN_TEXT_SCALE_OPTIONS.map((option) => {
             const selected = textScale === option;
             return (
-              <Pressable
+              <PressableScale
                 key={option}
+                variant="button"
                 accessibilityRole="radio"
                 accessibilityState={{ checked: selected, selected }}
                 accessibilityLabel={`${QURAN_TEXT_SCALE_LABELS[option]} text`}
                 onPress={() => void setTextScale(option)}
-                style={({ pressed }) => [
-                  styles.scaleCell,
-                  selected ? styles.scaleCellSelected : null,
-                  pressed && !selected ? styles.scaleCellPressed : null,
-                ]}
+                style={[styles.scaleCell, selected ? styles.scaleCellSelected : null]}
               >
                 <Text
                   allowFontScaling={false}
@@ -197,7 +185,7 @@ export default function QuranDisplaySettingsModal({
                 >
                   A
                 </Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
         </View>
@@ -212,85 +200,53 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     content: {
-      paddingHorizontal: 20,
-      paddingBottom: 24,
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.xxl,
     },
     displayModeList: {
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.66)
-        : withOpacity(themeColors.accent, 0.35),
-      borderRadius: 12,
+      borderRadius: theme.radii.row,
+      borderCurve: "continuous",
       overflow: "hidden",
+      backgroundColor: isLight
+        ? withOpacity(themeColors.black, 0.05)
+        : withOpacity(themeColors.white, 0.07),
     },
     displayModeRow: {
       flexDirection: "row",
       alignItems: "center",
       minHeight: 48,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primarySurface, 0.9)
-        : withOpacity(themeColors.primaryDeep, 0.35),
-      borderBottomWidth: 1,
-      borderBottomColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.4)
-        : withOpacity(themeColors.accent, 0.2),
+      paddingHorizontal: theme.spacing.lg,
     },
-    displayModeRowPressed: {
-      backgroundColor: isLight
-        ? withOpacity(themeColors.primarySurfaceAlt, 0.62)
-        : withOpacity(themeColors.primaryDeep, 0.55),
-    },
-    displayModeRowLast: {
-      borderBottomWidth: 0,
+    displayModeRowSeparated: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: withOpacity(themeColors.white, 0.1),
     },
     displayModeRowDisabled: {
       opacity: 0.72,
     },
-    displayModeCheckbox: {
-      width: 22,
-      height: 22,
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryOutline, 0.88)
-        : withOpacity(themeColors.white, 0.55),
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 12,
-      backgroundColor: "transparent",
-    },
-    displayModeCheckboxChecked: {
-      backgroundColor: themeColors.accent,
-      borderColor: themeColors.accent,
-    },
+    displayModeLabel: { flex: 1 },
     sectionLabel: {
-      letterSpacing: 1,
-      marginTop: theme.spacing.lg,
-      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.xxl,
     },
     scaleRow: {
       flexDirection: "row",
-      gap: theme.spacing.sm,
+      alignItems: "center",
+      padding: 2,
+      gap: 2,
+      borderRadius: theme.radii.chip,
+      borderCurve: "continuous",
+      backgroundColor: withOpacity(themeColors.white, 0.08),
     },
     scaleCell: {
       flex: 1,
-      minHeight: 44,
+      minHeight: 40,
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: theme.radii.row,
+      borderRadius: theme.radii.chip - 2,
       borderCurve: "continuous",
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.12),
-      backgroundColor: withOpacity(themeColors.white, 0.05),
     },
     scaleCellSelected: {
       backgroundColor: themeColors.accent,
-      borderColor: themeColors.accent,
-    },
-    scaleCellPressed: {
-      backgroundColor: withOpacity(themeColors.white, 0.1),
     },
     scaleGlyph: {
       fontWeight: "600",

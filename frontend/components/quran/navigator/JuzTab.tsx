@@ -65,6 +65,7 @@ function JuzTab({ onSelectJuz, onClose, bottomInset = 0 }: JuzTabProps) {
               return (
                 <PressableScale
                   key={juz}
+                  variant="row"
                   style={[styles.button, !isLast && styles.buttonSpaced]}
                   onPress={() => handleSelect(juz)}
                   accessibilityRole="button"
@@ -93,29 +94,27 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
     },
     contentContainer: {
-      paddingHorizontal: 20,
-      paddingBottom: 24,
-      paddingTop: 20,
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.xxl,
+      paddingTop: theme.spacing.xl,
     },
     row: {
       flexDirection: "row",
-      marginBottom: 12,
+      marginBottom: theme.spacing.md,
     },
     button: {
       flex: 1,
       minHeight: 48,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
       borderRadius: radii.row,
       borderCurve: "continuous",
-      backgroundColor: withOpacity(themeColors.white, 0.05),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.3),
+      backgroundColor: withOpacity(themeColors.white, 0.08),
       alignItems: "center",
       justifyContent: "center",
     },
     buttonSpaced: {
-      marginRight: 12,
+      marginRight: theme.spacing.md,
     },
     buttonText: {
       fontWeight: "600",

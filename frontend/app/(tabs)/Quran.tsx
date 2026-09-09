@@ -1,5 +1,8 @@
+import AppIcon from "@/components/ui/AppIcon";
 import Aurora from "@/components/ui/Aurora";
-import { Body, Caption, Footnote, Headline } from "@/components/ui/Text";
+import GlassSurface from "@/components/ui/GlassSurface";
+import IconButton from "@/components/ui/IconButton";
+import { Footnote, Headline, Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useTheme } from "@/context/ThemeContext";
@@ -26,7 +29,6 @@ import {
   saveLastReadAyahIndex,
   saveLastReadSurahAndAyah,
 } from "@/services/quranProgress";
-import { Ionicons } from "@expo/vector-icons";
 import {
   FlashList,
   FlashListRef,
@@ -49,6 +51,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { TIMING_ENTER } from "@/constants/motion";
 import PressableScale from "../../components/PressableScale";
 import NavigatorModal from "../../components/quran/navigator/NavigatorModal";
@@ -313,6 +316,8 @@ export default function QuranScreen() {
   const themeColors = theme.colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
+  const screenMargin = useScreenMargin();
+  const spacing = theme.spacing;
   const haptic = useHaptics();
   const listOpacity = useRef(new Animated.Value(0)).current;
 
@@ -1302,13 +1307,17 @@ export default function QuranScreen() {
       <Aurora />
       <View style={styles.screen}>
         <View style={styles.container}>
-          <LinearGradient
-            colors={[themeColors.primaryDeep, themeColors.primary]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={[styles.headerBar, { paddingTop: insets.top + 10 }]}
+          <GlassSurface
+            tier="chrome"
+            radius={0}
+            curve="continuous"
+            style={[
+              styles.headerBar,
+              { paddingTop: insets.top + spacing.md, paddingHorizontal: screenMargin },
+            ]}
           >
             <PressableScale
+              variant="row"
               style={styles.headerText}
               onPress={() => openNavigator("surah")}
               accessibilityRole="button"
@@ -1317,46 +1326,58 @@ export default function QuranScreen() {
             >
               <View style={styles.headerTitleRow}>
                 <Headline color={themeColors.white}>{currentSurahMeta?.englishName ?? ""}</Headline>
-                <Body color={themeColors.accent} style={styles.headerArabic}>
+                <Subhead color={themeColors.textSecondary} style={styles.headerArabic}>
                   {currentSurahMeta?.arabicName ?? ""}
-                </Body>
-                <Ionicons
-                  name="chevron-down"
-                  size={14}
-                  color={themeColors.accent}
-                  style={styles.headerChevron}
-                />
+                </Subhead>
+                <View style={styles.headerChevron}>
+                  <AppIcon name="chevron-down" size={14} color={themeColors.iconMuted} />
+                </View>
               </View>
-              <Caption color={themeColors.accent}>
+              <Footnote color={themeColors.textTertiary}>
                 Ayah {currentAyah.ayahNumber} · Juzʾ {currentAyah.juzNumber}
-              </Caption>
+              </Footnote>
             </PressableScale>
             <View style={styles.headerActions}>
               {offlinePillVisible ? (
-                <View style={[styles.ctrl, styles.ctrlOffline]} accessibilityRole="text">
-                  <Ionicons name="cloud-offline-outline" size={18} color={themeColors.white} />
+                <View style={styles.ctrlOffline} accessibilityRole="text">
+                  <AppIcon name="cloud-offline-outline" size={18} color={themeColors.white} />
                 </View>
               ) : (
-                <PressableScale
-                  style={[styles.ctrl, styles.ctrlPlay, isAudioLoading && styles.ctrlDisabled]}
+                <IconButton
+                  icon={audioIconName}
+                  variant="primary"
+                  size={40}
+                  iconSize={18}
                   onPress={handleAudioButtonPress}
                   onLongPress={stopAudio}
                   disabled={isAudioLoading}
-                  accessibilityRole="button"
                   accessibilityLabel={audioAccessibilityLabel}
-                  hitSlop={8}
-                >
-                  <Ionicons name={audioIconName} size={18} color={themeColors.onAccent} />
-                </PressableScale>
+                />
               )}
-              <PressableScale style={styles.ctrl} onPress={() => openNavigator("surah")} accessibilityRole="button" accessibilityLabel="Search" accessibilityHint="Find a surah, ayah, juz, or bookmark" hitSlop={2}>
-                <Ionicons name="search" size={18} color={themeColors.white} />
-              </PressableScale>
-              <PressableScale style={styles.ctrl} onPress={() => { closeAllSheets(); setDisplaySettingsOpen(true); }} accessibilityRole="button" accessibilityLabel="Display settings" accessibilityHint="Choose which text shows and its size">
-                <Footnote color={themeColors.white} style={styles.aa} maxFontSizeMultiplier={1}>Aa</Footnote>
+              <IconButton
+                icon="search"
+                variant="glass"
+                size={40}
+                iconSize={18}
+                color={themeColors.white}
+                onPress={() => openNavigator("surah")}
+                accessibilityLabel="Search"
+                accessibilityHint="Find a surah, ayah, juz, or bookmark"
+              />
+              <PressableScale
+                variant="button"
+                onPress={() => { closeAllSheets(); setDisplaySettingsOpen(true); }}
+                accessibilityRole="button"
+                accessibilityLabel="Display settings"
+                accessibilityHint="Choose which text shows and its size"
+                hitSlop={2}
+              >
+                <GlassSurface tier="chrome" radius={20} curve="circular" style={styles.ctrl}>
+                  <Footnote color={themeColors.white} style={styles.aa} maxFontSizeMultiplier={1}>Aa</Footnote>
+                </GlassSurface>
               </PressableScale>
             </View>
-          </LinearGradient>
+          </GlassSurface>
 
           {listReady ? (
             <Animated.View style={[styles.list, { opacity: listOpacity }]}>
@@ -1372,7 +1393,7 @@ export default function QuranScreen() {
                 estimatedItemSize={ESTIMATED_ITEM_SIZE}
                 getItemType={getItemType}
                 style={styles.list}
-                contentContainerStyle={{ ...styles.listContent, paddingTop: HEADER_HEIGHT + insets.top, paddingBottom: insets.bottom + 72 }}
+                contentContainerStyle={{ ...styles.listContent, paddingHorizontal: screenMargin, paddingTop: HEADER_HEIGHT + insets.top, paddingBottom: insets.bottom + 72 }}
                 contentInsetAdjustmentBehavior="never"
                 onLoad={handleListLoad}
                 onViewableItemsChanged={handleViewableItemsChanged}
@@ -1457,30 +1478,28 @@ const createStyles = (theme: AppTheme) => {
     headerBar: {
       position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
       flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-      paddingHorizontal: spacing.lg, paddingBottom: spacing.md,
-      borderBottomWidth: 1, borderColor: withOpacity(themeColors.white, 0.12),
+      paddingBottom: spacing.md,
     },
     headerText: {
       flex: 1,
     },
     headerTitleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
-    headerArabic: { fontWeight: "600" },
+    headerArabic: { fontWeight: "400" },
     headerChevron: { alignSelf: "center" },
-    headerActions: { flexDirection: "row", gap: spacing.sm },
+    headerActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
     // 40pt visual with hitSlop padding the target to 44.
     ctrl: {
-      width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center",
-      backgroundColor: withOpacity(themeColors.white, 0.1), borderWidth: 1, borderColor: withOpacity(themeColors.white, 0.18),
+      width: 40, height: 40, alignItems: "center", justifyContent: "center",
     },
-    ctrlPlay: { backgroundColor: themeColors.accent, borderColor: themeColors.accent },
-    ctrlOffline: { backgroundColor: withOpacity(themeColors.white, 0.08) },
-    ctrlDisabled: { opacity: 0.5 },
+    ctrlOffline: {
+      width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.white, 0.08),
+    },
     aa: { fontWeight: "700" },
     list: {
       flex: 1,
     },
     listContent: {
-      paddingHorizontal: spacing.xl,
       paddingTop: spacing.xs,
       paddingBottom: 72,
     },

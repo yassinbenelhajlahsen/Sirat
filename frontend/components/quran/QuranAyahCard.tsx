@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
+import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -134,7 +134,7 @@ function QuranAyahCard({
         >
           {isBookmarked ? (
             <View style={styles.bookmarkBadge}>
-              <Ionicons name="bookmark" size={16} color={themeColors.accent} />
+              <AppIcon name="bookmark" size={16} color={themeColors.accent} />
             </View>
           ) : null}
           {shouldShowArabic ? (
@@ -206,18 +206,20 @@ const createStyles = (theme: AppTheme) => {
 
   return StyleSheet.create({
     container: {
-      marginBottom: 22,
+      marginBottom: theme.spacing.xxl,
     },
 
     /* DIVIDER (between ayahs, not surah start) */
     divider: {
       flexDirection: "row",
       alignItems: "center",
-      gap: theme.spacing.md,
-      opacity: 0.45,
       marginTop: theme.spacing.sm,
     },
-    dividerLine: { flex: 1, height: 1, backgroundColor: withOpacity(themeColors.white, 0.16) },
+    dividerLine: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: withOpacity(themeColors.white, 0.1),
+    },
 
     /* AYAH BLOCK */
     ayahBlock: {
@@ -230,16 +232,11 @@ const createStyles = (theme: AppTheme) => {
       backgroundColor: withOpacity(themeColors.white, 0.05),
     },
 
-    /* BOOKMARK BADGE */
+    /* BOOKMARK BADGE — a bare gold glyph, no tile */
     bookmarkBadge: {
       position: "absolute",
-      top: 10,
-      left: 10,
-      backgroundColor: withOpacity(themeColors.accent, 0.14),
-      borderRadius: 999,
-      padding: 6,
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.3),
+      top: theme.spacing.md,
+      left: theme.spacing.sm,
     },
 
     /* ARABIC */
@@ -251,7 +248,7 @@ const createStyles = (theme: AppTheme) => {
     },
 
     textBlockSpacing: {
-      marginBottom: 13,
+      marginBottom: theme.spacing.md,
     },
 
     /* TRANSLITERATION */

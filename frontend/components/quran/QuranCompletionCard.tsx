@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import { memo, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Title3, Subhead } from "@/components/ui/Text";
@@ -20,7 +20,7 @@ function QuranCompletionCard({ onBackToTop }: QuranCompletionCardProps) {
     <GlassSurface tier="card" radius={theme.radii.card} style={styles.container}>
       <View style={styles.ornament}>
         <View style={styles.ornamentLine} />
-        <Ionicons name="sparkles" size={13} color={withOpacity(theme.colors.accent, 0.7)} />
+        <AppIcon name="sparkles" size={13} color={withOpacity(theme.colors.accent, 0.7)} />
         <View style={styles.ornamentLine} />
       </View>
       <Title3 style={styles.title}>
@@ -37,22 +37,22 @@ function QuranCompletionCard({ onBackToTop }: QuranCompletionCardProps) {
 export default memo(QuranCompletionCard);
 
 const createStyles = (theme: AppTheme) => {
-  const { colors } = theme;
+  const { colors, spacing } = theme;
 
   return StyleSheet.create({
     container: {
-      marginTop: 32,
-      marginBottom: 60,
-      marginHorizontal: 16,
-      padding: 24,
+      marginTop: spacing.xxxl,
+      marginBottom: spacing.huge + spacing.xl,
+      marginHorizontal: spacing.lg,
+      padding: spacing.xxl,
       alignItems: "center",
     },
     ornament: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8,
-      marginBottom: 16,
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
     },
     ornamentLine: {
       height: 1,
@@ -61,11 +61,11 @@ const createStyles = (theme: AppTheme) => {
     },
     title: {
       textAlign: "center",
-      marginBottom: 10,
+      marginBottom: spacing.md,
     },
     subtitle: {
       textAlign: "center",
-      marginBottom: 20,
+      marginBottom: spacing.xl,
     },
   });
 };

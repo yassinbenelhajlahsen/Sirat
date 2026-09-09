@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetFlatList, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -18,6 +17,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { NormalizedSurahMeta } from "@/services/quranData";
 
 import PressableScale from "../../PressableScale";
+import AppIcon from "@/components/ui/AppIcon";
 
 type LastReadAyah = {
   surahNumber: number;
@@ -141,6 +141,7 @@ function SurahTab({
   const renderTile = useCallback(
     (item: SurahItem, style: StyleProp<ViewStyle>, onPress: () => void) => (
       <PressableScale
+        variant="row"
         key={item.surahNumber}
         style={style}
         onPress={onPress}
@@ -207,6 +208,7 @@ function SurahTab({
           {sectionHeading("Verse Matches")}
           {ayahSearchResults.map((result) => (
             <PressableScale
+              variant="row"
               key={`${result.surahNumber}:${result.ayahNumber}`}
               style={styles.ayahResultTile}
               accessibilityRole="button"
@@ -229,6 +231,7 @@ function SurahTab({
         <View style={styles.ayahResultsContainer}>
           {sectionHeading("Juz Match")}
           <PressableScale
+            variant="row"
             style={styles.ayahResultTile}
             accessibilityRole="button"
             onPress={() => handleSelectJuz(juzSearchResult.juzNumber)}
@@ -249,6 +252,7 @@ function SurahTab({
     <View style={styles.defaultHeader}>
       {lastRead ? (
         <PressableScale
+          variant="row"
           style={styles.continueCard}
           accessibilityRole="button"
           accessibilityLabel={`Continue reading ${lastRead.englishName}, ayah ${lastRead.ayahNumber}`}
@@ -286,6 +290,7 @@ function SurahTab({
         sectionHeading("All Sūrahs", styles.allHeading)
       ) : (
         <PressableScale
+          variant="row"
           style={styles.allButton}
           accessibilityRole="button"
           onPress={() => setShowAllSurahs(true)}
@@ -293,7 +298,7 @@ function SurahTab({
           <Subhead color={themeColors.white} style={styles.allButtonText}>
             All Sūrahs
           </Subhead>
-          <Ionicons name="chevron-forward" size={16} color={accentText} />
+          <AppIcon name="chevron-forward" size={16} color={accentText} />
         </PressableScale>
       )}
     </View>
@@ -371,25 +376,23 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
     },
     listContent: {
-      paddingHorizontal: 20,
-      paddingBottom: 32,
-      paddingTop: 4,
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.xxxl,
+      paddingTop: theme.spacing.xs,
     },
     columnWrapper: {
-      paddingBottom: 12,
+      paddingBottom: theme.spacing.md,
     },
     defaultHeader: {
-      paddingTop: 4,
+      paddingTop: theme.spacing.xs,
     },
     continueCard: {
       borderRadius: radii.row,
       borderCurve: "continuous",
-      paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
       backgroundColor: withOpacity(themeColors.accent, isLight ? 0.16 : 0.14),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, isLight ? 0.4 : 0.35),
-      marginBottom: 16,
+      marginBottom: theme.spacing.lg,
       gap: 2,
     },
     continueLabel: {
@@ -416,100 +419,89 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 4,
+      gap: theme.spacing.xs,
       minHeight: 48,
-      borderRadius: radii.row,
-      borderCurve: "continuous",
-      backgroundColor: withOpacity(themeColors.white, 0.05),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.accent, 0.3),
+      borderRadius: theme.radii.pill,
+      borderCurve: "circular",
+      backgroundColor: withOpacity(themeColors.white, 0.08),
       marginTop: 2,
     },
     allButtonText: {
       fontWeight: "600",
     },
     headerContainer: {
-      marginBottom: 14,
+      marginBottom: theme.spacing.md,
     },
     sectionHeading: {
       fontWeight: "600",
-      marginTop: 12,
-      marginBottom: 8,
-      letterSpacing: 0.35,
+      marginTop: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
+      letterSpacing: 0.4,
       textTransform: "uppercase",
     },
     ayahResultsContainer: {
-      marginBottom: 8,
+      marginBottom: theme.spacing.sm,
     },
     ayahResultTile: {
       backgroundColor: mat.fill,
       borderRadius: radii.row,
       borderCurve: "continuous",
-      paddingHorizontal: 14,
-      paddingVertical: 11,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
       minHeight: 48,
-      borderWidth: 1,
-      borderColor: mat.border,
-      marginBottom: 9,
+      marginBottom: theme.spacing.sm,
     },
     ayahResultMeta: {
       fontWeight: "600",
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     searchInput: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
       minHeight: 48,
-      borderRadius: 15,
+      borderRadius: radii.row,
+      borderCurve: "continuous",
       backgroundColor: isLight
-        ? withOpacity(themeColors.primarySurface, 0.95)
-        : withOpacity(themeColors.white, 0.09),
+        ? withOpacity(themeColors.black, 0.05)
+        : withOpacity(themeColors.white, 0.07),
       color: themeColors.white,
       fontSize: 15,
-      borderWidth: 1,
-      borderColor: isLight
-        ? withOpacity(themeColors.primaryBorder, 0.72)
-        : withOpacity(themeColors.white, 0.16),
     },
     surahTile: {
       flex: 1,
-      paddingVertical: 13,
-      paddingHorizontal: 14,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
       borderRadius: radii.row,
       borderCurve: "continuous",
-      backgroundColor: withOpacity(themeColors.white, 0.05),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.1),
-      marginBottom: 12,
+      backgroundColor: withOpacity(themeColors.white, 0.06),
+      marginBottom: theme.spacing.md,
     },
     surahTileSpaced: {
       flex: 1,
-      paddingVertical: 13,
-      paddingHorizontal: 14,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
       borderRadius: radii.row,
       borderCurve: "continuous",
-      backgroundColor: withOpacity(themeColors.white, 0.05),
-      borderWidth: 1,
-      borderColor: withOpacity(themeColors.white, 0.1),
-      marginBottom: 12,
-      marginRight: 12,
+      backgroundColor: withOpacity(themeColors.white, 0.06),
+      marginBottom: theme.spacing.md,
+      marginRight: theme.spacing.md,
     },
     surahTileRow: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 4,
+      marginBottom: theme.spacing.xs,
     },
     surahNumber: {
       fontWeight: "700",
     },
     surahEnglish: {
       fontWeight: "600",
-      marginBottom: 3,
+      marginBottom: 2,
     },
     emptyStateText: {
       textAlign: "center",
-      paddingVertical: 12,
+      paddingVertical: theme.spacing.md,
     },
   });
 };
