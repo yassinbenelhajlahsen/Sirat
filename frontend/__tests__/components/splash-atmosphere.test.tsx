@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react-native";
 
 import SplashAtmosphere, {
-  GRAIN_OPACITY,
   HORIZON_OPACITY,
+  VIGNETTE_OPACITY,
 } from "@/components/SplashAtmosphere";
 import { AURORA_ACCENT_OPACITY } from "@/components/ui/Aurora";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -22,8 +22,8 @@ describe("SplashAtmosphere", () => {
     expect(HORIZON_OPACITY).toBeGreaterThan(AURORA_ACCENT_OPACITY);
   });
 
-  it("keeps the grain to a texture rather than a veil", () => {
-    expect(GRAIN_OPACITY).toBeLessThan(0.06);
-    expect(GRAIN_OPACITY).toBeGreaterThan(0);
+  it("keeps the vignette a deepening rather than a curtain", () => {
+    expect(VIGNETTE_OPACITY).toBeLessThan(0.3);
+    expect(VIGNETTE_OPACITY).toBeGreaterThan(0);
   });
 });
