@@ -1,5 +1,6 @@
 // frontend/__tests__/screens/Tracker.test.tsx
 import { fireEvent, render } from "@testing-library/react-native";
+import { Alert } from "react-native";
 import Tracker from "@/app/Tracker";
 import { ThemeProvider } from "@/context/ThemeContext";
 
@@ -63,5 +64,17 @@ describe("Tracker screen", () => {
     const { getByLabelText } = render(wrap(<Tracker />));
     fireEvent.press(getByLabelText("Go back"));
     expect(mockBack).toHaveBeenCalled();
+  });
+
+  it("asks before archiving a habit", () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const { getByLabelText } = render(wrap(<Tracker />));
+    fireEvent.press(getByLabelText("Archive Read Qur'an"));
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Archive habit?",
+      expect.stringContaining("Read Qur'an"),
+      expect.arrayContaining([expect.objectContaining({ text: "Archive", style: "destructive" })]),
+    );
+    alertSpy.mockRestore();
   });
 });

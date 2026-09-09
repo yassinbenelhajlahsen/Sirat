@@ -44,16 +44,16 @@ export default function HabitChecklist({ habits, done, date, onToggle }: Props) 
             <Ionicons
               name={checked ? "checkmark-circle" : "ellipse-outline"}
               size={22}
-              color={checked ? colors.accentSecondary : withOpacity(colors.white, 0.5)}
+              color={checked ? colors.accentSecondary : colors.iconMuted}
             />
             <View style={styles.meta}>
               <Headline numberOfLines={1}>{habit.name}</Headline>
-              <Caption color={withOpacity(colors.white, 0.6)}>{frequencyLabel(habit.frequency)}</Caption>
+              <Caption color={colors.textTertiary}>{frequencyLabel(habit.frequency)}</Caption>
             </View>
             <Ionicons
               name={habit.icon as IoniconName}
               size={16}
-              color={withOpacity(colors.white, 0.4)}
+              color={colors.iconMuted}
             />
           </PressableScale>
         );
@@ -72,6 +72,7 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       gap: spacing.md,
       paddingVertical: spacing.sm,
+      minHeight: 44,
     },
     meta: { flex: 1, gap: 2 },
   });

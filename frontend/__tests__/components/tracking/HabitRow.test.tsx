@@ -4,6 +4,11 @@ import HabitRow from "@/components/tracking/HabitRow";
 import { frequencyLabel } from "@/utils/habitFrequency";
 import { ThemeProvider } from "@/context/ThemeContext";
 import type { Habit } from "@/services/habitTracker";
+import { showActionMenu } from "@/utils/actionMenu";
+
+jest.mock("@/utils/actionMenu", () => ({ showActionMenu: jest.fn() }));
+
+const mockShowActionMenu = showActionMenu as jest.MockedFunction<typeof showActionMenu>;
 
 const habit: Habit = {
   id: "h1",
@@ -18,6 +23,20 @@ const habit: Habit = {
 
 const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
 
+const baseProps = {
+  habit,
+  streak: 5,
+  dueToday: true,
+  doneToday: false,
+  onToggleToday: jest.fn(),
+  canMoveUp: true,
+  canMoveDown: false,
+  onMoveUp: jest.fn(),
+  onMoveDown: jest.fn(),
+  onEdit: jest.fn(),
+  onArchive: jest.fn(),
+};
+
 describe("frequencyLabel", () => {
   it("formats daily and weekly", () => {
     expect(frequencyLabel({ type: "daily" })).toBe("Daily");
@@ -26,52 +45,41 @@ describe("frequencyLabel", () => {
 });
 
 describe("HabitRow", () => {
-  it("renders name, frequency, streak and fires actions", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("renders name, frequency, streak and fires the swipe actions", () => {
     const onArchive = jest.fn();
     const onEdit = jest.fn();
     const { getByText, getByLabelText } = render(
-      wrap(
-        <HabitRow
-          habit={habit}
-          streak={5}
-          dueToday
-          doneToday={false}
-          onToggleToday={jest.fn()}
-          canMoveUp
-          canMoveDown
-          onMoveUp={jest.fn()}
-          onMoveDown={jest.fn()}
-          onEdit={onEdit}
-          onArchive={onArchive}
-        />,
-      ),
+      wrap(<HabitRow {...baseProps} onEdit={onEdit} onArchive={onArchive} />),
     );
     expect(getByText("Read Qur'an")).toBeTruthy();
     expect(getByText("Mon, Thu")).toBeTruthy();
+    expect(getByLabelText("5 day streak")).toBeTruthy();
     fireEvent.press(getByLabelText("Archive Read Qur'an"));
     expect(onArchive).toHaveBeenCalled();
     fireEvent.press(getByLabelText("Edit Read Qur'an"));
     expect(onEdit).toHaveBeenCalled();
   });
 
+  it("offers every secondary action from a labelled more button", () => {
+    const onMoveUp = jest.fn();
+    const { getByLabelText } = render(wrap(<HabitRow {...baseProps} onMoveUp={onMoveUp} />));
+    fireEvent.press(getByLabelText("More options for Read Qur'an"));
+    expect(mockShowActionMenu).toHaveBeenCalledTimes(1);
+    const { options, title } = mockShowActionMenu.mock.calls[0][0];
+    expect(title).toBe("Read Qur'an");
+    // canMoveDown is false, so "Move down" is left out.
+    expect(options.map((o) => o.label)).toEqual(["Edit", "Move up", "Archive"]);
+    expect(options.find((o) => o.label === "Archive")?.destructive).toBe(true);
+    options.find((o) => o.label === "Move up")?.onPress();
+    expect(onMoveUp).toHaveBeenCalled();
+  });
+
   it("fires onToggleToday when due today", () => {
     const onToggleToday = jest.fn();
     const { getByLabelText } = render(
-      wrap(
-        <HabitRow
-          habit={habit}
-          streak={5}
-          dueToday
-          doneToday={false}
-          onToggleToday={onToggleToday}
-          canMoveUp
-          canMoveDown
-          onMoveUp={jest.fn()}
-          onMoveDown={jest.fn()}
-          onEdit={jest.fn()}
-          onArchive={jest.fn()}
-        />,
-      ),
+      wrap(<HabitRow {...baseProps} onToggleToday={onToggleToday} />),
     );
     fireEvent.press(getByLabelText("Mark Read Qur'an done today"));
     expect(onToggleToday).toHaveBeenCalled();
@@ -79,21 +87,7 @@ describe("HabitRow", () => {
 
   it("shows a non-interactive marker when not due today", () => {
     const { getByTestId, queryByLabelText } = render(
-      wrap(
-        <HabitRow
-          habit={habit}
-          streak={5}
-          dueToday={false}
-          doneToday={false}
-          onToggleToday={jest.fn()}
-          canMoveUp
-          canMoveDown
-          onMoveUp={jest.fn()}
-          onMoveDown={jest.fn()}
-          onEdit={jest.fn()}
-          onArchive={jest.fn()}
-        />,
-      ),
+      wrap(<HabitRow {...baseProps} dueToday={false} />),
     );
     expect(getByTestId(`habitrow-notdue-${habit.id}`)).toBeTruthy();
     expect(queryByLabelText("Mark Read Qur'an done today")).toBeNull();

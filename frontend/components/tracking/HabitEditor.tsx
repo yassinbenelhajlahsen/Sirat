@@ -2,14 +2,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Alert, StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
+import Button from "@/components/ui/Button";
 import SheetBackground from "@/components/ui/SheetBackground";
 import { Caption, Headline, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import type { Habit, HabitFrequency } from "@/services/habitTracker";
 import { WEEKDAY_SHORT } from "@/utils/habitFrequency";
 
@@ -19,19 +20,20 @@ function EditorSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
   return <SheetBackground {...p} solid />;
 }
 
-const GLYPHS: IoniconName[] = [
-  "book-outline",
-  "moon-outline",
-  "hand-left-outline",
-  "heart-outline",
-  "sunny-outline",
-  "water-outline",
-  "walk-outline",
-  "cash-outline",
-  "people-outline",
-  "star-outline",
-  "leaf-outline",
-  "time-outline",
+// Spoken names so VoiceOver reads "Moon icon", not the glyph id.
+const GLYPHS: { name: IoniconName; label: string }[] = [
+  { name: "book-outline", label: "Book" },
+  { name: "moon-outline", label: "Moon" },
+  { name: "hand-left-outline", label: "Hand" },
+  { name: "heart-outline", label: "Heart" },
+  { name: "sunny-outline", label: "Sun" },
+  { name: "water-outline", label: "Water" },
+  { name: "walk-outline", label: "Walk" },
+  { name: "cash-outline", label: "Charity" },
+  { name: "people-outline", label: "People" },
+  { name: "star-outline", label: "Star" },
+  { name: "leaf-outline", label: "Leaf" },
+  { name: "time-outline", label: "Clock" },
 ];
 
 type Props = {
@@ -46,11 +48,10 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
-  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
+  const tabBarClearance = useTabBarClearance();
 
   const [name, setName] = useState("");
-  const [icon, setIcon] = useState<IoniconName>(GLYPHS[0]);
+  const [icon, setIcon] = useState<IoniconName>(GLYPHS[0].name);
   const [weekly, setWeekly] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
 
@@ -62,7 +63,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
   useEffect(() => {
     if (visible && !previousVisibleRef.current) {
       setName(initial?.name ?? "");
-      setIcon((initial?.icon as IoniconName) ?? GLYPHS[0]);
+      setIcon((initial?.icon as IoniconName) ?? GLYPHS[0].name);
       const f = initial?.frequency;
       setWeekly(f?.type === "weekly");
       setSelectedDays(f?.type === "weekly" ? [...f.days] : []);
@@ -98,7 +99,8 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
   );
 
   const trimmed = name.trim();
-  const canSave = trimmed.length > 0 && (!weekly || selectedDays.length > 0);
+  const needsDays = weekly && selectedDays.length === 0;
+  const canSave = trimmed.length > 0 && !needsDays;
 
   const toggleDay = useCallback((index: number) => {
     setSelectedDays((prev) =>
@@ -118,6 +120,26 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
     onClose();
   }, [canSave, trimmed, icon, weekly, selectedDays, onSubmit, onClose]);
 
+  // Deleting removes the habit and its history everywhere, so confirm first.
+  const confirmDelete = useCallback(() => {
+    if (!onDelete) return;
+    Alert.alert(
+      "Delete habit?",
+      `"${initial?.name ?? trimmed}" and its history will be removed from this device and any synced devices.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            onDelete();
+            onClose();
+          },
+        },
+      ],
+    );
+  }, [initial?.name, onClose, onDelete, trimmed]);
+
   if (!mounted) return null;
 
   return (
@@ -135,39 +157,43 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
 
         <BottomSheetTextInput
           placeholder="Habit name"
-          placeholderTextColor={withOpacity(colors.white, 0.4)}
+          placeholderTextColor={colors.textTertiary}
           value={name}
           onChangeText={setName}
           style={styles.input}
+          accessibilityLabel="Habit name"
+          maxFontSizeMultiplier={1.4}
         />
 
-        <Caption color={withOpacity(colors.white, 0.6)} style={styles.sectionLabel}>ICON</Caption>
+        <Caption color={colors.textTertiary} style={styles.sectionLabel}>ICON</Caption>
         <View style={styles.glyphGrid}>
           {GLYPHS.map((g) => {
-            const active = g === icon;
+            const active = g.name === icon;
             return (
               <PressableScale
-                key={g}
-                onPress={() => setIcon(g)}
+                key={g.name}
+                onPress={() => setIcon(g.name)}
                 accessibilityRole="button"
-                accessibilityLabel={`Choose icon ${g}`}
+                accessibilityLabel={`${g.label} icon`}
+                accessibilityState={{ selected: active }}
                 style={[styles.glyph, active && styles.glyphActive]}
               >
                 <Ionicons
-                  name={g}
+                  name={g.name}
                   size={20}
-                  color={active ? colors.onAccent : withOpacity(colors.white, 0.8)}
+                  color={active ? colors.onAccent : colors.textSecondary}
                 />
               </PressableScale>
             );
           })}
         </View>
 
-        <Caption color={withOpacity(colors.white, 0.6)} style={styles.sectionLabel}>FREQUENCY</Caption>
+        <Caption color={colors.textTertiary} style={styles.sectionLabel}>FREQUENCY</Caption>
         <View style={styles.freqRow}>
           <PressableScale
             onPress={() => setWeekly(false)}
             accessibilityRole="button"
+            accessibilityState={{ selected: !weekly }}
             style={[styles.freqBtn, !weekly && styles.freqBtnActive]}
           >
             <Headline color={!weekly ? colors.onAccent : colors.white}>Daily</Headline>
@@ -175,6 +201,7 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
           <PressableScale
             onPress={() => setWeekly(true)}
             accessibilityRole="button"
+            accessibilityState={{ selected: weekly }}
             style={[styles.freqBtn, weekly && styles.freqBtnActive]}
           >
             <Headline color={weekly ? colors.onAccent : colors.white}>Weekly</Headline>
@@ -182,46 +209,41 @@ export default function HabitEditor({ visible, initial, onSubmit, onDelete, onCl
         </View>
 
         {weekly ? (
-          <View style={styles.weekdayRow}>
-            {WEEKDAY_SHORT.map((label, index) => {
-              const selected = selectedDays.includes(index);
-              return (
-                <PressableScale
-                  key={label}
-                  onPress={() => toggleDay(index)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Toggle ${label}`}
-                  accessibilityState={{ selected }}
-                  style={[styles.weekday, selected && styles.weekdayActive]}
-                >
-                  <Caption color={selected ? colors.onAccent : colors.white}>{label}</Caption>
-                </PressableScale>
-              );
-            })}
-          </View>
+          <>
+            <View style={styles.weekdayRow}>
+              {WEEKDAY_SHORT.map((label, index) => {
+                const selected = selectedDays.includes(index);
+                return (
+                  <PressableScale
+                    key={label}
+                    onPress={() => toggleDay(index)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Toggle ${label}`}
+                    accessibilityState={{ selected }}
+                    style={[styles.weekday, selected && styles.weekdayActive]}
+                  >
+                    <Caption color={selected ? colors.onAccent : colors.white}>{label}</Caption>
+                  </PressableScale>
+                );
+              })}
+            </View>
+            {needsDays ? (
+              <Caption color={colors.textTertiary} accessibilityLiveRegion="polite">
+                Pick at least one day.
+              </Caption>
+            ) : null}
+          </>
         ) : null}
 
-        <PressableScale
-          onPress={handleSave}
-          disabled={!canSave}
-          accessibilityRole="button"
-          style={[styles.save, !canSave && styles.saveDisabled]}
-        >
-          <Headline color={colors.onAccent}>Save</Headline>
-        </PressableScale>
+        <Button label="Save" size="lg" onPress={handleSave} disabled={!canSave} style={styles.save} />
 
         {initial && onDelete ? (
-          <PressableScale
-            onPress={() => {
-              onDelete();
-              onClose();
-            }}
-            accessibilityRole="button"
+          <Button
+            label="Delete habit"
+            variant="danger"
+            onPress={confirmDelete}
             accessibilityLabel="Delete habit"
-            style={styles.delete}
-          >
-            <Headline color={colors.danger}>Delete</Headline>
-          </PressableScale>
+          />
         ) : null}
       </BottomSheetView>
     </BottomSheet>
@@ -239,6 +261,7 @@ const createStyles = (theme: AppTheme) => {
       borderRadius: theme.radii.row,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
+      minHeight: 48,
       color: colors.white,
       fontSize: 16,
     },
@@ -258,7 +281,8 @@ const createStyles = (theme: AppTheme) => {
     freqBtn: {
       flex: 1,
       alignItems: "center",
-      paddingVertical: spacing.md,
+      justifyContent: "center",
+      minHeight: 44,
       borderRadius: theme.radii.row,
       borderWidth: 1,
       borderColor: withOpacity(colors.white, 0.12),
@@ -268,20 +292,13 @@ const createStyles = (theme: AppTheme) => {
     weekday: {
       flex: 1,
       alignItems: "center",
-      paddingVertical: spacing.sm,
+      justifyContent: "center",
+      minHeight: 40,
       borderRadius: theme.radii.chip,
       borderWidth: 1,
       borderColor: withOpacity(colors.white, 0.12),
     },
     weekdayActive: { backgroundColor: colors.accentSecondary, borderColor: colors.accentSecondary },
-    save: {
-      backgroundColor: colors.accent,
-      alignItems: "center",
-      paddingVertical: spacing.md,
-      borderRadius: theme.radii.row,
-      marginTop: spacing.sm,
-    },
-    saveDisabled: { opacity: 0.4 },
-    delete: { alignItems: "center", paddingVertical: spacing.sm },
+    save: { marginTop: spacing.sm },
   });
 };

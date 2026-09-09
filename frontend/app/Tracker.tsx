@@ -1,20 +1,20 @@
 // frontend/app/Tracker.tsx
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import PressableScale from "@/components/PressableScale";
 import CompletionRings from "@/components/tracking/CompletionRings";
 import HabitEditor from "@/components/tracking/HabitEditor";
 import HabitRow from "@/components/tracking/HabitRow";
 import MonthHeatmap from "@/components/tracking/MonthHeatmap";
 import QadaCard from "@/components/tracking/QadaCard";
 import StreakHero from "@/components/tracking/StreakHero";
+import Button from "@/components/ui/Button";
+import IconButton from "@/components/ui/IconButton";
 import Screen from "@/components/ui/Screen";
 import { Caption, LargeTitle, Title2 } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHabitLog, useHabitLogAll } from "@/hooks/useHabitLog";
 import { useHabits } from "@/hooks/useHabits";
@@ -50,6 +50,21 @@ export default function Tracker() {
     void reorder(ids);
   };
 
+  // Archiving has no undo surface in the UI, so it gets a confirmation.
+  const confirmArchive = useCallback(
+    (habit: Habit) => {
+      Alert.alert(
+        "Archive habit?",
+        `"${habit.name}" will leave your tracker. Its history is kept.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Archive", style: "destructive", onPress: () => void archive(habit.id) },
+        ],
+      );
+    },
+    [archive],
+  );
+
   return (
     <Screen safeArea={false}>
       <ScrollView
@@ -57,18 +72,18 @@ export default function Tracker() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + 120 },
+          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + 120 },
         ]}
       >
         <View style={styles.headerRow}>
-          <PressableScale
+          <IconButton
+            icon="chevron-back"
+            variant="plain"
+            color={colors.white}
             onPress={() => router.back()}
-            accessibilityRole="button"
             accessibilityLabel="Go back"
             style={styles.backBtn}
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.white} />
-          </PressableScale>
+          />
           <LargeTitle>Tracker</LargeTitle>
         </View>
 
@@ -83,19 +98,15 @@ export default function Tracker() {
 
         <View style={styles.habitsHeader}>
           <Title2>Habits</Title2>
-          <PressableScale
+          <Button
+            label="New habit"
+            icon="add"
             onPress={() => setEditing({ open: true, habit: null })}
-            accessibilityRole="button"
-            accessibilityLabel="New habit"
-            style={styles.newBtn}
-          >
-            <Ionicons name="add" size={18} color={colors.onAccent} />
-            <Caption color={colors.onAccent} style={styles.newBtnText}>New habit</Caption>
-          </PressableScale>
+          />
         </View>
 
         {habits.length === 0 ? (
-          <Caption color={withOpacity(colors.white, 0.6)} style={styles.empty}>
+          <Caption color={colors.textTertiary} style={styles.empty}>
             No habits yet. Tap &quot;New habit&quot; to start.
           </Caption>
         ) : (
@@ -113,7 +124,7 @@ export default function Tracker() {
                 onMoveUp={() => move(index, -1)}
                 onMoveDown={() => move(index, 1)}
                 onEdit={() => setEditing({ open: true, habit })}
-                onArchive={() => void archive(habit.id)}
+                onArchive={() => confirmArchive(habit)}
               />
             ))}
           </View>
@@ -137,23 +148,13 @@ export default function Tracker() {
 const EMPTY_BY_PRAYER = { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing } = theme;
+  const { spacing } = theme;
   return StyleSheet.create({
     content: { paddingHorizontal: spacing.xl, gap: spacing.lg },
-    headerRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-    backBtn: { padding: spacing.xs, marginLeft: -spacing.xs },
+    headerRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+    backBtn: { marginLeft: -spacing.sm },
     section: { gap: spacing.md },
     habitsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.sm },
-    newBtn: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.xs,
-      backgroundColor: colors.accent,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: theme.radii.pill,
-    },
-    newBtnText: { fontWeight: "700" },
     habitList: { gap: spacing.sm },
     empty: { paddingVertical: spacing.xl, textAlign: "center" },
   });
