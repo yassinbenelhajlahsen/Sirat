@@ -1,10 +1,15 @@
 import Aurora from "@/components/ui/Aurora";
+import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
+import IconButton from "@/components/ui/IconButton";
+import { Body, Caption, Headline, LargeTitle, Subhead } from "@/components/ui/Text";
 import MosqueMarker from "@/components/mosques/MosqueMarker";
 import MosqueSheet from "@/components/mosques/MosqueSheet";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
+import { distanceKm } from "@/utils/geo";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,7 +21,6 @@ import {
   Linking,
   Platform,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -33,9 +37,30 @@ import {
 } from "../../services/getNearbyMosques";
 
 type Perm = "undetermined" | "denied" | "granted";
+type LatLng = { latitude: number; longitude: number };
 
 const RECENTER_SIZE = 48;
 const RECENTER_GAP = 12;
+const LOAD_ERROR = "Couldn't load nearby mosques.";
+
+// "Search this area" only appears after the user has panned far enough from
+// the last searched centre for a new query to return different results.
+export function shouldOfferAreaSearch(
+  region: Region,
+  searchedCenter: LatLng | null,
+  isGesture: boolean | undefined,
+): boolean {
+  if (!isGesture || !searchedCenter) return false;
+  const moved = distanceKm(
+    searchedCenter.latitude,
+    searchedCenter.longitude,
+    region.latitude,
+    region.longitude,
+  );
+  // ~111 km per degree of latitude; 30% of the visible height, never under 500 m.
+  const threshold = Math.max(0.5, region.latitudeDelta * 111 * 0.3);
+  return moved > threshold;
+}
 
 export default function MosqueScreen() {
   const { theme } = useTheme();
@@ -53,20 +78,19 @@ export default function MosqueScreen() {
   const [permissionStatus, setPermissionStatus] =
     useState<Perm>("undetermined");
   const [servicesOn, setServicesOn] = useState<boolean | null>(null);
-  const [location, setLocation] = useState<null | {
-    latitude: number;
-    longitude: number;
-  }>(null);
+  const [location, setLocation] = useState<LatLng | null>(null);
   const [mosques, setMosques] = useState<Mosque[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchingFresh, setFetchingFresh] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
+  const [searchedCenter, setSearchedCenter] = useState<LatLng | null>(null);
   const [showSearchArea, setShowSearchArea] = useState(false);
 
   // Rests above the floating glass tab bar.
-  const tabBarClearance = Math.max(insets.bottom, 14) + 6 + 64 + 8;
+  const tabBarClearance = useTabBarClearance();
 
   // The sheet's live top edge — drives the recenter button so it sticks just
   // above the mosque list as the sheet is dragged.
@@ -92,6 +116,7 @@ export default function MosqueScreen() {
   const requestPermissionAndLoad = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const sOn = await Location.hasServicesEnabledAsync();
       setServicesOn(sOn);
 
@@ -117,6 +142,7 @@ export default function MosqueScreen() {
       });
       const { latitude, longitude } = loc.coords;
       setLocation({ latitude, longitude });
+      setSearchedCenter({ latitude, longitude });
 
       // Fast cached fill
       const cached = await getCachedMosques(latitude, longitude);
@@ -130,12 +156,12 @@ export default function MosqueScreen() {
       } catch (fetchErr) {
         console.error("Mosque fetch error:", fetchErr);
         if (cached.length === 0) {
-          Alert.alert("Error", "Failed to load nearby mosques.");
+          setLoadError(LOAD_ERROR);
         }
       }
     } catch (err) {
       console.error("Mosque load error:", err);
-      Alert.alert("Error", "Failed to load nearby mosques.");
+      setLoadError(LOAD_ERROR);
     } finally {
       setFetchingFresh(false);
       setLoading(false);
@@ -203,18 +229,33 @@ export default function MosqueScreen() {
     );
   };
 
+  const fetchAround = async (center: LatLng) => {
+    setLoadError(null);
+    setFetchingFresh(true);
+    try {
+      const fresh = await getNearbyMosques(center.latitude, center.longitude);
+      setMosques(fresh);
+      setSearchedCenter(center);
+    } catch (e) {
+      console.error("Mosque fetch error:", e);
+      setLoadError(LOAD_ERROR);
+    } finally {
+      setFetchingFresh(false);
+    }
+  };
+
   const handleSearchThisArea = async () => {
     if (!region) return;
     setShowSearchArea(false);
-    setFetchingFresh(true);
-    try {
-      const fresh = await getNearbyMosques(region.latitude, region.longitude);
-      setMosques(fresh);
-    } catch (e) {
-      console.error("Mosque fetch error:", e);
-      Alert.alert("Error", "Failed to load nearby mosques.");
-    } finally {
-      setFetchingFresh(false);
+    await fetchAround({ latitude: region.latitude, longitude: region.longitude });
+  };
+
+  const retryLoad = () => {
+    haptic("light");
+    if (searchedCenter) {
+      void fetchAround(searchedCenter);
+    } else {
+      void requestPermissionAndLoad();
     }
   };
 
@@ -256,8 +297,8 @@ export default function MosqueScreen() {
     <View style={styles.banner}>
       <Ionicons name={icon} size={20} color={iconColor} />
       <View style={styles.bannerBody}>
-        <Text style={styles.bannerTitle}>{title}</Text>
-        <Text style={styles.bannerText}>{message}</Text>
+        <Headline color={colors.accent}>{title}</Headline>
+        <Body color={colors.white} style={styles.bannerText}>{message}</Body>
         {actions}
       </View>
     </View>
@@ -281,11 +322,13 @@ export default function MosqueScreen() {
           <View style={styles.gateContainer}>
             <GlassSurface tier="card" style={styles.gateCard}>
               <View style={styles.headerSection}>
-                <Text style={styles.eyebrow}>Explore</Text>
-                <Text style={styles.title}>Nearby Mosques</Text>
-                <Text style={styles.subtitle}>
+                <Caption color={withOpacity(colors.accent, 0.9)} style={styles.eyebrow}>
+                  Explore
+                </Caption>
+                <LargeTitle style={styles.title}>Nearby Mosques</LargeTitle>
+                <Body color={colors.textSecondary} style={styles.subtitle}>
                   Enable location to discover masajid around you.
-                </Text>
+                </Body>
               </View>
               <View style={styles.gateContent}>
                 {servicesOff ? (
@@ -295,26 +338,17 @@ export default function MosqueScreen() {
                     message="Location is required to show nearby mosques and center the map."
                     actions={
                       <View style={styles.row}>
-                        <TouchableOpacity
-                          style={styles.ctaPrimary}
+                        <Button
+                          label="How to turn on"
                           onPress={openLocationServicesHelp}
-                          accessibilityRole="button"
                           accessibilityLabel="How to turn on location services"
-                        >
-                          <Text style={styles.ctaPrimaryText}>
-                            How to turn on
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.ctaSecondary}
+                        />
+                        <Button
+                          label="I turned it on"
+                          variant="secondary"
                           onPress={requestPermissionAndLoad}
-                          accessibilityRole="button"
                           accessibilityLabel="Retry location setup"
-                        >
-                          <Text style={styles.ctaSecondaryText}>
-                            I turned it on
-                          </Text>
-                        </TouchableOpacity>
+                        />
                       </View>
                     }
                   />
@@ -326,24 +360,17 @@ export default function MosqueScreen() {
                     message="Grant Sirat access to your location for accurate nearby mosque results."
                     actions={
                       <View style={styles.row}>
-                        <TouchableOpacity
-                          style={styles.ctaPrimary}
+                        <Button
+                          label="Open Settings"
                           onPress={openDeviceSettings}
-                          accessibilityRole="button"
                           accessibilityLabel="Open device settings"
-                        >
-                          <Text style={styles.ctaPrimaryText}>
-                            Open Settings
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.ctaSecondary}
+                        />
+                        <Button
+                          label="Try again"
+                          variant="secondary"
                           onPress={requestPermissionAndLoad}
-                          accessibilityRole="button"
                           accessibilityLabel="Retry location permission"
-                        >
-                          <Text style={styles.ctaSecondaryText}>Try again</Text>
-                        </TouchableOpacity>
+                        />
                       </View>
                     }
                   />
@@ -353,16 +380,13 @@ export default function MosqueScreen() {
                     title="We need your location"
                     message="Tap enable to find mosques near you. You can disable anytime in Settings."
                     actions={
-                      <TouchableOpacity
-                        style={styles.ctaPrimary}
-                        onPress={requestPermissionAndLoad}
-                        accessibilityRole="button"
-                        accessibilityLabel="Enable location"
-                      >
-                        <Text style={styles.ctaPrimaryText}>
-                          Enable Location
-                        </Text>
-                      </TouchableOpacity>
+                      <View style={styles.row}>
+                        <Button
+                          label="Enable Location"
+                          onPress={requestPermissionAndLoad}
+                          accessibilityLabel="Enable location"
+                        />
+                      </View>
                     }
                   />
                 ) : null}
@@ -375,7 +399,7 @@ export default function MosqueScreen() {
   }
 
   const emptyNearby =
-    !fetchingFresh && (mosques == null || mosques.length === 0);
+    !fetchingFresh && !loadError && (mosques == null || mosques.length === 0);
 
   const initialRegion: Region | undefined = location
     ? {
@@ -395,9 +419,9 @@ export default function MosqueScreen() {
         userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
         showsUserLocation
         initialRegion={initialRegion}
-        onRegionChangeComplete={(r) => {
+        onRegionChangeComplete={(r, details) => {
           setRegion(r);
-          setShowSearchArea(true);
+          setShowSearchArea(shouldOfferAreaSearch(r, searchedCenter, details?.isGesture));
         }}
       >
         {mosques.slice(0, 10).map((m) => (
@@ -428,25 +452,46 @@ export default function MosqueScreen() {
               style={styles.searchAreaPill}
             >
               <Ionicons name="search" size={16} color={colors.white} />
-              <Text style={styles.searchAreaText}>Search this area</Text>
+              <Subhead color={colors.white} style={styles.searchAreaText}>Search this area</Subhead>
             </GlassSurface>
           </TouchableOpacity>
         </View>
       )}
 
-      {emptyNearby && (
+      {loadError ? (
+        <View
+          style={[styles.emptyOverlayWrap, { top: insets.top + 64 }]}
+          pointerEvents="box-none"
+        >
+          <GlassSurface tier="card" style={styles.errorCard} accessibilityRole="alert">
+            <View style={styles.errorRow}>
+              <Ionicons name="alert-circle" size={18} color={colors.accent} />
+              <Subhead color={colors.white} style={styles.emptyText}>{loadError}</Subhead>
+            </View>
+            <Button
+              label="Try again"
+              variant="secondary"
+              size="sm"
+              icon="refresh"
+              onPress={retryLoad}
+              accessibilityLabel="Retry loading mosques"
+              style={styles.errorAction}
+            />
+          </GlassSurface>
+        </View>
+      ) : emptyNearby ? (
         <View
           style={[styles.emptyOverlayWrap, { top: insets.top + 64 }]}
           pointerEvents="box-none"
         >
           <GlassSurface tier="card" style={styles.emptyCard}>
             <Ionicons name="search" size={18} color={colors.accent} />
-            <Text style={styles.emptyText}>
+            <Subhead color={colors.white} style={styles.emptyText}>
               No mosques found near your current location.
-            </Text>
+            </Subhead>
           </GlassSurface>
         </View>
-      )}
+      ) : null}
 
       {(loading || fetchingFresh) && (
         <View
@@ -461,16 +506,15 @@ export default function MosqueScreen() {
         style={[styles.recenterWrap, recenterAnimatedStyle]}
         pointerEvents="box-none"
       >
-        <TouchableOpacity
-          activeOpacity={0.85}
+        <IconButton
+          icon="locate"
+          variant="glass"
+          size={RECENTER_SIZE}
+          iconSize={20}
+          color={colors.white}
           onPress={recenter}
-          accessibilityRole="button"
           accessibilityLabel="Recenter map on your location"
-        >
-          <GlassSurface tier="chrome" radius={999} style={styles.recenterButton}>
-            <Ionicons name="locate" size={20} color={colors.white} />
-          </GlassSurface>
-        </TouchableOpacity>
+        />
       </Animated.View>
 
       <MosqueSheet
@@ -493,7 +537,7 @@ const createCustomMapStyle = (colors: AppTheme["colors"]) => [
 ];
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, spacing, typography } = theme;
+  const { colors, spacing } = theme;
 
   return StyleSheet.create({
     gradient: { flex: 1 },
@@ -512,27 +556,15 @@ const createStyles = (theme: AppTheme) => {
       marginBottom: spacing.md,
     },
     eyebrow: {
-      color: withOpacity(colors.accent, 0.9),
-      fontSize: typography.caption,
       fontWeight: "600",
       textTransform: "uppercase",
       letterSpacing: 1,
     },
     title: {
-      color: colors.white,
-      fontWeight: "700",
-      fontSize: 34,
       marginTop: spacing.xs,
-      textShadowColor: withOpacity(colors.black, 0.4),
-      textShadowOffset: { width: 0, height: 2 },
-      textShadowRadius: 3,
     },
     subtitle: {
       marginTop: spacing.xs,
-      color: withOpacity(colors.white, 0.9),
-      fontSize: typography.body,
-      lineHeight: 20,
-      fontWeight: "400",
     },
     banner: {
       backgroundColor: withOpacity(colors.accent, 0.18),
@@ -545,40 +577,15 @@ const createStyles = (theme: AppTheme) => {
     },
     gateContent: { marginTop: spacing.md },
     bannerBody: { flex: 1, marginLeft: spacing.sm + 2 },
-    bannerTitle: {
-      color: colors.accent,
-      fontSize: typography.bodyLg,
-      fontWeight: "600",
-    },
     bannerText: {
-      color: colors.white,
-      opacity: 0.95,
-      fontSize: typography.body,
       marginTop: spacing.xs,
     },
     row: {
       flexDirection: "row",
       gap: spacing.sm + 2,
-      marginTop: spacing.sm + 2,
+      marginTop: spacing.md,
       flexWrap: "wrap",
     },
-    ctaPrimary: {
-      backgroundColor: colors.accent,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: 10,
-      alignSelf: "flex-start",
-    },
-    ctaPrimaryText: { color: colors.onAccent, fontWeight: "700" },
-    ctaSecondary: {
-      borderColor: colors.accent,
-      borderWidth: 1,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: 10,
-      alignSelf: "flex-start",
-    },
-    ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
     searchAreaWrap: {
       position: "absolute",
       left: 0,
@@ -589,12 +596,11 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.xs + 2,
+      minHeight: 44,
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm + 2,
+      paddingVertical: spacing.sm,
     },
     searchAreaText: {
-      color: colors.white,
-      fontSize: typography.body,
       fontWeight: "600",
     },
     emptyOverlayWrap: {
@@ -610,9 +616,15 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
+    errorCard: {
+      alignSelf: "stretch",
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+    },
+    errorRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+    errorAction: { alignSelf: "flex-start" },
     emptyText: {
-      color: colors.white,
-      fontSize: 15,
       flexShrink: 1,
     },
     spinnerOverlay: {
@@ -627,12 +639,6 @@ const createStyles = (theme: AppTheme) => {
       position: "absolute",
       top: 0,
       right: spacing.lg,
-    },
-    recenterButton: {
-      width: 48,
-      height: 48,
-      alignItems: "center",
-      justifyContent: "center",
     },
   });
 };

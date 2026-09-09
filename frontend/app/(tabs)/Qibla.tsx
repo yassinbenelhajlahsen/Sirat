@@ -1,6 +1,7 @@
 // app/(tabs)/qibla.tsx
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import Screen from "@/components/ui/Screen";
+import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Headline, LargeTitle, Body } from "@/components/ui/Text";
 import CompassDial from "@/components/qibla/CompassDial";
@@ -10,12 +11,11 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   Platform,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import useQibla from "../../hooks/useQibla";
@@ -127,7 +127,7 @@ export default function Qibla() {
       <Ionicons name={icon} size={20} color={iconColor} />
       <View style={styles.bannerBody}>
         <Headline color={colors.accent}>{title}</Headline>
-        <Body color={withOpacity(colors.white, 0.95)} style={styles.bannerText}>{message}</Body>
+        <Body color={colors.white} style={styles.bannerText}>{message}</Body>
         {actions}
       </View>
     </GlassSurface>
@@ -143,11 +143,13 @@ export default function Qibla() {
       <Screen>
         <View style={styles.container}>
           <View style={styles.headerSection}>
-            <Text style={styles.eyebrow}>Direction</Text>
-            <Text style={styles.title}>Qibla Compass</Text>
-            <Text style={styles.subtitle}>
+            <Caption color={withOpacity(colors.accent, 0.9)} style={styles.eyebrow}>
+              Direction
+            </Caption>
+            <LargeTitle style={styles.title}>Qibla Compass</LargeTitle>
+            <Body color={colors.textSecondary} style={styles.subtitle}>
               Enable location to calculate the direction to the Kaaba.
-            </Text>
+            </Body>
           </View>
           <View style={styles.gateContent}>
             {servicesOff ? (
@@ -157,26 +159,17 @@ export default function Qibla() {
                 message="Location is required to calculate the Qibla direction."
                 actions={
                   <View style={styles.row}>
-                    <TouchableOpacity
-                      style={styles.ctaPrimary}
+                    <Button
+                      label="How to turn on"
                       onPress={openLocationServicesHelp}
-                      accessibilityRole="button"
                       accessibilityLabel="How to turn on location services"
-                    >
-                      <Text style={styles.ctaPrimaryText}>
-                        How to turn on
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.ctaSecondary}
+                    />
+                    <Button
+                      label="I turned it on"
+                      variant="secondary"
                       onPress={requestPermissionAndLoad}
-                      accessibilityRole="button"
                       accessibilityLabel="Retry location setup"
-                    >
-                      <Text style={styles.ctaSecondaryText}>
-                        I turned it on
-                      </Text>
-                    </TouchableOpacity>
+                    />
                   </View>
                 }
               />
@@ -188,22 +181,17 @@ export default function Qibla() {
                 message="Grant Sirat access to your location to calculate the Qibla direction."
                 actions={
                   <View style={styles.row}>
-                    <TouchableOpacity
-                      style={styles.ctaPrimary}
+                    <Button
+                      label="Open Settings"
                       onPress={openDeviceSettings}
-                      accessibilityRole="button"
                       accessibilityLabel="Open device settings"
-                    >
-                      <Text style={styles.ctaPrimaryText}>Open Settings</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.ctaSecondary}
+                    />
+                    <Button
+                      label="Try again"
+                      variant="secondary"
                       onPress={requestPermissionAndLoad}
-                      accessibilityRole="button"
                       accessibilityLabel="Retry location permission"
-                    >
-                      <Text style={styles.ctaSecondaryText}>Try again</Text>
-                    </TouchableOpacity>
+                    />
                   </View>
                 }
               />
@@ -213,20 +201,19 @@ export default function Qibla() {
                 title="We need your location"
                 message="Tap enable to calculate the direction to the Kaaba. You can disable anytime in Settings."
                 actions={
-                  <TouchableOpacity
-                    style={styles.ctaPrimary}
-                    onPress={requestPermissionAndLoad}
-                    accessibilityRole="button"
-                    accessibilityLabel="Enable location"
-                  >
-                    <Text style={styles.ctaPrimaryText}>Enable Location</Text>
-                  </TouchableOpacity>
+                  <View style={styles.row}>
+                    <Button
+                      label="Enable Location"
+                      onPress={requestPermissionAndLoad}
+                      accessibilityLabel="Enable location"
+                    />
+                  </View>
                 }
               />
             ) : null}
 
             <GlassSurface tier="row" radius={theme.radii.row} style={styles.infoCard}>
-              <Body color={withOpacity(colors.white, 0.9)} style={styles.infoText}>
+              <Body color={colors.textSecondary} style={styles.infoText}>
                 Prayer Times still work without location. You can use a manual
                 city from the Settings tab.
               </Body>
@@ -246,7 +233,7 @@ export default function Qibla() {
             Direction
           </Caption>
           <LargeTitle style={styles.title}>Qibla Compass</LargeTitle>
-          <Body color={withOpacity(colors.white, 0.85)} style={styles.subtitle}>
+          <Body color={colors.textSecondary} style={styles.subtitle}>
             Keep your phone flat and turn until the Kaaba reaches the top.
           </Body>
         </View>
@@ -254,7 +241,7 @@ export default function Qibla() {
         <View style={styles.statusRow}>
           <GlassSurface tier="row" radius={theme.radii.pill} style={styles.statusPill}>
             <Ionicons name="compass-outline" size={15} color={withOpacity(colors.accent, 0.95)} />
-            <Caption color={withOpacity(colors.white, 0.92)}>
+            <Caption color={colors.white}>
               {accuracy != null && accuracy >= 0
                 ? `Accuracy ±${Math.round(accuracy)}°`
                 : "Calibrating compass..."}
@@ -281,12 +268,15 @@ export default function Qibla() {
             <View style={styles.stateBlock}>
               <Ionicons name="warning-outline" size={28} color={colors.danger} style={styles.errorIcon} />
               <Body color={colors.danger} style={styles.errorText}>{error}</Body>
-              <Caption color={colors.accentMuted} style={styles.helperText}>
+              <Caption color={colors.textTertiary} style={styles.helperText}>
                 Move your phone in a figure eight to improve compass accuracy.
               </Caption>
             </View>
           ) : rotation == null || qiblaAngle == null || heading == null ? (
-            <Headline color={colors.white}>Finding direction...</Headline>
+            <View style={styles.stateBlock} accessible accessibilityLabel="Finding direction">
+              <ActivityIndicator size="small" color={colors.accent} style={styles.errorIcon} />
+              <Headline color={colors.white}>Finding direction...</Headline>
+            </View>
           ) : (
             <CompassDial
               heading={heading}
@@ -335,26 +325,9 @@ const createStyles = (theme: AppTheme) => {
     row: {
       flexDirection: "row",
       gap: spacing.sm + 2,
-      marginTop: spacing.sm + 2,
+      marginTop: spacing.md,
       flexWrap: "wrap",
     },
-    ctaPrimary: {
-      backgroundColor: colors.accent,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: 10,
-      alignSelf: "flex-start",
-    },
-    ctaPrimaryText: { color: colors.onAccent, fontWeight: "700" },
-    ctaSecondary: {
-      borderColor: colors.accent,
-      borderWidth: 1,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm + 2,
-      borderRadius: 10,
-      alignSelf: "flex-start",
-    },
-    ctaSecondaryText: { color: colors.accent, fontWeight: "600" },
     statusRow: {
       flexDirection: "row",
       gap: spacing.sm + 2,

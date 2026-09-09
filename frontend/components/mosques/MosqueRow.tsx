@@ -1,10 +1,11 @@
 import PressableScale from "@/components/PressableScale";
+import Button from "@/components/ui/Button";
 import { Caption, Headline } from "@/components/ui/Text";
 import { type AppTheme, withOpacity } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 type MosqueRowProps = {
   name: string;
@@ -34,6 +35,7 @@ export default function MosqueRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Select ${name}`}
+      accessibilityState={{ selected: !!selected }}
       style={[styles.row, selected && styles.rowSelected]}
     >
       <View style={styles.glyphCircle}>
@@ -44,25 +46,21 @@ export default function MosqueRow({
         <Headline color={colors.white} numberOfLines={1}>
           {name}
         </Headline>
-        <Caption color={withOpacity(colors.white, 0.6)} numberOfLines={1}>
+        <Caption color={colors.textTertiary} numberOfLines={1}>
           {address}
         </Caption>
         {meta.length > 0 && (
-          <Caption color={withOpacity(colors.white, 0.45)}>{meta}</Caption>
+          <Caption color={colors.textTertiary}>{meta}</Caption>
         )}
       </View>
 
-      <Pressable
+      <Button
+        label="Directions"
+        icon="navigate"
+        size="sm"
         onPress={onDirections}
-        accessibilityRole="button"
         accessibilityLabel={`Directions to ${name}`}
-        style={styles.chip}
-      >
-        <Ionicons name="navigate" size={13} color={colors.onAccent} />
-        <Caption color={colors.onAccent} style={styles.chipLabel}>
-          Directions
-        </Caption>
-      </Pressable>
+      />
     </PressableScale>
   );
 }
@@ -77,6 +75,7 @@ const createStyles = (theme: AppTheme) => {
       gap: spacing.md,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm + 4,
+      minHeight: 64,
       borderRadius: theme.radii.row,
       borderCurve: "continuous",
       borderWidth: 1,
@@ -101,17 +100,5 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
       gap: 2,
     },
-    chip: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      paddingHorizontal: spacing.sm + 2,
-      paddingVertical: spacing.xs + 2,
-      borderRadius: theme.radii.chip,
-      backgroundColor: colors.accent,
-    },
-    chipLabel: {
-      fontWeight: "600",
-    } as any,
   });
 };

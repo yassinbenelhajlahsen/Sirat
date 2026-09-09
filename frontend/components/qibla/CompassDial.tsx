@@ -1,11 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  AccessibilityInfo,
-  Animated,
-  StyleSheet,
-  Text as RNText,
-  View,
-} from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import { Animated, StyleSheet, View } from "react-native";
 import ReAnimated, {
   useAnimatedStyle,
   useSharedValue,
@@ -13,10 +7,12 @@ import ReAnimated, {
 } from "react-native-reanimated";
 import Svg, { G, Line, Text as SvgText } from "react-native-svg";
 
+import KaabaMark from "@/components/qibla/KaabaMark";
 import GlassSurface from "@/components/ui/GlassSurface";
 import { Caption, Footnote, Title1, Title3 } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 import type { CompassDialProps } from "./CompassDial.types";
 
@@ -49,12 +45,7 @@ export default function CompassDial({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   // --- Reduce Motion ---
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
-    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
-    return () => sub?.remove?.();
-  }, []);
+  const reduceMotion = useReducedMotion();
 
   // --- Dial rotation: rotate the whole card by -heading so N tracks true north ---
   const rot = useSharedValue(0);
@@ -159,7 +150,9 @@ export default function CompassDial({
 
         {/* Kaaba marker, placed at qiblaAngle within the (already -heading-rotated) layer */}
         <View style={[StyleSheet.absoluteFill, { transform: [{ rotate: `${qiblaAngle}deg` }] }]}>
-          <RNText style={styles.kaaba}>🕋</RNText>
+          <View style={styles.kaaba} testID="kaaba-mark">
+            <KaabaMark size={26} />
+          </View>
         </View>
       </ReAnimated.View>
 
@@ -173,7 +166,7 @@ export default function CompassDial({
         ) : (
           <>
             <Title1>{`${Math.round(qiblaAngle)}°`}</Title1>
-            <Caption color={withOpacity(colors.white, 0.55)} style={styles.coreLabel}>
+            <Caption color={colors.textTertiary} style={styles.coreLabel}>
               to Makkah
             </Caption>
           </>
@@ -221,11 +214,12 @@ const createStyles = (theme: AppTheme) => {
     },
     kaaba: {
       position: "absolute",
-      top: -2,
-      left: R - 14,
-      width: 28,
-      fontSize: 26,
-      textAlign: "center",
+      top: 0,
+      left: R - 13,
+      width: 26,
+      height: 26,
+      alignItems: "center",
+      justifyContent: "center",
     },
     pointer: {
       position: "absolute",

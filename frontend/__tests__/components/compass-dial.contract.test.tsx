@@ -27,6 +27,7 @@ jest.mock("react-native-svg", () => {
     G: Svg,
     Line: (p: any) => <View {...p} />,
     Circle: (p: any) => <View {...p} />,
+    Rect: (p: any) => <View {...p} />,
     Text: ({ children, ...p }: any) => <Text {...p}>{children}</Text>,
   };
 });
@@ -70,6 +71,12 @@ describe("components/CompassDial", () => {
     );
     expect(getByText("Facing Makkah")).toBeTruthy();
     expect(queryByText("117°")).toBeNull();
+  });
+
+  it("draws the Kaaba as a themed mark rather than an emoji", () => {
+    const { getByTestId, queryByText } = render(<CompassDial {...base} />);
+    expect(getByTestId("kaaba-mark")).toBeTruthy();
+    expect(queryByText("🕋")).toBeNull();
   });
 
   it("omits the distance line when distanceKm is null", () => {
