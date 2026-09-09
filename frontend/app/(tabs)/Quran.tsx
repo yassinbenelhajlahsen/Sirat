@@ -1,6 +1,5 @@
 import AppIcon from "@/components/ui/AppIcon";
 import Aurora from "@/components/ui/Aurora";
-import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
 import { Footnote, Headline, Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
@@ -1307,10 +1306,7 @@ export default function QuranScreen() {
       <Aurora />
       <View style={styles.screen}>
         <View style={styles.container}>
-          <GlassSurface
-            tier="chrome"
-            radius={0}
-            curve="continuous"
+          <View
             style={[
               styles.headerBar,
               { paddingTop: insets.top + spacing.md, paddingHorizontal: screenMargin },
@@ -1356,7 +1352,7 @@ export default function QuranScreen() {
               )}
               <IconButton
                 icon="search"
-                variant="glass"
+                variant="tonal"
                 size={40}
                 iconSize={18}
                 color={themeColors.white}
@@ -1372,12 +1368,12 @@ export default function QuranScreen() {
                 accessibilityHint="Choose which text shows and its size"
                 hitSlop={2}
               >
-                <GlassSurface tier="chrome" radius={20} curve="circular" style={styles.ctrl}>
+                <View style={styles.ctrl}>
                   <Footnote color={themeColors.white} style={styles.aa} maxFontSizeMultiplier={1}>Aa</Footnote>
-                </GlassSurface>
+                </View>
               </PressableScale>
             </View>
-          </GlassSurface>
+          </View>
 
           {listReady ? (
             <Animated.View style={[styles.list, { opacity: listOpacity }]}>
@@ -1475,10 +1471,17 @@ const createStyles = (theme: AppTheme) => {
       flex: 1,
       backgroundColor: "transparent",
     },
+    // Flat and opaque rather than glass: the reader scrolls a wall of text
+    // under this bar, and a blurred surface over moving Arabic is punishing to
+    // look at. `primaryDeep` is the gradient's own top colour, so the bar sits
+    // seamlessly at the head of the screen; the hairline carries the edge.
     headerBar: {
       position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
       flexDirection: "row", justifyContent: "space-between", alignItems: "center",
       paddingBottom: spacing.md,
+      backgroundColor: themeColors.primaryDeep,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.materials.chrome.border,
     },
     headerText: {
       flex: 1,
@@ -1487,13 +1490,17 @@ const createStyles = (theme: AppTheme) => {
     headerArabic: { fontWeight: "400" },
     headerChevron: { alignSelf: "center" },
     headerActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-    // 40pt visual with hitSlop padding the target to 44.
+    // 40pt visual with hitSlop padding the target to 44. Both carry
+    // IconButton's `tonal` fill so the three header controls read as one set.
     ctrl: {
-      width: 40, height: 40, alignItems: "center", justifyContent: "center",
+      width: 40, height: 40, borderRadius: 20, borderCurve: "circular",
+      alignItems: "center", justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.white, 0.1),
     },
     ctrlOffline: {
-      width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center",
-      backgroundColor: withOpacity(themeColors.white, 0.08),
+      width: 40, height: 40, borderRadius: radii.pill, borderCurve: "circular",
+      alignItems: "center", justifyContent: "center",
+      backgroundColor: withOpacity(themeColors.white, 0.1),
     },
     aa: { fontWeight: "700" },
     list: {
