@@ -37,11 +37,20 @@ import { useCalendarViewState } from "@/hooks/useCalendarViewState";
 import { useNextPrayer } from "@/hooks/useNextPrayer";
 import { usePrayerLog } from "@/hooks/usePrayerLog";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { getLastResolvedCoords } from "@/services/prayer-times/environment";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { dateKeyFromDate } from "@/services/holidayService";
 import type { PrayerName } from "@/services/prayerTracker";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function useDialCoords(prayerTimes: unknown[]) {
+  const [coords, setCoords] = useState(getLastResolvedCoords);
+  useEffect(() => {
+    setCoords(getLastResolvedCoords());
+  }, [prayerTimes]);
+  return coords;
+}
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
@@ -160,6 +169,7 @@ export default function CalendarScreen() {
 
   const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
     usePrayerTimes(selectedDate);
+  const dialCoords = useDialCoords(prayerTimes);
   const { nextPrayer, timeLeft } = useNextPrayer(
     selectedDate,
     prayerTimes,
@@ -454,6 +464,7 @@ export default function CalendarScreen() {
                 onOpenSettings={openSettings}
                 nextPrayer={nextPrayer}
                 timeLeft={timeLeft}
+                coords={dialCoords}
                 statuses={statuses}
                 onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
               />

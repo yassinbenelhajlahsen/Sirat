@@ -24,7 +24,7 @@ export default function SignInCard({ onPress, onDismiss }: Props) {
       accessibilityLabel="Sign in to sync"
       activeOpacity={0.85}
     >
-      <GlassSurface tier="row" radius={theme.radii.card} style={styles.card}>
+      <GlassSurface tier="row" radius={theme.radii.row} style={styles.card}>
         <AppIcon name="cloud-upload-outline" size={20} color={colors.accent} />
 
         <View style={styles.text}>

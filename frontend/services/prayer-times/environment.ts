@@ -6,6 +6,25 @@ function coordBucket(lat: number, lng: number): string {
   return `${lat.toFixed(2)},${lng.toFixed(2)}`;
 }
 
+/**
+ * The coordinates behind the most recent prayer-times resolution.
+ *
+ * Every prayer-times fetch already resolves a real lat/lng, whether it came
+ * from the device, a manual city, or an override. Recording it here lets the
+ * dial draw the sun for that place without a second resolution, and without
+ * any screen having to trigger a location permission prompt of its own.
+ */
+let lastResolved: { latitude: number; longitude: number } | null = null;
+
+export function getLastResolvedCoords(): { latitude: number; longitude: number } | null {
+  return lastResolved;
+}
+
+function remember(env: ResolvedEnv): ResolvedEnv {
+  lastResolved = { latitude: env.latitude, longitude: env.longitude };
+  return env;
+}
+
 export async function resolveCoordsAndCountry(
   settings: PrayerSettings,
   override?: PrayerLocationOverride,
@@ -13,12 +32,12 @@ export async function resolveCoordsAndCountry(
   if (override?.coords) {
     const { latitude, longitude } = override.coords;
     const bucket = coordBucket(latitude, longitude);
-    return {
+    return remember({
       latitude,
       longitude,
       bucket,
       country: override.country ?? "",
-    };
+    });
   }
 
   if (!settings.useLocation) {
@@ -27,12 +46,12 @@ export async function resolveCoordsAndCountry(
     }
 
     const { lat, lng, country } = settings.city;
-    return {
+    return remember({
       latitude: lat,
       longitude: lng,
       country: country || "",
       bucket: coordBucket(lat, lng),
-    };
+    });
   }
 
   const servicesEnabled = await Location.hasServicesEnabledAsync();
@@ -64,22 +83,22 @@ export async function resolveCoordsAndCountry(
       // no-op
     }
 
-    return {
+    return remember({
       latitude: loc.coords.latitude,
       longitude: loc.coords.longitude,
       country,
       bucket: coordBucket(loc.coords.latitude, loc.coords.longitude),
-    };
+    });
   }
 
   if (settings.city) {
     const { lat, lng, country } = settings.city;
-    return {
+    return remember({
       latitude: lat,
       longitude: lng,
       country: country || "",
       bucket: coordBucket(lat, lng),
-    };
+    });
   }
 
   throw new Error(

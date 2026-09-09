@@ -11,34 +11,26 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
-import DisplayNumber from "@/components/ui/DisplayNumber";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
 import SectionHeader from "@/components/ui/SectionHeader";
-import SkeletonBar from "@/components/ui/SkeletonBar";
-import { AppText, Body, Footnote, Headline, Subhead, Title3 } from "@/components/ui/Text";
+import { Body, Footnote, Subhead, Title1, Title3 } from "@/components/ui/Text";
 import Screen from "@/components/ui/Screen";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { getGreeting } from "@/utils/greeting";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
-import PrayerArc from "@/components/PrayerArc";
+import PrayerDial from "@/components/PrayerDial";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import PressableScale from "../../components/PressableScale";
 import { useDuaInteraction } from "../../hooks/useDuaInteraction";
 import { useHomePrayerTimes } from "../../hooks/useHomePrayerTimes";
 import { useKeyboardAutoScroll } from "../../hooks/useKeyboardAutoScroll";
-import useModalTransition from "../../hooks/useModalTransition";
 import { usePrayerLog } from "@/hooks/usePrayerLog";
 import { useTrackingStats } from "@/hooks/useTrackingStats";
 import { dateKeyFromDate } from "@/services/holidayService";
 import type { PrayerName } from "@/services/prayerTracker";
-
-// "5:42 PM" → "5:42": the period is implied by the greeting and the arc.
-function bareTime(time: string): string {
-  return time.split(" ")[0] ?? time;
-}
 
 export default function Home() {
   const { theme } = useTheme();
@@ -50,7 +42,7 @@ export default function Home() {
   const router = useRouter();
   const {
     prayerTimes, nextPrayer, nextDayFajr, timeLeft,
-    loading, refreshing, banner, locationLabel, refresh,
+    loading, refreshing, banner, locationLabel, coords, refresh,
   } = useHomePrayerTimes();
   const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
@@ -60,9 +52,6 @@ export default function Home() {
     setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 400);
   }, [submitDua, scrollViewRef]);
 
-  const hasPrayerSummary = !!(nextPrayer || nextDayFajr);
-  const { shouldRender: shouldRenderPrayerSummary, cardAnimatedStyle: prayerSummaryAnimatedStyle } =
-    useModalTransition(hasPrayerSummary);
 
   const onRefresh = async () => { await refresh(); };
 
@@ -108,12 +97,6 @@ export default function Home() {
       { scale: duaSwapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
     ],
   };
-
-  const heroLocation = locationLabel ? (
-    <View style={styles.heroLocation}>
-      <Subhead color={colors.textTertiary}>{locationLabel}</Subhead>
-    </View>
-  ) : null;
 
   return (
     <Screen safeArea={false}>
@@ -164,14 +147,18 @@ export default function Home() {
           </View>
         )}
 
-        {/* Header: greeting, one dated supporting line, settings gear */}
+        {/* Header hero: the greeting and the Hijri date carry the top of the
+            screen now that the next prayer lives in the dial's centre. */}
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
-            <Headline numberOfLines={1}>
+            <Title1 numberOfLines={2}>
               {displayName ? `${baseGreeting}, ${displayName}` : baseGreeting}
-            </Headline>
+            </Title1>
+            <Title3 color={colors.accent} numberOfLines={1} style={styles.headerHijri}>
+              {`${islamicDate} AH`}
+            </Title3>
             <Footnote color={colors.textTertiary} style={styles.headerDate}>
-              {`${gregorianDate} · ${islamicDate} AH`}
+              {locationLabel ? `${gregorianDate} · ${locationLabel}` : gregorianDate}
             </Footnote>
           </View>
           <IconButton
@@ -183,63 +170,31 @@ export default function Home() {
           />
         </View>
 
-        {/* Next prayer, bare on the canvas */}
-        {(loading || shouldRenderPrayerSummary || hasPrayerSummary) && (
-          <View style={styles.heroSlot}>
-            {shouldRenderPrayerSummary ? (
-              <Animated.View style={[prayerSummaryAnimatedStyle, { opacity: 1 }]}>
-                {nextPrayer ? (
-                  <View style={styles.hero}>
-                    <View style={styles.heroTitleRow}>
-                      <Title3 color={colors.accent}>{nextPrayer.label}</Title3>
-                      {timeLeft ? (
-                        <AppText variant="title3" color={colors.textSecondary} style={styles.heroCountdown}>
-                          {`in ${timeLeft}`}
-                        </AppText>
-                      ) : null}
-                    </View>
-                    <DisplayNumber value={bareTime(nextPrayer.time)} size={72} flush />
-                    {heroLocation}
-                  </View>
-                ) : nextDayFajr ? (
-                  <PressableScale
-                    onPress={() =>
-                      router.push({
-                        pathname: "/Calendar",
-                        params: { date: tomorrowParam, month: tomorrow.getMonth().toString(), year: tomorrow.getFullYear().toString() },
-                      })
-                    }
-                    accessibilityRole="button"
-                    accessibilityLabel="View tomorrow prayer times"
-                    style={styles.hero}
-                  >
-                    <Title3 color={colors.accent}>Prayers done for today</Title3>
-                    <Headline color={colors.textSecondary}>
-                      {`Fajr tomorrow at ${bareTime(nextDayFajr)}`}
-                    </Headline>
-                    {heroLocation}
-                  </PressableScale>
-                ) : null}
-              </Animated.View>
-            ) : loading ? (
-              <View style={styles.hero} accessible accessibilityLabel="Loading prayer times">
-                <SkeletonBar height={20} width={160} />
-                <SkeletonBar height={56} width={200} />
-                <SkeletonBar height={16} width={120} />
-              </View>
-            ) : null}
-          </View>
-        )}
-
-        {/* Prayer arc (owns its own glass card) */}
-        <View style={styles.arcSlot}>
-          <PrayerArc
+        {/* Prayer dial (owns its own glass card, and is now the screen's hero) */}
+        <View style={styles.dialSlot}>
+          <PrayerDial
             loading={loading}
             prayerTimes={prayerTimes}
             nextPrayer={nextPrayer}
+            timeLeft={timeLeft}
+            tomorrowFajr={nextDayFajr}
+            coords={coords}
             logging
             statuses={statuses}
             onPressPrayer={(name, label) => setSheet({ name, label })}
+            onPressCentre={
+              !nextPrayer && nextDayFajr
+                ? () =>
+                    router.push({
+                      pathname: "/Calendar",
+                      params: {
+                        date: tomorrowParam,
+                        month: tomorrow.getMonth().toString(),
+                        year: tomorrow.getFullYear().toString(),
+                      },
+                    })
+                : undefined
+            }
           />
         </View>
 
@@ -288,15 +243,11 @@ const createStyles = (theme: AppTheme) => {
     bannerRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
     bannerText: { flex: 1 },
     bannerAction: { alignSelf: "flex-start" },
-    headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
+    headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.md },
     headerText: { flex: 1 },
+    headerHijri: { marginTop: spacing.xs },
     headerDate: { marginTop: 2 },
-    heroSlot: { marginTop: spacing.xxl },
-    hero: { gap: spacing.xs },
-    heroTitleRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm, flexWrap: "wrap" },
-    heroCountdown: { fontWeight: "400" },
-    heroLocation: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-    arcSlot: { marginTop: spacing.xxl },
+    dialSlot: { marginTop: spacing.xl },
     section: { marginTop: spacing.xxl },
     trackerRow: {
       flexDirection: "row",

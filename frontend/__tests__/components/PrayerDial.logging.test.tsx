@@ -1,11 +1,14 @@
-// frontend/__tests__/components/PrayerArc.logging.test.tsx
+// frontend/__tests__/components/PrayerDial.logging.test.tsx
 import { fireEvent, render } from "@testing-library/react-native";
-import PrayerArc from "@/components/PrayerArc";
+import PrayerDial from "@/components/PrayerDial";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
-  return { ...actual, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
+  return {
+    ...actual,
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  };
 });
 
 const TIMES = [
@@ -17,17 +20,21 @@ const TIMES = [
   { label: "Isha", time: "8:01 PM" },
 ] as any;
 
+const DAY = new Date(2026, 2, 4);
+const AFTERNOON = new Date(2026, 2, 4, 16, 0, 0);
+
 const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
 
-describe("PrayerArc logging mode", () => {
+describe("PrayerDial logging mode", () => {
   it("renders status dots for logged prayers", () => {
     const { getByTestId } = render(
       wrap(
-        <PrayerArc
+        <PrayerDial
           loading={false}
           prayerTimes={TIMES}
           nextPrayer={{ label: "Asr", time: "3:42 PM" }}
           live={false}
+          date={DAY}
           logging
           statuses={{ fajr: "prayed", dhuhr: "late" }}
         />,
@@ -41,10 +48,12 @@ describe("PrayerArc logging mode", () => {
     const onPress = jest.fn();
     const { getByLabelText } = render(
       wrap(
-        <PrayerArc
+        <PrayerDial
           loading={false}
           prayerTimes={TIMES}
           nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          now={AFTERNOON}
+          date={DAY}
           live
           logging
           statuses={{}}
@@ -59,10 +68,12 @@ describe("PrayerArc logging mode", () => {
   it("exposes the logged status to assistive tech without changing the label", () => {
     const { getByLabelText } = render(
       wrap(
-        <PrayerArc
+        <PrayerDial
           loading={false}
           prayerTimes={TIMES}
           nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          now={AFTERNOON}
+          date={DAY}
           live
           logging
           statuses={{ fajr: "prayed" }}
@@ -70,16 +81,45 @@ describe("PrayerArc logging mode", () => {
         />,
       ),
     );
-    expect(getByLabelText("Log Fajr").props.accessibilityValue).toEqual({ text: "Marked prayed" });
-    expect(getByLabelText("Log Dhuhr").props.accessibilityValue).toEqual({ text: "Not logged" });
+    const fajr = getByLabelText("Log Fajr");
+    expect(fajr.props.accessibilityValue).toEqual({ text: "Marked prayed" });
   });
 
-  it("does not crash and renders nothing loggable for Sunrise", () => {
+  it("never offers Sunrise as something to log", () => {
     const { queryByLabelText } = render(
       wrap(
-        <PrayerArc loading={false} prayerTimes={TIMES} nextPrayer={null} live={false} logging statuses={{}} onPressPrayer={jest.fn()} />,
+        <PrayerDial
+          loading={false}
+          prayerTimes={TIMES}
+          nextPrayer={null}
+          live={false}
+          date={DAY}
+          logging
+          statuses={{}}
+          onPressPrayer={jest.fn()}
+        />,
       ),
     );
     expect(queryByLabelText("Log Sunrise")).toBeNull();
+  });
+
+  it("leaves a prayer that has not come round yet unloggable", () => {
+    const { queryByLabelText, getByLabelText } = render(
+      wrap(
+        <PrayerDial
+          loading={false}
+          prayerTimes={TIMES}
+          nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          now={AFTERNOON}
+          date={DAY}
+          live
+          logging
+          statuses={{}}
+          onPressPrayer={jest.fn()}
+        />,
+      ),
+    );
+    expect(getByLabelText("Log Asr")).toBeTruthy();
+    expect(queryByLabelText("Log Isha")).toBeNull();
   });
 });

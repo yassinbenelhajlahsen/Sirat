@@ -52,6 +52,9 @@ export default function PrayerStatusDot({ status, loggable }: Props) {
 }
 
 const styles = StyleSheet.create({
-  slot: { height: SIZE, alignItems: "center", justifyContent: "center" },
+  // Square, not just tall: the logged states are 14px glyphs and the unlogged
+  // state is a 6px dot, so without a fixed width they sit in different-sized
+  // boxes and the coloured circle reads as off-centre against its neighbours.
+  slot: { width: SIZE, height: SIZE, alignItems: "center", justifyContent: "center" },
   upcoming: { width: 6, height: 6, borderRadius: radii.pill },
 });

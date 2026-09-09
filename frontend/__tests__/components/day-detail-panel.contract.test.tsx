@@ -35,11 +35,11 @@ jest.mock("@/context/ThemeContext", () => {
   return { useTheme: () => ({ theme: defaultTheme }) };
 });
 
-jest.mock("@/components/PrayerArc", () => {
+jest.mock("@/components/PrayerDial", () => {
   const React = require("react");
   const { Text } = require("react-native");
   return (props: any) =>
-    React.createElement(Text, { testID: "prayer-arc" }, props.live ? "live" : "static");
+    React.createElement(Text, { testID: "prayer-dial" }, props.live ? "live" : "static");
 });
 
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
@@ -62,12 +62,12 @@ const baseProps = {
 describe("DayDetailPanel", () => {
   it("renders a static arc for a non-today day", () => {
     const { getByTestId } = render(<DayDetailPanel {...baseProps} />);
-    expect(getByTestId("prayer-arc")).toHaveTextContent("static");
+    expect(getByTestId("prayer-dial")).toHaveTextContent("static");
   });
 
   it("renders a live arc for today", () => {
     const { getByTestId } = render(<DayDetailPanel {...baseProps} isToday />);
-    expect(getByTestId("prayer-arc")).toHaveTextContent("live");
+    expect(getByTestId("prayer-dial")).toHaveTextContent("live");
   });
 
   it("appends the holiday to the supporting line", () => {

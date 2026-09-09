@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
-import PrayerArc from "@/components/PrayerArc";
+import PrayerDial from "@/components/PrayerDial";
 import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
@@ -23,6 +23,7 @@ type DayDetailPanelProps = {
   onOpenSettings: () => void;
   nextPrayer: { label: string; time: string } | null;
   timeLeft: string;
+  coords?: { latitude: number; longitude: number } | null;
   statuses: Partial<Record<PrayerName, PrayerStatus>>;
   onPressPrayer: (name: PrayerName, label: string) => void;
 };
@@ -38,6 +39,7 @@ export default function DayDetailPanel({
   onOpenSettings,
   nextPrayer,
   timeLeft,
+  coords,
   statuses,
   onPressPrayer,
 }: DayDetailPanelProps) {
@@ -119,11 +121,14 @@ export default function DayDetailPanel({
           />
         </GlassSurface>
       ) : (
-        <PrayerArc
+        <PrayerDial
           loading={loading}
           prayerTimes={prayerTimes}
           nextPrayer={isToday ? nextPrayer : null}
+          timeLeft={isToday ? timeLeft : undefined}
+          date={date}
           live={isToday}
+          coords={coords}
           logging
           statuses={statuses}
           onPressPrayer={onPressPrayer}

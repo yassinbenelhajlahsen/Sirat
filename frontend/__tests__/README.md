@@ -109,8 +109,9 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/ui/aurora.test.tsx` — the exported bloom opacities stay toned down
   - `hooks/useScreenMargin.test.ts` — 16 under 400pt, 20 at 430pt
 - `home prayer arc (horizontal progress thumb) testing`
-  - `utils/prayer-arc.test.ts` — geometry, states, `sunMarker`, and `isMarkerAbsorbed` (slot dot hidden while the thumb sits on it)
-  - `components/prayer-arc.contract.test.tsx` (incl. live vs static/non-today mode, thumb instead of sun/moon glyph)
+  - `utils/prayer-dial.test.ts` — dial geometry (noon at top, markers at true angular time), ring construction, disc stops, star field, marker fallbacks
+  - `utils/sky.test.ts` — solar palette: pins that `suncalc` altitude is in DEGREES, plus horizon/zenith behaviour at low, high and negative sun
+  - `components/prayer-dial.contract.test.tsx` — five columns with Sunrise excluded, centre stack (next prayer / tomorrow rollover / date + daylight / logged count / future), and that a non-today date is never mutated
 - `tab bar scroll-collapse testing`
   - `utils/tab-bar-chrome.test.ts` — collapse decision, shared pill geometry (`tabBarClearanceForInset`), Reduce Motion gate
   - `hooks/useTabBarClearance.test.ts`
@@ -133,11 +134,11 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/tracking/merge.test.ts` — LWW merge for prayer log, habits, habit log
   - `services/tracking/facades.test.ts` — prayerTracker + habitTracker barrel re-exports
 - `prayer logging UI (Phase 2) testing`
-  - `utils/prayerLabel.test.ts` — maps prayer-arc labels to PrayerName (Sunrise → null)
+  - `utils/prayerLabel.test.ts` — maps dial prayer labels to PrayerName (Sunrise → null)
   - `hooks/usePrayerLog.test.ts` — usePrayerLog hook: load, set/clear, event filtering, unmount cleanup
   - `components/tracking/PrayerStatusDot.test.tsx` — prayer status glyph states (check / clock / cross, not colour-only)
   - `components/tracking/PrayerLogSheet.test.tsx` — prayer logging bottom sheet (Prayed/Late/Missed + Clear)
-  - `components/PrayerArc.logging.test.tsx` — PrayerArc logging mode (status dots, tap-to-log, Sunrise excluded)
+  - `components/PrayerDial.logging.test.tsx` — PrayerDial logging mode (status dots, tap-to-log, Sunrise excluded, future prayers unloggable)
   - `screens/home-prayer-logging.test.tsx` — logging a prayer from the Home arc persists
   - `components/calendar/DayDetailPanel.logging.test.tsx` — logging a prayer for a past date in the Calendar detail
 - `tracker screen + habits UI (Phase 3) testing`

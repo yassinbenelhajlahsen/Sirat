@@ -293,21 +293,36 @@ jest.mock("@shopify/flash-list", () => {
   return { FlashList };
 });
 
-jest.mock("@/components/PrayerArc", () => {
+jest.mock("@/components/PrayerDial", () => {
   const React = require("react");
   const { Text } = require("react-native");
 
-  return function PrayerArcMock({
+  const { TouchableOpacity } = require("react-native");
+
+  return function PrayerDialMock({
     loading,
     prayerTimes,
+    nextPrayer,
+    onPressCentre,
   }: {
     loading: boolean;
     prayerTimes: unknown[];
+    nextPrayer: { label: string } | null;
+    onPressCentre?: () => void;
   }) {
     return (
-      <Text testID="prayer-arc">
-        loading:{String(loading)} count:{prayerTimes.length}
-      </Text>
+      <>
+        <Text testID="prayer-dial">
+          loading:{String(loading)} count:{prayerTimes.length} next:
+          {nextPrayer?.label ?? "none"}
+        </Text>
+        {onPressCentre ? (
+          <TouchableOpacity
+            accessibilityLabel="View tomorrow prayer times"
+            onPress={onPressCentre}
+          />
+        ) : null}
+      </>
     );
   };
 });
@@ -811,10 +826,14 @@ describe("Screen contracts", () => {
     it("renders the prayer and dua sections contract", () => {
       const { getByText, getByTestId, getByLabelText } = render(<Home />);
 
-      expect(getByText("Chicago, US")).toBeTruthy();
-      expect(getByText("Dhuhr")).toBeTruthy();
+      // The city moved into the dated header line when the hero was removed and
+      // the dial took no footer, so it is no longer a standalone text node.
+      expect(getByText(/Chicago, US$/)).toBeTruthy();
       expect(getByText("DuaCardMock")).toBeTruthy();
-      expect(getByTestId("prayer-arc")).toHaveTextContent("loading:false count:1");
+      // The next prayer is the dial's centre now, not a separate hero block.
+      expect(getByTestId("prayer-dial")).toHaveTextContent(
+        "loading:false count:1 next:Dhuhr",
+      );
       expect(getByLabelText("Open settings")).toBeTruthy();
     });
 

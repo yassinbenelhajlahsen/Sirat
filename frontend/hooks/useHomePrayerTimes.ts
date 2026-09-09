@@ -85,6 +85,18 @@ async function readSyncedSettings(): Promise<PrayerSettings> {
   return settings;
 }
 
+/**
+ * The chosen city's coordinates. Prayer times already resolve through these
+ * when device location is unavailable, and the dial needs them for the sun.
+ */
+function cityCoords(
+  effective: PrayerSettings,
+): { latitude: number; longitude: number } | undefined {
+  const city = effective.city;
+  if (!city || typeof city.lat !== "number" || typeof city.lng !== "number") return undefined;
+  return { latitude: city.lat, longitude: city.lng };
+}
+
 async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
   coords?: { latitude: number; longitude: number };
   country?: string;
@@ -92,7 +104,7 @@ async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
 }> {
   if (!effective.useLocation) {
     return {
-      coords: undefined,
+      coords: cityCoords(effective),
       label: effective.city?.name ?? "Unknown",
     };
   }
@@ -105,7 +117,7 @@ async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
   const services = await Location.hasServicesEnabledAsync();
   if (!services || perm.status !== "granted") {
     return {
-      coords: undefined,
+      coords: cityCoords(effective),
       label: effective.city?.name ?? "Location off",
     };
   }
@@ -161,6 +173,8 @@ export function useHomePrayerTimes() {
   const [refreshing, setRefreshing] = useState(false);
   const [banner, setBanner] = useState("");
   const [locationLabel, setLocationLabel] = useState("");
+  // Surfaced so the dial can compute the sun's position for this place.
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const { nextPrayer, timeLeft } = useNextPrayer(
     selectedDate,
     prayerTimes,
@@ -183,6 +197,7 @@ export function useHomePrayerTimes() {
       const effective = await readSyncedSettings();
       const { coords, country, label } = await resolveCoordsAndLabel(effective);
       setLocationLabel(label);
+      setCoords(coords ?? null);
 
       const resolvedDate = new Date();
       const times = await getPrayerTimesToday(effective, { coords, country });
@@ -252,6 +267,7 @@ export function useHomePrayerTimes() {
     refreshing,
     banner,
     locationLabel,
+    coords,
     refresh,
   };
 }

@@ -10,6 +10,7 @@ const OPTICAL_INSET_RATIO = 0.04;
 type Props = {
   value: ReactNode;
   size: number;
+  testID?: string;
   color?: string;
   /** Hang the glyph past the layout edge so it optically aligns with copy. */
   flush?: boolean;
@@ -20,10 +21,11 @@ type Props = {
  * Large stat numerals. The system face, tightened and set in tabular figures —
  * iOS uses SF for display numbers, and a serif reads as someone else's brand.
  */
-export default function DisplayNumber({ value, size, color, flush = false, style }: Props) {
+export default function DisplayNumber({ value, size, color, flush = false, style, testID }: Props) {
   const { theme } = useTheme();
   return (
     <Text
+      testID={testID}
       allowFontScaling={false}
       style={[
         {
