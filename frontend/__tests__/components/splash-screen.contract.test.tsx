@@ -21,30 +21,37 @@ describe("SplashScreen", () => {
     await AsyncStorage.clear();
   });
 
-  // The wordmark stays on the system face and the type scale — no bundled
-  // display face, so nothing here waits on a font load.
-  it("sets the wordmark on the largeTitle scale in the system face", async () => {
+  // The wordmark stays on the system face, but sets above the type scale: the
+  // scale tops out at 34 for screens that also carry UI, and this one carries
+  // none, so it is set for a page rather than an interface.
+  it("sets the wordmark large, in the system face", async () => {
     const { getByTestId, getByText } = renderSplash();
     await waitFor(() => expect(getByTestId("splash-wordmark")).toBeTruthy());
 
     const style = StyleSheet.flatten(getByTestId("splash-wordmark").props.style);
     expect(style.fontFamily).toBeUndefined();
-    expect(style.fontSize).toBe(34);
+    expect(style.fontSize).toBeGreaterThan(34);
     expect(style.fontWeight).toBe("700");
     expect(getByText("The path to your deen")).toBeTruthy();
   });
 
+  // Reflow would break the fixed anchor, and nothing here is read at length.
+  it("pins every size against Dynamic Type", async () => {
+    const { getByTestId } = renderSplash();
+    await waitFor(() => expect(getByTestId("splash-passage")).toBeTruthy());
+
+    for (const id of ["splash-wordmark", "splash-hijri"]) {
+      expect(getByTestId(id).props.allowFontScaling).toBe(false);
+    }
+  });
+
   it("shows today's passage on the first launch of the day", async () => {
-    const { getByTestId, getByText, queryByText } = renderSplash();
+    const { getByTestId, getByText } = renderSplash();
 
     await waitFor(() => expect(getByTestId("splash-passage")).toBeTruthy());
     expect(getByText(todaysHadith.arabic)).toBeTruthy();
     expect(getByText(todaysHadith.english)).toBeTruthy();
     expect(getByText(todaysHadith.source)).toBeTruthy();
-    // The hadith wins the slot over the standing Bismillah.
-    expect(
-      queryByText("In the name of God, the Most Gracious, the Most Merciful"),
-    ).toBeNull();
   });
 
   it("marks the day as seen so the next launch is a repeat", async () => {
@@ -54,19 +61,17 @@ describe("SplashScreen", () => {
     );
   });
 
-  // The passage slot is never empty: without a hadith the Bismillah stands in,
-  // so the composition and the gold rule beside it are complete every launch.
-  it("stands the Bismillah in for the hadith on a repeat launch", async () => {
+  // The passage is the first launch of the day only; every launch after that is
+  // the masthead alone. Nothing stands in for it.
+  it("shows the masthead alone on a repeat launch", async () => {
     await AsyncStorage.setItem(LAST_SPLASH_KEY, new Date().toDateString());
 
-    const { getByTestId, getByText, queryByText } = renderSplash();
+    const { getByTestId, queryByTestId, queryByText } = renderSplash();
     await waitFor(() => expect(getByTestId("splash-wordmark")).toBeTruthy());
 
-    expect(getByTestId("splash-passage")).toBeTruthy();
-    expect(getByText("In the name of God, the Most Gracious, the Most Merciful")).toBeTruthy();
+    expect(getByTestId("splash-hijri")).toBeTruthy();
+    expect(queryByTestId("splash-passage")).toBeNull();
     expect(queryByText(todaysHadith.arabic)).toBeNull();
-    // The Bismillah carries no attribution.
-    expect(queryByText(todaysHadith.source)).toBeNull();
   });
 
   it("shows the Hijri date and no Gregorian date", async () => {

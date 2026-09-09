@@ -110,7 +110,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/ui/aurora.test.tsx` — the exported bloom opacities stay toned down
   - `hooks/useScreenMargin.test.ts` — 16 under 400pt, 20 at 430pt
 - `splash screen (marked passage) testing`
-  - `components/splash-screen.contract.test.tsx` — wordmark on the `largeTitle` scale in the system face, today's hadith on the first launch of the day and the standing Bismillah on a repeat launch (the passage slot is never empty), Hijri date only (no Gregorian), the wordmark anchored identically on both launch paths, and the native splash hidden only after a layout pass
+  - `components/splash-screen.contract.test.tsx` — wordmark set above the type scale in the system face with Dynamic Type pinned off, today's hadith on the first launch of the day and the masthead alone on a repeat launch, Hijri date only (no Gregorian), the wordmark anchored identically on both launch paths, and the native splash hidden only after a layout pass
   - `components/splash-atmosphere.test.tsx` — the splash-only horizon glow carries further than the in-app `Aurora` (which stays faint because content sits on it), and the top vignette stays a deepening rather than a curtain
 - `home prayer arc (horizontal progress thumb) testing`
   - `utils/prayer-dial.test.ts` — dial geometry (noon at top, markers at true angular time), ring construction, disc stops, star field, marker fallbacks
