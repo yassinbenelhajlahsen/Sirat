@@ -1,6 +1,6 @@
 // app/(tabs)/index.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
