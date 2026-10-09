@@ -1,14 +1,18 @@
-import { AccessoryWidgetBackground, Spacer, Text, VStack, ZStack } from "@expo/ui/swift-ui";
+import { AccessoryWidgetBackground, Rectangle, Spacer, Text, VStack, ZStack } from "@expo/ui/swift-ui";
 import {
   containerBackground,
   font,
   foregroundStyle,
   frame,
+  kerning,
+  lineLimit,
+  minimumScaleFactor,
   opacity,
   padding,
   widgetURL,
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
+import type { ReactNode } from "react";
 
 import type { PrayerEntryProps } from "@/services/widgets/timeline";
 import type { WidgetTheme } from "@/services/widgets/widgetTheme";
@@ -33,19 +37,50 @@ const NextPrayer = (props: NextPrayerProps, environment: WidgetEnvironment) => {
   if (!props.theme || !props.next) {
     return lockScreen ? rounded("Sirat") : <Text>Sirat</Text>;
   }
+  const { theme } = props;
   const open = widgetURL("sirat:///");
 
   if (props.stale && lockScreen) {
     return rounded("Open Sirat to update");
   }
 
+  // The app's screen look: a diagonal gradient with a soft glow in two corners.
+  // Falls back to the flat color for props pushed before the gradient existed.
+  const backdrop = theme.gradient
+    ? { type: "linearGradient" as const, colors: theme.gradient, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } }
+    : theme.background;
+  const glow = (color: string, x: number, y: number) => (
+    <Rectangle
+      modifiers={[
+        foregroundStyle({
+          type: "radialGradient",
+          colors: [color + "29", color + "00"],
+          center: { x, y },
+          startRadius: 0,
+          endRadius: 110,
+        }),
+        frame({ maxWidth: 10000, maxHeight: 10000 }),
+        // Negative padding pushes the glow past the widget's content margin, so the widget edge clips it.
+        padding({ all: -24 }),
+      ]}
+    />
+  );
+  const card = (content: ReactNode) => (
+    <ZStack modifiers={[open, containerBackground(backdrop, "widget")]}>
+      {theme.glow ? glow(theme.glow, 0.85, 0) : null}
+      {theme.glowSecondary ? glow(theme.glowSecondary, 0.1, 1) : null}
+      {content}
+    </ZStack>
+  );
+  const pad = [padding({ all: 2 }), frame({ maxWidth: 10000, maxHeight: 10000, alignment: "topLeading" })];
+
   if (props.stale) {
-    return (
-      <VStack alignment="leading" modifiers={[open, containerBackground(props.theme.background, "widget")]}>
-        <Text modifiers={[font({ size: 14, weight: "semibold" }), foregroundStyle(props.theme.text)]}>
+    return card(
+      <VStack alignment="leading" modifiers={pad}>
+        <Text modifiers={[font({ size: 14, weight: "semibold" }), foregroundStyle(theme.text)]}>
           Open Sirat to update
         </Text>
-      </VStack>
+      </VStack>,
     );
   }
 
@@ -61,34 +96,30 @@ const NextPrayer = (props: NextPrayerProps, environment: WidgetEnvironment) => {
     );
   }
 
-  return (
-    <VStack
-      alignment="leading"
-      spacing={0}
-      modifiers={[
-        open,
-        padding({ all: 2 }),
-        frame({ maxWidth: 10000, maxHeight: 10000, alignment: "topLeading" }),
-        containerBackground(props.theme.background, "widget"),
-      ]}
-    >
-      <Text modifiers={[font({ size: 11, weight: "medium" }), foregroundStyle(props.theme.text), opacity(0.7)]}>
+  return card(
+    <VStack alignment="leading" spacing={0} modifiers={pad}>
+      <Text modifiers={[font({ size: 11, weight: "medium" }), kerning(1.3), foregroundStyle(theme.accent)]}>
         NEXT PRAYER
       </Text>
-      <Text modifiers={[font({ size: 30, weight: "bold" }), foregroundStyle(props.theme.accent)]}>
+      <Text modifiers={[font({ size: 32, weight: "bold" }), foregroundStyle(theme.text)]}>
         {props.next.name}
       </Text>
-      <Text modifiers={[font({ size: 17, weight: "medium" }), foregroundStyle(props.theme.text)]}>
+      <Text modifiers={[font({ size: 14 }), foregroundStyle(theme.text), opacity(0.7)]}>
         {props.next.time}
       </Text>
       <Spacer />
       <Text
-        modifiers={[font({ size: 14, weight: "semibold" }), foregroundStyle(props.theme.text)]}
+        modifiers={[
+          font({ size: 17, weight: "semibold" }),
+          foregroundStyle(theme.text),
+          lineLimit(1),
+          minimumScaleFactor(0.7),
+        ]}
         date={new Date(props.next.at)}
         dateStyle="relative"
       />
-      <Text modifiers={[font({ size: 11 }), foregroundStyle(props.theme.accent)]}>{props.hijri}</Text>
-    </VStack>
+      <Text modifiers={[font({ size: 11 }), foregroundStyle(theme.accent)]}>{props.hijri}</Text>
+    </VStack>,
   );
 };
 
