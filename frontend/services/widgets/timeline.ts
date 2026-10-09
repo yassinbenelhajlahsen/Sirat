@@ -44,11 +44,14 @@ function dateLabels(date: Date) {
       month: "short",
       day: "numeric",
     }).format(date),
+    // The era suffix (" AH") is dropped: it is what the lock screen truncates.
     hijri: new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
       day: "numeric",
       month: "long",
       year: "numeric",
-    }).format(date),
+    })
+      .format(date)
+      .replace(/\s*AH$/, ""),
   };
 }
 

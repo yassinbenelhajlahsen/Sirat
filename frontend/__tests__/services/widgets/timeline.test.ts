@@ -27,7 +27,7 @@ describe("buildPrayerTimeline", () => {
       sunrise: "7:02 AM",
       gregorian: "Fri, Oct 9",
     });
-    expect(first.props.hijri).toMatch(/1448/);
+    expect(first.props.hijri).toMatch(/1448$/);
     expect(first.props.prayers.map((p) => p.name)).toEqual([
       "Fajr",
       "Dhuhr",
