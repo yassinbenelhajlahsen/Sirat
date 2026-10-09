@@ -268,6 +268,10 @@ function normalizeQuranData(): {
   return { ayat: ayatAccumulator, surahs: surahAccumulator, lookup };
 }
 
+export function isQuranDataLoaded(): boolean {
+  return Boolean(cachedAyat && cachedSurahs && ayahIndexLookup);
+}
+
 export async function preloadQuranData(): Promise<void> {
   if (cachedAyat && cachedSurahs && ayahIndexLookup) {
     return;

@@ -184,6 +184,8 @@ jest.mock("@/context/QuranAudioProvider", () => ({
 }));
 
 jest.mock("@/services/quranData", () => ({
+  isQuranDataLoaded: () => true,
+  preloadQuranData: async () => {},
   getAllAyat: jest.fn(),
   getSurahMeta: jest.fn(),
   getAyatIndexForSurahAndAyah: jest.fn(),

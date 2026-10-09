@@ -24,6 +24,7 @@ type QuranCopySheetProps = {
   showEnglish: boolean;
   showTransliteration: boolean;
   onCopy: (text: string) => void;
+  onAddWidget: () => void;
   onClose: () => void;
 };
 
@@ -34,6 +35,7 @@ export default function QuranCopySheet({
   showEnglish,
   showTransliteration,
   onCopy,
+  onAddWidget,
   onClose,
 }: QuranCopySheetProps) {
   const { theme } = useTheme();
@@ -201,6 +203,17 @@ export default function QuranCopySheet({
               />
             </>
           ) : null}
+
+          <View style={styles.divider} />
+          <CopyRow
+            icon="grid-outline"
+            label="Add as widget"
+            isLast
+            isGold={false}
+            styles={styles}
+            themeColors={themeColors}
+            onPress={onAddWidget}
+          />
         </View>
       </BottomSheetView>
     </BottomSheet>

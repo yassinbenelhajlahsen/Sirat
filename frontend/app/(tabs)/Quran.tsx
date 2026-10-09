@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import AppIcon from "@/components/ui/AppIcon";
 import Aurora from "@/components/ui/Aurora";
 import IconButton from "@/components/ui/IconButton";
@@ -62,6 +63,8 @@ import QuranCompletionCard from "../../components/quran/QuranCompletionCard";
 import QuranDisplaySettingsModal from "../../components/quran/QuranDisplaySettingsModal";
 import QuranCopySheet from "../../components/quran/QuranCopySheet";
 import CopyToast from "../../components/CopyToast";
+import QuranDataGate from "@/components/quran/QuranDataGate";
+import { pinVerse } from "@/services/widgets/sync";
 
 type AyahItem = {
   type: "ayah";
@@ -310,7 +313,7 @@ function computeBookmarkMatchScore(
   return score;
 }
 
-export default function QuranScreen() {
+function QuranScreen() {
   const { theme } = useTheme();
   const themeColors = theme.colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -383,6 +386,7 @@ export default function QuranScreen() {
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false);
   const [copySheetAyah, setCopySheetAyah] = useState<NormalizedAyah | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("Copied to clipboard");
   const [surahSearchQuery, setSurahSearchQuery] = useState("");
   const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
 
@@ -655,6 +659,30 @@ export default function QuranScreen() {
     },
     [],
   );
+
+  // Opened from the verse widget: sirat:///Quran?surah=94&ayah=5
+  const { surah: linkSurah, ayah: linkAyah } = useLocalSearchParams<{
+    surah?: string;
+    ayah?: string;
+  }>();
+  const handledLinkRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!linkSurah || !listReady) return;
+    const key = `${linkSurah}:${linkAyah ?? 1}`;
+    if (handledLinkRef.current === key) return;
+    // Waits past the last-read restore, which scrolls again ~120ms after load.
+    const timer = setTimeout(() => {
+      handledLinkRef.current = key;
+      try {
+        scrollToAyahIndex(
+          getAyatIndexForSurahAndAyah(Number(linkSurah), Number(linkAyah) || 1),
+        );
+      } catch (error) {
+        console.warn("Failed to open linked verse", error);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [linkSurah, linkAyah, listReady, scrollToAyahIndex]);
 
   const handleJump = useCallback(
     (target: JumpTarget) => {
@@ -1166,9 +1194,28 @@ export default function QuranScreen() {
   const handleCopy = useCallback((text: string) => {
     Clipboard.setString(text);
     setCopySheetAyah(null);
+    setToastMessage("Copied to clipboard");
     setToastVisible(true);
     haptic("success");
   }, [haptic]);
+
+  const handleAddWidget = useCallback(async () => {
+    const ayah = copySheetAyah;
+    if (!ayah) return;
+    setCopySheetAyah(null);
+    try {
+      await pinVerse(ayah);
+      setToastMessage("Verse added to your widget");
+      haptic("success");
+    } catch (error) {
+      console.warn("Failed to pin verse", error);
+      // The real reason, while the widget feature is still being proven on a device.
+      setToastMessage(
+        __DEV__ ? `Widget: ${(error as Error).message}` : "Could not update the widget",
+      );
+    }
+    setToastVisible(true);
+  }, [copySheetAyah, haptic]);
 
   const renderItem = useCallback<ListRenderItem<QuranListItem>>(
     ({ item }: ListRenderItemInfo<QuranListItem>) => {
@@ -1448,11 +1495,13 @@ export default function QuranScreen() {
             showEnglish={showEnglish}
             showTransliteration={showTransliteration}
             onCopy={handleCopy}
+            onAddWidget={handleAddWidget}
             onClose={() => setCopySheetAyah(null)}
           />
 
           <CopyToast
             visible={toastVisible}
+            message={toastMessage}
             onHide={() => setToastVisible(false)}
           />
         </View>
@@ -1515,3 +1564,11 @@ const createStyles = (theme: AppTheme) => {
     },
   });
 };
+
+export default function QuranRoute() {
+  return (
+    <QuranDataGate>
+      <QuranScreen />
+    </QuranDataGate>
+  );
+}
