@@ -9,7 +9,7 @@ import {
   padding,
   widgetURL,
 } from "@expo/ui/swift-ui/modifiers";
-import { createWidget } from "expo-widgets";
+import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
 import type { WidgetTheme } from "@/services/widgets/widgetTheme";
 
@@ -20,16 +20,15 @@ export type VerseProps =
       arabic: string;
       english: string;
       reference: string;
-      arabicSize: number;
-      // 0 when the English was dropped so the Arabic fits.
-      englishSize: number;
+      // Text sizes per widget size; englishSize is 0 when the English was dropped.
+      layouts: Record<"systemMedium" | "systemLarge", { arabicSize: number; englishSize: number }>;
       surah: number;
       ayah: number;
       theme: WidgetTheme;
     };
 
 // Runs in the widget's isolated runtime: see NextPrayerWidget.
-const Verse = (props: VerseProps) => {
+const Verse = (props: VerseProps, environment: WidgetEnvironment) => {
   "widget";
   // WidgetKit renders a placeholder with no props before the app has pushed any.
   if (!props.theme) {
@@ -55,22 +54,25 @@ const Verse = (props: VerseProps) => {
     );
   }
 
+  const medium = environment.widgetFamily === "systemMedium";
+  const layout = medium ? props.layouts.systemMedium : props.layouts.systemLarge;
+
   return (
-    <VStack spacing={8} modifiers={shell(`sirat:///Quran?surah=${props.surah}&ayah=${props.ayah}`)}>
+    <VStack spacing={medium ? 4 : 8} modifiers={shell(`sirat:///Quran?surah=${props.surah}&ayah=${props.ayah}`)}>
       <Spacer />
       <Text
         modifiers={[
-          font({ size: props.arabicSize }),
+          font({ size: layout.arabicSize }),
           foregroundStyle(theme.text),
           multilineTextAlignment("center"),
         ]}
       >
         {props.arabic}
       </Text>
-      {props.englishSize ? (
+      {layout.englishSize ? (
         <Text
           modifiers={[
-            font({ size: props.englishSize }),
+            font({ size: layout.englishSize }),
             foregroundStyle(theme.text),
             opacity(0.9),
             multilineTextAlignment("center"),

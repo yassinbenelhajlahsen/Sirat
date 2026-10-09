@@ -53,14 +53,16 @@ export async function syncVerseWidget() {
     Verse.updateSnapshot({ pinned: false, theme });
     return;
   }
-  const layout = fitVerse(ayah.arabicText, ayah.englishText);
+  const layouts = {
+    systemMedium: fitVerse(ayah.arabicText, ayah.englishText, "systemMedium"),
+    systemLarge: fitVerse(ayah.arabicText, ayah.englishText, "systemLarge"),
+  };
   Verse.updateSnapshot({
     pinned: true,
     arabic: ayah.arabicText,
     english: ayah.englishText,
     reference: `${ayah.surahNameEn} ${ayah.surahNumber}:${ayah.ayahNumber}`,
-    arabicSize: layout.arabicSize,
-    englishSize: layout.englishSize,
+    layouts,
     surah: ayah.surahNumber,
     ayah: ayah.ayahNumber,
     theme,

@@ -137,7 +137,10 @@ describe("syncWidgets", () => {
         arabic: ayah.arabicText,
         english: ayah.englishText,
         reference: "Ash-Sharh 94:5",
-        englishSize: expect.any(Number),
+        layouts: {
+          systemMedium: { arabicSize: expect.any(Number), englishSize: expect.any(Number) },
+          systemLarge: { arabicSize: expect.any(Number), englishSize: expect.any(Number) },
+        },
       }),
     );
   });
@@ -156,7 +159,8 @@ describe("props sent to the native widget", () => {
 
     expect(mockVerse.updateSnapshot).toHaveBeenCalled();
     const snapshot = mockVerse.updateSnapshot.mock.calls.at(-1)![0];
-    expect(snapshot.englishSize).toBe(0);
+    expect(snapshot.layouts.systemLarge.englishSize).toBe(0);
+    expect(snapshot.layouts.systemMedium.englishSize).toBe(0);
     expect(hasNull(snapshot)).toBe(false);
     expect(hasNull(mockNextPrayer.updateTimeline.mock.calls.at(-1)![0])).toBe(false);
   });

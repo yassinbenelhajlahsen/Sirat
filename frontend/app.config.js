@@ -84,7 +84,7 @@ export default {
               name: "Verse",
               displayName: "Verse",
               description: "A verse you picked in the Quran tab.",
-              ios: { supportedFamilies: ["systemLarge"] },
+              ios: { supportedFamilies: ["systemMedium", "systemLarge"] },
             },
           ],
         },
