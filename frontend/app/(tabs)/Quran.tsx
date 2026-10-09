@@ -387,6 +387,8 @@ function QuranScreen() {
   const [copySheetAyah, setCopySheetAyah] = useState<NormalizedAyah | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("Copied to clipboard");
+  // The ayah whose Bookmark/Copy row is showing; tapping another one moves it.
+  const [openActionsKey, setOpenActionsKey] = useState<string | null>(null);
   const [surahSearchQuery, setSurahSearchQuery] = useState("");
   const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
 
@@ -1205,7 +1207,7 @@ function QuranScreen() {
     setCopySheetAyah(null);
     try {
       await pinVerse(ayah);
-      setToastMessage("Verse added to your widget");
+      setToastMessage("Saved. Add the Verse widget to your home screen to see it.");
       haptic("success");
     } catch (error) {
       console.warn("Failed to pin verse", error);
@@ -1240,6 +1242,12 @@ function QuranScreen() {
             }
             onCopy={() => handleAyahLongPress(item.ayah)}
             onLongPress={() => handleAyahLongPress(item.ayah)}
+            actionsOpen={openActionsKey === ayahKey}
+            onActionsOpenChange={(open) =>
+              setOpenActionsKey((current) =>
+                open ? ayahKey : current === ayahKey ? null : current,
+              )
+            }
           />
         );
       }
@@ -1250,6 +1258,7 @@ function QuranScreen() {
       bookmarkedAyahKeys,
       handleAyahBookmark,
       handleAyahLongPress,
+      openActionsKey,
       scrollToTopAnimated,
       showArabic,
       showEnglish,
@@ -1432,6 +1441,7 @@ function QuranScreen() {
                 onScroll={handleTabBarScroll}
                 scrollEventThrottle={16}
                 renderItem={renderItem}
+                extraData={openActionsKey}
                 keyExtractor={keyExtractor}
                 estimatedItemSize={ESTIMATED_ITEM_SIZE}
                 getItemType={getItemType}

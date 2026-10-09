@@ -112,6 +112,73 @@ describe("QuranAyahCard contract", () => {
     expect(onCopy).toHaveBeenCalledTimes(1);
   });
 
+  describe("when the parent controls which card is open", () => {
+    it("asks to open instead of opening itself, so only one card can be open", () => {
+      const onActionsOpenChange = jest.fn();
+      const { getByLabelText, queryByLabelText } = render(
+        <QuranAyahCard
+          ayah={ayah}
+          isSurahStart={false}
+          onBookmark={jest.fn()}
+          actionsOpen={false}
+          onActionsOpenChange={onActionsOpenChange}
+        />
+      );
+
+      fireEvent.press(getByLabelText("Ayah 255 from Surah 2"));
+
+      expect(onActionsOpenChange).toHaveBeenCalledWith(true);
+      expect(queryByLabelText("Bookmark this ayah")).toBeNull();
+    });
+
+    it("shows its actions only while the parent says it is open", () => {
+      const onActionsOpenChange = jest.fn();
+      const { getByLabelText, rerender, queryByLabelText } = render(
+        <QuranAyahCard
+          ayah={ayah}
+          isSurahStart={false}
+          onBookmark={jest.fn()}
+          actionsOpen
+          onActionsOpenChange={onActionsOpenChange}
+        />
+      );
+      expect(getByLabelText("Bookmark this ayah")).toBeTruthy();
+
+      fireEvent.press(getByLabelText("Ayah 255 from Surah 2"));
+      expect(onActionsOpenChange).toHaveBeenCalledWith(false);
+
+      rerender(
+        <QuranAyahCard
+          ayah={ayah}
+          isSurahStart={false}
+          onBookmark={jest.fn()}
+          actionsOpen={false}
+          onActionsOpenChange={onActionsOpenChange}
+        />
+      );
+      expect(queryByLabelText("Bookmark this ayah")).toBeNull();
+    });
+
+    it("asks to close once an action is used", () => {
+      const onActionsOpenChange = jest.fn();
+      const onBookmark = jest.fn();
+      const { getByLabelText } = render(
+        <QuranAyahCard
+          ayah={ayah}
+          isSurahStart={false}
+          onBookmark={onBookmark}
+          actionsOpen
+          onActionsOpenChange={onActionsOpenChange}
+        />
+      );
+
+      fireEvent.press(getByLabelText("Bookmark this ayah"));
+
+      expect(onBookmark).toHaveBeenCalledTimes(1);
+      expect(onActionsOpenChange).toHaveBeenCalledWith(false);
+    });
+  });
+
   it("labels the bookmark action differently once bookmarked", () => {
     const { getByLabelText } = render(
       <QuranAyahCard ayah={ayah} isSurahStart={false} isBookmarked onBookmark={jest.fn()} />

@@ -21,6 +21,12 @@ type QuranAyahCardProps = {
   onBookmark?: () => void;
   onCopy?: () => void;
   onLongPress?: () => void;
+  /**
+   * Lets the list keep a single card's actions open at a time. Leave both unset
+   * and the card manages its own open state.
+   */
+  actionsOpen?: boolean;
+  onActionsOpenChange?: (open: boolean) => void;
 };
 
 // Base reading sizes at textScale = 1.
@@ -48,6 +54,8 @@ function QuranAyahCard({
   onBookmark,
   onCopy,
   onLongPress,
+  actionsOpen: actionsOpenProp,
+  onActionsOpenChange,
 }: QuranAyahCardProps) {
   const { theme } = useTheme();
   const themeColors = theme.colors;
@@ -61,7 +69,15 @@ function QuranAyahCard({
     showTransliteration && Boolean(ayah.transliteration);
   const hasActions = Boolean(onBookmark || onCopy);
 
-  const [actionsOpen, setActionsOpen] = useState(false);
+  const [localActionsOpen, setLocalActionsOpen] = useState(false);
+  const actionsOpen = actionsOpenProp ?? localActionsOpen;
+  const setActionsOpen = useCallback(
+    (open: boolean) => {
+      if (actionsOpenProp === undefined) setLocalActionsOpen(open);
+      onActionsOpenChange?.(open);
+    },
+    [actionsOpenProp, onActionsOpenChange],
+  );
   const holdScale = useRef(new Animated.Value(1)).current;
 
   const sized = useMemo(
@@ -97,17 +113,20 @@ function QuranAyahCard({
     }).start();
   }, [holdScale]);
 
-  const toggleActions = useCallback(() => setActionsOpen((open) => !open), []);
+  const toggleActions = useCallback(
+    () => setActionsOpen(!actionsOpen),
+    [actionsOpen, setActionsOpen],
+  );
 
   const handleBookmark = useCallback(() => {
     setActionsOpen(false);
     onBookmark?.();
-  }, [onBookmark]);
+  }, [onBookmark, setActionsOpen]);
 
   const handleCopy = useCallback(() => {
     setActionsOpen(false);
     onCopy?.();
-  }, [onCopy]);
+  }, [onCopy, setActionsOpen]);
 
   return (
     <View style={styles.container}>
