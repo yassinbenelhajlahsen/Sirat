@@ -382,11 +382,7 @@ function RootLayoutContent() {
   const appReady = fontsLoaded && initialSynced && isHydrated;
   const splashReady = appReady;
 
-  // The plist forces UIUserInterfaceStyle=Dark, so without this the Light
-  // theme paints white status-bar text on its cream canvas.
-  // NEEDS NATIVE BUILD: once app.config.js `ios.userInterfaceStyle` is
-  // "automatic", this can drive `Appearance.setColorScheme` from ThemeContext
-  // instead, and native alerts/switches will follow the in-app theme too.
+  // Explicit so the Light theme paints dark status-bar text on its cream canvas.
   const statusBarStyle = theme.name === "light" ? "dark" : "light";
 
   return (

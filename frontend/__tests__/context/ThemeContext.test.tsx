@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
+import { Appearance } from "react-native";
 
 import { APP_THEME_STORAGE_KEY, defaultTheme } from "@/constants/theme";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -40,6 +41,26 @@ describe("context/ThemeContext", () => {
       expect(result.current.themeName).toBe("default");
       expect(result.current.theme).toEqual(defaultTheme);
     });
+  });
+
+  it("sets the native color scheme from the picked theme", async () => {
+    const setColorScheme = jest.spyOn(Appearance, "setColorScheme");
+    const { result } = renderHook(() => useTheme(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isHydrated).toBe(true);
+    });
+    expect(setColorScheme).toHaveBeenLastCalledWith("dark");
+
+    await act(async () => {
+      await result.current.setTheme("light");
+    });
+    expect(setColorScheme).toHaveBeenLastCalledWith("light");
+
+    await act(async () => {
+      await result.current.setTheme("default");
+    });
+    expect(setColorScheme).toHaveBeenLastCalledWith("dark");
   });
 
   it("persists theme updates from setTheme", async () => {

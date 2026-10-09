@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { DeviceEventEmitter } from "react-native";
+import { Appearance, DeviceEventEmitter } from "react-native";
 
 import {
   APP_THEME_STORAGE_KEY,
@@ -56,12 +56,12 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  // NEEDS NATIVE BUILD: native UI (Alert, Switch, ActionSheet, Modal backdrop)
-  // ignores this theme and stays dark because app.config.js pins
-  // `ios.userInterfaceStyle: "dark"`. When that flips to "automatic", call
-  // `Appearance.setColorScheme(nextTheme === "light" ? "light" : "dark")` here
-  // so native chrome follows the picked theme. A "System" theme option that
-  // reads `Appearance.getColorScheme()` becomes worthwhile at the same time.
+  // Native UI (Alert, Switch, ActionSheet, Modal backdrop, share sheet) follows
+  // the picked theme through the OS color scheme.
+  useEffect(() => {
+    Appearance.setColorScheme(themeName === "light" ? "light" : "dark");
+  }, [themeName]);
+
   const setTheme = useCallback(async (nextTheme: ThemeName) => {
     setThemeName(nextTheme);
     try {

@@ -131,10 +131,6 @@ export default function Settings() {
         />
 
         {/* Account */}
-        {/* NEEDS NATIVE BUILD: this Alert (and every other native Alert/Switch)
-            renders dark even on the Light theme while app.config.js pins
-            ios.userInterfaceStyle to "dark". Flip it to "automatic" and drive
-            Appearance.setColorScheme from ThemeContext in the next binary. */}
         <AccountSection
           onSignIn={() => router.push("/SignIn")}
           onSignOut={() => { void signOut(); }}

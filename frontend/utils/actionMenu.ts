@@ -18,10 +18,6 @@ type Params = {
 /**
  * Contextual menu for a row: a native action sheet on iOS, an Alert elsewhere.
  * Gives every secondary action a full-size target instead of a 24pt icon.
- *
- * NEEDS NATIVE BUILD: `userInterfaceStyle` is the only reason this sheet follows
- * the in-app theme. Alert (the fallback here and every other Alert in the app)
- * stays dark until app.config.js `ios.userInterfaceStyle` becomes "automatic".
  */
 export function showActionMenu({ title, message, options, theme }: Params): void {
   if (Platform.OS === "ios") {
