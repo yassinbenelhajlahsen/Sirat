@@ -38,9 +38,9 @@ describe("NavigatorTabs contract", () => {
     expect(surahTab).toBeTruthy();
     expect(juzTab).toBeTruthy();
     expect(bookmarksTab).toBeTruthy();
-    expect(surahTab.props.accessibilityState).toEqual({ selected: true });
-    expect(juzTab.props.accessibilityState).toEqual({ selected: false });
-    expect(bookmarksTab.props.accessibilityState).toEqual({ selected: false });
+    expect(surahTab!.props.accessibilityState).toEqual({ selected: true });
+    expect(juzTab!.props.accessibilityState).toEqual({ selected: false });
+    expect(bookmarksTab!.props.accessibilityState).toEqual({ selected: false });
   });
 
   it("wires tab press callbacks with the expected tab keys", () => {

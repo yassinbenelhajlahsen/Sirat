@@ -29,7 +29,7 @@ describe("PressableScale variants", () => {
       ),
     );
 
-    const overlay = getByTestId("row").children[0] as { props: { style: StyleProp<ViewStyle> } };
+    const overlay = getByTestId("row").children[0] as unknown as { props: { style: StyleProp<ViewStyle> } };
     expect(StyleSheet.flatten(overlay.props.style).borderRadius).toBe(16);
   });
 
@@ -42,7 +42,7 @@ describe("PressableScale variants", () => {
       ),
     );
 
-    const overlay = getByTestId("row").children[0] as { props: { style: StyleProp<ViewStyle> } };
+    const overlay = getByTestId("row").children[0] as unknown as { props: { style: StyleProp<ViewStyle> } };
     expect(StyleSheet.flatten(overlay.props.style).borderRadius).toBe(24);
   });
 

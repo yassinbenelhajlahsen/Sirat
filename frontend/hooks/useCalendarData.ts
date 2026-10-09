@@ -1,4 +1,4 @@
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getHolidayMapForYear, getHolidaysForYear } from "../services/holidayService";
 import {

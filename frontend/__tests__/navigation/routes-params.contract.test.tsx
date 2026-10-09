@@ -65,10 +65,6 @@ jest.mock("react-native-safe-area-context", () => ({
   useSafeAreaFrame: () => ({ x: 0, y: 0, width: 390, height: 844 }),
 }));
 
-jest.mock("@react-navigation/bottom-tabs", () => ({
-  useBottomTabBarHeight: () => 0,
-}));
-
 jest.mock("expo-haptics", () => ({
   ImpactFeedbackStyle: { Light: "light" },
   impactAsync: jest.fn(async () => {}),

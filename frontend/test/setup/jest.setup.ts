@@ -125,6 +125,10 @@ afterEach(() => {
   }
 });
 
+// Worklets 0.7+ no longer falls back to JS under Jest; use the bundled mocks.
+jest.mock("react-native-worklets", () => require("react-native-worklets/src/mock"));
+jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
+
 // @gorhom/bottom-sheet renders as plain views/list in tests so screens that
 // embed the sheet can be rendered and queried.
 jest.mock("@gorhom/bottom-sheet", () => {

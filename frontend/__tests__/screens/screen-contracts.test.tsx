@@ -72,10 +72,6 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
-jest.mock("@react-navigation/bottom-tabs", () => ({
-  useBottomTabBarHeight: jest.fn(() => 0),
-}));
-
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: jest.fn(),
 }));

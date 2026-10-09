@@ -4,7 +4,7 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 
 const mockUseFocusEffect = jest.fn((cb: () => void) => cb());
 
-jest.mock("@react-navigation/native", () => ({
+jest.mock("expo-router/react-navigation", () => ({
   useFocusEffect: (cb: () => void) => mockUseFocusEffect(cb),
 }));
 

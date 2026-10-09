@@ -18,7 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
-import { ThemeProvider as NavThemeProvider, DarkTheme } from "@react-navigation/native";
+import { ThemeProvider as NavThemeProvider, DarkTheme } from "expo-router/react-navigation";
 
 import { QuranAudioProvider } from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";

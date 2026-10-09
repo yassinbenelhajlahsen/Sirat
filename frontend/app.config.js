@@ -31,7 +31,6 @@ export default {
     scheme: "sirat",
     userInterfaceStyle: "automatic",
     backgroundColor: "#0E1117",
-    newArchEnabled: true,
     platforms: ["ios", "android"],
     ios: {
       // NEEDS NATIVE BUILD: switch to "automatic" (see header comment).
@@ -72,6 +71,26 @@ export default {
           { name: "Dark", ios: "./assets/icons/icon-dark.png" },
           { name: "Light", ios: "./assets/icons/icon-light.png" },
         ],
+      ],
+      // Adds the widget extension target and App Group.
+      [
+        "expo-widgets",
+        {
+          widgets: [
+            {
+              name: "NextPrayer",
+              displayName: "Next prayer",
+              description: "The next prayer, its time, and the time remaining.",
+              ios: {
+                supportedFamilies: [
+                  "accessoryRectangular",
+                  "accessoryInline",
+                  "systemSmall",
+                ],
+              },
+            },
+          ],
+        },
       ],
       "expo-secure-store",
       "@clerk/expo",

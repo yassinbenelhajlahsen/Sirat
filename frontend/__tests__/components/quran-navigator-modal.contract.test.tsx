@@ -221,7 +221,7 @@ describe("NavigatorModal contract", () => {
     expect(getByText("Search")).toBeTruthy();
     expect(getByText("Find a surah, ayah, juz, or bookmark")).toBeTruthy();
     expect(surahTab).toBeTruthy();
-    expect(surahTab.props.accessibilityState).toEqual({ selected: true });
+    expect(surahTab!.props.accessibilityState).toEqual({ selected: true });
 
     fireEvent.changeText(getByLabelText("Surah search input"), "2:255");
     fireEvent.press(getByText("Mock select surah"));
@@ -230,8 +230,8 @@ describe("NavigatorModal contract", () => {
 
     const bookmarksTab = findTabButton("Bookmarks");
     expect(bookmarksTab).toBeTruthy();
-    fireEvent.press(bookmarksTab);
-    expect(bookmarksTab.props.accessibilityState).toEqual({ selected: true });
+    fireEvent.press(bookmarksTab!);
+    expect(bookmarksTab!.props.accessibilityState).toEqual({ selected: true });
 
     fireEvent.changeText(getByLabelText("Bookmark search input"), "kursi");
     fireEvent.press(getByText("Mock select bookmark"));

@@ -7,7 +7,7 @@ import { getHolidayMapForYear, getHolidaysForYear } from "@/services/holidayServ
 
 let triggerFocusEffect: (() => void) | null = null;
 
-jest.mock("@react-navigation/native", () => ({
+jest.mock("expo-router/react-navigation", () => ({
   useFocusEffect: (cb: () => void) => {
     triggerFocusEffect = cb;
   },
