@@ -5,7 +5,6 @@
 // binary whose `version` matches. Do NOT bump `version` for a JS-only release;
 // bump it (and rebuild) only when one of these lands:
 //
-// (none queued)
 //
 // Search the codebase for "NEEDS NATIVE BUILD" to find every call site that
 // was written around the current native build.
@@ -14,7 +13,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.1.1",
+    version: "1.2.0",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {
@@ -73,13 +72,19 @@ export default {
               name: "NextPrayer",
               displayName: "Next prayer",
               description: "The next prayer, its time, and the time remaining.",
-              ios: {
-                supportedFamilies: [
-                  "accessoryRectangular",
-                  "accessoryInline",
-                  "systemSmall",
-                ],
-              },
+              ios: { supportedFamilies: ["accessoryRectangular", "systemSmall"] },
+            },
+            {
+              name: "PrayerTimes",
+              displayName: "Prayer times",
+              description: "Today's five prayers and the time until the next one.",
+              ios: { supportedFamilies: ["systemMedium", "systemLarge"] },
+            },
+            {
+              name: "Verse",
+              displayName: "Verse",
+              description: "A verse you picked in the Quran tab.",
+              ios: { supportedFamilies: ["systemLarge"] },
             },
           ],
         },

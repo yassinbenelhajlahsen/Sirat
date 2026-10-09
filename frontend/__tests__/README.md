@@ -128,6 +128,13 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/notification-settings.contract.test.tsx` — a button master row (press) plus per-prayer and per-window Switches, the offset Segmented and the sound rows; the `useNotificationSegmentLayout` mock went with the hook
   - `screens/screen-contracts.test.tsx` — dropdown-picker and CitySearchModal mocks removed; city-search-modal.contract.test.tsx suite deleted
 
+- `widgets testing`
+  - `services/widgets/timeline.test.ts` — prayer timeline entries: next prayer per boundary, tomorrow's list after Isha, stale when stored days run out
+  - `services/widgets/verseFit.test.ts` — verse layout tiers; every verse in the Quran fits at or above the minimum size
+  - `services/widgets/sync.test.ts` — themed timeline push, 7-day horizon, offline keeps old data, verse pinning and push
+  - `hooks/useWidgetSync.test.ts` — syncs on mount, foreground, settings and theme changes
+  - `components/quran-copy-sheet.contract.test.tsx` — "Add as widget" action in the copy sheet
+  - `components/quran-data-gate.test.tsx` — the reader waits for the Quran data before rendering (widget tap on a cold start)
 - `tracking data layer (Plan 1) testing`
   - `services/tracking/util.test.ts` — date key utilities
   - `services/tracking/prayerLog.test.ts` — prayer status CRUD + events + preload
