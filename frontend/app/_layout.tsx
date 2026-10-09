@@ -34,6 +34,7 @@ import UpdateModal from "@/components/UpdateModal";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
 import { getVersionHeaders } from "@/services/appVersion";
 import { useSyncEngine } from "@/hooks/useSyncEngine";
+import { useWidgetSync } from "@/hooks/useWidgetSync";
 
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
@@ -178,6 +179,7 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
   useSyncEngine();
+  useWidgetSync();
   const { theme, isHydrated } = useTheme();
   const backgroundColor = isHydrated
     ? theme.colors.primaryDark

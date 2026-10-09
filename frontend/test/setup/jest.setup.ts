@@ -12,6 +12,11 @@ jest.mock("@clerk/expo", () => ({
 }));
 jest.mock("@clerk/expo/token-cache", () => ({ tokenCache: {} }));
 
+// The ExpoWidgets native module only exists in a device build.
+jest.mock("expo-widgets", () => ({
+  createWidget: () => ({ updateTimeline: jest.fn(), updateSnapshot: jest.fn(), reload: jest.fn() }),
+}));
+
 declare global {
   // eslint-disable-next-line no-var
   var freezeTestTime: (isoDate: string | Date) => void;
