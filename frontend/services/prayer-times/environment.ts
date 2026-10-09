@@ -25,6 +25,25 @@ function remember(env: ResolvedEnv): ResolvedEnv {
   return env;
 }
 
+// A fresh fix can fail even with permission granted (iOS reports "denied" when the
+// app is launched in the background, or no fix is available yet). The last known
+// position is good enough for prayer times; the caller falls back to the saved
+// city after that.
+async function currentCoords(): Promise<{ latitude: number; longitude: number } | null> {
+  try {
+    const loc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    return loc.coords;
+  } catch {
+    try {
+      return (await Location.getLastKnownPositionAsync())?.coords ?? null;
+    } catch {
+      return null;
+    }
+  }
+}
+
 export async function resolveCoordsAndCountry(
   settings: PrayerSettings,
   override?: PrayerLocationOverride,
@@ -68,27 +87,26 @@ export async function resolveCoordsAndCountry(
   }
 
   if (servicesEnabled && perm.status === "granted") {
-    const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-
-    let country = "";
-    try {
-      const geo = await Location.reverseGeocodeAsync(loc.coords);
-      if (geo.length > 0) {
-        country =
-          (geo[0].country as string) || (geo[0].isoCountryCode as string) || "";
+    const coords = await currentCoords();
+    if (coords) {
+      let country = "";
+      try {
+        const geo = await Location.reverseGeocodeAsync(coords);
+        if (geo.length > 0) {
+          country =
+            (geo[0].country as string) || (geo[0].isoCountryCode as string) || "";
+        }
+      } catch {
+        // no-op
       }
-    } catch {
-      // no-op
-    }
 
-    return remember({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-      country,
-      bucket: coordBucket(loc.coords.latitude, loc.coords.longitude),
-    });
+      return remember({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        country,
+        bucket: coordBucket(coords.latitude, coords.longitude),
+      });
+    }
   }
 
   if (settings.city) {

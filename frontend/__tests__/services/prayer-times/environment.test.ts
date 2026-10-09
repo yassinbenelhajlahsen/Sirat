@@ -3,6 +3,7 @@ type LocationMocks = {
   getForegroundPermissionsAsync: jest.Mock;
   requestForegroundPermissionsAsync: jest.Mock;
   getCurrentPositionAsync: jest.Mock;
+  getLastKnownPositionAsync: jest.Mock;
   reverseGeocodeAsync: jest.Mock;
 };
 
@@ -16,6 +17,7 @@ function loadEnvironment(overrides?: Partial<LocationMocks>) {
     getCurrentPositionAsync: jest.fn(async () => ({
       coords: { latitude: 41.881, longitude: -87.623 },
     })),
+    getLastKnownPositionAsync: jest.fn(async () => null),
     reverseGeocodeAsync: jest.fn(async () => [{ country: "United States", isoCountryCode: "US" }]),
   };
 
@@ -27,6 +29,7 @@ function loadEnvironment(overrides?: Partial<LocationMocks>) {
     getForegroundPermissionsAsync: mocks.getForegroundPermissionsAsync,
     requestForegroundPermissionsAsync: mocks.requestForegroundPermissionsAsync,
     getCurrentPositionAsync: mocks.getCurrentPositionAsync,
+    getLastKnownPositionAsync: mocks.getLastKnownPositionAsync,
     reverseGeocodeAsync: mocks.reverseGeocodeAsync,
   }));
 
@@ -128,5 +131,44 @@ describe("prayer-times/environment", () => {
     ).rejects.toThrow(
       "Location unavailable. Enable Location Services or set a manual city in Settings.",
     );
+  });
+  describe("when a fresh location fix fails", () => {
+    const failFix = jest.fn(async () => {
+      throw new Error("LocationUnavailable: kCLErrorDomain error 1");
+    });
+
+    it("uses the last known position", async () => {
+      const { resolveCoordsAndCountry } = loadEnvironment({
+        getCurrentPositionAsync: failFix,
+        getLastKnownPositionAsync: jest.fn(async () => ({
+          coords: { latitude: 30.04, longitude: 31.23 },
+        })),
+      });
+
+      const env = await resolveCoordsAndCountry({ useLocation: true, method: 2 });
+
+      expect(env.latitude).toBeCloseTo(30.04);
+      expect(env.bucket).toBe("30.04,31.23");
+    });
+
+    it("falls back to the saved city when there is no last known position", async () => {
+      const { resolveCoordsAndCountry } = loadEnvironment({ getCurrentPositionAsync: failFix });
+
+      const env = await resolveCoordsAndCountry({
+        useLocation: true,
+        method: 2,
+        city: { name: "Toronto", lat: 43.65, lng: -79.38, country: "CA" },
+      });
+
+      expect(env.bucket).toBe("43.65,-79.38");
+    });
+
+    it("still reports unavailable location when nothing else is known", async () => {
+      const { resolveCoordsAndCountry } = loadEnvironment({ getCurrentPositionAsync: failFix });
+
+      await expect(
+        resolveCoordsAndCountry({ useLocation: true, method: 2 }),
+      ).rejects.toThrow("Location unavailable.");
+    });
   });
 });
