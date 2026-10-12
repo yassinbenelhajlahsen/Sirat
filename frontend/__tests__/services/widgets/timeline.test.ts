@@ -38,6 +38,32 @@ describe("buildPrayerTimeline", () => {
     expect(first.props.next.at).toBe(new Date(2026, 9, 9, 12, 43).getTime());
   });
 
+  it("counts down to Sunrise between Fajr and Sunrise", () => {
+    const now = new Date(2026, 9, 9, 6, 0);
+    const [first] = buildPrayerTimeline([oct9], now);
+
+    expect(first.props.next).toMatchObject({ name: "Sunrise", time: "7:02 AM" });
+    expect(first.props.next.at).toBe(new Date(2026, 9, 9, 7, 2).getTime());
+    expect(first.props.prayers.map((p) => p.name)).not.toContain("Sunrise");
+  });
+
+  it("moves from Sunrise to Dhuhr at the Sunrise time", () => {
+    const now = new Date(2026, 9, 9, 6, 0);
+    const entries = buildPrayerTimeline([oct9], now);
+
+    expect(entries[1].date).toEqual(new Date(2026, 9, 9, 7, 2));
+    expect(entries[1].props.next.name).toBe("Dhuhr");
+  });
+
+  it("skips Sunrise when the day has none", () => {
+    const noSunrise: WidgetDay = {
+      date: oct9.date,
+      times: oct9.times.filter((t) => t.label !== "Sunrise"),
+    };
+    const [first] = buildPrayerTimeline([noSunrise], new Date(2026, 9, 9, 6, 0));
+    expect(first.props.next.name).toBe("Dhuhr");
+  });
+
   it("adds an entry at each prayer time that moves to the following prayer", () => {
     const now = new Date(2026, 9, 9, 11, 45);
     const entries = buildPrayerTimeline([oct9, oct10], now);

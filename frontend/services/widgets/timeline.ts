@@ -8,11 +8,14 @@ export type WidgetDay = { date: Date; times: PrayerTime[] };
 
 export type PrayerSlot = { name: WidgetPrayerName; time: string; at: number };
 
+// What the widget counts down to: a prayer, or Sunrise (the end of Fajr's window).
+export type NextSlot = { name: WidgetPrayerName | "Sunrise"; time: string; at: number };
+
 // Dates cross into the widget runtime as epoch-ms numbers.
 export type PrayerEntryProps = {
   // True once the stored days have run out; the widget asks the user to open the app.
   stale: boolean;
-  next: PrayerSlot;
+  next: NextSlot;
   prayers: PrayerSlot[];
   // Empty when the day has no Sunrise time (null cannot cross into the native widget).
   sunrise: string;
@@ -22,7 +25,7 @@ export type PrayerEntryProps = {
 
 export type PrayerTimelineEntry = { date: Date; props: PrayerEntryProps };
 
-type ParsedDay = { date: Date; prayers: PrayerSlot[]; sunrise: string };
+type ParsedDay = { date: Date; prayers: PrayerSlot[]; sunrise: string; sunriseAt: number | null };
 
 function parseDay({ date, times }: WidgetDay): ParsedDay | null {
   const prayers: PrayerSlot[] = [];
@@ -33,7 +36,8 @@ function parseDay({ date, times }: WidgetDay): ParsedDay | null {
     prayers.push({ name, time, at: at.getTime() });
   }
   const sunrise = times.find((t) => t.label === "Sunrise")?.time ?? "";
-  return { date, prayers, sunrise };
+  const sunriseAt = sunrise ? (parsePrayerTime(sunrise, date)?.getTime() ?? null) : null;
+  return { date, prayers, sunrise, sunriseAt };
 }
 
 // Same calls Home uses, so the widget shows the dates the app shows.
@@ -55,11 +59,11 @@ function dateLabels(date: Date) {
   };
 }
 
-const EMPTY_SLOT: PrayerSlot = { name: "Fajr", time: "", at: 0 };
+const EMPTY_SLOT: NextSlot = { name: "Fajr", time: "", at: 0 };
 
 /**
- * One entry for `now`, then one at every later prayer time, each showing the
- * prayer that follows. The list always belongs to the day of the next prayer,
+ * One entry for `now`, then one at every later prayer time (and Sunrise), each
+ * showing the event that follows. The list always belongs to the day of the next prayer,
  * so after Isha it flips to tomorrow. The final entry is stale: it lands on the
  * last stored Isha, after which nothing newer is known.
  */
@@ -71,7 +75,14 @@ export function buildPrayerTimeline(days: WidgetDay[], now: Date): PrayerTimelin
     parsed.push(p);
   }
 
-  const seq = parsed.flatMap((day) => day.prayers.map((slot) => ({ day, slot })));
+  // Sunrise sits between Fajr and Dhuhr in the countdown sequence only; the list rows stay at five.
+  const seq = parsed.flatMap((day) => {
+    const slots: NextSlot[] = [...day.prayers];
+    if (day.sunriseAt !== null) {
+      slots.splice(1, 0, { name: "Sunrise", time: day.sunrise, at: day.sunriseAt });
+    }
+    return slots.map((slot) => ({ day, slot }));
+  });
   const nowMs = now.getTime();
   const first = seq.findIndex((s) => s.slot.at > nowMs);
 
