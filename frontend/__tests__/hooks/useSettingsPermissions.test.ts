@@ -18,7 +18,10 @@ jest.mock("expo-updates", () => ({
 }));
 jest.mock("@gorhom/portal", () => ({ PortalProvider: ({ children }: any) => children }));
 jest.mock("react-native-safe-area-context", () => ({ SafeAreaProvider: ({ children }: any) => children }));
-jest.mock("@/context/QuranAudioProvider", () => ({ QuranAudioProvider: ({ children }: any) => children }));
+jest.mock("@/context/QuranAudioProvider", () => ({
+  QuranAudioProvider: ({ children }: any) => children,
+  useQuranAudioController: () => ({ isPlaying: false }),
+}));
 jest.mock("@/context/ThemeContext", () => ({
   ThemeProvider: ({ children }: any) => children,
   useTheme: () => ({
@@ -29,7 +32,6 @@ jest.mock("@/context/ThemeContext", () => ({
 jest.mock("@/services/quranData", () => ({ preloadQuranData: jest.fn(async () => {}) }));
 jest.mock("@/services/quranDisplayModes", () => ({ preloadQuranDisplayModes: jest.fn(async () => {}) }));
 jest.mock("@/components/SplashScreen", () => "SplashScreen");
-jest.mock("@/components/UpdateModal", () => "UpdateModal");
 jest.mock("@/components/quran/QuranMiniPlayerPortal", () => ({ QuranMiniPlayerPortal: () => null }));
 jest.mock("@/services/notificationService", () => ({
   NotificationService: { init: jest.fn() },

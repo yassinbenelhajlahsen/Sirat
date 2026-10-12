@@ -9,7 +9,13 @@ import * as ExpoSplash from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import * as Updates from "expo-updates";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 import { AppState, DeviceEventEmitter, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -20,7 +26,10 @@ import * as Notifications from "expo-notifications";
 
 import { ThemeProvider as NavThemeProvider, DarkTheme } from "expo-router/react-navigation";
 
-import { QuranAudioProvider } from "@/context/QuranAudioProvider";
+import {
+  QuranAudioProvider,
+  useQuranAudioController,
+} from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
@@ -30,7 +39,6 @@ import { PortalProvider } from "@gorhom/portal";
 import { NotificationService } from "../services/notificationService";
 import ForceUpdateGate from "@/components/ForceUpdateGate";
 import SplashScreen from "@/components/SplashScreen";
-import UpdateModal from "@/components/UpdateModal";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
 import { getVersionHeaders } from "@/services/appVersion";
 import { useSyncEngine } from "@/hooks/useSyncEngine";
@@ -39,6 +47,7 @@ import { useWidgetSync } from "@/hooks/useWidgetSync";
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
 const LAUNCH_BACKGROUND_COLOR = "#0E1117";
+const LAUNCH_UPDATE_TIMEOUT_MS = 3000;
 SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
@@ -177,6 +186,20 @@ export default function RootLayout() {
   );
 }
 
+// The audio state lives below the root, so mirror it into a ref the update
+// flow can read without re-rendering the root.
+function AudioPlayingBridge({
+  playingRef,
+}: {
+  playingRef: MutableRefObject<boolean>;
+}) {
+  const { isPlaying } = useQuranAudioController();
+  useEffect(() => {
+    playingRef.current = isPlaying;
+  }, [playingRef, isPlaying]);
+  return null;
+}
+
 function RootLayoutContent() {
   useSyncEngine();
   useWidgetSync();
@@ -189,9 +212,7 @@ function RootLayoutContent() {
 
   const [showSplash, setShowSplash] = useState(true);
   const [initialSynced, setInitialSynced] = useState(false);
-  const [updateReady, setUpdateReady] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [isRestartingUpdate, setIsRestartingUpdate] = useState(false);
+  const [launchUpdateCheckDone, setLaunchUpdateCheckDone] = useState(false);
   const [showReloadCover, setShowReloadCover] = useState(false);
   const [forceUpdate, setForceUpdate] = useState<{
     minVersion: string;
@@ -199,31 +220,40 @@ function RootLayoutContent() {
   } | null>(null);
   const appStateRef = useRef(AppState.currentState);
   const otaCheckInFlightRef = useRef(false);
+  const updateReadyRef = useRef(false);
+  const isApplyingUpdateRef = useRef(false);
+  const audioPlayingRef = useRef(false);
+  // Read at reload time so applyUpdate stays stable across theme hydration.
+  const reloadColorRef = useRef(theme.colors.primaryDark);
+  useEffect(() => {
+    reloadColorRef.current = theme.colors.primaryDark;
+  }, [theme.colors.primaryDark]);
   const mountedRef = useRef(true);
 
-  const checkAndPrepareOtaUpdate = useCallback(async () => {
-    if (otaCheckInFlightRef.current || updateReady) return;
+  // Resolves true once an update is downloaded and waiting to be applied.
+  const checkAndPrepareOtaUpdate = useCallback(async (): Promise<boolean> => {
+    if (updateReadyRef.current) return true;
+    if (otaCheckInFlightRef.current) return false;
     otaCheckInFlightRef.current = true;
 
     try {
       // checkForUpdateAsync() throws in development builds and Expo Go (both
       // __DEV__), and when expo-updates isn't enabled. Skip in all those cases.
-      if (__DEV__ || !Updates.isEnabled) return;
+      if (__DEV__ || !Updates.isEnabled) return false;
 
       const update = await Updates.checkForUpdateAsync();
-      if (!update.isAvailable) return;
+      if (!update.isAvailable) return false;
 
       await Updates.fetchUpdateAsync();
-
-      if (mountedRef.current) {
-        setUpdateReady(true);
-      }
+      updateReadyRef.current = true;
+      return true;
     } catch (error) {
       console.error("OTA update check failed", error);
+      return false;
     } finally {
       otaCheckInFlightRef.current = false;
     }
-  }, [updateReady]);
+  }, []);
 
   const checkMinVersion = useCallback(async () => {
     // Skip in Expo Go — developers should never see the force update gate.
@@ -248,12 +278,11 @@ function RootLayoutContent() {
     }
   }, []);
 
-  const handleRestartForUpdate = useCallback(async () => {
-    if (isRestartingUpdate) return;
+  const applyUpdate = useCallback(async () => {
+    if (isApplyingUpdateRef.current) return;
+    isApplyingUpdateRef.current = true;
 
     SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
-    setIsRestartingUpdate(true);
-    setShowUpdateModal(false);
     setShowReloadCover(true);
     setShowSplash(true);
 
@@ -275,20 +304,20 @@ function RootLayoutContent() {
 
       await Updates.reloadAsync({
         reloadScreenOptions: {
-          backgroundColor: theme.colors.primaryDark,
+          backgroundColor: reloadColorRef.current,
           fade: true,
         },
       });
     } catch (error) {
       console.error("Failed to reload for OTA update", error);
+      isApplyingUpdateRef.current = false;
       if (mountedRef.current) {
-        setIsRestartingUpdate(false);
         setShowReloadCover(false);
         setShowSplash(false);
-        setShowUpdateModal(true);
+        setLaunchUpdateCheckDone(true);
       }
     }
-  }, [isRestartingUpdate, theme.colors.primaryDark]);
+  }, []);
 
   useEffect(() => {
     NotificationService.init();
@@ -313,10 +342,26 @@ function RootLayoutContent() {
     };
   }, []);
 
-  // OTA update check - run in background and prompt when ready
+  // Hold the splash while a pending OTA downloads and apply it before the user
+  // sees the app. Capped so a slow or offline network never blocks launch; a
+  // download that outlives the cap is applied the next time the app foregrounds.
   useEffect(() => {
-    checkAndPrepareOtaUpdate();
-  }, [checkAndPrepareOtaUpdate]);
+    (async () => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const ready = await Promise.race([
+        checkAndPrepareOtaUpdate(),
+        new Promise<boolean>((resolve) => {
+          timer = setTimeout(() => resolve(false), LAUNCH_UPDATE_TIMEOUT_MS);
+        }),
+      ]);
+      clearTimeout(timer);
+      if (ready) {
+        await applyUpdate();
+      } else if (mountedRef.current) {
+        setLaunchUpdateCheckDone(true);
+      }
+    })();
+  }, [checkAndPrepareOtaUpdate, applyUpdate]);
 
   // Listen for 426 force-update events emitted by any API call
   useEffect(() => {
@@ -357,8 +402,10 @@ function RootLayoutContent() {
         } catch (error) {
           console.error("Failed to re-sync permissions on foreground", error);
         }
-        if (updateReady) {
-          setShowUpdateModal(true);
+        // The user just came back, so nothing is in progress; skip while Quran
+        // audio plays because a reload would cut it off.
+        if (updateReadyRef.current && !audioPlayingRef.current) {
+          void applyUpdate();
           return;
         }
         await Promise.all([checkAndPrepareOtaUpdate(), checkMinVersion()]);
@@ -369,7 +416,7 @@ function RootLayoutContent() {
       mounted = false;
       sub.remove();
     };
-  }, [checkAndPrepareOtaUpdate, checkMinVersion, updateReady]);
+  }, [applyUpdate, checkAndPrepareOtaUpdate, checkMinVersion]);
 
   // Native splash control
   const hasHiddenNative = useRef(false);
@@ -382,7 +429,7 @@ function RootLayoutContent() {
   }, []);
 
   const appReady = fontsLoaded && initialSynced && isHydrated;
-  const splashReady = appReady;
+  const splashReady = appReady && launchUpdateCheckDone;
 
   // Explicit so the Light theme paints dark status-bar text on its cream canvas.
   const statusBarStyle = theme.name === "light" ? "dark" : "light";
@@ -394,6 +441,7 @@ function RootLayoutContent() {
       <PortalProvider>
         {/* Always render app content so it mounts and loads data while splash is visible */}
         <QuranAudioProvider>
+          <AudioPlayingBridge playingRef={audioPlayingRef} />
           <View style={{ flex: 1, backgroundColor }}>
             <NavThemeProvider
               value={{ ...DarkTheme, colors: { ...DarkTheme.colors, background: theme.colors.primaryDark } }}
@@ -461,15 +509,6 @@ function RootLayoutContent() {
             opacity: showReloadCover ? 1 : 0,
           }}
           pointerEvents={showReloadCover ? "auto" : "none"}
-        />
-
-        <UpdateModal
-          visible={showUpdateModal && updateReady}
-          isRestarting={isRestartingUpdate}
-          onLater={() => setShowUpdateModal(false)}
-          onRestart={() => {
-            void handleRestartForUpdate();
-          }}
         />
 
         <ForceUpdateGate

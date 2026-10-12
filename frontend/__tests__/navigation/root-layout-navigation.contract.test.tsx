@@ -34,6 +34,7 @@ jest.mock("react-native-safe-area-context", () => ({
 }));
 jest.mock("@/context/QuranAudioProvider", () => ({
   QuranAudioProvider: ({ children }: any) => children,
+  useQuranAudioController: () => ({ isPlaying: false }),
 }));
 jest.mock("@/context/ThemeContext", () => {
   const { darkTheme } = require("@/constants/theme");
@@ -52,7 +53,6 @@ jest.mock("@/services/quranDisplayModes", () => ({
   preloadQuranDisplayModes: jest.fn(async () => {}),
 }));
 jest.mock("@/components/SplashScreen", () => "SplashScreen");
-jest.mock("@/components/UpdateModal", () => "UpdateModal");
 jest.mock("@/components/quran/QuranMiniPlayerPortal", () => ({
   QuranMiniPlayerPortal: () => null,
 }));
@@ -86,6 +86,7 @@ jest.mock("expo-router", () => {
 
 import RootLayout from "@/app/_layout";
 import { preloadQuranData } from "@/services/quranData";
+import * as Updates from "expo-updates";
 
 describe("root layout navigation contract", () => {
   let appStateListenerSpy: jest.SpyInstance;
@@ -135,5 +136,26 @@ describe("root layout navigation contract", () => {
 
     expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "Settings"]));
     expect(routeNames).not.toContain("MosqueMap");
+  });
+
+  it("applies a pending OTA update on launch without prompting", async () => {
+    const updates = Updates as unknown as {
+      isEnabled: boolean;
+      checkForUpdateAsync: jest.Mock;
+      reloadAsync: jest.Mock;
+    };
+    const devFlag = (global as any).__DEV__;
+    (global as any).__DEV__ = false;
+    updates.isEnabled = true;
+    updates.checkForUpdateAsync.mockResolvedValue({ isAvailable: true });
+
+    render(<RootLayout />);
+
+    await waitFor(() => {
+      expect(updates.reloadAsync).toHaveBeenCalled();
+    });
+
+    (global as any).__DEV__ = devFlag;
+    updates.isEnabled = false;
   });
 });

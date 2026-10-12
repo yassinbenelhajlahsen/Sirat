@@ -68,6 +68,7 @@ jest.mock("react-native-safe-area-context", () => ({
 
 jest.mock("@/context/QuranAudioProvider", () => ({
   QuranAudioProvider: ({ children }: any) => children,
+  useQuranAudioController: () => ({ isPlaying: false }),
 }));
 jest.mock("@/context/ThemeContext", () => {
   const { darkTheme } = require("@/constants/theme");
@@ -88,7 +89,6 @@ jest.mock("@/services/notificationService", () => ({
 }));
 
 jest.mock("@/components/SplashScreen", () => "SplashScreen");
-jest.mock("@/components/UpdateModal", () => "UpdateModal");
 jest.mock("@/components/quran/QuranMiniPlayerPortal", () => ({
   QuranMiniPlayerPortal: () => null,
 }));
