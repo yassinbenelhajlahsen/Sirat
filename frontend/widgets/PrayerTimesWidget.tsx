@@ -68,6 +68,7 @@ const PrayerTimes = (props: PrayerTimesProps, environment: WidgetEnvironment) =>
     );
   }
 
+  const sunriseNext = props.next.name === "Sunrise";
   const header = (
     <HStack alignment="top">
       <VStack alignment="leading" spacing={2}>
@@ -80,7 +81,13 @@ const PrayerTimes = (props: PrayerTimesProps, environment: WidgetEnvironment) =>
       </VStack>
       <Spacer />
       {props.sunrise ? (
-        <Text modifiers={[font({ size: 12 }), foregroundStyle(theme.text), opacity(0.7)]}>
+        <Text
+          modifiers={[
+            font({ size: 12, weight: sunriseNext ? "semibold" : "regular" }),
+            foregroundStyle(sunriseNext ? theme.accent : theme.text),
+            opacity(sunriseNext ? 1 : 0.7),
+          ]}
+        >
           {`Sunrise ${props.sunrise}`}
         </Text>
       ) : null}
