@@ -99,7 +99,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `constants/theme-text-tokens.test.ts` — `textPrimary/Secondary/Tertiary/Disabled` and `iconMuted` clear WCAG contrast on every theme's canvas
   - `components/ui/primitives.contract.test.tsx` — shared `Button`, `IconButton` (44pt target + hitSlop), `SheetHeader`, `SkeletonBar`
   - `hooks/useReducedMotion.test.ts` — mirrors the OS Reduce Motion setting and its live changes
-  - `screens/nearby-mosques.contract.test.tsx` — inline load error with retry (no Alert), `shouldOfferAreaSearch` gesture/distance gate
+  - `screens/nearby-mosques.contract.test.tsx` — inline load error with retry (no Alert), `shouldOfferAreaSearch` distance gate
   - `components/compass-dial.contract.test.tsx` — themed Kaaba mark replaces the emoji
   - `components/prayer-times-list.contract.test.tsx` was removed with the unused `PrayerTimesList` component
 - `iOS-native polish (Direction A) testing`

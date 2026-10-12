@@ -233,15 +233,14 @@ describe("screens/nearby-mosques contracts", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it("only offers 'Search this area' after a real pan away from the searched centre", () => {
+  it("only offers 'Search this area' once the map is away from the searched centre", () => {
     const { shouldOfferAreaSearch } = jest.requireActual("@/app/(tabs)/Mosques");
     const centre = { latitude: 41.881, longitude: -87.623 };
     const near = { latitude: 41.882, longitude: -87.624, latitudeDelta: 0.02, longitudeDelta: 0.02 };
     const far = { latitude: 41.95, longitude: -87.7, latitudeDelta: 0.02, longitudeDelta: 0.02 };
 
-    expect(shouldOfferAreaSearch(far, centre, false)).toBe(false); // programmatic move
-    expect(shouldOfferAreaSearch(near, centre, true)).toBe(false); // barely moved
-    expect(shouldOfferAreaSearch(far, centre, true)).toBe(true);
-    expect(shouldOfferAreaSearch(far, null, true)).toBe(false); // nothing searched yet
+    expect(shouldOfferAreaSearch(near, centre)).toBe(false); // barely moved
+    expect(shouldOfferAreaSearch(far, centre)).toBe(true);
+    expect(shouldOfferAreaSearch(far, null)).toBe(false); // nothing searched yet
   });
 });

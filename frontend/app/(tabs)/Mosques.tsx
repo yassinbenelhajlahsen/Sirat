@@ -45,14 +45,18 @@ const RECENTER_SIZE = 48;
 const RECENTER_GAP = 12;
 const LOAD_ERROR = "Couldn't load nearby mosques.";
 
-// "Search this area" only appears after the user has panned far enough from
+// Apple Maps never reports `isGesture`, so our own animations are filtered by
+// time instead: ignore region events landing shortly after animateToRegion.
+const PROGRAMMATIC_MOVE_MS = 350;
+const PROGRAMMATIC_MOVE_SETTLE_MS = 500;
+
+// "Search this area" only appears after the map has moved far enough from
 // the last searched centre for a new query to return different results.
 export function shouldOfferAreaSearch(
   region: Region,
   searchedCenter: LatLng | null,
-  isGesture: boolean | undefined,
 ): boolean {
-  if (!isGesture || !searchedCenter) return false;
+  if (!searchedCenter) return false;
   const moved = distanceKm(
     searchedCenter.latitude,
     searchedCenter.longitude,
@@ -76,6 +80,7 @@ export default function MosqueScreen() {
   }, [theme.name, colors]);
 
   const mapRef = useRef<MapView>(null);
+  const ignoreRegionUntilRef = useRef(0);
 
   const [permissionStatus, setPermissionStatus] =
     useState<Perm>("undetermined");
@@ -217,18 +222,22 @@ export default function MosqueScreen() {
     }
   };
 
+  const animateTo = (r: Region) => {
+    ignoreRegionUntilRef.current =
+      Date.now() + PROGRAMMATIC_MOVE_MS + PROGRAMMATIC_MOVE_SETTLE_MS;
+    setShowSearchArea(false);
+    mapRef.current?.animateToRegion(r, PROGRAMMATIC_MOVE_MS);
+  };
+
   const onSelectMosque = (m: Mosque) => {
     haptic("light");
     setSelectedId(m.id);
-    mapRef.current?.animateToRegion(
-      {
-        latitude: m.lat,
-        longitude: m.lng,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      },
-      350,
-    );
+    animateTo({
+      latitude: m.lat,
+      longitude: m.lng,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    });
   };
 
   const fetchAround = async (center: LatLng) => {
@@ -264,15 +273,12 @@ export default function MosqueScreen() {
   const recenter = () => {
     if (!location) return;
     haptic("light");
-    mapRef.current?.animateToRegion(
-      {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      },
-      350,
-    );
+    animateTo({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    });
   };
 
   const needLocationGate = useMemo(() => {
@@ -362,9 +368,10 @@ export default function MosqueScreen() {
         userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
         showsUserLocation
         initialRegion={initialRegion}
-        onRegionChangeComplete={(r, details) => {
+        onRegionChangeComplete={(r) => {
           setRegion(r);
-          setShowSearchArea(shouldOfferAreaSearch(r, searchedCenter, details?.isGesture));
+          if (Date.now() < ignoreRegionUntilRef.current) return;
+          setShowSearchArea(shouldOfferAreaSearch(r, searchedCenter));
         }}
       >
         {mosques.slice(0, 10).map((m) => (
