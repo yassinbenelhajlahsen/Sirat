@@ -159,6 +159,32 @@ describe("notifications/scheduler", () => {
     resetTestTime();
   });
 
+  it("plays the adhan only for prayer alerts; Sunrise and window reminders use the system sound", async () => {
+    const scheduleNotificationAsync = Notifications.scheduleNotificationAsync as jest.Mock;
+    freezeTestTime(new Date(2026, 0, 1, 4, 0, 0));
+    mockGetPrayerTimesForDate.mockResolvedValue(FULL_DAY as any);
+
+    await scheduleForHorizon({
+      days: 1,
+      prefs: { ...makePrefs(false), Sunrise: true, Dhuhr: true },
+      cityDisplay: "Chicago",
+      effective: { useLocation: true, method: 2, city: undefined },
+      soundMode: "adhan",
+      windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
+      windowOffset: 15,
+    });
+
+    const sounds = Object.fromEntries(
+      scheduleNotificationAsync.mock.calls.map(([arg]) => [arg.content.title, arg.content.sound]),
+    );
+    expect(sounds).toEqual({
+      "🌞 Sunrise time": "default",
+      "☀️ Dhuhr time": "adhan.caf",
+      "Dhuhr ending soon": "default",
+    });
+    resetTestTime();
+  });
+
   it("does not schedule a window reminder when the prayer is already logged", async () => {
     const scheduleNotificationAsync = Notifications.scheduleNotificationAsync as jest.Mock;
     freezeTestTime(new Date(2026, 0, 1, 4, 0, 0));

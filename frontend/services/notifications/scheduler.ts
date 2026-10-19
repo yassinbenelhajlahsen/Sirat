@@ -143,7 +143,8 @@ export async function scheduleForHorizon(params: {
         content: {
           title: `${PRAYER_EMOJI[label] || "🕌"} ${label} time`,
           body: `${prayer.time} in ${cityDisplay}`,
-          sound: triggerSound,
+          // Sunrise is not a prayer, so it gets no adhan.
+          sound: label === "Sunrise" ? "default" : triggerSound,
           priority: Notifications.AndroidNotificationPriority.HIGH,
           data: {
             type: "prayer",
@@ -177,7 +178,8 @@ export async function scheduleForHorizon(params: {
           content: {
             title: `${label} ending soon`,
             body: `${next.label} ${verb} at ${next.time}, in ${windowOffset} min.`,
-            sound: triggerSound,
+            // The adhan is a call to prayer, so it never plays for "ending soon" reminders.
+            sound: "default",
             priority: Notifications.AndroidNotificationPriority.HIGH,
             data: {
               type: "window_reminder",
