@@ -78,8 +78,6 @@ type PrayerDialProps = {
   onPressPrayer?: (name: PrayerName, label: string) => void;
   /** Tapping the dial once the day is done. Routes to tomorrow on Home. */
   onPressCentre?: () => void;
-  /** Hide the dial and show only the prayer columns. */
-  showDial?: boolean;
 };
 
 export default function PrayerDial({
@@ -96,7 +94,6 @@ export default function PrayerDial({
   statuses,
   onPressPrayer,
   onPressCentre,
-  showDial = true,
 }: PrayerDialProps) {
   const { theme } = useTheme();
   const { colors } = theme;
@@ -390,7 +387,7 @@ export default function PrayerDial({
 
   return (
     <View style={styles.card}>
-      {!showDial ? null : onPressCentre ? (
+      {onPressCentre ? (
         <Pressable
           onPress={onPressCentre}
           accessibilityRole="button"

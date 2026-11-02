@@ -28,7 +28,7 @@ export default function HabitChecklist({ habits, done, date, onToggle }: Props) 
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="Habits" />
+      <SectionHeader title="Habits" inset={0} />
       <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
         {dueHabits.map((habit, i) => {
           const checked = done[habit.id] === true;
@@ -63,7 +63,7 @@ export default function HabitChecklist({ habits, done, date, onToggle }: Props) 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    section: { marginTop: spacing.xxl },
+    section: { marginTop: spacing.xxl + spacing.md },
     card: { paddingHorizontal: spacing.lg },
     row: {
       flexDirection: "row",

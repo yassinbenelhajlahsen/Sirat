@@ -54,4 +54,23 @@ describe("DayDetailPanel logging", () => {
     );
     expect(getByTestId("dot-prayed")).toBeTruthy();
   });
+
+  it("lists future days without log buttons or status dots", () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 3);
+    const { queryByLabelText, queryByTestId, getByText } = render(
+      wrap(
+        <DayDetailPanel
+          date={future} isToday={false} holiday={null} loading={false}
+          prayerTimes={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
+          nextPrayer={null} timeLeft=""
+          statuses={{}}
+          onPressPrayer={jest.fn()}
+        />,
+      ),
+    );
+    expect(getByText("Maghrib")).toBeTruthy();
+    expect(queryByLabelText("Log Maghrib")).toBeNull();
+    expect(queryByTestId("dot-loggable")).toBeNull();
+  });
 });

@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
-import PrayerDial from "@/components/PrayerDial";
+import PrayerTimesList from "@/components/calendar/PrayerTimesList";
 import AppIcon from "@/components/ui/AppIcon";
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
+import SectionHeader from "@/components/ui/SectionHeader";
 import { AppText, Body, Footnote, Headline, Title2 } from "@/components/ui/Text";
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -24,7 +25,6 @@ type DayDetailPanelProps = {
   onOpenSettings: () => void;
   nextPrayer: { label: string; time: string } | null;
   timeLeft: string;
-  coords?: { latitude: number; longitude: number } | null;
   statuses: Partial<Record<PrayerName, PrayerStatus>>;
   onPressPrayer: (name: PrayerName, label: string) => void;
 };
@@ -40,7 +40,6 @@ export default function DayDetailPanel({
   onOpenSettings,
   nextPrayer,
   timeLeft,
-  coords,
   statuses,
   onPressPrayer,
 }: DayDetailPanelProps) {
@@ -57,7 +56,7 @@ export default function DayDetailPanel({
   }).format(date);
 
   return (
-    <View>
+    <View style={styles.root}>
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
           <Title2 numberOfLines={1}>{isToday ? `Today, ${dateLine}` : dateLine}</Title2>
@@ -118,19 +117,17 @@ export default function DayDetailPanel({
           />
         </GlassSurface>
       ) : (
-        <PrayerDial
-          loading={loading}
-          prayerTimes={prayerTimes}
-          nextPrayer={isToday ? nextPrayer : null}
-          timeLeft={isToday ? timeLeft : undefined}
-          date={date}
-          live={isToday}
-          showDial={isToday}
-          coords={coords}
-          logging
-          statuses={statuses}
-          onPressPrayer={onPressPrayer}
-        />
+        <View style={styles.prayers}>
+          <SectionHeader title="Prayers" inset={0} />
+          <PrayerTimesList
+            prayerTimes={prayerTimes}
+            statuses={statuses}
+            isToday={isToday}
+            nextPrayer={nextPrayer}
+            canLog={date.getTime() <= Date.now()}
+            onPressPrayer={onPressPrayer}
+          />
+        </View>
       )}
     </View>
   );
@@ -139,6 +136,8 @@ export default function DayDetailPanel({
 const createStyles = (theme: AppTheme) => {
   const { spacing } = theme;
   return StyleSheet.create({
+    root: { flexGrow: 1 },
+    prayers: { flexGrow: 1, marginTop: spacing.md },
     headerRow: {
       flexDirection: "row",
       alignItems: "center",

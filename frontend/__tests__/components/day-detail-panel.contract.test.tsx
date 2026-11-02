@@ -55,14 +55,16 @@ const baseProps = {
 };
 
 describe("DayDetailPanel", () => {
-  it("renders a static arc for a non-today day", () => {
-    const { getByTestId } = render(<DayDetailPanel {...baseProps} />);
-    expect(getByTestId("prayer-dial")).toHaveTextContent("static");
+  it("lists the times without an arc for a non-today day", () => {
+    const { queryByTestId, getByText } = render(<DayDetailPanel {...baseProps} />);
+    expect(queryByTestId("prayer-dial")).toBeNull();
+    expect(getByText("5:31 AM")).toBeTruthy();
   });
 
-  it("renders a live arc for today", () => {
-    const { getByTestId } = render(<DayDetailPanel {...baseProps} isToday />);
-    expect(getByTestId("prayer-dial")).toHaveTextContent("live");
+  it("lists today's times too, with no arc", () => {
+    const { queryByTestId, getByText } = render(<DayDetailPanel {...baseProps} isToday />);
+    expect(queryByTestId("prayer-dial")).toBeNull();
+    expect(getByText("5:31 AM")).toBeTruthy();
   });
 
   it("appends the holiday to the supporting line", () => {

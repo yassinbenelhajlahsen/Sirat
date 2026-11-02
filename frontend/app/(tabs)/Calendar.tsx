@@ -37,20 +37,11 @@ import { useCalendarViewState } from "@/hooks/useCalendarViewState";
 import { useNextPrayer } from "@/hooks/useNextPrayer";
 import { usePrayerLog } from "@/hooks/usePrayerLog";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
-import { getLastResolvedCoords } from "@/services/prayer-times/environment";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { dateKeyFromDate } from "@/services/holidayService";
 import type { PrayerName } from "@/services/prayerTracker";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
-
-function useDialCoords(prayerTimes: unknown[]) {
-  const [coords, setCoords] = useState(getLastResolvedCoords);
-  useEffect(() => {
-    setCoords(getLastResolvedCoords());
-  }, [prayerTimes]);
-  return coords;
-}
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
@@ -169,7 +160,6 @@ export default function CalendarScreen() {
 
   const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
     usePrayerTimes(selectedDate);
-  const dialCoords = useDialCoords(prayerTimes);
   const { nextPrayer, timeLeft } = useNextPrayer(
     selectedDate,
     prayerTimes,
@@ -255,6 +245,54 @@ export default function CalendarScreen() {
     },
     [setViewMonth, setViewYear],
   );
+
+  const ramadanSection = ramadanMonthActive ? (
+    <View style={styles.section}>
+    <SectionHeader title="Ramadan" inset={0} />
+    <GlassSurface tier="card" radius={theme.radii.card} style={styles.ramadanCard}>
+      {showRamadanSummary ? (
+        <PressableScale
+          variant="row"
+          radius={theme.radii.row}
+          onPress={handleRamadanSummaryPress}
+          accessibilityRole="button"
+          accessibilityLabel="Open first missed Ramadan fast date"
+          style={styles.ramadanRow}
+        >
+          <View style={styles.ramadanTextWrap}>
+            <Body color={colors.white}>
+              {ramadanSummary?.totalMissed ?? 0} missed{" "}
+              {(ramadanSummary?.totalMissed ?? 0) === 1 ? "fast" : "fasts"}
+            </Body>
+            {missedDaysLabel ? (
+              <Caption color={colors.textSecondary}>{missedDaysLabel}</Caption>
+            ) : null}
+          </View>
+          <AppIcon name="chevron-forward" size={20} color={colors.iconMuted} />
+        </PressableScale>
+      ) : (
+        <View style={styles.ramadanRow}>
+          <Body color={colors.textSecondary}>No missed fasts</Body>
+        </View>
+      )}
+
+      {selectedDate && isRamadan ? (
+        <Button
+          label={
+            isFastMissed
+              ? `Day ${selectedDate.getDate()} · marked missed`
+              : `Mark Day ${selectedDate.getDate()} missed`
+          }
+          icon={isFastMissed ? "checkmark-circle" : "ellipse-outline"}
+          variant={isFastMissed ? "primary" : "secondary"}
+          onPress={onToggleMissed}
+          accessibilityLabel={isFastMissed ? "Clear missed fast" : "Mark fast as missed"}
+          style={styles.markBtn}
+        />
+      ) : null}
+    </GlassSurface>
+    </View>
+  ) : null;
 
   return (
     <View style={styles.fill}>
@@ -382,14 +420,14 @@ export default function CalendarScreen() {
 
         <View style={[styles.divider, { marginHorizontal: screenMargin }]} />
 
-        {/* Scrolling day panel */}
+        {/* Day panel: the prayer list grows to fill the space and the panel only scrolls if it overflows. */}
         <ScrollView
           style={styles.fill}
           contentInsetAdjustmentBehavior="never"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.panelContent,
-            { paddingHorizontal: screenMargin, paddingBottom: tabBarClearance + spacing.lg },
+            { flexGrow: 1, paddingHorizontal: screenMargin, paddingBottom: tabBarClearance + spacing.lg },
           ]}
         >
           {!isViewingToday && (
@@ -402,54 +440,6 @@ export default function CalendarScreen() {
                 accessibilityLabel="Back to current month"
               />
             </Animated.View>
-          )}
-
-          {ramadanMonthActive && (
-            <View style={styles.section}>
-            <SectionHeader title="Ramadan" />
-            <GlassSurface tier="card" radius={theme.radii.card} style={styles.ramadanCard}>
-              {showRamadanSummary ? (
-                <PressableScale
-                  variant="row"
-                  radius={theme.radii.row}
-                  onPress={handleRamadanSummaryPress}
-                  accessibilityRole="button"
-                  accessibilityLabel="Open first missed Ramadan fast date"
-                  style={styles.ramadanRow}
-                >
-                  <View style={styles.ramadanTextWrap}>
-                    <Body color={colors.white}>
-                      {ramadanSummary?.totalMissed ?? 0} missed{" "}
-                      {(ramadanSummary?.totalMissed ?? 0) === 1 ? "fast" : "fasts"}
-                    </Body>
-                    {missedDaysLabel ? (
-                      <Caption color={colors.textSecondary}>{missedDaysLabel}</Caption>
-                    ) : null}
-                  </View>
-                  <AppIcon name="chevron-forward" size={20} color={colors.iconMuted} />
-                </PressableScale>
-              ) : (
-                <View style={styles.ramadanRow}>
-                  <Body color={colors.textSecondary}>No missed fasts</Body>
-                </View>
-              )}
-
-              {selectedDate && isRamadan ? (
-                <Button
-                  label={
-                    isFastMissed
-                      ? `Day ${selectedDate.getDate()} · marked missed`
-                      : `Mark Day ${selectedDate.getDate()} missed`
-                  }
-                  icon={isFastMissed ? "checkmark-circle" : "ellipse-outline"}
-                  variant={isFastMissed ? "primary" : "secondary"}
-                  onPress={onToggleMissed}
-                  accessibilityLabel={isFastMissed ? "Clear missed fast" : "Mark fast as missed"}
-                  style={styles.markBtn}
-                />
-              ) : null}
-            </GlassSurface>
-            </View>
           )}
 
           {selectedDate ? (
@@ -465,19 +455,22 @@ export default function CalendarScreen() {
                 onOpenSettings={openSettings}
                 nextPrayer={nextPrayer}
                 timeLeft={timeLeft}
-                coords={dialCoords}
                 statuses={statuses}
                 onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
               />
+              {ramadanSection}
               <HabitChecklist habits={habits} done={habitDone} date={selectedDate} onToggle={toggleHabit} />
             </>
           ) : (
+            <>
+            {ramadanSection}
             <View style={styles.prompt}>
               <AppIcon name="calendar-outline" size={30} color={colors.iconMuted} />
               <Body color={colors.textSecondary} style={styles.promptText}>
                 Tap any day to see its prayer times &amp; events.
               </Body>
             </View>
+            </>
           )}
         </ScrollView>
       </View>
@@ -554,7 +547,7 @@ const createStyles = (theme: AppTheme) => {
       alignSelf: "center",
       marginBottom: spacing.lg,
     },
-    section: { marginBottom: spacing.xxl },
+    section: { marginTop: spacing.xxl + spacing.md },
     ramadanCard: { padding: spacing.lg },
     ramadanRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 44 },
     ramadanTextWrap: { flexShrink: 1, gap: 2 },
