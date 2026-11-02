@@ -1,7 +1,12 @@
 import { render } from "@testing-library/react-native";
 import type { SharedValue } from "react-native-reanimated";
 
-import SplashSky, { GLOW_OPACITY, STAR_LAYERS } from "@/components/splash/SplashSky";
+import SplashSky, {
+  GLOW_OPACITY,
+  STAR_FLOOR,
+  STAR_LAYERS,
+  turnAngle,
+} from "@/components/splash/SplashSky";
 import { darkTheme } from "@/constants/theme";
 
 describe("SplashSky", () => {
@@ -24,6 +29,16 @@ describe("SplashSky", () => {
         expect(star.size).toBeLessThanOrEqual(2);
       }
     }
+  });
+
+  it("twinkles gently instead of blinking out", () => {
+    expect(STAR_FLOOR).toBeGreaterThanOrEqual(0.5);
+  });
+
+  it("reads a layer's turn off the wall clock, so remounts pick up where it was", () => {
+    expect(turnAngle(60_000, 0)).toBe(0);
+    expect(turnAngle(60_000, 15_000)).toBe(90);
+    expect(turnAngle(60_000, 75_000)).toBe(90);
   });
 
   it("renders one view per star", () => {

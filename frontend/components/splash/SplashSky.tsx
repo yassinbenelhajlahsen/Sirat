@@ -16,7 +16,8 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 
 /** `x`/`y` are percentages of the parent. `opacity` dims one star within its layer. */
 type Star = { x: number; y: number; size: number; opacity?: number };
-export type StarLayer = { stars: Star[]; twinkleMs: number; delayMs: number };
+/** `turnMs`: one full clockwise turn about the layer's centre. Omit for a still layer. */
+export type StarLayer = { stars: Star[]; twinkleMs: number; delayMs: number; turnMs?: number };
 
 // Seeded so the field is the same on every launch and in tests.
 function mulberry32(seed: number) {
@@ -65,8 +66,17 @@ const GLOW_STOPS: Record<GlowVariant, [number, number][]> = {
   focused: [[0, 1], [0.7, 0]],
   soft: [[0, 1], [0.5, 0.4], [1, 0]],
 };
-const STAR_FLOOR = 0.12;
-const STAR_STILL = 0.5;
+// A shallow twinkle: stars soften and return rather than blinking out.
+export const STAR_FLOOR = 0.6;
+const STAR_STILL = 0.8;
+
+/**
+ * How far a turning layer has gone right now, in degrees clockwise. Read off
+ * the wall clock so a remount, and any caller placing stars by hand, agree.
+ */
+export function turnAngle(turnMs: number, now: number = Date.now()): number {
+  return ((now % turnMs) / turnMs) * 360;
+}
 
 export function StarLayerView({
   layer,
@@ -84,12 +94,22 @@ export function StarLayerView({
 }) {
   const opacity = useSharedValue(STAR_STILL * peak);
   const drift = useSharedValue(0);
+  const turn = useSharedValue(layer.turnMs ? turnAngle(layer.turnMs) : 0);
 
   useEffect(() => {
+    const start = layer.turnMs ? turnAngle(layer.turnMs) : 0;
+    turn.value = start;
     if (reduceMotion) {
       opacity.value = STAR_STILL * peak;
       drift.value = 0;
       return;
+    }
+    if (layer.turnMs) {
+      turn.value = withRepeat(
+        withTiming(start + 360, { duration: layer.turnMs, easing: Easing.linear }),
+        -1,
+        false,
+      );
     }
     opacity.value = STAR_FLOOR * peak;
     opacity.value = withDelay(
@@ -102,12 +122,12 @@ export function StarLayerView({
     );
     if (drifts) drift.value = withTiming(DRIFT_PX, { duration: DRIFT_MS, easing: Easing.linear });
     // Keyed on timing, not the layer object, so a caller can update star
-    // opacities without restarting the twinkle.
-  }, [reduceMotion, peak, layer.twinkleMs, layer.delayMs, drifts, opacity, drift]);
+    // opacities without restarting the motion.
+  }, [reduceMotion, peak, layer.twinkleMs, layer.delayMs, layer.turnMs, drifts, opacity, drift, turn]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateY: drift.value }],
+    transform: [{ translateY: drift.value }, { rotate: `${turn.value}deg` }],
   }));
 
   return (

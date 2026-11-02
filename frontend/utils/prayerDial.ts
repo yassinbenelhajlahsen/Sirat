@@ -226,6 +226,9 @@ function relativeLuminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
+/** Where the centre type sits, in dial units. Stars keep out of it. */
+export const DIAL_TEXT_BOX = { x0: 90, x1: 210, y0: 102, y1: 202 } as const;
+
 export type Star = { x: number; y: number; r: number; o: number; bloom: boolean };
 
 /**
@@ -239,7 +242,7 @@ export const STARS: Star[] = (() => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  const TEXT = { x0: 90, x1: 210, y0: 102, y1: 202 };
+  const TEXT = DIAL_TEXT_BOX;
   const out: Star[] = [];
   for (let guard = 0; out.length < 26 && guard < 9000; guard++) {
     const a = rnd() * 360;

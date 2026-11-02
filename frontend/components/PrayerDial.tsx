@@ -11,7 +11,7 @@ import Svg, {
   Text as SvgText,
 } from "react-native-svg";
 
-import { LAYER_DEFS, StarLayerView } from "@/components/splash/SplashSky";
+import { LAYER_DEFS, StarLayerView, turnAngle } from "@/components/splash/SplashSky";
 import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import DisplayNumber from "@/components/ui/DisplayNumber";
 import { formatMonthDay } from "@/utils/formatDate";
@@ -23,6 +23,7 @@ import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
 import {
   DIAL,
+  DIAL_TEXT_BOX,
   STARS,
   angleForMinutes,
   buildRing,
@@ -47,6 +48,7 @@ import { sunDay } from "@/utils/sky";
  * without interpolation. Deliberately not the 1s tick that drives the countdown.
  */
 const SKY_TICK_MS = 60_000;
+const STAR_TICK_MS = 1_000;
 
 const STATUS_VALUE: Record<PrayerStatus, string> = {
   prayed: "Marked prayed",
@@ -60,6 +62,29 @@ const COLUMN_FONT_SCALE = 1.2;
 // read against, whatever colour the day's light is at that hour.
 const MARKER_KNOCKOUT = 5.6;
 const MARKER_GROUND = "rgba(8,16,11,0.55)";
+
+// The disc is small, so its stars turn faster than the screen's sky or the
+// motion would not show at all.
+const DIAL_TURN_MS = [4, 4.5, 5].map((m) => m * 60_000);
+
+/** 0 behind the centre type, easing to 1 a few units clear of it. */
+function clearOfText(p: { x: number; y: number }): number {
+  const dx = Math.max(DIAL_TEXT_BOX.x0 - p.x, 0, p.x - DIAL_TEXT_BOX.x1);
+  const dy = Math.max(DIAL_TEXT_BOX.y0 - p.y, 0, p.y - DIAL_TEXT_BOX.y1);
+  return Math.min(1, Math.hypot(dx, dy) / 8);
+}
+
+/** A star's position once its layer has turned `deg` clockwise about the disc centre. */
+function turnAbout<T extends { x: number; y: number }>(s: T, deg: number): T {
+  const a = (deg * Math.PI) / 180;
+  const dx = s.x - DIAL.cx;
+  const dy = s.y - DIAL.cy;
+  return {
+    ...s,
+    x: DIAL.cx + dx * Math.cos(a) - dy * Math.sin(a),
+    y: DIAL.cy + dx * Math.sin(a) + dy * Math.cos(a),
+  };
+}
 
 // White type over a sunlit disc. A warm shadow, not black, so it reads as
 // shade on the sky rather than a drop shadow.
@@ -126,6 +151,16 @@ export default function PrayerDial({
   }, [now, live]);
   const at = now ?? tick;
 
+  // Turning stars move between dark and lit patches, so their brightness needs
+  // a faster clock than the sky colour does.
+  const [starClock, setStarClock] = useState(() => Date.now());
+  const hasSky = coords != null;
+  useEffect(() => {
+    if (now || !live || !hasSky) return;
+    const id = setInterval(() => setStarClock(Date.now()), STAR_TICK_MS);
+    return () => clearInterval(id);
+  }, [now, live, hasSky]);
+
   const day = useMemo(() => date ?? new Date(), [date]);
   const markers = useMemo(() => dialMarkers(prayerTimes, day), [prayerTimes, day]);
 
@@ -153,20 +188,28 @@ export default function PrayerDial({
   const sunPoint = nowMinutes == null ? null : pointOnRing(angleForMinutes(nowMinutes));
   const axis = sunPoint ? discAxis(sunPoint) : null;
 
-  // The splash's star layers, laid over the disc: same dots, same twinkle,
-  // each star dimmed by how dark its own patch of sky is.
+  // The splash's star layers, laid over the disc and turning about its centre.
+  // Each star is dimmed by the patch of sky it is passing through right now.
   const starLayers =
     sunAlt != null && sunPoint && !loading
-      ? LAYER_DEFS.map(({ twinkleMs, delayMs }, layer) => ({
-          twinkleMs,
-          delayMs,
-          stars: STARS.filter((_, i) => i % LAYER_DEFS.length === layer).map((s) => ({
-            x: (s.x / DIAL.size) * 100,
-            y: (s.y / DIAL.size) * 100,
-            size: 1 + Math.min(1, (s.r - 0.45) / 0.8),
-            opacity: starVisibility(s, sunAlt, sunPoint),
-          })),
-        }))
+      ? LAYER_DEFS.map(({ twinkleMs, delayMs }, layer) => {
+          const turnMs = DIAL_TURN_MS[layer];
+          const turned = turnAngle(turnMs, now ? now.getTime() : starClock);
+          return {
+            twinkleMs,
+            delayMs,
+            turnMs,
+            stars: STARS.filter((_, i) => i % LAYER_DEFS.length === layer).map((s) => ({
+              x: (s.x / DIAL.size) * 100,
+              y: (s.y / DIAL.size) * 100,
+              size: 1 + Math.min(1, (s.r - 0.45) / 0.8),
+              opacity: (() => {
+                const p = turnAbout(s, turned);
+                return starVisibility(p, sunAlt, sunPoint) * clearOfText(p);
+              })(),
+            })),
+          };
+        })
       : null;
 
   const [wrapWidth, setWrapWidth] = useState(0);
