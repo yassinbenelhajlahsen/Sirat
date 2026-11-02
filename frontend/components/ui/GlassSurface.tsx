@@ -16,6 +16,8 @@ type GlassSurfaceProps = ViewProps & {
   // on top of it by default. The non-glass fallback keeps a hairline for
   // definition. Pass `bordered` explicitly to force (or drop) the drawn edge.
   bordered?: boolean;
+  // Tints the Liquid Glass so it stays legible over busy content such as a map.
+  tint?: string;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 };
@@ -25,6 +27,7 @@ export default function GlassSurface({
   radius,
   curve = "continuous",
   bordered,
+  tint,
   style,
   children,
   ...rest
@@ -52,6 +55,7 @@ export default function GlassSurface({
       <GlassView
         key={theme.name}
         glassEffectStyle="clear"
+        tintColor={tint}
         colorScheme={isLight ? "light" : "dark"}
         style={[shared, { borderWidth: bordered ? 1 : 0 }, style]}
         {...rest}

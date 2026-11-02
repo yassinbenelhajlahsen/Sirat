@@ -5,10 +5,10 @@ import EmptyState from "@/components/ui/EmptyState";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
 import ScreenHeader from "@/components/ui/ScreenHeader";
-import { Subhead } from "@/components/ui/Text";
+import { Footnote, Subhead } from "@/components/ui/Text";
 import MosqueMarker from "@/components/mosques/MosqueMarker";
 import MosqueSheet from "@/components/mosques/MosqueSheet";
-import type { AppTheme } from "@/constants/theme";
+import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
@@ -70,6 +70,8 @@ export default function MosqueScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const haptic = useHaptics();
+  // Tinted so the floating controls stay readable over the map.
+  const glassTint = withOpacity(colors.primaryDeep, 0.6);
   const customMapStyle = useMemo(() => {
     if (theme.name === "light") return undefined;
     return createCustomMapStyle(colors);
@@ -98,7 +100,7 @@ export default function MosqueScreen() {
   // brings it back. It also hides when another tab is focused.
   const tabBarClearance = useTabBarClearance();
   const isFocused = useIsFocused();
-  const [sheetOpen, setSheetOpen] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const checkStatus = async () => {
     const sOn = await Location.hasServicesEnabledAsync();
@@ -386,7 +388,9 @@ export default function MosqueScreen() {
           >
             <GlassSurface
               tier="chrome"
+              tint={glassTint}
               radius={999}
+              curve="circular"
               style={styles.searchAreaPill}
             >
               <AppIcon name="search" size={16} color={colors.white} />
@@ -401,10 +405,16 @@ export default function MosqueScreen() {
           style={[styles.emptyOverlayWrap, { top: insets.top + 64 }]}
           pointerEvents="box-none"
         >
-          <GlassSurface tier="card" style={styles.errorCard} accessibilityRole="alert">
+          <GlassSurface
+            tier="chrome"
+            tint={glassTint}
+            radius={theme.radii.card}
+            style={styles.errorCard}
+            accessibilityRole="alert"
+          >
             <View style={styles.errorRow}>
-              <AppIcon name="alert-circle" size={18} color={colors.accent} />
-              <Subhead color={colors.white} style={styles.emptyText}>{loadError}</Subhead>
+              <AppIcon name="alert-circle" size={16} color={colors.accent} />
+              <Footnote color={colors.white} style={styles.emptyText}>{loadError}</Footnote>
             </View>
             <Button
               label="Try again"
@@ -422,11 +432,16 @@ export default function MosqueScreen() {
           style={[styles.emptyOverlayWrap, { top: insets.top + 64 }]}
           pointerEvents="box-none"
         >
-          <GlassSurface tier="card" style={styles.emptyCard}>
-            <AppIcon name="search" size={18} color={colors.accent} />
-            <Subhead color={colors.white} style={styles.emptyText}>
+          <GlassSurface
+            tier="chrome"
+            tint={glassTint}
+            radius={theme.radii.card}
+            style={styles.emptyCard}
+          >
+            <AppIcon name="search" size={16} color={colors.accent} />
+            <Footnote color={colors.white} style={styles.emptyText}>
               No mosques found near your current location.
-            </Subhead>
+            </Footnote>
           </GlassSurface>
         </View>
       ) : null}
@@ -436,32 +451,28 @@ export default function MosqueScreen() {
           style={[styles.spinnerWrap, { top: insets.top + spacing.md }]}
           pointerEvents="none"
         >
-          <GlassSurface tier="chrome" radius={theme.radii.pill} curve="circular" style={styles.spinner}>
+          <GlassSurface tier="chrome" tint={glassTint} radius={theme.radii.pill} curve="circular" style={styles.spinner}>
             <ActivityIndicator size="small" color={colors.accent} />
           </GlassSurface>
         </View>
       )}
 
-      <View
-        style={[styles.recenterWrap, { top: insets.top + 12 }]}
-        pointerEvents="box-none"
-      >
-        <IconButton
-          icon="locate"
-          variant="glass"
-          size={RECENTER_SIZE}
-          iconSize={20}
-          color={colors.white}
-          onPress={recenter}
-          accessibilityLabel="Recenter map on your location"
-        />
-      </View>
-
       {!sheetOpen ? (
         <View style={[styles.reopenWrap, { bottom: tabBarClearance + 12 }]} pointerEvents="box-none">
           <IconButton
+            icon="locate"
+            variant="glass"
+            glassTint={glassTint}
+            size={RECENTER_SIZE}
+            iconSize={20}
+            color={colors.white}
+            onPress={recenter}
+            accessibilityLabel="Recenter map on your location"
+          />
+          <IconButton
             icon="list"
             variant="glass"
+            glassTint={glassTint}
             size={RECENTER_SIZE}
             iconSize={20}
             color={colors.white}
@@ -533,15 +544,17 @@ const createStyles = (theme: AppTheme) => {
       paddingVertical: spacing.md,
     },
     errorCard: {
-      alignSelf: "stretch",
+      maxWidth: 280,
+      alignItems: "center",
       gap: spacing.sm,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
     errorRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-    errorAction: { alignSelf: "flex-start" },
+    errorAction: { alignSelf: "center" },
     emptyText: {
       flexShrink: 1,
+      textAlign: "center",
     },
     spinnerWrap: { position: "absolute", right: spacing.lg },
     spinner: {
@@ -550,13 +563,10 @@ const createStyles = (theme: AppTheme) => {
       alignItems: "center",
       justifyContent: "center",
     },
-    recenterWrap: {
-      position: "absolute",
-      right: spacing.lg,
-    },
     reopenWrap: {
       position: "absolute",
       right: spacing.lg,
+      gap: spacing.md,
     },
   });
 };

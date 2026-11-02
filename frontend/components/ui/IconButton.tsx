@@ -18,6 +18,8 @@ export type IconButtonProps = {
   size?: number;
   iconSize?: number;
   variant?: IconButtonVariant;
+  /** Liquid Glass tint for the glass variant. */
+  glassTint?: string;
   color?: string;
   disabled?: boolean;
   accessibilityHint?: string;
@@ -35,6 +37,7 @@ export default function IconButton({
   size = ICON_BUTTON_MIN_TARGET,
   iconSize,
   variant = "tonal",
+  glassTint,
   color,
   disabled = false,
   accessibilityHint,
@@ -65,7 +68,7 @@ export default function IconButton({
       style={[disabled && styles.disabled, style]}
     >
       {variant === "glass" ? (
-        <GlassSurface tier="chrome" radius={size / 2} curve="circular" style={[styles.center, dims]}>
+        <GlassSurface tier="chrome" radius={size / 2} curve="circular" tint={glassTint} style={[styles.center, dims]}>
           {glyph}
         </GlassSurface>
       ) : (

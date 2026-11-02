@@ -7,7 +7,7 @@ import type { Mosque } from "@/services/getNearbyMosques";
 import { useCallback, useMemo } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 
-const DETENTS = [0.18, 0.5, 0.92];
+const DETENTS = [0.5, 0.92];
 
 type MosqueSheetProps = {
   mosques: Mosque[];
