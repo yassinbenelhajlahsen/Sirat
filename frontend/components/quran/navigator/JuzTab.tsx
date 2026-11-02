@@ -1,6 +1,5 @@
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo } from "react";
-import { InteractionManager, StyleSheet, View } from "react-native";
+import { InteractionManager, ScrollView, StyleSheet, View } from "react-native";
 
 import { Subhead } from "@/components/ui/Text";
 import { radii, withOpacity, type AppTheme } from "@/constants/theme";
@@ -49,7 +48,7 @@ function JuzTab({ onSelectJuz, onClose, bottomInset = 0 }: JuzTabProps) {
   );
 
   return (
-    <BottomSheetScrollView
+    <ScrollView
       style={styles.scrollView}
       contentContainerStyle={[
         styles.contentContainer,
@@ -80,7 +79,7 @@ function JuzTab({ onSelectJuz, onClose, bottomInset = 0 }: JuzTabProps) {
           </View>
         ))}
       </View>
-    </BottomSheetScrollView>
+    </ScrollView>
   );
 }
 

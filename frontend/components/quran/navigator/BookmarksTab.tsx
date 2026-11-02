@@ -1,11 +1,12 @@
-import { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
   InteractionManager,
   Pressable,
+  ScrollView,
   StyleSheet,
+  TextInput,
   View,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -216,7 +217,7 @@ function BookmarksTab({
   }, [bookmarks, filteredBookmarks, trimmedQuery]);
 
   return (
-    <BottomSheetScrollView
+    <ScrollView
       style={styles.scrollView}
       contentContainerStyle={[
         styles.contentContainer,
@@ -228,7 +229,7 @@ function BookmarksTab({
     >
       {hasBookmarks ? (
         <View>
-          <BottomSheetTextInput
+          <TextInput
             style={styles.searchInput}
             placeholder="Search bookmarks..."
             placeholderTextColor={themeColors.textTertiary}
@@ -264,7 +265,7 @@ function BookmarksTab({
           Tap an ayah and choose Bookmark to save your first one.
         </Footnote>
       )}
-    </BottomSheetScrollView>
+    </ScrollView>
   );
 }
 

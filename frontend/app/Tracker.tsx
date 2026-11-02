@@ -1,8 +1,6 @@
 // frontend/app/Tracker.tsx
-import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CompletionRings from "@/components/tracking/CompletionRings";
 import HabitEditor from "@/components/tracking/HabitEditor";
@@ -12,7 +10,6 @@ import QadaCard from "@/components/tracking/QadaCard";
 import StreakHero from "@/components/tracking/StreakHero";
 import GlassSurface from "@/components/ui/GlassSurface";
 import Screen from "@/components/ui/Screen";
-import ScreenHeader from "@/components/ui/ScreenHeader";
 import SectionHeader from "@/components/ui/SectionHeader";
 import { Footnote } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
@@ -29,9 +26,7 @@ export default function Tracker() {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
   const screenMargin = useScreenMargin();
-  const router = useRouter();
 
   const stats = useTrackingStats();
   const { habits, create, update, archive, remove, reorder } = useHabits();
@@ -71,20 +66,10 @@ export default function Tracker() {
   return (
     <Screen safeArea={false}>
       <ScrollView
-        contentInsetAdjustmentBehavior="never"
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          { paddingHorizontal: screenMargin },
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + 120 },
-        ]}
+        contentContainerStyle={[{ paddingHorizontal: screenMargin }, { paddingBottom: 120 }]}
       >
-        <ScreenHeader
-          title="Tracker"
-          leadingIcon="chevron-back"
-          onLeadingPress={() => router.back()}
-          leadingAccessibilityLabel="Go back"
-        />
-
         <View style={styles.streakSlot}>
           <StreakHero streak={stats?.streak ?? 0} />
         </View>

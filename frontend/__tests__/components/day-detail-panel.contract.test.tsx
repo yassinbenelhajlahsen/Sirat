@@ -1,11 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { View } = require("react-native");
-  const Comp = ({ children }: any) => require("react").createElement(View, null, children);
-  return { __esModule: true, default: Comp, BottomSheetView: Comp };
-});
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
   return {

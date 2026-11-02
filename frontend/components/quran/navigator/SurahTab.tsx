@@ -1,10 +1,11 @@
-import { BottomSheetFlatList, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
+  FlatList,
   InteractionManager,
   ListRenderItem,
   StyleProp,
   StyleSheet,
+  TextInput,
   View,
   ViewStyle,
   useWindowDimensions,
@@ -308,7 +309,7 @@ function SurahTab({
 
   const stickySearch = (
     <View style={styles.searchContainer}>
-      <BottomSheetTextInput
+      <TextInput
         style={styles.searchInput}
         placeholder="Search verses or 2:255"
         placeholderTextColor={themeColors.textTertiary}
@@ -323,7 +324,7 @@ function SurahTab({
   return (
     <View style={styles.container}>
       {stickySearch}
-      <BottomSheetFlatList
+      <FlatList
         data={data as readonly SurahItem[]}
         extraData={numColumns}
         renderItem={renderItem}

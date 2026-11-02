@@ -16,6 +16,7 @@ import { distanceKm } from "@/utils/geo";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
+import { useIsFocused } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,10 +28,6 @@ import {
   View,
 } from "react-native";
 import MapView, { Region } from "react-native-maps";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getCachedMosques,
@@ -42,7 +39,6 @@ type Perm = "undetermined" | "denied" | "granted";
 type LatLng = { latitude: number; longitude: number };
 
 const RECENTER_SIZE = 48;
-const RECENTER_GAP = 12;
 const LOAD_ERROR = "Couldn't load nearby mosques.";
 
 // Apple Maps never reports `isGesture`, so our own animations are filtered by
@@ -92,26 +88,17 @@ export default function MosqueScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [region, setRegion] = useState<Region | null>(null);
+  // A ref, not state: every pan would otherwise re-render the whole screen and
+  // the sheet list for a value only read on "Search this area".
+  const regionRef = useRef<Region | null>(null);
   const [searchedCenter, setSearchedCenter] = useState<LatLng | null>(null);
   const [showSearchArea, setShowSearchArea] = useState(false);
 
-  // Rests above the floating glass tab bar.
+  // The native sheet covers the tab bar, so it can be swiped away and a button
+  // brings it back. It also hides when another tab is focused.
   const tabBarClearance = useTabBarClearance();
-
-  // The sheet's live top edge — drives the recenter button so it sticks just
-  // above the mosque list as the sheet is dragged.
-  const sheetPosition = useSharedValue(0);
-  const recenterAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY: Math.max(
-          insets.top + 8,
-          sheetPosition.value - RECENTER_SIZE - RECENTER_GAP,
-        ),
-      },
-    ],
-  }));
+  const isFocused = useIsFocused();
+  const [sheetOpen, setSheetOpen] = useState(true);
 
   const checkStatus = async () => {
     const sOn = await Location.hasServicesEnabledAsync();
@@ -256,6 +243,7 @@ export default function MosqueScreen() {
   };
 
   const handleSearchThisArea = async () => {
+    const region = regionRef.current;
     if (!region) return;
     setShowSearchArea(false);
     await fetchAround({ latitude: region.latitude, longitude: region.longitude });
@@ -369,7 +357,7 @@ export default function MosqueScreen() {
         showsUserLocation
         initialRegion={initialRegion}
         onRegionChangeComplete={(r) => {
-          setRegion(r);
+          regionRef.current = r;
           if (Date.now() < ignoreRegionUntilRef.current) return;
           setShowSearchArea(shouldOfferAreaSearch(r, searchedCenter));
         }}
@@ -454,8 +442,8 @@ export default function MosqueScreen() {
         </View>
       )}
 
-      <Animated.View
-        style={[styles.recenterWrap, recenterAnimatedStyle]}
+      <View
+        style={[styles.recenterWrap, { top: insets.top + 12 }]}
         pointerEvents="box-none"
       >
         <IconButton
@@ -467,7 +455,21 @@ export default function MosqueScreen() {
           onPress={recenter}
           accessibilityLabel="Recenter map on your location"
         />
-      </Animated.View>
+      </View>
+
+      {!sheetOpen ? (
+        <View style={[styles.reopenWrap, { bottom: tabBarClearance + 12 }]} pointerEvents="box-none">
+          <IconButton
+            icon="list"
+            variant="glass"
+            size={RECENTER_SIZE}
+            iconSize={20}
+            color={colors.white}
+            onPress={() => setSheetOpen(true)}
+            accessibilityLabel="Show nearby mosques"
+          />
+        </View>
+      ) : null}
 
       <MosqueSheet
         mosques={mosques}
@@ -475,8 +477,8 @@ export default function MosqueScreen() {
         selectedId={selectedId}
         onSelect={onSelectMosque}
         onDirections={(m) => openDirections(m.lat, m.lng)}
-        bottomInset={tabBarClearance}
-        animatedPosition={sheetPosition}
+        visible={sheetOpen && isFocused}
+        onClose={() => setSheetOpen(false)}
       />
     </View>
   );
@@ -550,7 +552,10 @@ const createStyles = (theme: AppTheme) => {
     },
     recenterWrap: {
       position: "absolute",
-      top: 0,
+      right: spacing.lg,
+    },
+    reopenWrap: {
+      position: "absolute",
       right: spacing.lg,
     },
   });

@@ -1,20 +1,13 @@
 // frontend/components/calendar/MonthPickerSheet.tsx
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
-import SheetBackground from "@/components/ui/SheetBackground";
-import SheetHeader from "@/components/ui/SheetHeader";
+import NativeSheet from "@/components/ui/NativeSheet";
 import { Body, Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { useHaptics } from "@/hooks/useHaptics";
-
-function PickerSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
-  return <SheetBackground {...p} solid />;
-}
 
 type Props = {
   visible: boolean;
@@ -45,12 +38,6 @@ export default function MonthPickerSheet({
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const haptics = useHaptics();
-  const tabBarClearance = useTabBarClearance();
-
-  const handleIndicatorStyle = useMemo(
-    () => ({ backgroundColor: withOpacity(colors.white, 0.3), width: 38 }),
-    [colors.white],
-  );
 
   const years = useMemo(() => {
     const list: number[] = [];
@@ -62,35 +49,9 @@ export default function MonthPickerSheet({
 
   const [year, setYear] = useState(viewYear);
 
-  const [mounted, setMounted] = useState(visible);
-  const sheetRef = useRef<BottomSheet>(null);
-  const previousVisibleRef = useRef(visible);
-
   useEffect(() => {
-    if (visible) {
-      setMounted(true);
-      setYear(viewYear);
-    }
+    if (visible) setYear(viewYear);
   }, [visible, viewYear]);
-
-  useEffect(() => {
-    if (visible && !previousVisibleRef.current) {
-      sheetRef.current?.snapToIndex(0);
-    } else if (!visible && previousVisibleRef.current) {
-      sheetRef.current?.close();
-    }
-    previousVisibleRef.current = visible;
-  }, [visible]);
-
-  const handleSheetChange = useCallback(
-    (index: number) => {
-      if (index === -1) {
-        setMounted(false);
-        onClose();
-      }
-    },
-    [onClose],
-  );
 
   const isMonthInRange = useCallback(
     (y: number, m: number) => {
@@ -108,21 +69,9 @@ export default function MonthPickerSheet({
     [haptics, onSelect, year],
   );
 
-  if (!mounted) return null;
-
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      enableDynamicSizing
-      enablePanDownToClose
-      backgroundComponent={PickerSheetBackground}
-      handleIndicatorStyle={handleIndicatorStyle}
-      onChange={handleSheetChange}
-    >
-      <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 16 }]}>
-        <SheetHeader title="Jump to month" />
-
+    <NativeSheet visible={visible} onClose={onClose} title="Jump to month">
+      <View style={styles.body}>
         <View style={styles.yearRow}>
           {years.map((y) => {
             const active = y === year;
@@ -187,15 +136,15 @@ export default function MonthPickerSheet({
             );
           })}
         </View>
-      </BottomSheetView>
-    </BottomSheet>
+      </View>
+    </NativeSheet>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    body: { paddingHorizontal: spacing.xl, paddingTop: 0 },
+    body: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl },
     yearRow: {
       flexDirection: "row",
       gap: spacing.sm,

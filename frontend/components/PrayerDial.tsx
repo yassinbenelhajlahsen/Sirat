@@ -15,7 +15,7 @@ import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import DisplayNumber from "@/components/ui/DisplayNumber";
 import { formatMonthDay } from "@/utils/formatDate";
 import { Caption } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import { darkTheme, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
@@ -97,6 +97,10 @@ export default function PrayerDial({
 }: PrayerDialProps) {
   const { theme } = useTheme();
   const { colors } = theme;
+  // The disc is always a night sky, so on the cream Light theme its text and
+  // ring gaps use the Dark palette.
+  const isLight = theme.name === "light";
+  const dialColors = isLight ? darkTheme.colors : colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   // The sky advances on its own clock. `now` short-circuits it for tests.
@@ -150,7 +154,7 @@ export default function PrayerDial({
     day,
     statuses,
     daylight: daylightLabel(solar?.sunrise ?? null, solar?.sunset ?? null),
-    colors,
+    colors: dialColors,
   });
 
   const loggedCount = countLogged(statuses);
@@ -190,6 +194,16 @@ export default function PrayerDial({
             <Stop offset="1" stopColor={colors.accent} stopOpacity="0" />
           </RadialGradient>
         </Defs>
+
+        {/* Days without a live sky (Calendar) still get the dark disc on Light. */}
+        {isLight ? (
+          <Circle
+            cx={DIAL.cx}
+            cy={DIAL.cy}
+            r={DIAL.discRadius}
+            fill={darkTheme.colors.primaryHighlight}
+          />
+        ) : null}
 
         {/* Sky disc: the whole disc is sky, horizon at the bottom, zenith at the top. */}
         {stops ? (
@@ -231,7 +245,7 @@ export default function PrayerDial({
                 key={i}
                 d={s.d}
                 fill="none"
-                stroke={ringColor(s, nowMinutes, colors.primaryDark)}
+                stroke={ringColor(s, nowMinutes, dialColors.primaryDark)}
                 strokeWidth={DIAL.ringWidth}
               />
             ))}
@@ -343,14 +357,19 @@ export default function PrayerDial({
       <View style={styles.centre} pointerEvents="none">
         <Caption
           testID="dial-label"
-          color={colors.textSecondary}
+          color={dialColors.textSecondary}
           style={styles.centreLabel}
           numberOfLines={1}
         >
           {centre.label}
         </Caption>
         {centre.value ? (
-          <DisplayNumber testID="dial-value" value={centre.value} size={centre.size} />
+          <DisplayNumber
+            testID="dial-value"
+            value={centre.value}
+            size={centre.size}
+            color={dialColors.white}
+          />
         ) : null}
         {centre.sub ? (
           <Caption

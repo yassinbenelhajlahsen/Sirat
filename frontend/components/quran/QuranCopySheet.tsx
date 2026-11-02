@@ -1,21 +1,14 @@
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
 import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
-import SheetBackground from "@/components/ui/SheetBackground";
-import SheetHeader from "@/components/ui/SheetHeader";
+import NativeSheet from "@/components/ui/NativeSheet";
 import { Callout } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { formatCopyText } from "@/services/quranCopyText";
 import { NormalizedAyah } from "@/services/quranData";
-
-function CopySheetBackground(p: Parameters<typeof SheetBackground>[0]) {
-  return <SheetBackground {...p} solid />;
-}
 
 type QuranCopySheetProps = {
   visible: boolean;
@@ -42,13 +35,6 @@ export default function QuranCopySheet({
   const themeColors = theme.colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Stays mounted through the close animation; only unmounts once the sheet
-  // reports it has fully closed (onChange === -1), so closing animates instead
-  // of snapping shut.
-  const [mounted, setMounted] = useState(visible);
-  const sheetRef = useRef<BottomSheet>(null);
-  const previousVisibleRef = useRef(visible);
-
   // `visible` and `ayah` clear together on close, so keep the last ayah around
   // for the duration of the close animation.
   const lastAyahRef = useRef(ayah);
@@ -57,69 +43,20 @@ export default function QuranCopySheet({
   }
   const activeAyah = ayah ?? lastAyahRef.current;
 
-  // The sheet runs full-height to the screen bottom, so its content is padded
-  // past the floating glass tab bar.
-  const tabBarClearance = useTabBarClearance();
-
-  useEffect(() => {
-    if (visible) {
-      setMounted(true);
-    }
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible && !previousVisibleRef.current) {
-      sheetRef.current?.snapToIndex(0);
-    } else if (!visible && previousVisibleRef.current) {
-      sheetRef.current?.close();
-    }
-    previousVisibleRef.current = visible;
-  }, [visible]);
-
-  const handleSheetChange = useCallback(
-    (index: number) => {
-      if (index === -1) {
-        setMounted(false);
-        onClose();
-      }
-    },
-    [onClose],
-  );
-
-  const handleIndicatorStyle = useMemo(
-    () => ({
-      backgroundColor: withOpacity(themeColors.white, 0.3),
-      width: 38,
-    }),
-    [themeColors.white],
-  );
-
   const enabledCount = [showArabic, showEnglish, showTransliteration].filter(
     Boolean,
   ).length;
   const showCopyAll = enabledCount > 1;
 
-  if (!mounted || !activeAyah) {
+  if (!activeAyah) {
     return null;
   }
 
   const title = `${activeAyah.surahNameEn} ${activeAyah.surahNumber}:${activeAyah.ayahNumber}`;
 
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      enableDynamicSizing
-      enablePanDownToClose
-      backgroundComponent={CopySheetBackground}
-      handleIndicatorStyle={handleIndicatorStyle}
-      onChange={handleSheetChange}
-    >
-      <BottomSheetView
-        style={[styles.content, { paddingBottom: tabBarClearance + 24 }]}
-      >
-        <SheetHeader title={title} subtitle="Copy ayah text" onClose={onClose} />
-
+    <NativeSheet visible={visible} onClose={onClose} title={title}>
+      <View style={styles.content}>
         <View style={styles.optionList}>
           {showArabic ? (
             <CopyRow
@@ -215,8 +152,8 @@ export default function QuranCopySheet({
             onPress={onAddWidget}
           />
         </View>
-      </BottomSheetView>
-    </BottomSheet>
+      </View>
+    </NativeSheet>
   );
 }
 

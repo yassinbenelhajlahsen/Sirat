@@ -72,7 +72,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/force-update-gate.contract.test.tsx`
 - `shared component contracts testing`
   - `components/*.contract.test.tsx`
-  - `components/sheet-background.contract.test.tsx`
+  - `components/native-sheet.contract.test.tsx` — native sheet keeps its title and content while closing
 - `screen level contract tests testing`
   - `screens/screen-contracts.test.tsx`
   - `screens/nearby-mosques.contract.test.tsx`
@@ -98,14 +98,14 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `navigation/glass-tab-bar.contract.test.tsx`
 - `design audit follow-ups (Sept 2026) testing`
   - `constants/theme-text-tokens.test.ts` — `textPrimary/Secondary/Tertiary/Disabled` and `iconMuted` clear WCAG contrast on every theme's canvas
-  - `components/ui/primitives.contract.test.tsx` — shared `Button`, `IconButton` (44pt target + hitSlop), `SheetHeader`, `SkeletonBar`
+  - `components/ui/primitives.contract.test.tsx` — shared `Button`, `IconButton` (44pt target + hitSlop), `SheetTitleBar`, `SkeletonBar`
   - `hooks/useReducedMotion.test.ts` — mirrors the OS Reduce Motion setting and its live changes
   - `screens/nearby-mosques.contract.test.tsx` — inline load error with retry (no Alert), `shouldOfferAreaSearch` distance gate
   - `components/compass-dial.contract.test.tsx` — themed Kaaba mark replaces the emoji
   - `components/prayer-times-list.contract.test.tsx` was removed with the unused `PrayerTimesList` component
 - `iOS-native polish (Direction A) testing`
   - `components/ui/app-icon.test.tsx` — every `IONICON_TO_SF` entry renders an SF Symbol on iOS and the Ionicon on Android; unmapped names fall back on both
-  - `components/ui/segmented.test.tsx` — radiogroup/radio roles, selected state, `onChange` value, thumb position per index
+  - `components/ui/segmented.ios.test.tsx` — native segmented control: radiogroup, selected state, `onChange` value
   - `components/ui/section-header.test.tsx` — `SectionHeader` (+ action and footer), `ScreenHeader` (title, supporting line, leading control) and `EmptyState` contracts
   - `components/ui/press-variants.test.tsx` — `PressableScale` `row` renders no transform; `button`/`card` do; the `row` highlight takes its corners from the `radius` prop, falling back to the pressable's own `borderRadius`
   - `components/ui/aurora.test.tsx` — the exported bloom opacities stay toned down

@@ -1,11 +1,8 @@
 import { useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import IconButton from "@/components/ui/IconButton";
 import Screen from "@/components/ui/Screen";
-import ScreenHeader from "@/components/ui/ScreenHeader";
 import { Footnote, Subhead } from "@/components/ui/Text";
 import NotificationSettings from "@/components/NotificationSettings";
 import { AccountSection } from "@/components/settings/AccountSection";
@@ -44,7 +41,6 @@ export default function Settings() {
   const { theme, themeName } = useTheme();
   const { colors, spacing } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const haptics = useHaptics();
   const screenMargin = useScreenMargin();
@@ -102,34 +98,13 @@ export default function Settings() {
   return (
     <Screen safeArea={false}>
       <ScrollView
-        contentInsetAdjustmentBehavior="never"
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          { paddingHorizontal: screenMargin },
-          {
-            paddingTop: spacing.sm,
-            paddingBottom: insets.bottom + spacing.xxxl,
-          },
-        ]}
+        contentContainerStyle={{
+          paddingHorizontal: screenMargin,
+          paddingBottom: spacing.xxxl,
+        }}
       >
-        <View style={styles.grabber} />
-
-        <ScreenHeader
-          title="Settings"
-          trailing={
-            <IconButton
-              icon="close"
-              variant="glass"
-              iconSize={20}
-              onPress={() => {
-                haptics("selection");
-                router.back();
-              }}
-              accessibilityLabel="Close settings"
-            />
-          }
-        />
-
         {/* Account */}
         <AccountSection
           onSignIn={() => router.push("/SignIn")}

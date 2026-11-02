@@ -134,40 +134,59 @@ afterEach(() => {
 jest.mock("react-native-worklets", () => require("react-native-worklets/src/mock"));
 jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
 
-// @gorhom/bottom-sheet renders as plain views/list in tests so screens that
-// embed the sheet can be rendered and queried.
-jest.mock("@gorhom/bottom-sheet", () => {
+// Native SwiftUI hosts only exist in a device build. Sheets render their
+// children inline while presented, so screens stay queryable.
+jest.mock("@expo/ui/swift-ui", () => {
   const React = require("react");
-  const { View, FlatList, ScrollView, TextInput } = require("react-native");
-  const Passthrough = ({ children, ...props }: any) =>
-    React.createElement(View, props, children);
+  const { View } = require("react-native");
+  const Passthrough = ({ children }: any) => React.createElement(View, null, children);
   return {
-    __esModule: true,
-    default: React.forwardRef(function BottomSheet({ children, ...props }: any, _ref: any) {
-      return React.createElement(View, props, children);
-    }),
-    BottomSheetView: Passthrough,
-    BottomSheetScrollView: ({ children, ...props }: any) =>
-      React.createElement(ScrollView, props, children),
-    BottomSheetFlatList: ({ ListHeaderComponent, ...props }: any) =>
-      React.createElement(
+    Host: Passthrough,
+    Group: Passthrough,
+    RNHostView: Passthrough,
+    BottomSheet: ({ isPresented, children }: any) =>
+      isPresented ? React.createElement(View, null, children) : null,
+    // Each tagged Text becomes a pressable radio so tests can drive the control.
+    Text: ({ children, modifiers }: any) => {
+      const { Text: RNText } = require("react-native");
+      return React.createElement(RNText, { modifiers }, children);
+    },
+    Picker: ({ selection, onSelectionChange, children }: any) => {
+      const { Pressable } = require("react-native");
+      return React.createElement(
         View,
         null,
-        ListHeaderComponent
-          ? React.createElement(
-              typeof ListHeaderComponent === "function"
-                ? ListHeaderComponent
-                : () => ListHeaderComponent,
-            )
-          : null,
-        React.createElement(FlatList, props),
-      ),
-    BottomSheetTextInput: TextInput,
-    useBottomSheet: () => ({
-      snapToIndex: jest.fn(),
-      expand: jest.fn(),
-      collapse: jest.fn(),
-      close: jest.fn(),
-    }),
+        React.Children.map(children, (child: any) => {
+          const mods = child.props.modifiers ?? [];
+          const value = mods.find((m: any) => "tag" in m)?.tag;
+          const label = mods.find((m: any) => "accessibilityLabel" in m)?.accessibilityLabel;
+          return React.createElement(
+            Pressable,
+            {
+              accessibilityRole: "radio",
+              accessibilityLabel: label ?? child.props.children,
+              accessibilityState: { selected: value === selection },
+              onPress: () => onSelectionChange(value),
+            },
+            child,
+          );
+        }),
+      );
+    },
   };
 });
+jest.mock("@expo/ui/swift-ui/modifiers", () => {
+  const modifier = () => ({});
+  return {
+    tag: (tag: unknown) => ({ tag }),
+    accessibilityLabel: (accessibilityLabel: string) => ({ accessibilityLabel }),
+    pickerStyle: modifier,
+    interactiveDismissDisabled: modifier,
+    preferredColorScheme: modifier,
+    presentationBackgroundInteraction: modifier,
+    presentationDetents: modifier,
+    presentationDragIndicator: modifier,
+    presentationSizing: modifier,
+  };
+});
+

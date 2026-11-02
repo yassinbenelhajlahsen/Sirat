@@ -5,11 +5,6 @@ import HabitEditor from "@/components/tracking/HabitEditor";
 import { ThemeProvider } from "@/context/ThemeContext";
 import type { Habit } from "@/services/habitTracker";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { View, TextInput } = require("react-native");
-  const Comp = ({ children }: any) => <View>{children}</View>;
-  return { __esModule: true, default: Comp, BottomSheetView: Comp, BottomSheetTextInput: TextInput };
-});
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
   return { ...actual, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };

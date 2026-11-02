@@ -104,8 +104,9 @@ export function withOpacity(hexColor: string, alpha: number): string {
 export type GlassTier = { fill: string; border: string; blur: number; solid: string };
 export type Materials = { chrome: GlassTier; card: GlassTier; row: GlassTier };
 
-// `cardColor` is the one opaque color every content card and row paints, so
-// neighbouring cards match regardless of size or what sits behind them.
+// `cardColor` is the one color every content card and row paints, so
+// neighbouring cards match regardless of size. On the dark themes it is a dark
+// tint rather than a flat fill, so the background gradient still shows through.
 export function buildMaterials(colors: AppColors, isLight: boolean, cardColor: string): Materials {
   // On dark themes glass is a light film; on light themes a dark tint.
   const tintBase = isLight ? colors.black : colors.white;
@@ -242,13 +243,12 @@ const lightColors: AppColors = {
 
 export const defaultTheme: AppTheme = {
   name: "default", colors: defaultColors, spacing, typography, type, radii,
-  // Measured from the old clear-glass cards on the green gradient.
-  materials: buildMaterials(defaultColors, false, "#2F533F"),
+  materials: buildMaterials(defaultColors, false, "rgba(0,0,0,0.3)"),
   aurora: { accent: defaultColors.accent, secondary: defaultColors.accentSecondary, core: defaultColors.accentGlow },
 };
 export const darkTheme: AppTheme = {
   name: "dark", colors: darkColors, spacing, typography, type, radii,
-  materials: buildMaterials(darkColors, false, darkColors.primaryHighlight),
+  materials: buildMaterials(darkColors, false, "rgba(0,0,0,0.28)"),
   // Cool indigo + teal aurora — harmonises with the navy canvas; gold accent still pops.
   aurora: { accent: "#6E8BFF", secondary: darkColors.accentSecondary, core: "#8FA8FF" },
 };

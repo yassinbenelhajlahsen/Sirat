@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 
 import Button from "@/components/ui/Button";
 import IconButton, { ICON_BUTTON_MIN_TARGET } from "@/components/ui/IconButton";
-import SheetHeader from "@/components/ui/SheetHeader";
+import SheetTitleBar from "@/components/ui/SheetTitleBar";
 import SkeletonBar from "@/components/ui/SkeletonBar";
 import { ThemeProvider } from "@/context/ThemeContext";
 
@@ -68,21 +68,15 @@ describe("IconButton", () => {
   });
 });
 
-describe("SheetHeader", () => {
-  it("renders title, subtitle and wires the close control", () => {
+describe("SheetTitleBar", () => {
+  it("renders the title and wires the close control", () => {
     const onClose = jest.fn();
     const { getByText, getByLabelText } = render(
-      wrap(<SheetHeader title="Search" subtitle="Find anything" onClose={onClose} />),
+      wrap(<SheetTitleBar title="Search" onClose={onClose} />),
     );
     expect(getByText("Search")).toBeTruthy();
-    expect(getByText("Find anything")).toBeTruthy();
     fireEvent.press(getByLabelText("Close"));
     expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("omits the close control when there is no handler", () => {
-    const { queryByLabelText } = render(wrap(<SheetHeader title="Log Fajr" />));
-    expect(queryByLabelText("Close")).toBeNull();
   });
 });
 

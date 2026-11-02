@@ -30,11 +30,6 @@ jest.mock("@/components/PressableScale", () => {
   );
 });
 
-jest.mock("@/components/ui/SheetBackground", () => {
-  const { View } = require("react-native");
-  return ({ style }: any) => <View style={style} />;
-});
-
 jest.mock("@/components/quran/navigator/SurahTab", () => {
   const { Pressable, Text, TextInput, View } = require("react-native");
   return function SurahTabMock({

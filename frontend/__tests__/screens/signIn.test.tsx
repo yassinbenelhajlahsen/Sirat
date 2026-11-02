@@ -144,9 +144,8 @@ describe("SignIn screen", () => {
     alertSpy.mockRestore();
   });
 
-  it("tapping Not now calls router.back()", () => {
-    const { getByLabelText } = render(<SignIn />);
-    fireEvent.press(getByLabelText("Not now"));
-    expect(mockBack).toHaveBeenCalledTimes(1);
+  it("has no Not now button; the sheet is dismissed by swiping down", () => {
+    const { queryByText } = render(<SignIn />);
+    expect(queryByText("Not now")).toBeNull();
   });
 });

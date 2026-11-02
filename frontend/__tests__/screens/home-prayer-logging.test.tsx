@@ -5,11 +5,6 @@ import Home from "@/app/(tabs)/index";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { getDayStatuses } from "@/services/prayerTracker";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { View } = require("react-native");
-  const Comp = ({ children }: any) => <View>{children}</View>;
-  return { __esModule: true, default: Comp, BottomSheetView: Comp };
-});
 jest.mock("@gorhom/portal", () => ({ Portal: ({ children }: any) => children }));
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");

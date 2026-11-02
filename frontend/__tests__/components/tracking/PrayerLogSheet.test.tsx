@@ -3,11 +3,6 @@ import { fireEvent, render } from "@testing-library/react-native";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import { ThemeProvider } from "@/context/ThemeContext";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { View } = require("react-native");
-  const Comp = ({ children }: any) => <View>{children}</View>;
-  return { __esModule: true, default: Comp, BottomSheetView: Comp };
-});
 jest.mock("@gorhom/portal", () => ({ Portal: ({ children }: any) => children }));
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");

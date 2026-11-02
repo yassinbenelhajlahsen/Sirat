@@ -1,13 +1,11 @@
-import BottomSheet from "@gorhom/bottom-sheet";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useSafeAreaFrame } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import SheetBackground from "@/components/ui/SheetBackground";
-import SheetHeader from "@/components/ui/SheetHeader";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import NativeSheet from "@/components/ui/NativeSheet";
+import { Footnote } from "@/components/ui/Text";
+import { type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { QuranBookmark } from "@/services/quranBookmarks";
 import { NormalizedSurahMeta } from "@/services/quranData";
 
@@ -18,11 +16,6 @@ import SurahTab, {
   QuranAyahSearchResult,
   QuranJuzSearchResult,
 } from "./SurahTab";
-
-// Stable module-level backgroundComponent — avoids recreating on each render.
-function NavigatorSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
-  return <SheetBackground {...p} opaque />;
-}
 
 type LastReadAyah = {
   surahNumber: number;
@@ -53,7 +46,7 @@ type QuranNavigatorModalProps = {
   onClose: () => void;
 };
 
-const SNAP_POINTS = ["78%"];
+const DETENTS = [0.78];
 
 function NavigatorModal({
   visible,
@@ -78,91 +71,24 @@ function NavigatorModal({
 }: QuranNavigatorModalProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const frame = useSafeAreaFrame();
-
-  // gorhom 5.2 + reanimated 4 fails to bound this sheet's content to the snap
-  // height, so the content View (flex:1) grows to its children and the
-  // BottomSheetFlatList lays out at full content height with no scroll
-  // viewport — the last rows fall off-screen. Cap the content host to the snap
-  // height (computed from the real, correct window frame) so the list is
-  // bounded and scrolls normally. Matches SNAP_POINTS ("78%").
-  const contentMaxHeight = Math.round(frame.height * 0.78);
-
-  // The sheet runs full-height to the screen bottom (one continuous surface,
-  // like the display-settings sheet — no separate chrome strip to desync on
-  // close). Pad each tab's scroll content past the floating glass tab bar so
-  // the last rows aren't trapped behind the pill.
-  const tabBarClearance = useTabBarClearance();
+  // The native sheet covers the tab bar, so only the home indicator needs clearing.
+  const bottomInset = useSafeAreaInsets().bottom;
 
   const [selectedTab, setSelectedTab] = useState<NavigatorTabKey>("surah");
-  // Stays mounted through the close animation; only unmounts once the sheet
-  // reports it has fully closed (onChange === -1), so closing animates instead
-  // of snapping shut.
-  const [mounted, setMounted] = useState(visible);
-  const sheetRef = useRef<BottomSheet>(null);
-  const previousVisibleRef = useRef(visible);
-
   useEffect(() => {
-    if (visible) {
-      setMounted(true);
-    }
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible && !previousVisibleRef.current) {
-      setSelectedTab(initialTab);
-      sheetRef.current?.snapToIndex(0);
-    } else if (!visible && previousVisibleRef.current) {
-      sheetRef.current?.close();
-    }
-    previousVisibleRef.current = visible;
+    if (visible) setSelectedTab(initialTab);
   }, [initialTab, visible]);
 
   const handleSelectTab = useCallback((tab: NavigatorTabKey) => {
     setSelectedTab(tab);
   }, []);
 
-  const handleSheetChange = useCallback(
-    (index: number) => {
-      if (index === -1) {
-        setMounted(false);
-        onClose();
-      }
-    },
-    [onClose],
-  );
-
-  const handleIndicatorStyle = useMemo(
-    () => ({
-      backgroundColor: withOpacity(theme.colors.white, 0.3),
-      width: 38,
-    }),
-    [theme.colors.white],
-  );
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      snapPoints={SNAP_POINTS}
-      enableDynamicSizing={false}
-      enablePanDownToClose
-      backgroundComponent={NavigatorSheetBackground}
-      handleIndicatorStyle={handleIndicatorStyle}
-      onChange={handleSheetChange}
-    >
-      <View style={[styles.content, { maxHeight: contentMaxHeight }]}>
-        <View style={styles.modalHeader}>
-          <SheetHeader
-            title="Search"
-            subtitle="Find a surah, ayah, juz, or bookmark"
-            onClose={onClose}
-          />
-        </View>
+    <NativeSheet visible={visible} onClose={onClose} title="Search" detents={DETENTS}>
+      <View style={styles.content}>
+        <Footnote color={theme.colors.textSecondary} style={styles.hint}>
+          Find a surah, ayah, juz, or bookmark
+        </Footnote>
 
         <NavigatorTabs selectedTab={selectedTab} onSelectTab={handleSelectTab} />
 
@@ -175,7 +101,7 @@ function NavigatorModal({
               juzSearchResult={juzSearchResult}
               surahSearchQuery={surahSearchQuery}
               lastRead={lastRead}
-              bottomInset={tabBarClearance}
+              bottomInset={bottomInset}
               onSurahSearchQueryChange={onSurahSearchQueryChange}
               onSelectSurah={onSelectSurah}
               onSelectAyah={onSelectAyah}
@@ -186,14 +112,14 @@ function NavigatorModal({
             <JuzTab
               onSelectJuz={onSelectJuz}
               onClose={onClose}
-              bottomInset={tabBarClearance}
+              bottomInset={bottomInset}
             />
           ) : (
             <BookmarksTab
               bookmarks={bookmarks}
               filteredBookmarks={filteredBookmarks}
               bookmarkSearchQuery={bookmarkSearchQuery}
-              bottomInset={tabBarClearance}
+              bottomInset={bottomInset}
               onBookmarkSearchQueryChange={onBookmarkSearchQueryChange}
               onSelectBookmark={onSelectBookmark}
               onDeleteBookmark={onDeleteBookmark}
@@ -202,7 +128,7 @@ function NavigatorModal({
           )}
         </View>
       </View>
-    </BottomSheet>
+    </NativeSheet>
   );
 }
 
@@ -215,8 +141,9 @@ const createStyles = (_theme: AppTheme) => {
       flex: 1,
       paddingBottom: 12,
     },
-    modalHeader: {
+    hint: {
       paddingHorizontal: 20,
+      marginBottom: 8,
     },
     tabContentContainer: {
       flex: 1,

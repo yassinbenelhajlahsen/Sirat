@@ -3,11 +3,6 @@ import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 import { ThemeProvider } from "@/context/ThemeContext";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { View } = require("react-native");
-  const Comp = ({ children }: any) => <View>{children}</View>;
-  return { __esModule: true, default: Comp, BottomSheetView: Comp };
-});
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
   return {

@@ -269,8 +269,8 @@ export default function CalendarScreen() {
                 <IconButton
                   icon="chevron-back"
                   variant="plain"
-                  size={40}
-                  iconSize={20}
+                  size={36}
+                  iconSize={18}
                   color={colors.accent}
                   onPress={handlePrevMonth}
                   disabled={!canGoPrev}
@@ -291,8 +291,8 @@ export default function CalendarScreen() {
                 <IconButton
                   icon="chevron-forward"
                   variant="plain"
-                  size={40}
-                  iconSize={20}
+                  size={36}
+                  iconSize={18}
                   color={colors.accent}
                   onPress={handleNextMonth}
                   disabled={!canGoNext}
@@ -510,8 +510,14 @@ const createStyles = (theme: AppTheme) => {
   return StyleSheet.create({
     fill: { flex: 1 },
     header: { paddingTop: spacing.sm, marginBottom: spacing.sm },
-    monthSwitcher: { flexDirection: "row", alignItems: "center" },
-    monthLabel: { minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.xs },
+    // One light capsule around chevron, month and chevron.
+    monthSwitcher: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderRadius: 999,
+      backgroundColor: withOpacity(colors.white, 0.08),
+    },
+    monthLabel: { minHeight: 36, justifyContent: "center", paddingHorizontal: spacing.xs },
     weekdayRow: {
       flexDirection: "row",
       justifyContent: "space-between",

@@ -1,23 +1,13 @@
-import BottomSheet, {
-  BottomSheetFlatList,
-} from "@gorhom/bottom-sheet";
-import { Footnote, Headline } from "@/components/ui/Text";
+import { Footnote } from "@/components/ui/Text";
 import MosqueRow from "@/components/mosques/MosqueRow";
-import SheetBackground from "@/components/ui/SheetBackground";
-import { withOpacity } from "@/constants/theme";
+import NativeSheet from "@/components/ui/NativeSheet";
 import { useTheme } from "@/context/ThemeContext";
 import { distanceKm, formatDistanceShort } from "@/utils/geo";
 import type { Mosque } from "@/services/getNearbyMosques";
-import { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
-import { type SharedValue } from "react-native-reanimated";
+import { useCallback, useMemo } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
 
-// Opaque background (no GlassView/BlurView) — the sheet sits over a live MapView,
-// and a real-time backdrop filter forces a GPU readback of the redrawing map
-// every frame. A flat opaque gradient removes that per-frame cost entirely.
-function MosqueSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
-  return <SheetBackground {...p} opaque />;
-}
+const DETENTS = [0.18, 0.5, 0.92];
 
 type MosqueSheetProps = {
   mosques: Mosque[];
@@ -25,8 +15,8 @@ type MosqueSheetProps = {
   selectedId: string | null;
   onSelect: (m: Mosque) => void;
   onDirections: (m: Mosque) => void;
-  bottomInset: number;
-  animatedPosition?: SharedValue<number>;
+  visible: boolean;
+  onClose: () => void;
 };
 
 export default function MosqueSheet({
@@ -35,13 +25,11 @@ export default function MosqueSheet({
   selectedId,
   onSelect,
   onDirections,
-  bottomInset,
-  animatedPosition,
+  visible,
+  onClose,
 }: MosqueSheetProps) {
   const { theme } = useTheme();
   const { colors, spacing } = theme;
-
-  const snapPoints = useMemo(() => ["18%", "50%", "92%"], []);
 
   const rows = useMemo(() => {
     const r = mosques.slice(0, 10);
@@ -55,88 +43,57 @@ export default function MosqueSheet({
     return r;
   }, [mosques, userLoc]);
 
-  const handleStyle = {
-    backgroundColor: withOpacity(colors.white, 0.3),
-    width: 38,
-  };
+  const contentContainerStyle = useMemo(
+    () => ({ paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl }),
+    [spacing.xl, spacing.xxl],
+  );
 
-  function Header() {
-    const title = rows.length === 0 ? "No mosques nearby" : "Nearby mosques";
-    return (
-      <View style={{ paddingVertical: spacing.lg, gap: 2 }}>
-        <Headline color={colors.white}>{title}</Headline>
+  const renderItem = useCallback(
+    ({ item, index }: { item: Mosque; index: number }) => {
+      const km = userLoc
+        ? distanceKm(userLoc.latitude, userLoc.longitude, item.lat, item.lng)
+        : null;
+      return (
+        <MosqueRow
+          name={item.name}
+          address={item.address}
+          distanceLabel={km !== null ? formatDistanceShort(km) : null}
+          selected={item.id === selectedId}
+          separated={index > 0}
+          onPress={() => onSelect(item)}
+          onDirections={() => onDirections(item)}
+        />
+      );
+    },
+    [userLoc, selectedId, onSelect, onDirections],
+  );
+
+  return (
+    <NativeSheet
+      visible={visible}
+      onClose={onClose}
+      title={rows.length === 0 ? "No mosques nearby" : "Nearby mosques"}
+      detents={DETENTS}
+      backgroundInteraction
+    >
+      <View style={styles.fill}>
         {rows.length > 0 ? (
-          <Footnote color={colors.textTertiary}>
+          <Footnote color={colors.textTertiary} style={{ paddingHorizontal: spacing.xl }}>
             {`${rows.length} ${rows.length === 1 ? "result" : "results"}`}
           </Footnote>
         ) : null}
-      </View>
-    );
-  }
-
-  return (
-    <>
-      {/* Chrome behind the floating tab bar — a flat fill matching the sheet's
-          opaque bottom edge so the two read as one continuous surface. */}
-      <View
-        pointerEvents="none"
-        style={[
-          styles.chrome,
-          { height: bottomInset, backgroundColor: colors.primary },
-        ]}
-      />
-
-      <BottomSheet
-        index={0}
-        snapPoints={snapPoints}
-        bottomInset={bottomInset}
-        animatedPosition={animatedPosition}
-        enablePanDownToClose={false}
-        backgroundComponent={MosqueSheetBackground}
-        handleIndicatorStyle={handleStyle}
-      >
-        <BottomSheetFlatList
+        <FlatList
           data={rows}
           keyExtractor={(m) => m.id}
-          ListHeaderComponent={Header}
-          renderItem={({ item, index }) => {
-            const km = userLoc
-              ? distanceKm(
-                  userLoc.latitude,
-                  userLoc.longitude,
-                  item.lat,
-                  item.lng,
-                )
-              : null;
-            const distanceLabel = km !== null ? formatDistanceShort(km) : null;
-            return (
-              <MosqueRow
-                name={item.name}
-                address={item.address}
-                distanceLabel={distanceLabel}
-                selected={item.id === selectedId}
-                separated={index > 0}
-                onPress={() => onSelect(item)}
-                onDirections={() => onDirections(item)}
-              />
-            );
-          }}
-          contentContainerStyle={{
-            paddingHorizontal: spacing.xl,
-            paddingBottom: spacing.xl,
-          }}
+          renderItem={renderItem}
+          style={styles.fill}
+          contentContainerStyle={contentContainerStyle}
         />
-      </BottomSheet>
-    </>
+      </View>
+    </NativeSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  chrome: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: "hidden",
-  },
+  fill: { flex: 1 },
 });

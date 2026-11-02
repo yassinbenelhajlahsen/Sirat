@@ -15,6 +15,7 @@ jest.mock("expo-router", () => ({
     push: jest.fn(),
     back: jest.fn(),
   }),
+  useIsFocused: () => true,
 }));
 
 jest.mock("@/context/ThemeContext", () => ({

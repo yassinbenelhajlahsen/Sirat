@@ -4,11 +4,6 @@ import { Alert } from "react-native";
 import Tracker from "@/app/Tracker";
 import { ThemeProvider } from "@/context/ThemeContext";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { View, TextInput } = require("react-native");
-  const Comp = ({ children }: any) => <View>{children}</View>;
-  return { __esModule: true, default: Comp, BottomSheetView: Comp, BottomSheetTextInput: TextInput };
-});
 // react-native-svg is already mocked globally in jest.setup.ts via a Proxy
 // that handles Svg, Defs, RadialGradient, Rect, Stop and all other exports.
 // The local override in the brief was incomplete (missing Aurora's Defs/etc),
@@ -58,12 +53,6 @@ describe("Tracker screen", () => {
     expect(getByText("12")).toBeTruthy();
     expect(getByText("Qada")).toBeTruthy();
     expect(getByText("Read Qur'an")).toBeTruthy();
-  });
-
-  it("back button calls router.back", () => {
-    const { getByLabelText } = render(wrap(<Tracker />));
-    fireEvent.press(getByLabelText("Go back"));
-    expect(mockBack).toHaveBeenCalled();
   });
 
   it("asks before archiving a habit", () => {

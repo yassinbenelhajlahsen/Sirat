@@ -4,12 +4,6 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 
 import { defaultTheme } from "@/constants/theme";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { FlatList, View } = require("react-native");
-  const Comp = ({ children }: any) => require("react").createElement(View, null, children);
-  return { __esModule: true, default: Comp, BottomSheetView: Comp, BottomSheetFlatList: FlatList };
-});
-
 const mockPush = jest.fn();
 
 const mockRefresh = jest.fn(async () => {});
@@ -35,6 +29,7 @@ const mockSetNavigating = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
   useLocalSearchParams: jest.fn(),
+  useIsFocused: () => true,
 }));
 
 jest.mock("@/context/ThemeContext", () => ({
@@ -872,7 +867,6 @@ describe("Screen contracts", () => {
     it("renders settings title and notifications contract", () => {
       const { getByText } = render(<Settings />);
 
-      expect(getByText("Settings")).toBeTruthy();
       expect(
         getByText(
           "Using live location. Turn this off to choose a fixed city.",

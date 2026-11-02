@@ -92,14 +92,18 @@ describe("PickerDialog", () => {
       />,
     );
     fireEvent.changeText(getByPlaceholderText("Search"), "cai");
-    await waitFor(() => {
-      expect(queryByText("Mecca")).toBeNull();
-      expect(queryByText("Cairo")).toBeTruthy();
-    });
+    // The search is debounced; give it room when the suite runs in parallel.
+    await waitFor(
+      () => {
+        expect(queryByText("Mecca")).toBeNull();
+        expect(queryByText("Cairo")).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
   });
 
-  it("returns null when not visible", () => {
-    const { toJSON } = render(
+  it("renders no sheet content when not visible", () => {
+    const { queryByText } = render(
       <PickerDialog
         visible={false}
         title="X"
@@ -108,6 +112,7 @@ describe("PickerDialog", () => {
         onClose={jest.fn()}
       />,
     );
-    expect(toJSON()).toBeNull();
+    expect(queryByText("X")).toBeNull();
+    expect(queryByText("Mecca")).toBeNull();
   });
 });

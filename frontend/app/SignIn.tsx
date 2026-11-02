@@ -9,14 +9,12 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useCallback, useEffect, useMemo } from "react";
-import { Alert, Platform, Pressable, StyleSheet, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Alert, Platform, StyleSheet, View } from "react-native";
 
-import Aurora from "@/components/ui/Aurora";
 import Button from "@/components/ui/Button";
 import GoogleIcon from "@/components/ui/GoogleIcon";
 import { Footnote, Title1 } from "@/components/ui/Text";
-import { withOpacity, type AppTheme } from "@/constants/theme";
+import { type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
 
@@ -66,88 +64,53 @@ export default function SignIn() {
     }
   }, [startAppleAuthenticationFlow]);
 
+  // The native form sheet supplies the surface, grabber and swipe-down to dismiss.
   return (
-    <Pressable style={styles.backdrop} onPress={() => router.back()}>
-      {/* Inner Pressable absorbs taps so they don't bubble to the backdrop */}
-      <Pressable onPress={() => {}} style={styles.cardWrapper}>
-        <View style={styles.card}>
-          {/* Same themed background every screen uses: base gradient + Aurora */}
-          <LinearGradient
-            colors={[colors.primaryDeep, colors.primary, colors.primaryLift]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
+    <View style={styles.content}>
+      <Title1 style={styles.headline} maxFontSizeMultiplier={1.2} accessibilityRole="header">
+        Sync your journey
+      </Title1>
+      <Footnote color={colors.textSecondary}>
+        Sign in to back up your tracker &amp; settings across devices.
+      </Footnote>
+
+      <View style={styles.stack}>
+        {Platform.OS === "ios" && (
+          // Apple's own control: required styling, localisation and the
+          // "Continue with" wording come for free.
+          <AppleAuthenticationButton
+            buttonType={AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={
+              theme.name === "light"
+                ? AppleAuthenticationButtonStyle.BLACK
+                : AppleAuthenticationButtonStyle.WHITE
+            }
+            cornerRadius={26}
+            style={styles.appleButton}
+            accessibilityLabel="Continue with Apple"
+            onPress={() => void signInWithApple()}
           />
-          <Aurora />
+        )}
 
-          <View style={styles.content}>
-            <Title1 style={styles.headline} maxFontSizeMultiplier={1.2} accessibilityRole="header">
-              {"Sync your\njourney"}
-            </Title1>
-            <Footnote color={colors.textSecondary}>
-              Sign in to back up your tracker &amp; settings across devices.
-            </Footnote>
-
-            <View style={styles.stack}>
-              {Platform.OS === "ios" && (
-                // Apple's own control: required styling, localisation and the
-                // "Continue with" wording come for free.
-                <AppleAuthenticationButton
-                  buttonType={AppleAuthenticationButtonType.CONTINUE}
-                  buttonStyle={AppleAuthenticationButtonStyle.WHITE}
-                  cornerRadius={26}
-                  style={styles.appleButton}
-                  accessibilityLabel="Continue with Apple"
-                  onPress={() => void signInWithApple()}
-                />
-              )}
-
-              <Button
-                label="Continue with Google"
-                variant="tonal"
-                size="lg"
-                leading={<GoogleIcon size={19} />}
-                onPress={() => void signInWithGoogle()}
-              />
-
-              <Button
-                label="Not now"
-                variant="ghost"
-                size="lg"
-                onPress={() => router.back()}
-                accessibilityLabel="Not now"
-              />
-            </View>
-          </View>
-        </View>
-      </Pressable>
-    </Pressable>
+        <Button
+          label="Continue with Google"
+          variant="tonal"
+          size="lg"
+          leading={<GoogleIcon size={19} />}
+          onPress={() => void signInWithGoogle()}
+        />
+      </View>
+    </View>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
-  const { colors, radii, spacing } = theme;
-  const isLightTheme = theme.name === "light";
+  const { spacing } = theme;
   return StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      backgroundColor: isLightTheme
-        ? withOpacity(colors.black, 0.24)
-        : withOpacity(colors.black, 0.70),
-      justifyContent: "center",
-      alignItems: "center",
-      padding: spacing.xxl,
-    },
-    cardWrapper: { width: "100%", maxWidth: 360 },
-    card: {
-      borderRadius: radii.card,
-      borderCurve: "continuous",
-      overflow: "hidden",
-    },
     content: {
       paddingTop: spacing.xxxl,
       paddingHorizontal: spacing.xxl,
-      paddingBottom: spacing.lg,
+      paddingBottom: spacing.xxl,
     },
     headline: { marginBottom: spacing.md },
     stack: {

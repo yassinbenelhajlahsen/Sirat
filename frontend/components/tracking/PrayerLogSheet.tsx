@@ -1,21 +1,14 @@
 // frontend/components/tracking/PrayerLogSheet.tsx
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
 import AppIcon from "@/components/ui/AppIcon";
-import SheetBackground from "@/components/ui/SheetBackground";
-import SheetHeader from "@/components/ui/SheetHeader";
+import NativeSheet from "@/components/ui/NativeSheet";
 import { Headline } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
-
-function LogSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
-  return <SheetBackground {...p} solid />;
-}
 
 type Props = {
   visible: boolean;
@@ -45,54 +38,10 @@ export default function PrayerLogSheet({
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const tabBarClearance = useTabBarClearance();
-
-  const handleIndicatorStyle = useMemo(
-    () => ({ backgroundColor: withOpacity(colors.white, 0.3), width: 38 }),
-    [colors.white],
-  );
-
-  const [mounted, setMounted] = useState(visible);
-  const sheetRef = useRef<BottomSheet>(null);
-  const previousVisibleRef = useRef(visible);
-
-  useEffect(() => {
-    if (visible) setMounted(true);
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible && !previousVisibleRef.current) {
-      sheetRef.current?.snapToIndex(0);
-    } else if (!visible && previousVisibleRef.current) {
-      sheetRef.current?.close();
-    }
-    previousVisibleRef.current = visible;
-  }, [visible]);
-
-  const handleSheetChange = useCallback(
-    (index: number) => {
-      if (index === -1) {
-        setMounted(false);
-        onClose();
-      }
-    },
-    [onClose],
-  );
-
-  if (!mounted) return null;
 
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      enableDynamicSizing
-      enablePanDownToClose
-      backgroundComponent={LogSheetBackground}
-      handleIndicatorStyle={handleIndicatorStyle}
-      onChange={handleSheetChange}
-    >
-      <BottomSheetView style={[styles.body, { paddingBottom: tabBarClearance + 16 }]}>
-      <SheetHeader title={`Log ${prayerLabel}`} />
+    <NativeSheet visible={visible} onClose={onClose} title={`Log ${prayerLabel}`}>
+      <View style={styles.body}>
       <View style={styles.group}>
       {OPTIONS.map((opt, i) => {
         const active = currentStatus === opt.status;
@@ -126,15 +75,15 @@ export default function PrayerLogSheet({
         </PressableScale>
       ) : null}
       </View>
-      </BottomSheetView>
-    </BottomSheet>
+      </View>
+    </NativeSheet>
   );
 }
 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
-    body: { paddingHorizontal: spacing.xl, paddingTop: 0 },
+    body: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl },
     group: {
       borderRadius: theme.radii.row,
       borderCurve: "continuous",

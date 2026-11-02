@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Asset } from "expo-asset";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
@@ -31,6 +31,7 @@ import {
   useQuranAudioController,
 } from "@/context/QuranAudioProvider";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { useNativeHeaderOptions } from "@/hooks/useNativeHeaderOptions";
 import { preloadQuranData } from "@/services/quranData";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { preloadPrayerLog } from "@/services/prayerTracker";
@@ -176,6 +177,9 @@ export async function runInitialAppSync(
   ]);
 }
 
+// Deep links to /SignIn or /Settings must still have the tabs underneath, or the sheet becomes the root screen.
+export const unstable_settings = { anchor: "(tabs)" };
+
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
@@ -204,6 +208,8 @@ function RootLayoutContent() {
   useSyncEngine();
   useWidgetSync();
   const { theme, isHydrated } = useTheme();
+  const settingsHeader = useNativeHeaderOptions("Settings", { large: false, titleSize: 26 });
+  const trackerHeader = useNativeHeaderOptions("Tracker", { large: false, titleSize: 26 });
   const backgroundColor = isHydrated
     ? theme.colors.primaryDark
     : LAUNCH_BACKGROUND_COLOR;
@@ -460,20 +466,48 @@ function RootLayoutContent() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="Settings"
-                  options={{ presentation: "modal", animation: "slide_from_bottom", headerShown: false }}
+                  options={{
+                    ...settingsHeader,
+                    presentation: "modal",
+                    animation: "slide_from_bottom",
+                    unstable_headerRightItems: () => [
+                      {
+                        type: "button",
+                        label: "Close",
+                        icon: { type: "sfSymbol", name: "xmark" },
+                        onPress: () => router.back(),
+                      },
+                    ],
+                  }}
                 />
                 <Stack.Screen
                   name="SignIn"
                   options={{
-                    presentation: "transparentModal",
-                    animation: "fade",
+                    presentation: "formSheet",
+                    animation: "slide_from_bottom",
+                    sheetAllowedDetents: "fitToContents",
+                    sheetGrabberVisible: true,
                     headerShown: false,
-                    // Override the global opaque contentStyle so the dimmed
-                    // screen behind shows through (a real transparent overlay).
+                    // Let iOS 26 draw the system sheet material instead of the app's opaque page color.
                     contentStyle: { backgroundColor: "transparent" },
                   }}
                 />
-                <Stack.Screen name="Tracker" options={{ animation: "slide_from_right" }} />
+                <Stack.Screen
+                  name="Tracker"
+                  options={{
+                    ...trackerHeader,
+                    presentation: "modal",
+                    animation: "slide_from_bottom",
+                    unstable_headerRightItems: () => [
+                      {
+                        type: "button",
+                        label: "Close",
+                        icon: { type: "sfSymbol", name: "xmark" },
+                        onPress: () => router.back(),
+                      },
+                    ],
+                  }}
+                />
               </Stack>
             </NavThemeProvider>
             <QuranMiniPlayerPortal />

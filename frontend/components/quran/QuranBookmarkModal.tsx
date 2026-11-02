@@ -1,21 +1,12 @@
-import BottomSheet, {
-  BottomSheetTextInput,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { StyleSheet, TextInput, View } from "react-native";
 
 import Button from "@/components/ui/Button";
-import SheetBackground from "@/components/ui/SheetBackground";
-import SheetHeader from "@/components/ui/SheetHeader";
+import NativeSheet from "@/components/ui/NativeSheet";
 import { Body, Caption, Callout, Footnote } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { NormalizedAyah } from "@/services/quranData";
-
-function BookmarkSheetBackground(p: Parameters<typeof SheetBackground>[0]) {
-  return <SheetBackground {...p} solid />;
-}
 
 export type QuranBookmarkModalPayload = {
   title: string;
@@ -43,28 +34,6 @@ function QuranBookmarkModal({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [title, setTitle] = useState(initialTitle ?? "");
-
-  // Stays mounted through the close animation; only unmounts once the sheet
-  // reports it has fully closed (onChange === -1), so closing animates instead
-  // of snapping shut.
-  const [mounted, setMounted] = useState(visible);
-  const sheetRef = useRef<BottomSheet>(null);
-  const previousVisibleRef = useRef(visible);
-
-  useEffect(() => {
-    if (visible) {
-      setMounted(true);
-    }
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible && !previousVisibleRef.current) {
-      sheetRef.current?.snapToIndex(0);
-    } else if (!visible && previousVisibleRef.current) {
-      sheetRef.current?.close();
-    }
-    previousVisibleRef.current = visible;
-  }, [visible]);
 
   useEffect(() => {
     if (!visible) {
@@ -102,48 +71,14 @@ function QuranBookmarkModal({
     });
   };
 
-  const handleSheetChange = useCallback(
-    (index: number) => {
-      if (index === -1) {
-        setMounted(false);
-        onClose();
-      }
-    },
-    [onClose],
-  );
-
-  const handleIndicatorStyle = useMemo(
-    () => ({
-      backgroundColor: withOpacity(themeColors.white, 0.3),
-      width: 38,
-    }),
-    [themeColors.white],
-  );
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      enableDynamicSizing
-      enablePanDownToClose
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-      backgroundComponent={BookmarkSheetBackground}
-      handleIndicatorStyle={handleIndicatorStyle}
-      onChange={handleSheetChange}
+    <NativeSheet
+      visible={visible}
+      onClose={onClose}
+      title={initialTitle ? "Edit Bookmark" : "New Bookmark"}
+      dismissDisabled={isSubmitting}
     >
-      <BottomSheetView style={styles.content}>
-        <SheetHeader
-          title={initialTitle ? "Edit Bookmark" : "New Bookmark"}
-          subtitle="Save this ayah for quick return"
-          onClose={onClose}
-          closeDisabled={isSubmitting}
-        />
-
+      <View style={styles.content}>
         {ayah ? (
           <View style={styles.ayahMeta}>
             <Callout color={themeColors.white} style={styles.ayahMetaEnglish}>
@@ -158,7 +93,7 @@ function QuranBookmarkModal({
           <Caption color={themeColors.textSecondary} style={styles.fieldLabel}>
             BOOKMARK NAME
           </Caption>
-          <BottomSheetTextInput
+          <TextInput
             style={styles.input}
             placeholder={defaultTitleFallback || "Bookmark title"}
             placeholderTextColor={themeColors.textTertiary}
@@ -179,8 +114,8 @@ function QuranBookmarkModal({
           loading={isSubmitting}
           loadingLabel="Saving..."
         />
-      </BottomSheetView>
-    </BottomSheet>
+      </View>
+    </NativeSheet>
   );
 }
 

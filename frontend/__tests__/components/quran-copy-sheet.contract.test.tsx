@@ -3,12 +3,6 @@ import { fireEvent, render } from "@testing-library/react-native";
 import QuranCopySheet from "@/components/quran/QuranCopySheet";
 import type { NormalizedAyah } from "@/services/quranData";
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { View } = require("react-native");
-  const BottomSheet = ({ children }: { children: React.ReactNode }) => <View>{children}</View>;
-  return { __esModule: true, default: BottomSheet, BottomSheetView: View };
-});
-
 jest.mock("@/context/ThemeContext", () => {
   const { defaultTheme } = jest.requireActual("@/constants/theme");
   return { useTheme: () => ({ theme: defaultTheme, isHydrated: true }) };

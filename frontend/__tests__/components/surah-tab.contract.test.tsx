@@ -7,11 +7,6 @@ jest.mock("@/context/ThemeContext", () => {
   return { useTheme: () => ({ theme: defaultTheme, isHydrated: true }) };
 });
 
-jest.mock("@gorhom/bottom-sheet", () => {
-  const { FlatList, TextInput } = require("react-native");
-  return { BottomSheetFlatList: FlatList, BottomSheetTextInput: TextInput };
-});
-
 jest.mock("@/components/PressableScale", () => {
   const { Pressable } = require("react-native");
   return ({ children, ...props }: any) => (
