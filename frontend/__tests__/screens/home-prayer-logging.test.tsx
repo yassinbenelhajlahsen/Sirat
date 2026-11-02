@@ -47,7 +47,20 @@ jest.mock("@/hooks/useHomePrayerTimes", () => ({
 const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
 
 describe("Home prayer logging", () => {
-  beforeEach(async () => { jest.clearAllMocks(); await AsyncStorage.clear(); });
+  // Only Fajr..Asr have passed at this hour; without pinning, "Log Fajr" exists only when the suite runs after 5:12 AM.
+  beforeEach(async () => {
+    jest.useFakeTimers({
+      now: new Date(2026, 5, 16, 16, 0),
+      doNotFake: [
+        "setTimeout", "clearTimeout", "setInterval", "clearInterval",
+        "setImmediate", "clearImmediate", "nextTick", "queueMicrotask",
+        "requestAnimationFrame", "cancelAnimationFrame", "performance",
+      ],
+    });
+    jest.clearAllMocks();
+    await AsyncStorage.clear();
+  });
+  afterEach(() => { jest.useRealTimers(); });
 
   it("logs a prayer from the arc and persists it", async () => {
     const { getByLabelText, getByText } = render(wrap(<Home />));
