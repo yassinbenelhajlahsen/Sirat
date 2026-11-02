@@ -32,7 +32,7 @@ export default function MosqueSheet({
   const { colors, spacing } = theme;
 
   const rows = useMemo(() => {
-    const r = mosques.slice(0, 10);
+    const r = [...mosques];
     if (userLoc) {
       r.sort(
         (a, b) =>

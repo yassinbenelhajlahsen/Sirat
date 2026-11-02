@@ -355,7 +355,7 @@ export default function MosqueScreen() {
           setShowSearchArea(shouldOfferAreaSearch(r, searchedCenter));
         }}
       >
-        {mosques.slice(0, 10).map((m) => (
+        {mosques.map((m) => (
           <MosqueMarker
             key={m.id}
             mosque={m}
