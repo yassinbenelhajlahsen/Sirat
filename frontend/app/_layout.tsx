@@ -224,10 +224,10 @@ function RootLayoutContent() {
   const isApplyingUpdateRef = useRef(false);
   const audioPlayingRef = useRef(false);
   // Read at reload time so applyUpdate stays stable across theme hydration.
-  const reloadColorRef = useRef(theme.colors.primaryDark);
+  const reloadColorsRef = useRef(theme.colors);
   useEffect(() => {
-    reloadColorRef.current = theme.colors.primaryDark;
-  }, [theme.colors.primaryDark]);
+    reloadColorsRef.current = theme.colors;
+  }, [theme.colors]);
   const mountedRef = useRef(true);
 
   // Resolves true once an update is downloaded and waiting to be applied.
@@ -282,7 +282,9 @@ function RootLayoutContent() {
     if (isApplyingUpdateRef.current) return;
     isApplyingUpdateRef.current = true;
 
-    SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
+    // primary is the middle of the Screen/Splash gradient; primaryDark reads as gray.
+    const { primary, accent } = reloadColorsRef.current;
+    SystemUI.setBackgroundColorAsync(primary).catch(() => {});
     setShowReloadCover(true);
     setShowSplash(true);
 
@@ -304,7 +306,8 @@ function RootLayoutContent() {
 
       await Updates.reloadAsync({
         reloadScreenOptions: {
-          backgroundColor: reloadColorRef.current,
+          backgroundColor: primary,
+          spinner: { color: accent },
           fade: true,
         },
       });
@@ -505,7 +508,7 @@ function RootLayoutContent() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: LAUNCH_BACKGROUND_COLOR,
+            backgroundColor: theme.colors.primary,
             opacity: showReloadCover ? 1 : 0,
           }}
           pointerEvents={showReloadCover ? "auto" : "none"}
