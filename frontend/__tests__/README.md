@@ -90,6 +90,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `flows/nearby-mosques-refresh.flow.test.tsx`
 - `visual refresh foundations (Plan 1) testing`
   - `utils/greeting.test.ts`
+  - `utils/formatDate.test.ts` — ordinal day suffixes (1st/2nd/3rd/11th-13th) for the dial centre and calendar day title
   - `constants/motion.test.ts`
   - `hooks/useHaptics.test.ts`
   - `components/glass-surface.contract.test.tsx` — glass vs fallback, and the borderless-over-glass default (hairline in the fallback, 1px when `bordered`)

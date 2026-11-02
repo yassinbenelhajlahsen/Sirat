@@ -181,7 +181,7 @@ describe("PrayerDial on a day that is not today", () => {
         coords={COORDS}
       />,
     );
-    expect(getByTestId("dial-value")).toHaveTextContent("3 Mar");
+    expect(getByTestId("dial-value")).toHaveTextContent("Mar 3rd");
     // A day with no logs must not present an empty scoreboard.
     expect(queryByText("0 of 5 prayed")).toBeNull();
     expect(getByText(/of daylight$/)).toBeTruthy();

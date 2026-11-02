@@ -11,6 +11,7 @@ import { useTheme } from "@/context/ThemeContext";
 import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
+import { formatWeekdayMonthDay } from "@/utils/formatDate";
 
 type DayDetailPanelProps = {
   date: Date;
@@ -47,11 +48,7 @@ export default function DayDetailPanel({
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const dateLine = new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(date);
+  const dateLine = formatWeekdayMonthDay(date);
 
   const hijri = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric",

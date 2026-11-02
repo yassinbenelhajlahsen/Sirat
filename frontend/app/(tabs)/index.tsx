@@ -17,6 +17,7 @@ import SectionHeader from "@/components/ui/SectionHeader";
 import { Body, Footnote, Subhead, Title1, Title3 } from "@/components/ui/Text";
 import Screen from "@/components/ui/Screen";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
+import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { getGreeting } from "@/utils/greeting";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
@@ -82,9 +83,7 @@ export default function Home() {
   const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
     day: "numeric", month: "long", year: "numeric",
   }).format(today);
-  const gregorianDate = new Intl.DateTimeFormat("en-US", {
-    weekday: "short", month: "short", day: "numeric",
-  }).format(today);
+  const gregorianDate = formatWeekdayMonthDay(today);
 
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);

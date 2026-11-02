@@ -13,6 +13,7 @@ import Svg, {
 
 import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import DisplayNumber from "@/components/ui/DisplayNumber";
+import { formatMonthDay } from "@/utils/formatDate";
 import { Caption } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -453,7 +454,6 @@ function countLogged(statuses?: Partial<Record<PrayerName, PrayerStatus>>): numb
 
 
 const WEEKDAYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 type Centre = {
   label: string;
@@ -520,7 +520,7 @@ function centreContent({
 
   return {
     label: WEEKDAYS[day.getDay()],
-    value: `${day.getDate()} ${MONTHS[day.getMonth()]}`,
+    value: formatMonthDay(day),
     size: DATE_SIZE,
     // Tracking only ever adds a line. A day with nothing logged still says
     // something true, so the card is worth opening for someone who never logs
