@@ -204,7 +204,7 @@ describe("screens/nearby-mosques contracts", () => {
     });
   });
 
-  it("shows an inline error with retry when fresh fetch fails and no cached data is available", async () => {
+  it("shows an inline error and keeps Search this area available to retry when the fresh fetch fails", async () => {
     const consoleErrorSpy = jest
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -225,7 +225,7 @@ describe("screens/nearby-mosques contracts", () => {
     });
     expect(Alert.alert).not.toHaveBeenCalled();
 
-    fireEvent.press(getByLabelText("Retry loading mosques"));
+    fireEvent.press(getByLabelText("Search this area"));
 
     await waitFor(() => {
       expect(queryAllByText("Recovered Masjid").length).toBeGreaterThan(0);

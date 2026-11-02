@@ -1,6 +1,5 @@
 import AppIcon from "@/components/ui/AppIcon";
 import Aurora from "@/components/ui/Aurora";
-import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
@@ -72,6 +71,7 @@ export default function MosqueScreen() {
   const haptic = useHaptics();
   // Tinted so the floating controls stay readable over the map.
   const glassTint = withOpacity(colors.primaryDeep, 0.6);
+  const errorTint = withOpacity(colors.danger, 0.55);
   const customMapStyle = useMemo(() => {
     if (theme.name === "light") return undefined;
     return createCustomMapStyle(colors);
@@ -245,19 +245,10 @@ export default function MosqueScreen() {
   };
 
   const handleSearchThisArea = async () => {
-    const region = regionRef.current;
-    if (!region) return;
+    const center = regionRef.current ?? searchedCenter;
+    if (!center) return;
     setShowSearchArea(false);
-    await fetchAround({ latitude: region.latitude, longitude: region.longitude });
-  };
-
-  const retryLoad = () => {
-    haptic("light");
-    if (searchedCenter) {
-      void fetchAround(searchedCenter);
-    } else {
-      void requestPermissionAndLoad();
-    }
+    await fetchAround({ latitude: center.latitude, longitude: center.longitude });
   };
 
   const recenter = () => {
@@ -375,7 +366,7 @@ export default function MosqueScreen() {
         ))}
       </MapView>
 
-      {showSearchArea && (
+      {(showSearchArea || loadError) && (
         <View
           style={[styles.searchAreaWrap, { top: insets.top + 12 }]}
           pointerEvents="box-none"
@@ -407,24 +398,15 @@ export default function MosqueScreen() {
         >
           <GlassSurface
             tier="chrome"
-            tint={glassTint}
-            radius={theme.radii.card}
-            style={styles.errorCard}
+            tint={errorTint}
+            radius={999}
+            curve="circular"
+            style={styles.errorPill}
             accessibilityRole="alert"
           >
-            <View style={styles.errorRow}>
-              <AppIcon name="alert-circle" size={16} color={colors.accent} />
-              <Footnote color={colors.white} style={styles.emptyText}>{loadError}</Footnote>
-            </View>
-            <Button
-              label="Try again"
-              variant="secondary"
-              size="sm"
-              icon="refresh"
-              onPress={retryLoad}
-              accessibilityLabel="Retry loading mosques"
-              style={styles.errorAction}
-            />
+            <Subhead color={colors.white} style={styles.searchAreaText} numberOfLines={1}>
+              {loadError}
+            </Subhead>
           </GlassSurface>
         </View>
       ) : emptyNearby ? (
@@ -543,15 +525,12 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
-    errorCard: {
-      maxWidth: 280,
-      alignItems: "center",
-      gap: spacing.sm,
+    errorPill: {
+      minHeight: 44,
+      justifyContent: "center",
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
+      paddingVertical: spacing.sm,
     },
-    errorRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-    errorAction: { alignSelf: "center" },
     emptyText: {
       flexShrink: 1,
       textAlign: "center",
