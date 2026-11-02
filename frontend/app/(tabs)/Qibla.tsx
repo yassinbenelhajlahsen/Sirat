@@ -10,6 +10,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import * as Location from "expo-location";
+import { useIsFocused } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -31,6 +32,7 @@ export default function Qibla() {
 
   const { rotation, heading, qiblaAngle, distanceKm, accuracy, error, isAligned } = useQibla();
   const haptics = useHaptics();
+  const isFocused = useIsFocused();
 
   const [permissionStatus, setPermissionStatus] =
     useState<Perm>("undetermined");
@@ -76,14 +78,15 @@ export default function Qibla() {
       .catch(() => {});
   }, []);
 
+  // The compass keeps running while other tabs are up, so only buzz on this one.
   useEffect(() => {
     const now = Date.now();
-    if (isAligned && !prevAligned.current && now - lastHapticAt.current > 900) {
+    if (isFocused && isAligned && !prevAligned.current && now - lastHapticAt.current > 900) {
       haptics("success");
       lastHapticAt.current = now;
     }
     prevAligned.current = isAligned;
-  }, [isAligned, haptics]);
+  }, [isAligned, isFocused, haptics]);
 
   const needLocationGate =
     servicesOn === false || permissionStatus !== "granted";

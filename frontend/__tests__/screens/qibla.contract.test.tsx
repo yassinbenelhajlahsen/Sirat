@@ -49,6 +49,8 @@ jest.mock("expo-location", () => ({
   requestForegroundPermissionsAsync: jest.fn(),
 }));
 
+jest.mock("expo-router", () => ({ useIsFocused: () => true }));
+
 jest.mock("expo-haptics", () => ({
   ImpactFeedbackStyle: { Light: "light", Medium: "medium" },
   NotificationFeedbackType: { Success: "success", Error: "error" },
