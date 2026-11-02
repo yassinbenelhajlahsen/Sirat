@@ -82,3 +82,23 @@ export function expandTabBar() {
   collapsed = false;
   animateTo(0);
 }
+
+// For non-scrolling surfaces (the map): shrink on drag, then expand once the
+// user has been still for EXPAND_DELAY_MS. Every drag event restarts the wait.
+const EXPAND_DELAY_MS = 3000;
+let expandTimer: ReturnType<typeof setTimeout> | undefined;
+
+export function cancelTabBarExpand() {
+  if (expandTimer) clearTimeout(expandTimer);
+  expandTimer = undefined;
+}
+
+export function collapseTabBarWhileActive() {
+  if (reduceMotion) return;
+  cancelTabBarExpand();
+  if (!collapsed) {
+    collapsed = true;
+    animateTo(1);
+  }
+  expandTimer = setTimeout(expandTabBar, EXPAND_DELAY_MS);
+}

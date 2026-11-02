@@ -7,6 +7,7 @@ import ScreenHeader from "@/components/ui/ScreenHeader";
 import { Footnote, Subhead } from "@/components/ui/Text";
 import MosqueMarker from "@/components/mosques/MosqueMarker";
 import MosqueSheet from "@/components/mosques/MosqueSheet";
+import { cancelTabBarExpand, collapseTabBarWhileActive } from "@/utils/tabBarChrome";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -76,6 +77,7 @@ export default function MosqueScreen() {
   }, [theme.name, colors]);
 
   const mapRef = useRef<MapView>(null);
+  useEffect(() => cancelTabBarExpand, []);
   const ignoreRegionUntilRef = useRef(0);
 
   const [permissionStatus, setPermissionStatus] =
@@ -347,6 +349,7 @@ export default function MosqueScreen() {
         userInterfaceStyle={theme.name === "light" ? "light" : "dark"}
         showsUserLocation
         initialRegion={initialRegion}
+        onPanDrag={collapseTabBarWhileActive}
         onRegionChangeComplete={(r) => {
           regionRef.current = r;
           if (Date.now() < ignoreRegionUntilRef.current) return;
