@@ -18,6 +18,7 @@ jest.mock("expo-location", () => ({
 
 jest.mock("@/services/prayerTimes", () => ({
   getPrayerTimesToday: jest.fn(),
+  getPrayerTimesForDate: jest.fn(),
 }));
 
 jest.mock("@/hooks/useNextPrayer", () => ({
@@ -27,7 +28,11 @@ jest.mock("@/hooks/useNextPrayer", () => ({
   })),
 }));
 
-import { getPrayerTimesToday } from "@/services/prayerTimes";
+import { getPrayerTimesForDate, getPrayerTimesToday } from "@/services/prayerTimes";
+
+const mockGetPrayerTimesForDate = getPrayerTimesForDate as jest.MockedFunction<
+  typeof getPrayerTimesForDate
+>;
 import * as Location from "expo-location";
 
 const mockGetPrayerTimesToday = getPrayerTimesToday as jest.MockedFunction<
@@ -116,16 +121,15 @@ describe("useHomePrayerTimes", () => {
   it("loads next-day fajr when there are no upcoming prayers today", async () => {
     freezeTestTime(new Date(2026, 1, 25, 21, 0, 0));
 
-    mockGetPrayerTimesToday
-      .mockResolvedValueOnce([
-        { label: "Fajr", time: "5:00 AM" },
-        { label: "Dhuhr", time: "12:00 PM" },
-        { label: "Isha", time: "8:00 PM" },
-      ] as any)
-      .mockResolvedValueOnce([
-        { label: "Fajr", time: "5:10 AM" },
-        { label: "Dhuhr", time: "12:05 PM" },
-      ] as any);
+    mockGetPrayerTimesToday.mockResolvedValueOnce([
+      { label: "Fajr", time: "5:00 AM" },
+      { label: "Dhuhr", time: "12:00 PM" },
+      { label: "Isha", time: "8:00 PM" },
+    ] as any);
+    mockGetPrayerTimesForDate.mockResolvedValueOnce([
+      { label: "Fajr", time: "5:10 AM" },
+      { label: "Dhuhr", time: "12:05 PM" },
+    ] as any);
 
     const { result } = renderHook(() => useHomePrayerTimes());
 
@@ -135,7 +139,8 @@ describe("useHomePrayerTimes", () => {
     });
 
     expect(result.current.locationLabel).toBe("Chicago");
-    expect(mockGetPrayerTimesToday).toHaveBeenCalledTimes(2);
+    expect(mockGetPrayerTimesToday).toHaveBeenCalledTimes(1);
+    expect(mockGetPrayerTimesForDate.mock.calls[0][1].getDate()).toBe(26);
   });
 
   describe("location label fallback (useLocation: true)", () => {

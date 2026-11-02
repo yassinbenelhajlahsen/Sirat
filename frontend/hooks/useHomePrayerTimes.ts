@@ -5,7 +5,7 @@ import { AppState, DeviceEventEmitter } from "react-native";
 import { dateKeyFromDate } from "../services/holidayService";
 import { resolveCityDisplay } from "../services/notifications/cityResolver";
 import { STORAGE_CITY_DISPLAY_LOC } from "../services/notifications/constants";
-import { getPrayerTimesToday, PrayerSettings, PrayerTime } from "../services/prayerTimes";
+import { getPrayerTimesForDate, getPrayerTimesToday, PrayerSettings, PrayerTime } from "../services/prayerTimes";
 import CITIES, { City, cityKey } from "../utils/cities";
 import { useNextPrayer } from "./useNextPrayer";
 
@@ -211,10 +211,9 @@ export function useHomePrayerTimes() {
         .some((dateObj) => dateObj > now);
 
       if (!hasUpcoming) {
-        const tomorrowTimes = await getPrayerTimesToday(effective, {
-          coords,
-          country,
-        });
+        const tomorrow = new Date(resolvedDate);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowTimes = await getPrayerTimesForDate(effective, tomorrow);
         const fajr = tomorrowTimes.find((p) => p.label === "Fajr");
         setNextDayFajr(fajr?.time ?? null);
       } else {
