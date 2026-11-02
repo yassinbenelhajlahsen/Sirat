@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
@@ -29,30 +29,32 @@ export default function HabitChecklist({ habits, done, date, onToggle }: Props) 
   return (
     <View style={styles.section}>
       <SectionHeader title="Habits" inset={0} />
-      <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
+      <GlassSurface tier="card" radius={theme.radii.card}>
         {dueHabits.map((habit, i) => {
           const checked = done[habit.id] === true;
           return (
-            <PressableScale
-              key={habit.id}
-              variant="row"
-              onPress={() => onToggle(habit.id)}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked }}
-              accessibilityLabel={`Toggle ${habit.name}`}
-              style={[styles.row, i > 0 && styles.separated]}
-            >
-              <AppIcon
-                name={checked ? "checkmark-circle" : "ellipse-outline"}
-                size={22}
-                color={checked ? colors.accentSecondary : colors.iconMuted}
-              />
-              <View style={styles.meta}>
-                <Body numberOfLines={1}>{habit.name}</Body>
-                <Footnote color={colors.textTertiary}>{frequencyLabel(habit.frequency)}</Footnote>
-              </View>
-              <AppIcon name={habit.icon as AppIconName} size={16} color={colors.iconMuted} />
-            </PressableScale>
+            <Fragment key={habit.id}>
+              {i > 0 && <View style={styles.separator} />}
+              <PressableScale
+                variant="row"
+                onPress={() => onToggle(habit.id)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked }}
+                accessibilityLabel={`Toggle ${habit.name}`}
+                style={styles.row}
+              >
+                <AppIcon
+                  name={checked ? "checkmark-circle" : "ellipse-outline"}
+                  size={22}
+                  color={checked ? colors.accentSecondary : colors.iconMuted}
+                />
+                <View style={styles.meta}>
+                  <Body numberOfLines={1}>{habit.name}</Body>
+                  <Footnote color={colors.textTertiary}>{frequencyLabel(habit.frequency)}</Footnote>
+                </View>
+                <AppIcon name={habit.icon as AppIconName} size={16} color={colors.iconMuted} />
+              </PressableScale>
+            </Fragment>
           );
         })}
       </GlassSurface>
@@ -64,17 +66,19 @@ const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;
   return StyleSheet.create({
     section: { marginTop: spacing.xxl + spacing.md },
-    card: { paddingHorizontal: spacing.lg },
     row: {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.md,
       minHeight: 56,
+      paddingHorizontal: spacing.lg,
     },
-    // Inset to the text edge: glyph slot (22) plus its gap.
-    separated: {
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: withOpacity(colors.white, 0.1),
+    // Padding lives on the row so the press highlight reaches the card edges; the
+    // separator stays inset to match.
+    separator: {
+      height: StyleSheet.hairlineWidth,
+      marginHorizontal: spacing.lg,
+      backgroundColor: withOpacity(colors.white, 0.1),
     },
     meta: { flex: 1, gap: 2 },
   });
