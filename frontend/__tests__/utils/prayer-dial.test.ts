@@ -5,6 +5,9 @@ import {
   buildRing,
   daylightLabel,
   dialMarkers,
+  discAxis,
+  discIsBright,
+  discLight,
   discStops,
   minutesOfDay,
   parsePrayerTime,
@@ -12,6 +15,7 @@ import {
   ringColor,
   ringPresence,
   STARS,
+  starVisibility,
 } from "@/utils/prayerDial";
 
 const LAT = 33.5731;
@@ -158,9 +162,59 @@ describe("discStops", () => {
     }
   });
 
-  it("thins out towards the top so the centre numerals stay legible", () => {
+  it("thins out towards the far side so the centre numerals stay legible", () => {
     const stops = discStops(10);
     expect(stops[stops.length - 1].opacity).toBeLessThan(stops[0].opacity);
+  });
+});
+
+describe("disc sky", () => {
+  const rgb = (c: string) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+  // Sun low on the left of the ring, as at sunrise.
+  const sunrise = pointOnRing(angleForMinutes(6 * 60));
+  const nearSun = { x: DIAL.cx - 80, y: DIAL.cy, r: 1, o: 0.5, bloom: false };
+  const farSide = { x: DIAL.cx + 80, y: DIAL.cy, r: 1, o: 0.5, bloom: false };
+
+  it("puts the bright edge on the side facing the sun", () => {
+    const { x1, x2 } = discAxis(sunrise);
+    expect(x1).toBeLessThan(DIAL.cx);
+    expect(x2).toBeGreaterThan(DIAL.cx);
+  });
+
+  it("keeps the real twilight colours at the horizon", () => {
+    const [r, g, b] = rgb(discStops(0)[0].color);
+    expect(r).toBeGreaterThan(g);
+    expect(r).toBeGreaterThan(b);
+  });
+
+  it("turns sunlit, not tan, once the sun is high", () => {
+    for (const s of discStops(40)) {
+      const [r, g, b] = rgb(s.color);
+      expect(r).toBeGreaterThan(200);
+      expect(b).toBeLessThan(g - 40);
+      expect(s.opacity).toBeGreaterThan(0.8);
+    }
+    expect(discLight(60)).not.toBe(discLight(10));
+  });
+
+  it("shows stars on the dark half at dusk and none near the sun", () => {
+    expect(starVisibility(farSide, 1, sunrise)).toBeGreaterThan(0.5);
+    expect(starVisibility(nearSun, 1, sunrise)).toBeLessThan(0.1);
+  });
+
+  it("shows every star at night and none at midday", () => {
+    const noon = pointOnRing(angleForMinutes(12 * 60));
+    for (const s of STARS) {
+      expect(starVisibility(s, -30, sunrise)).toBe(1);
+      expect(starVisibility(s, 40, noon)).toBe(0);
+    }
+  });
+
+  it("flags a bright middle by day and a dark one at night", () => {
+    expect(discIsBright(discStops(40))).toBe(true);
+    expect(discIsBright(discStops(-20))).toBe(false);
+    // A low sun still leaves the middle dark, so the text needs no shadow.
+    expect(discIsBright(discStops(2))).toBe(false);
   });
 });
 

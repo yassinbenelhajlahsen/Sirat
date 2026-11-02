@@ -11,12 +11,14 @@ import Svg, {
   Text as SvgText,
 } from "react-native-svg";
 
+import { LAYER_DEFS, StarLayerView } from "@/components/splash/SplashSky";
 import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import DisplayNumber from "@/components/ui/DisplayNumber";
 import { formatMonthDay } from "@/utils/formatDate";
 import { Caption } from "@/components/ui/Text";
 import { darkTheme, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
 import {
@@ -26,11 +28,13 @@ import {
   buildRing,
   daylightLabel,
   dialMarkers,
+  discAxis,
+  discIsBright,
   discStops,
   minutesOfDay,
   pointOnRing,
   ringColor,
-  starLevel,
+  starVisibility,
   sunAltitude,
   type RingSegment,
 } from "@/utils/prayerDial";
@@ -56,6 +60,14 @@ const COLUMN_FONT_SCALE = 1.2;
 // read against, whatever colour the day's light is at that hour.
 const MARKER_KNOCKOUT = 5.6;
 const MARKER_GROUND = "rgba(8,16,11,0.55)";
+
+// White type over a sunlit disc. A warm shadow, not black, so it reads as
+// shade on the sky rather than a drop shadow.
+const SUNLIT_TEXT = {
+  textShadowColor: "rgba(40,22,0,0.55)",
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 6,
+};
 
 type Coords = { latitude: number; longitude: number };
 
@@ -102,6 +114,7 @@ export default function PrayerDial({
   const isLight = theme.name === "light";
   const dialColors = isLight ? darkTheme.colors : colors;
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const reduceMotion = useReducedMotion();
 
   // The sky advances on its own clock. `now` short-circuits it for tests.
   const [tick, setTick] = useState(() => now ?? new Date());
@@ -134,10 +147,27 @@ export default function PrayerDial({
 
   const sunAlt = coords && live ? sunAltitude(at, coords.latitude, coords.longitude) : null;
   const stops = useMemo(() => (sunAlt == null ? null : discStops(sunAlt)), [sunAlt]);
-  const stars = sunAlt == null ? 0 : starLevel(sunAlt);
+  const sunlit = stops ? discIsBright(stops) : false;
 
   const nowMinutes = live ? minutesOfDay(at) : null;
   const sunPoint = nowMinutes == null ? null : pointOnRing(angleForMinutes(nowMinutes));
+  const axis = sunPoint ? discAxis(sunPoint) : null;
+
+  // The splash's star layers, laid over the disc: same dots, same twinkle,
+  // each star dimmed by how dark its own patch of sky is.
+  const starLayers =
+    sunAlt != null && sunPoint && !loading
+      ? LAYER_DEFS.map(({ twinkleMs, delayMs }, layer) => ({
+          twinkleMs,
+          delayMs,
+          stars: STARS.filter((_, i) => i % LAYER_DEFS.length === layer).map((s) => ({
+            x: (s.x / DIAL.size) * 100,
+            y: (s.y / DIAL.size) * 100,
+            size: 1 + Math.min(1, (s.r - 0.45) / 0.8),
+            opacity: starVisibility(s, sunAlt, sunPoint),
+          })),
+        }))
+      : null;
 
   const [wrapWidth, setWrapWidth] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => {
@@ -163,14 +193,14 @@ export default function PrayerDial({
     <View style={styles.dialWrap} onLayout={onLayout}>
       <Svg width="100%" height={wrapWidth || undefined} viewBox={`0 0 ${DIAL.size} ${DIAL.size}`}>
         <Defs>
-          {stops ? (
+          {stops && axis ? (
             <LinearGradient
               id="dialSky"
               gradientUnits="userSpaceOnUse"
-              x1={DIAL.cx}
-              y1={DIAL.cy + DIAL.discRadius}
-              x2={DIAL.cx}
-              y2={DIAL.cy - DIAL.discRadius}
+              x1={axis.x1}
+              y1={axis.y1}
+              x2={axis.x2}
+              y2={axis.y2}
             >
               {stops.map((s) => (
                 <Stop
@@ -205,22 +235,10 @@ export default function PrayerDial({
           />
         ) : null}
 
-        {/* Sky disc: the whole disc is sky, horizon at the bottom, zenith at the top. */}
-        {stops ? (
+        {/* Sky disc: bright on the side facing the sun, darkening away from it. */}
+        {stops && axis ? (
           <>
             <Circle cx={DIAL.cx} cy={DIAL.cy} r={DIAL.discRadius} fill="url(#dialSky)" />
-            {stars > 0
-              ? STARS.map((s, i) => (
-                  <Circle
-                    key={i}
-                    cx={s.x}
-                    cy={s.y}
-                    r={s.r}
-                    fill="#EAF0FF"
-                    opacity={Math.min(0.95, s.o * stars)}
-                  />
-                ))
-              : null}
             <Circle cx={DIAL.cx} cy={DIAL.cy} r={DIAL.discRadius} fill="url(#dialVignette)" />
           </>
         ) : null}
@@ -354,11 +372,22 @@ export default function PrayerDial({
         ) : null}
       </Svg>
 
+      {starLayers?.map((layer, i) => (
+        <StarLayerView
+          key={i}
+          layer={layer}
+          color={dialColors.textPrimary}
+          peak={0.9}
+          reduceMotion={reduceMotion}
+          drift={false}
+        />
+      ))}
+
       <View style={styles.centre} pointerEvents="none">
         <Caption
           testID="dial-label"
-          color={dialColors.textSecondary}
-          style={styles.centreLabel}
+          color={sunlit ? dialColors.white : dialColors.textSecondary}
+          style={[styles.centreLabel, sunlit && SUNLIT_TEXT]}
           numberOfLines={1}
         >
           {centre.label}
@@ -369,13 +398,14 @@ export default function PrayerDial({
             value={centre.value}
             size={centre.size}
             color={dialColors.white}
+            style={sunlit ? SUNLIT_TEXT : undefined}
           />
         ) : null}
         {centre.sub ? (
           <Caption
             testID="dial-sub"
-            color={centre.subColor}
-            style={styles.centreSub}
+            color={sunlit ? dialColors.white : centre.subColor}
+            style={[styles.centreSub, sunlit && SUNLIT_TEXT]}
             numberOfLines={1}
           >
             {centre.sub}

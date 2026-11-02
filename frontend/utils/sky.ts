@@ -124,7 +124,12 @@ const FALLOFF = 0.45;
  * sun currently is. Brightest at the sun's own elevation, falling away from it.
  */
 export function skyAt(sunAlt: number, elevation: number): string {
-  return lightAt(sunAlt - Math.abs(elevation - sunAlt) * FALLOFF);
+  return lightAt(skyAltAt(sunAlt, elevation));
+}
+
+/** The sun altitude whose light `skyAt` shows at `elevation`. */
+export function skyAltAt(sunAlt: number, elevation: number): number {
+  return sunAlt - Math.abs(elevation - sunAlt) * FALLOFF;
 }
 
 /** 0 while the sun is up, ramping to 1 once it is well down. */

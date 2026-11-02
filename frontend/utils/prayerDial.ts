@@ -1,6 +1,6 @@
 import type { PrayerTime } from "@/services/prayerTimes";
 
-import { lightAt, mixColors, skyAt, starLevel, sunAltitude } from "./sky";
+import { lightAt, mixColors, skyAltAt, starLevel, sunAltitude } from "./sky";
 
 /**
  * A 24 hour dial. Noon sits at the top, midnight at the bottom, and every
@@ -123,22 +123,107 @@ export function ringColor(segment: RingSegment, nowMinutes: number | null, backd
 export type SkyStop = { offset: number; color: string; opacity: number };
 
 /**
- * The sky right now, bottom of the disc to top: offset 0 is the horizon, 1 is
- * the zenith. The whole disc is sky; there is no half-lit cross section.
+ * Daylight on the disc. The ring's ramp tops out at a pale cream, which over
+ * the dark canvas read as tan, so above the horizon the disc takes this sunlit
+ * ramp instead: amber when the sun is low, gold, then pale sunlight overhead.
+ * Night and twilight stay on the shared ramp.
+ */
+const DAY_FROM = 2;
+const DAY_KEYFRAMES: [alt: number, hex: string][] = [
+  [DAY_FROM, lightAt(DAY_FROM)],
+  [10, "#f4a840"],
+  [22, "#fcce60"],
+  [40, "#ffe89c"],
+  [60, "#fff4cd"],
+];
+
+export function discLight(alt: number): string {
+  if (alt <= DAY_FROM) return lightAt(alt);
+  for (let i = 0; i < DAY_KEYFRAMES.length - 1; i++) {
+    const [a1, c1] = DAY_KEYFRAMES[i];
+    const [a2, c2] = DAY_KEYFRAMES[i + 1];
+    if (alt <= a2) return mixColors(c1, c2, (alt - a1) / (a2 - a1));
+  }
+  return DAY_KEYFRAMES[DAY_KEYFRAMES.length - 1][1];
+}
+
+/**
+ * Lowest sky the disc shows. A low sun keeps a dark far side for the stars; once
+ * it is well up, the far side stops sinking back through twilight, or a band of
+ * violet runs across a midday sky.
+ */
+function dayFloor(sunAlt: number): number {
+  return Math.min(Math.min(sunAlt, 20) * 0.6, -30 + Math.max(0, sunAlt - 6) * 4);
+}
+
+/** Sky altitude at `t` along the disc, 0 the edge facing the sun, 1 the far edge. */
+function discAlt(sunAlt: number, t: number): number {
+  return Math.max(skyAltAt(sunAlt, t * 90), dayFloor(sunAlt));
+}
+
+/**
+ * The sky right now, from the edge facing the sun (offset 0) to the far edge
+ * (offset 1). Lay it along `discAxis` so the bright side follows the sun.
  */
 export function discStops(sunAlt: number, steps = 20): SkyStop[] {
+  const day = Math.max(0, Math.min(1, sunAlt / 15));
   const stops: SkyStop[] = [];
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
+    // At night denser air near the horizon, thinner beyond, so the wash never
+    // flattens the numerals. By day it goes near-opaque: any green showing
+    // through a sunlit sky is what made it tan.
+    const night = 0.52 - 0.26 * Math.pow(t, 0.9);
     stops.push({
       offset: t,
-      color: skyAt(sunAlt, t * 90),
-      // Denser air low down, thinner overhead, so the wash never flattens the
-      // numerals sitting in the middle of the disc.
-      opacity: 0.52 - 0.26 * Math.pow(t, 0.9),
+      color: discLight(discAlt(sunAlt, t)),
+      opacity: night * (1 - day) + (0.95 - 0.1 * t) * day,
     });
   }
   return stops;
+}
+
+/** Gradient endpoints for `discStops`: from the disc edge nearest the sun to the far edge. */
+export function discAxis(sun: { x: number; y: number }): { x1: number; y1: number; x2: number; y2: number } {
+  const dx = sun.x - DIAL.cx;
+  const dy = sun.y - DIAL.cy;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = (dx / len) * DIAL.discRadius;
+  const uy = (dy / len) * DIAL.discRadius;
+  return { x1: DIAL.cx + ux, y1: DIAL.cy + uy, x2: DIAL.cx - ux, y2: DIAL.cy - uy };
+}
+
+/**
+ * How much a star shows, 0..1: full wherever its patch of sky is dark, none
+ * where it is lit, at any hour. A dusk disc holds stars on its far half only.
+ */
+export function starVisibility(star: Star, sunAlt: number, sun: { x: number; y: number }): number {
+  const { x1, y1, x2, y2 } = discAxis(sun);
+  const ax = x2 - x1;
+  const ay = y2 - y1;
+  const t = ((star.x - x1) * ax + (star.y - y1) * ay) / (ax * ax + ay * ay);
+  return starLevel(discAlt(sunAlt, Math.max(0, Math.min(1, t))));
+}
+
+/**
+ * True when the middle of the disc is bright enough that white type needs a
+ * shadow to hold. Judged on the composited colour, not the clock: a low
+ * afternoon sun still leaves the middle dark.
+ */
+export function discIsBright(stops: SkyStop[]): boolean {
+  const mid = stops[Math.floor(stops.length / 2)];
+  return relativeLuminance(mixColors(CANVAS, mid.color, mid.opacity)) > BRIGHT_LUMINANCE;
+}
+
+const CANVAS = "#102A1C";
+const BRIGHT_LUMINANCE = 0.3;
+
+function relativeLuminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 export type Star = { x: number; y: number; r: number; o: number; bloom: boolean };
@@ -146,7 +231,7 @@ export type Star = { x: number; y: number; r: number; o: number; bloom: boolean 
 /**
  * A fixed scatter of stars over the disc, varied in size and brightness so it
  * does not read as a grid of identical dots. Generated once at module load and
- * kept clear of the centre type. `starLevel` scales their opacity by time.
+ * kept clear of the centre type. `starVisibility` scales each by its patch of sky.
  */
 export const STARS: Star[] = (() => {
   let seed = 20260304;

@@ -14,8 +14,9 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import { withOpacity, type AppTheme } from "@/constants/theme";
 
-type Star = { x: number; y: number; size: number };
-type StarLayer = { stars: Star[]; twinkleMs: number; delayMs: number };
+/** `x`/`y` are percentages of the parent. `opacity` dims one star within its layer. */
+type Star = { x: number; y: number; size: number; opacity?: number };
+export type StarLayer = { stars: Star[]; twinkleMs: number; delayMs: number };
 
 // Seeded so the field is the same on every launch and in tests.
 function mulberry32(seed: number) {
@@ -29,7 +30,7 @@ function mulberry32(seed: number) {
 }
 
 // Twinkle is one looping opacity per layer, not one value per star.
-const LAYER_DEFS = [
+export const LAYER_DEFS = [
   { count: 18, minSize: 1, maxSize: 1.5, twinkleMs: 2200, delayMs: 0 },
   { count: 16, minSize: 1, maxSize: 2, twinkleMs: 3000, delayMs: 700 },
   { count: 14, minSize: 1.5, maxSize: 2, twinkleMs: 4000, delayMs: 1500 },
@@ -67,16 +68,19 @@ const GLOW_STOPS: Record<GlowVariant, [number, number][]> = {
 const STAR_FLOOR = 0.12;
 const STAR_STILL = 0.5;
 
-function StarLayerView({
+export function StarLayerView({
   layer,
   color,
   peak,
   reduceMotion,
+  drift: drifts = true,
 }: {
   layer: StarLayer;
   color: string;
   peak: number;
   reduceMotion: boolean;
+  /** Slow upward drift. Off where the stars must stay inside a shape. */
+  drift?: boolean;
 }) {
   const opacity = useSharedValue(STAR_STILL * peak);
   const drift = useSharedValue(0);
@@ -96,8 +100,10 @@ function StarLayerView({
         true,
       ),
     );
-    drift.value = withTiming(DRIFT_PX, { duration: DRIFT_MS, easing: Easing.linear });
-  }, [reduceMotion, peak, layer, opacity, drift]);
+    if (drifts) drift.value = withTiming(DRIFT_PX, { duration: DRIFT_MS, easing: Easing.linear });
+    // Keyed on timing, not the layer object, so a caller can update star
+    // opacities without restarting the twinkle.
+  }, [reduceMotion, peak, layer.twinkleMs, layer.delayMs, drifts, opacity, drift]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -118,6 +124,7 @@ function StarLayerView({
             height: s.size,
             borderRadius: s.size / 2,
             backgroundColor: color,
+            opacity: s.opacity,
           }}
         />
       ))}
