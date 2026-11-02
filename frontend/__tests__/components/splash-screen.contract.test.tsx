@@ -5,6 +5,7 @@ import { StyleSheet } from "react-native";
 import SplashScreen from "@/components/SplashScreen";
 import { ThemeProvider } from "@/context/ThemeContext";
 import hadiths from "@/assets/data/hadiths.json";
+import { darkTheme, lightTheme } from "@/constants/theme";
 
 const LAST_SPLASH_KEY = "lastSplashDate";
 
@@ -32,7 +33,51 @@ describe("SplashScreen", () => {
     expect(style.fontFamily).toBeUndefined();
     expect(style.fontSize).toBeGreaterThan(34);
     expect(style.fontWeight).toBe("700");
-    expect(getByText("The path to your deen")).toBeTruthy();
+  });
+
+  it("drops the tagline", async () => {
+    const { getByTestId, queryByText } = renderSplash();
+    await waitFor(() => expect(getByTestId("splash-wordmark")).toBeTruthy());
+    expect(queryByText("The path to your deen")).toBeNull();
+  });
+
+  it("sets the emblem lettering in gold Amiri", async () => {
+    const { getByTestId, getByText } = renderSplash();
+    await waitFor(() => expect(getByTestId("splash-emblem-text")).toBeTruthy());
+
+    const style = StyleSheet.flatten(getByTestId("splash-emblem-text").props.style);
+    expect(getByText("صراط")).toBeTruthy();
+    expect(style.fontFamily).toBe("Amiri");
+  });
+
+  it("sets the hadith Arabic in Amiri so the splash uses one Arabic face", async () => {
+    const { getByTestId, getByText } = renderSplash();
+    await waitFor(() => expect(getByTestId("splash-passage")).toBeTruthy());
+
+    const style = StyleSheet.flatten(getByText(todaysHadith.arabic).props.style);
+    expect(style.fontFamily).toBe("Amiri");
+  });
+
+  // Day 31 is the longest hadith; at the full size it ran into the wordmark.
+  it("sets a long hadith smaller than a short one", async () => {
+    const getDate = jest.spyOn(Date.prototype, "getDate");
+    const sizeOnDay = async (day: number) => {
+      await AsyncStorage.clear();
+      getDate.mockReturnValue(day);
+      const view = renderSplash();
+      const arabic = (hadiths as { day: number; arabic: string }[]).find((h) => h.day === day)!
+        .arabic;
+      await waitFor(() => expect(view.getByText(arabic)).toBeTruthy());
+      const { fontSize } = StyleSheet.flatten(view.getByText(arabic).props.style);
+      view.unmount();
+      return fontSize as number;
+    };
+
+    const short = await sizeOnDay(15);
+    const long = await sizeOnDay(31);
+    getDate.mockRestore();
+
+    expect(long).toBeLessThan(short);
   });
 
   // Reflow would break the fixed anchor, and nothing here is read at length.
@@ -72,6 +117,20 @@ describe("SplashScreen", () => {
     expect(getByTestId("splash-hijri")).toBeTruthy();
     expect(queryByTestId("splash-passage")).toBeNull();
     expect(queryByText(todaysHadith.arabic)).toBeNull();
+  });
+
+  it("focuses the horizon glow under the passage and softens it on a repeat launch", async () => {
+    const first = renderSplash();
+    await waitFor(() => expect(first.getByTestId("splash-passage")).toBeTruthy());
+    expect(first.getByTestId("splash-glow-focused")).toBeTruthy();
+    expect(first.queryByTestId("splash-glow-soft")).toBeNull();
+    first.unmount();
+
+    await AsyncStorage.setItem(LAST_SPLASH_KEY, new Date().toDateString());
+    const repeat = renderSplash();
+    await waitFor(() => expect(repeat.getByTestId("splash-wordmark")).toBeTruthy());
+    await waitFor(() => expect(repeat.getByTestId("splash-glow-soft")).toBeTruthy());
+    expect(repeat.queryByTestId("splash-glow-focused")).toBeNull();
   });
 
   it("shows the Hijri date and no Gregorian date", async () => {
@@ -119,4 +178,37 @@ describe("SplashScreen", () => {
 
     expect(onReadyToHideNative).toHaveBeenCalledTimes(1);
   });
+
+  // Gold on the cream Light sky is under 2:1, unreadable at text size. The gold
+  // stays on the dark skies, where it reads.
+  it("sets the Hijri date and hadith source in gold on the dark sky only", async () => {
+    const hijriColor = async () => {
+      const view = renderSplash();
+      await waitFor(() => expect(view.getByTestId("splash-passage")).toBeTruthy());
+      const hijri = StyleSheet.flatten(view.getByTestId("splash-hijri").props.style).color;
+      const source = StyleSheet.flatten(view.getByText(todaysHadith.source).props.style).color;
+      view.unmount();
+      return { hijri, source };
+    };
+
+    await AsyncStorage.setItem("app_theme_v1", "dark");
+    expect(await hijriColor()).toEqual({
+      hijri: darkTheme.colors.accent,
+      source: darkTheme.colors.accent,
+    });
+
+    await AsyncStorage.clear();
+    await AsyncStorage.setItem("app_theme_v1", "light");
+    const light = await hijriColor();
+    expect(light.hijri).not.toBe(lightTheme.colors.accent);
+    expect(light.source).not.toBe(lightTheme.colors.accent);
+  });
+
+  it("dissolves out and hands off to the app once ready", async () => {
+    await AsyncStorage.setItem(LAST_SPLASH_KEY, new Date().toDateString());
+    const onFinished = jest.fn();
+    renderSplash({ ready: true, onFinished });
+
+    await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1), { timeout: 5000 });
+  }, 10000);
 });

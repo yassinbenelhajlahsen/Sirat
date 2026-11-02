@@ -1,38 +1,54 @@
 import { darkTheme, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
+import { useFonts } from "expo-font";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
+  Animated as RNAnimated,
   Easing,
   I18nManager,
-  LayoutChangeEvent,
   Platform,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
-import SplashAtmosphere from "@/components/SplashAtmosphere";
-import Aurora from "@/components/ui/Aurora";
+import SplashEmblem, { SPLASH_ARABIC_FONT } from "@/components/splash/SplashEmblem";
+import SplashSky from "@/components/splash/SplashSky";
+import { useSplashChoreography } from "@/components/splash/useSplashChoreography";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import hadiths from "../assets/data/hadiths.json";
 
 const LAST_SPLASH_KEY = "lastSplashDate";
 
 /**
- * The wordmark sits at a fixed fraction of the screen height rather than in a
- * flex slot, so it lands in exactly the same place whether or not the hadith is
- * present. A repeat launch is then the same screen with the passage removed,
- * not a differently-composed one.
+ * Star and wordmark sit at fixed fractions of the screen height rather than in
+ * a flex slot, so they land in exactly the same place whether or not the hadith
+ * is present. A repeat launch is the same screen with the passage removed.
  */
-const WORDMARK_TOP_RATIO = 0.3;
+const EMBLEM_CENTER_RATIO = 0.296;
+const WORDMARK_TOP_RATIO = 0.4185;
+const EMBLEM_MAX_SIZE = 156;
+const EMBLEM_HEIGHT_RATIO = 0.18;
+const PASSAGE_BOTTOM = 72;
+const RISE_PX = 9;
+// How far each layer travels on the way out. The sky only drifts; the star
+// swells past the screen edges, so the exit reads as moving through it.
+const EXIT_SKY_SCALE = 1.12;
+const EXIT_STAR_SCALE = 1.6;
+const EXIT_TEXT_LIFT_PX = -10;
+
+/** The longest hadiths ran into the wordmark at the full size. */
+const LONG_ARABIC_CHARS = 60;
 
 /** How long the splash holds before dissolving, once the app is ready. */
-const DWELL_WITH_PASSAGE_MS = 1600;
-const DWELL_PLAIN_MS = 600;
+const DWELL_FIRST_MS = 2750;
+const DWELL_REPEAT_MS = 1250;
+
+type Launch = "unknown" | "first" | "repeat";
 
 type Props = {
   // When true, start the fade out and call onFinished at the end
@@ -43,32 +59,46 @@ type Props = {
   onFinished?: () => void;
 };
 
-export default function SplashScreen({
-  ready,
-  onReadyToHideNative,
-  onFinished,
-}: Props) {
+export default function SplashScreen({ ready, onReadyToHideNative, onFinished }: Props) {
   const { theme, isHydrated } = useTheme();
   const splashTheme = isHydrated ? theme : darkTheme;
   const themeColors = splashTheme.colors;
-  const styles = useMemo(() => createStyles(splashTheme), [splashTheme]);
   const screenMargin = useScreenMargin();
   const { height } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
+
+  const emblemSize = Math.min(EMBLEM_MAX_SIZE, height * EMBLEM_HEIGHT_RATIO);
+  const wordmarkSize = Math.min(50, height * 0.06);
+  // Gold is under 2:1 on the cream Light sky: text drops to the dark ink and the
+  // emblem line to the deeper gold.
+  const isLight = splashTheme.name === "light";
+  const goldText = isLight ? themeColors.textSecondary : themeColors.accent;
+  const goldLine = isLight ? themeColors.primaryOutline : themeColors.accent;
+  const styles = useMemo(
+    () => createStyles(splashTheme, wordmarkSize, goldText),
+    [splashTheme, wordmarkSize, goldText],
+  );
 
   const [hadith, setHadith] = useState<{
     arabic: string;
     english: string;
     source: string;
   } | null>(null);
-  const [isFirstLaunchToday, setIsFirstLaunchToday] = useState(false);
+  const [launch, setLaunch] = useState<Launch>("unknown");
 
-  // The screen has no entrance animation: it is composed when you see it. The
-  // only animated value is the dissolve into the app, so the handoff isn't a
-  // hard cut. Opaque at start so nothing beneath shows through.
-  const opacity = useRef(new Animated.Value(1)).current;
+  // Hold the opening until the Arabic face is in (or has failed), so the Arabic
+  // never visibly swaps faces and a failed load never blocks the splash.
+  const [fontLoaded, fontError] = useFonts({
+    [SPLASH_ARABIC_FONT]: require("../assets/fonts/Amiri-Regular.ttf"),
+  });
+  const fontSettled = fontLoaded || fontError !== null;
+
+  // 0 = splash showing, 1 = gone. The text lifts away first, the star swells and
+  // clears, and the sky drifts and fades last, so the exit moves into the app
+  // rather than just dimming.
+  const exit = useRef(new RNAnimated.Value(0)).current;
   const startedAtMs = useRef(Date.now());
 
-  // Check if this is the first launch today
   useEffect(() => {
     const checkFirstLaunch = async () => {
       try {
@@ -76,12 +106,15 @@ export default function SplashScreen({
         const lastSplash = await AsyncStorage.getItem(LAST_SPLASH_KEY);
 
         if (lastSplash !== today) {
-          setIsFirstLaunchToday(true);
+          setLaunch("first");
           await AsyncStorage.setItem(LAST_SPLASH_KEY, today);
+        } else {
+          setLaunch("repeat");
         }
       } catch (error) {
-        // If error, default to shorter splash
+        // If error, default to the shorter splash
         console.log("Error checking first launch:", error);
+        setLaunch("repeat");
       }
     };
 
@@ -96,37 +129,44 @@ export default function SplashScreen({
     setHadith(today);
   }, []);
 
-  // The passage is the first launch of the day only. Every launch after that is
-  // the masthead alone.
-  const showPassage = isFirstLaunchToday && hadith !== null;
+  const isFirst = launch === "first";
+  const showPassage = isFirst && hadith !== null;
+  const { star, ring, lettering, masthead, passage } = useSplashChoreography(
+    launch !== "unknown" && fontSettled,
+    launch === "repeat",
+    reduceMotion,
+  );
 
-  // Dissolve out once the app is ready, after holding long enough to read
+  const mastheadStyle = useAnimatedStyle(() => ({
+    opacity: masthead.value,
+    transform: [{ translateY: (1 - masthead.value) * RISE_PX }],
+  }));
+  const passageStyle = useAnimatedStyle(() => ({
+    opacity: passage.value,
+    transform: [{ translateY: (1 - passage.value) * RISE_PX }],
+  }));
+
+  // Dissolve out once the app is ready, after holding long enough for the opening
   useEffect(() => {
-    if (!ready) return;
-    const dwellMs = isFirstLaunchToday ? DWELL_WITH_PASSAGE_MS : DWELL_PLAIN_MS;
+    if (!ready || launch === "unknown") return;
     const elapsed = Date.now() - startedAtMs.current;
 
     const timeout = setTimeout(
       () => {
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: isFirstLaunchToday ? 360 : 220,
-          easing: Easing.bezier(0.4, 0, 1, 1), // iOS fade-out easing
+        RNAnimated.timing(exit, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.bezier(0.4, 0, 0.2, 1),
           useNativeDriver: true,
         }).start(({ finished }) => {
           if (finished && onFinished) onFinished();
         });
       },
-      Math.max(0, dwellMs - elapsed),
+      Math.max(0, (isFirst ? DWELL_FIRST_MS : DWELL_REPEAT_MS) - elapsed),
     );
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, isFirstLaunchToday]);
-
-  // Hide native splash once this component has a frame on screen
-  const handleLayout = (_e: LayoutChangeEvent) => {
-    onReadyToHideNative?.();
-  };
+  }, [ready, launch]);
 
   const hijriDate = useMemo(
     () =>
@@ -138,173 +178,195 @@ export default function SplashScreen({
     [],
   );
 
+  const longArabic = (hadith?.arabic.length ?? 0) > LONG_ARABIC_CHARS;
+
   return (
-    <LinearGradient
-      colors={[
-        themeColors.primaryDeep,
-        themeColors.primary,
-        themeColors.primaryLift,
+    <RNAnimated.View
+      style={[
+        styles.root,
+        {
+          opacity: exit.interpolate({
+            inputRange: [0.35, 1],
+            outputRange: [1, 0],
+            extrapolate: "clamp",
+          }),
+        },
       ]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.gradient}
-      onLayout={handleLayout}
+      onLayout={() => onReadyToHideNative?.()}
       testID="splash-root"
     >
-      {/* Ambient aurora background, then the splash-only atmosphere on top */}
-      <Aurora />
-      <SplashAtmosphere />
-
-      <Animated.View
-        testID="splash-anchor"
+      <RNAnimated.View
         style={[
-          styles.container,
-          { paddingHorizontal: screenMargin, paddingTop: height * WORDMARK_TOP_RATIO },
-          { opacity },
+          StyleSheet.absoluteFill,
+          {
+            transform: [
+              { scale: exit.interpolate({ inputRange: [0, 1], outputRange: [1, EXIT_SKY_SCALE] }) },
+            ],
+          },
         ]}
       >
-        {/* The rule runs beside the wordmark on every launch, so when the
-            passage arrives below it reads as one system rather than a gold bar
-            appearing out of nowhere once a day. */}
-        <View style={styles.masthead}>
-          <View style={[styles.rule, styles.mastheadRule]} />
-          <View style={styles.mastheadText}>
-            <Text testID="splash-wordmark" style={styles.wordmark} allowFontScaling={false}>
-              Sirat
-            </Text>
-            <Text style={styles.tagline} allowFontScaling={false}>
-              The path to your deen
-            </Text>
-            <Text testID="splash-hijri" style={styles.hijri} allowFontScaling={false}>
-              {hijriDate.toUpperCase()}
-            </Text>
-          </View>
-        </View>
+        <SplashSky
+          theme={splashTheme}
+          reduceMotion={reduceMotion}
+          glow={
+            launch === "unknown"
+              ? undefined
+              : showPassage
+                ? { progress: passage, variant: "focused" }
+                : { progress: masthead, variant: "soft" }
+          }
+        />
+        <RNAnimated.View
+          style={[
+            styles.emblem,
+            { top: height * EMBLEM_CENTER_RATIO - emblemSize / 2 },
+            {
+              opacity: exit.interpolate({
+                inputRange: [0, 0.7],
+                outputRange: [1, 0],
+                extrapolate: "clamp",
+              }),
+              transform: [
+                {
+                  scale: exit.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, EXIT_STAR_SCALE],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <SplashEmblem
+            size={emblemSize}
+            color={goldLine}
+            star={star}
+            ring={ring}
+            lettering={lettering}
+          />
+        </RNAnimated.View>
+      </RNAnimated.View>
 
-        <View style={styles.spacer} />
+      <RNAnimated.View
+        testID="splash-anchor"
+        style={[
+          styles.anchor,
+          { paddingHorizontal: screenMargin, paddingTop: height * WORDMARK_TOP_RATIO },
+          {
+            opacity: exit.interpolate({
+              inputRange: [0, 0.4],
+              outputRange: [1, 0],
+              extrapolate: "clamp",
+            }),
+            transform: [
+              {
+                translateY: exit.interpolate({
+                  inputRange: [0, 0.4],
+                  outputRange: [0, EXIT_TEXT_LIFT_PX],
+                  extrapolate: "clamp",
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Animated.View style={[styles.masthead, mastheadStyle]}>
+          <Text testID="splash-wordmark" style={styles.wordmark} allowFontScaling={false}>
+            Sirat
+          </Text>
+          <Text testID="splash-hijri" style={styles.hijri} allowFontScaling={false}>
+            {hijriDate.toUpperCase()}
+          </Text>
+        </Animated.View>
 
-        {/* Marked in the margin the way a read passage is. */}
         {showPassage && hadith ? (
-          <View testID="splash-passage" style={styles.passage}>
-            <View style={styles.rule} />
-            <View style={styles.passageText}>
-              <Text style={styles.arabic} allowFontScaling={false}>
-                {hadith.arabic}
+          <Animated.View
+            testID="splash-passage"
+            style={[styles.passage, { paddingHorizontal: screenMargin }, passageStyle]}
+          >
+            <Text
+              style={[styles.arabic, longArabic && styles.arabicLong]}
+              allowFontScaling={false}
+            >
+              {hadith.arabic}
+            </Text>
+            <Text style={styles.english} allowFontScaling={false}>
+              {hadith.english}
+            </Text>
+            {hadith.source ? (
+              <Text style={styles.source} allowFontScaling={false}>
+                {hadith.source}
               </Text>
-              <Text style={styles.english} allowFontScaling={false}>
-                {hadith.english}
-              </Text>
-              {hadith.source ? (
-                <Text style={styles.source} allowFontScaling={false}>
-                  {hadith.source}
-                </Text>
-              ) : null}
-            </View>
-          </View>
+            ) : null}
+          </Animated.View>
         ) : null}
-      </Animated.View>
-    </LinearGradient>
+      </RNAnimated.View>
+    </RNAnimated.View>
   );
 }
 
 const noAndroidPadding = Platform.OS === "android" ? { includeFontPadding: false } : null;
 
-const createStyles = (theme: AppTheme) => {
+const createStyles = (theme: AppTheme, wordmarkSize: number, goldText: string) => {
   const { colors, spacing } = theme;
 
   return StyleSheet.create({
-    gradient: {
-      flex: 1,
-    },
-    container: {
-      flex: 1,
-      paddingBottom: spacing.huge + spacing.xxxl,
-    },
-    masthead: {
-      flexDirection: "row",
-      alignItems: "stretch",
-      gap: spacing.lg,
-    },
-    // Quieter than the passage's rule: this one is structure, that one is a mark.
-    mastheadRule: {
-      opacity: 0.55,
-    },
-    mastheadText: {
-      flex: 1,
-    },
-    // Above the type scale on purpose. The scale tops out at 34 for screens
-    // that also carry UI; this screen carries none, so the type is set for a
-    // page rather than for an interface. Dynamic Type is off throughout for the
-    // same reason — nothing here is read at length, and reflow would break the
-    // fixed anchor.
+    root: { flex: 1 },
+    anchor: { flex: 1, alignItems: "center" },
+    emblem: { position: "absolute", left: 0, right: 0, alignItems: "center" },
+    masthead: { alignItems: "center" },
+    // Above the type scale on purpose: this screen carries no UI, so the type is
+    // set for a page. Dynamic Type is off throughout because reflow would break
+    // the fixed anchor.
     wordmark: {
-      fontSize: 56,
-      lineHeight: 62,
+      fontSize: wordmarkSize,
+      lineHeight: wordmarkSize * 1.12,
       fontWeight: "700",
-      letterSpacing: -1.2,
+      letterSpacing: -wordmarkSize * 0.02,
       color: colors.textPrimary,
-      ...noAndroidPadding,
-    },
-    tagline: {
-      marginTop: spacing.sm,
-      fontSize: 19,
-      lineHeight: 25,
-      fontWeight: "400",
-      color: colors.textTertiary,
       ...noAndroidPadding,
     },
     hijri: {
-      marginTop: spacing.lg,
-      fontSize: 14,
-      lineHeight: 19,
+      marginTop: spacing.md,
+      fontSize: 15,
+      lineHeight: 20,
       fontWeight: "700",
-      letterSpacing: 1.6,
-      color: colors.accent,
+      letterSpacing: 2.2,
+      color: goldText,
       ...noAndroidPadding,
     },
-    spacer: {
-      flex: 1,
-    },
     passage: {
-      flexDirection: "row",
-      alignItems: "stretch",
-      gap: spacing.lg,
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: PASSAGE_BOTTOM,
+      alignItems: "center",
     },
-    // The marked-passage rule. The one place accent earns a decorative role.
-    rule: {
-      width: 2,
-      borderRadius: 2,
-      backgroundColor: colors.accent,
-      opacity: 0.85,
-    },
-    passageText: {
-      flex: 1,
-    },
-    // Arabic needs more leading than the Latin scale allows or the diacritics
-    // collide with the line above.
     arabic: {
+      fontFamily: SPLASH_ARABIC_FONT,
       fontSize: 32,
-      lineHeight: 54,
+      lineHeight: 56,
       color: colors.textPrimary,
-      textAlign: "right",
+      textAlign: "center",
       writingDirection: "rtl",
       ...noAndroidPadding,
     },
+    arabicLong: { fontSize: 28, lineHeight: 49 },
     english: {
       marginTop: spacing.md,
       fontSize: 18,
       lineHeight: 25,
-      fontWeight: "400",
       color: colors.textSecondary,
+      textAlign: "center",
       ...noAndroidPadding,
     },
     source: {
       marginTop: spacing.md,
       fontSize: 14,
       lineHeight: 19,
-      fontWeight: "400",
       letterSpacing: 0.4,
-      color: colors.accent,
+      color: goldText,
+      textAlign: "center",
       ...noAndroidPadding,
     },
   });
