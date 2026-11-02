@@ -44,7 +44,6 @@ export default function PrayerTimesList({
   return (
     <View style={styles.list}>
       {prayerTimes.map((p, fi) => {
-        if (p.label === "Sunrise") return null;
         const name = prayerNameForArcLabel(p.label);
         const status = name ? statuses[name] : undefined;
         const isNext = fi === nextIdx;
