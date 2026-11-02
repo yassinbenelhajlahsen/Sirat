@@ -202,7 +202,6 @@ export default function Home() {
               <Text style={styles.flame} maxFontSizeMultiplier={1.2}>🔥</Text>
               <Body style={styles.trackerLabel}>{`${stats?.streak ?? 0} day streak`}</Body>
               <Subhead color={colors.textTertiary}>Tracker &amp; habits</Subhead>
-              <AppIcon name="chevron-forward" size={14} color={colors.iconMuted} />
             </GlassSurface>
           </PressableScale>
         </View>
