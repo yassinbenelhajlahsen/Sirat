@@ -104,15 +104,16 @@ export function withOpacity(hexColor: string, alpha: number): string {
 export type GlassTier = { fill: string; border: string; blur: number; solid: string };
 export type Materials = { chrome: GlassTier; card: GlassTier; row: GlassTier };
 
-export function buildMaterials(colors: AppColors, isLight: boolean): Materials {
+// `cardColor` is the one opaque color every content card and row paints, so
+// neighbouring cards match regardless of size or what sits behind them.
+export function buildMaterials(colors: AppColors, isLight: boolean, cardColor: string): Materials {
   // On dark themes glass is a light film; on light themes a dark tint.
   const tintBase = isLight ? colors.black : colors.white;
-  // Opaque fallback surfaces — used when real glass is unavailable (Expo Go, Android).
   const solidBase = isLight ? colors.primaryLift : colors.primarySurface;
   return {
     chrome: { fill: withOpacity(tintBase, isLight ? 0.06 : 0.1), border: withOpacity(tintBase, isLight ? 0.1 : 0.18), blur: 26, solid: withOpacity(solidBase, isLight ? 0.97 : 0.95) },
-    card:   { fill: withOpacity(tintBase, isLight ? 0.07 : 0.07), border: withOpacity(tintBase, isLight ? 0.08 : 0.13), blur: 18, solid: withOpacity(solidBase, isLight ? 0.96 : 0.92) },
-    row:    { fill: withOpacity(tintBase, isLight ? 0.04 : 0.05), border: withOpacity(tintBase, isLight ? 0.07 : 0.09), blur: 0,  solid: withOpacity(solidBase, isLight ? 0.93 : 0.86) },
+    card:   { fill: withOpacity(tintBase, isLight ? 0.07 : 0.07), border: withOpacity(tintBase, isLight ? 0.08 : 0.13), blur: 18, solid: cardColor },
+    row:    { fill: withOpacity(tintBase, isLight ? 0.04 : 0.05), border: withOpacity(tintBase, isLight ? 0.07 : 0.09), blur: 0,  solid: cardColor },
   };
 }
 
@@ -241,18 +242,19 @@ const lightColors: AppColors = {
 
 export const defaultTheme: AppTheme = {
   name: "default", colors: defaultColors, spacing, typography, type, radii,
-  materials: buildMaterials(defaultColors, false),
+  // Measured from the old clear-glass cards on the green gradient.
+  materials: buildMaterials(defaultColors, false, "#2F533F"),
   aurora: { accent: defaultColors.accent, secondary: defaultColors.accentSecondary, core: defaultColors.accentGlow },
 };
 export const darkTheme: AppTheme = {
   name: "dark", colors: darkColors, spacing, typography, type, radii,
-  materials: buildMaterials(darkColors, false),
+  materials: buildMaterials(darkColors, false, darkColors.primaryHighlight),
   // Cool indigo + teal aurora — harmonises with the navy canvas; gold accent still pops.
   aurora: { accent: "#6E8BFF", secondary: darkColors.accentSecondary, core: "#8FA8FF" },
 };
 export const lightTheme: AppTheme = {
   name: "light", colors: lightColors, spacing, typography, type, radii,
-  materials: buildMaterials(lightColors, true),
+  materials: buildMaterials(lightColors, true, lightColors.primaryHighlight),
   aurora: { accent: lightColors.accent, secondary: lightColors.accentSecondary, core: lightColors.accentGlow },
 };
 

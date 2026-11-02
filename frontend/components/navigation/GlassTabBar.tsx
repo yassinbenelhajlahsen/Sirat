@@ -88,11 +88,6 @@ export default function GlassTabBar({ state, navigation }: BottomTabBarProps) {
           bordered={false}
           style={[styles.pill, { paddingHorizontal: PAD }]}
         >
-          {/* Smoked-glass scrim: darkens the chrome so it reads as chrome, not content. */}
-          <View
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { backgroundColor: withOpacity(colors.primaryDeep, 0.5) }]}
-          />
           {/* Fluid sliding glass-capsule indicator (translucent highlight over the glass pill). */}
           <Animated.View
             pointerEvents="none"

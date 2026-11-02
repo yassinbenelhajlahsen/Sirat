@@ -3,18 +3,9 @@ import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 
 /**
- * The dua card swap is deliberately un-animated.
- *
- * Both cards are `GlassSurface`, and iOS Liquid Glass samples what is behind it
- * through its own layer — it cannot do that under an animated ancestor. A
- * GlassView mounted beneath either group opacity *or* a non-identity transform
- * renders as nothing, and it does not recover once the animation settles. So a
- * crossfade here costs the arriving card its container permanently, which is
- * the bug this replaced: close a dua result and the "Ask for a dua" card came
- * back with its content sitting straight on the gradient.
- *
- * If the motion is wanted back, it has to move *inside* each card — the glass
- * container static, its contents fading — never onto the wrapper.
+ * The dua card swap is un-animated because the cards used to be Liquid Glass,
+ * which renders nothing under an animated ancestor. Cards are solid surfaces
+ * now, so that limit no longer applies.
  */
 export function useDuaInteraction() {
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);

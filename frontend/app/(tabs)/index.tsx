@@ -146,7 +146,7 @@ export default function Home() {
               {displayName ? `${baseGreeting}, ${displayName}` : baseGreeting}
             </Title1>
             <Title3 color={colors.accent} numberOfLines={1} style={styles.headerHijri}>
-              {`${islamicDate} AH`}
+              {islamicDate}
             </Title3>
             <Footnote color={colors.textTertiary} style={styles.headerDate}>
               {locationLabel ? `${gregorianDate} · ${locationLabel}` : gregorianDate}

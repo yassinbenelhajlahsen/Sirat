@@ -33,10 +33,11 @@ export default function GlassSurface({
   const m = theme.materials[tier];
   const r = radius ?? theme.radii.card;
 
-  const useGlass = Platform.OS === "ios" && isLiquidGlassAvailable();
-  // Always "clear": the frosted "regular" material reads as a grey panel on the light
-  // theme's cream canvas, and on dark themes iOS shades it lighter on some card sizes,
-  // so neighbouring cards stop matching.
+  // Only floating chrome (tab bar, round buttons, toasts, mini player) is Liquid
+  // Glass; cards and rows are a solid surface so neighbouring ones always match.
+  // Chrome is always "clear": the frosted "regular" material reads as a grey panel
+  // on the light theme's cream canvas.
+  const useGlass = tier === "chrome" && Platform.OS === "ios" && isLiquidGlassAvailable();
   const isLight = theme.name === "light";
 
   const shared: ViewStyle = {
@@ -65,7 +66,7 @@ export default function GlassSurface({
       style={[
         shared,
         { borderWidth: bordered ? 1 : StyleSheet.hairlineWidth },
-        { backgroundColor: m.fill },
+        { backgroundColor: tier === "chrome" ? m.fill : m.solid },
         style,
       ]}
       {...rest}
