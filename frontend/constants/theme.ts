@@ -83,6 +83,11 @@ export const type: Record<TypeStyleName, TypeStyle> = {
   caption: { fontSize: 12, lineHeight: 16, fontWeight: "400" },
 };
 
+// Shared Liquid Glass tint for floating chrome and buttons. Lighter on the light
+// theme, where its tan base would otherwise read heavy on the cream canvas.
+export const glassTintFor = (theme: Pick<AppTheme, "name" | "colors">): string =>
+  withOpacity(theme.colors.primaryDeep, theme.name === "light" ? 0.4 : 0.6);
+
 export function withOpacity(hexColor: string, alpha: number): string {
   const sanitized = hexColor.replace("#", "");
   const normalized =

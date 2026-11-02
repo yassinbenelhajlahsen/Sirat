@@ -30,6 +30,7 @@ import {
   QuranAudioProvider,
   useQuranAudioController,
 } from "@/context/QuranAudioProvider";
+import { glassTintFor } from "@/constants/theme";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { useNativeHeaderOptions } from "@/hooks/useNativeHeaderOptions";
 import { preloadQuranData } from "@/services/quranData";
@@ -475,6 +476,8 @@ function RootLayoutContent() {
                         type: "button",
                         label: "Close",
                         icon: { type: "sfSymbol", name: "xmark" },
+                        variant: "prominent" as const,
+                        tintColor: glassTintFor(theme),
                         onPress: () => router.back(),
                       },
                     ],
@@ -503,6 +506,8 @@ function RootLayoutContent() {
                         type: "button",
                         label: "Close",
                         icon: { type: "sfSymbol", name: "xmark" },
+                        variant: "prominent" as const,
+                        tintColor: glassTintFor(theme),
                         onPress: () => router.back(),
                       },
                     ],

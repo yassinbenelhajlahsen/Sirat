@@ -25,6 +25,7 @@ export default function SheetTitleBar({ title, onClose, closeLabel = "Close", cl
       </Headline>
       <IconButton
         icon="close"
+        variant="glass"
         size={36}
         iconSize={16}
         accessibilityLabel={closeLabel}

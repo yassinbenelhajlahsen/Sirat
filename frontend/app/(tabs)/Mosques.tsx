@@ -69,8 +69,6 @@ export default function MosqueScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const haptic = useHaptics();
-  // Tinted so the floating controls stay readable over the map.
-  const glassTint = withOpacity(colors.primaryDeep, 0.6);
   const errorTint = withOpacity(colors.danger, 0.55);
   const customMapStyle = useMemo(() => {
     if (theme.name === "light") return undefined;
@@ -379,7 +377,6 @@ export default function MosqueScreen() {
           >
             <GlassSurface
               tier="chrome"
-              tint={glassTint}
               radius={999}
               curve="circular"
               style={styles.searchAreaPill}
@@ -416,7 +413,6 @@ export default function MosqueScreen() {
         >
           <GlassSurface
             tier="chrome"
-            tint={glassTint}
             radius={theme.radii.card}
             style={styles.emptyCard}
           >
@@ -433,7 +429,7 @@ export default function MosqueScreen() {
           style={[styles.spinnerWrap, { top: insets.top + spacing.md }]}
           pointerEvents="none"
         >
-          <GlassSurface tier="chrome" tint={glassTint} radius={theme.radii.pill} curve="circular" style={styles.spinner}>
+          <GlassSurface tier="chrome" radius={theme.radii.pill} curve="circular" style={styles.spinner}>
             <ActivityIndicator size="small" color={colors.accent} />
           </GlassSurface>
         </View>
@@ -444,7 +440,6 @@ export default function MosqueScreen() {
           <IconButton
             icon="locate"
             variant="glass"
-            glassTint={glassTint}
             size={RECENTER_SIZE}
             iconSize={20}
             color={colors.white}
@@ -454,7 +449,6 @@ export default function MosqueScreen() {
           <IconButton
             icon="list"
             variant="glass"
-            glassTint={glassTint}
             size={RECENTER_SIZE}
             iconSize={20}
             color={colors.white}

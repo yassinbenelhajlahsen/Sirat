@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Platform, StyleProp, StyleSheet, View, ViewProps, ViewStyle } from "react-native";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 
+import { glassTintFor } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 type Tier = "chrome" | "card" | "row";
@@ -55,7 +56,7 @@ export default function GlassSurface({
       <GlassView
         key={theme.name}
         glassEffectStyle="clear"
-        tintColor={tint}
+        tintColor={tint ?? glassTintFor(theme)}
         colorScheme={isLight ? "light" : "dark"}
         style={[shared, { borderWidth: bordered ? 1 : 0 }, style]}
         {...rest}
