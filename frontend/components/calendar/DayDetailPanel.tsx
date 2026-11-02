@@ -125,6 +125,7 @@ export default function DayDetailPanel({
           timeLeft={isToday ? timeLeft : undefined}
           date={date}
           live={isToday}
+          showDial={isToday}
           coords={coords}
           logging
           statuses={statuses}
