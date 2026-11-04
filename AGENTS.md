@@ -89,8 +89,7 @@ Important frontend flows:
 - `OPENAI_API_KEY` default: empty (AI disabled, fallback mode used)
 - `OPENAI_MODEL` default: `gpt-4-turbo`
 - `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
-- `MIN_SUPPORTED_APP_VERSION` default: `1.0.0` (minimum client version allowed)
-- `ENFORCE_MIN_VERSION` default: `false` (monitor mode — logs but never blocks; set to `true` to enforce)
+- `MIN_SUPPORTED_APP_VERSION` default: `1.0.0` (minimum client version allowed; the gate always enforces it)
 - Database migrations: Prisma Migrate. Schema in `backend/prisma/schema.prisma`;
   migrations in `backend/prisma/migrations/`. Apply with `npm run migrate`
   (`prisma migrate deploy`); author new ones with `npm run migrate:dev`.
@@ -139,4 +138,4 @@ Important frontend flows:
 - When changing dua schema/category behavior, keep frontend and backend dua data/logic aligned.
 - Frontend test coverage map and conventions live in `frontend/__tests__/README.md`; update it when adding/removing major frontend test suites.
 - All frontend API calls must go through `frontend/services/apiClient.ts` (`apiFetch`/`apiPost`) so version headers and 426 interception are applied consistently. Do not add raw `fetch`/`axios` calls in service files.
-- Force update gate rollout: deploy backend with `ENFORCE_MIN_VERSION=false` first, ship frontend OTA second, then flip `ENFORCE_MIN_VERSION=true`.
+- Force update: raise `MIN_SUPPORTED_APP_VERSION` only after the new native build is approved and live on the App Store. Every build below it is blocked with 426 at once; OTA-only changes never need it.
