@@ -54,7 +54,7 @@ export default function QuranDisplaySettingsModal({
   );
 
   return (
-    <NativeSheet visible={visible} onClose={onClose} title="Display Text">
+    <NativeSheet visible={visible} onClose={onClose} title="Quran Settings">
       <View style={styles.content}>
         <Footnote color={themeColors.textSecondary} style={styles.hint}>
           Select which text to show

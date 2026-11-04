@@ -1417,18 +1417,16 @@ function QuranScreen() {
                 accessibilityLabel="Search"
                 accessibilityHint="Find a surah, ayah, juz, or bookmark"
               />
-              <PressableScale
-                variant="button"
+              <IconButton
+                icon="settings-outline"
+                variant="tonal"
+                size={40}
+                iconSize={18}
+                color={themeColors.white}
                 onPress={() => { closeAllSheets(); setDisplaySettingsOpen(true); }}
-                accessibilityRole="button"
-                accessibilityLabel="Display settings"
-                accessibilityHint="Choose which text shows and its size"
-                hitSlop={2}
-              >
-                <View style={styles.ctrl}>
-                  <Footnote color={themeColors.white} style={styles.aa} maxFontSizeMultiplier={1}>Aa</Footnote>
-                </View>
-              </PressableScale>
+                accessibilityLabel="Quran settings"
+                accessibilityHint="Choose the text shown, its size, and the reciter"
+              />
             </View>
           </View>
 
@@ -1552,17 +1550,11 @@ const createStyles = (theme: AppTheme) => {
     headerActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
     // 40pt visual with hitSlop padding the target to 44. Both carry
     // IconButton's `tonal` fill so the three header controls read as one set.
-    ctrl: {
-      width: 40, height: 40, borderRadius: 20, borderCurve: "circular",
-      alignItems: "center", justifyContent: "center",
-      backgroundColor: withOpacity(themeColors.white, 0.1),
-    },
     ctrlOffline: {
       width: 40, height: 40, borderRadius: radii.pill, borderCurve: "circular",
       alignItems: "center", justifyContent: "center",
       backgroundColor: withOpacity(themeColors.white, 0.1),
     },
-    aa: { fontWeight: "700" },
     list: {
       flex: 1,
     },

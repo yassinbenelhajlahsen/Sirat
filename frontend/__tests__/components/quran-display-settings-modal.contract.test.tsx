@@ -66,7 +66,7 @@ describe("QuranDisplaySettingsModal contract", () => {
       <QuranDisplaySettingsModal visible={false} onClose={jest.fn()} />
     );
 
-    expect(queryByText("Display Text")).toBeNull();
+    expect(queryByText("Quran Settings")).toBeNull();
   });
 
   it("renders display options, exposes checkbox contract, and wires toggles/close", () => {
@@ -82,7 +82,7 @@ describe("QuranDisplaySettingsModal contract", () => {
       <QuranDisplaySettingsModal visible onClose={onClose} />
     );
 
-    expect(getByText("Display Text")).toBeTruthy();
+    expect(getByText("Quran Settings")).toBeTruthy();
     expect(getByText("Select which text to show")).toBeTruthy();
     expect(getByText("Arabic")).toBeTruthy();
     expect(getByText("English")).toBeTruthy();
