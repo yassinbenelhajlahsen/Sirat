@@ -45,6 +45,20 @@ export async function readMasterEnabled(): Promise<boolean> {
   return raw === "1";
 }
 
+const masterListeners = new Set<(enabled: boolean) => void>();
+
+/** The master notifications switch. Listeners hear only real changes. */
+export async function writeMasterEnabled(enabled: boolean): Promise<void> {
+  const changed = (await readMasterEnabled()) !== enabled;
+  await AsyncStorage.setItem(STORAGE_ENABLED, enabled ? "1" : "0");
+  if (changed) for (const listener of [...masterListeners]) listener(enabled);
+}
+
+export function subscribeMasterEnabled(listener: (enabled: boolean) => void): () => void {
+  masterListeners.add(listener);
+  return () => masterListeners.delete(listener);
+}
+
 export async function readDayFingerprint(): Promise<string> {
   return (await AsyncStorage.getItem(STORAGE_DAYKEY)) || "";
 }

@@ -39,6 +39,7 @@ import { preloadPrayerLog } from "@/services/prayerTracker";
 import { preloadHabitLog } from "@/services/habitTracker";
 import { PortalProvider } from "@gorhom/portal";
 import { NotificationService } from "../services/notificationService";
+import { writeMasterEnabled } from "@/services/notifications/storage";
 import { routeNotificationResponse } from "@/services/notifications/response";
 import ForceUpdateGate from "@/components/ForceUpdateGate";
 import SplashScreen from "@/components/SplashScreen";
@@ -68,7 +69,6 @@ const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "
 // Storage keys and events used elsewhere in your app
 export const NOTIF_ENABLED_KEY = "notif_enabled_v1";
 export const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
-export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
 async function preloadImages() {
   await Asset.loadAsync([]);
@@ -120,16 +120,8 @@ export async function syncNotificationPermissionToToggle() {
   if (osGranted && !currentEnabled) nextEnabled = true;
   if (!osGranted && currentEnabled) nextEnabled = false;
 
-  await AsyncStorage.setItem(NOTIF_ENABLED_KEY, nextEnabled ? "1" : "0");
+  await writeMasterEnabled(nextEnabled);
   await AsyncStorage.setItem(NOTIF_OS_STATUS_KEY, JSON.stringify(status));
-
-  // 4) Notify the app so any schedulers/UI update
-  try {
-    DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, {
-      enabled: nextEnabled,
-      osStatus: status,
-    });
-  } catch {}
 }
 
 type InitialSyncDeps = {

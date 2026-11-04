@@ -37,8 +37,6 @@ export const SOUND_OPTIONS: {
   },
 ];
 
-export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
-
 export const DEFAULT_PREFS = PRAYERS.reduce<Record<PrayerKey, boolean>>(
   (acc, key) => {
     acc[key] = true;

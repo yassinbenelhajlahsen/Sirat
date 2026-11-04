@@ -8,6 +8,8 @@ type LifecycleSetup = {
   addAppStateListenerMock: jest.Mock;
   msUntilNextLocalMidnightPlusMock: jest.Mock;
   settings: typeof import("@/services/syncedSettings");
+  storage: typeof import("@/services/notifications/storage");
+  hijri: typeof import("@/utils/hijriDate");
 };
 
 function loadLifecycle(): LifecycleSetup {
@@ -46,10 +48,6 @@ function loadLifecycle(): LifecycleSetup {
     msUntilNextLocalMidnightPlus: msUntilNextLocalMidnightPlusMock,
   }));
 
-  jest.doMock("@/services/tracking/prayerLog", () => ({
-    PRAYER_LOG_UPDATED_EVENT: "PRAYER_LOG_UPDATED",
-  }));
-
   const mod = require("@/services/notifications/lifecycle");
 
   return {
@@ -60,6 +58,8 @@ function loadLifecycle(): LifecycleSetup {
     addAppStateListenerMock,
     msUntilNextLocalMidnightPlusMock,
     settings: require("@/services/syncedSettings") as typeof import("@/services/syncedSettings"),
+    storage: require("@/services/notifications/storage") as typeof import("@/services/notifications/storage"),
+    hijri: require("@/utils/hijriDate") as typeof import("@/utils/hijriDate"),
   };
 }
 
@@ -72,41 +72,43 @@ describe("notifications/lifecycle", () => {
     jest.useRealTimers();
   });
 
-  it("attaches listeners once and emits expected reschedule reasons", async () => {
+  it("attaches listeners once and asks for a reschedule with the right reason", async () => {
     const setup = loadLifecycle();
     const onReschedule = jest.fn();
 
     setup.initNotificationLifecycle(onReschedule);
+    setup.initNotificationLifecycle(onReschedule);
 
-    expect(setup.addListenerMock).toHaveBeenCalledTimes(2);
+    expect(setup.addListenerMock).toHaveBeenCalledTimes(1);
     expect(setup.addAppStateListenerMock).toHaveBeenCalledTimes(1);
 
-    setup.eventCallbacks.NOTIF_PREFS_UPDATED();
     setup.appStateRef.cb?.("active");
+    expect(onReschedule).toHaveBeenLastCalledWith("app-foreground");
+
     await setup.settings.prayerSettingsSetting.set({ useLocation: true, method: 2, city: null });
-
-    expect(onReschedule).toHaveBeenCalledWith("notif-prefs-changed");
-    expect(onReschedule).toHaveBeenCalledWith("settings-changed");
-    expect(onReschedule).toHaveBeenCalledWith("app-foreground");
-
-    onReschedule.mockClear();
-    await setup.settings.notifFridaySetting.applyRemote(false);
-    expect(onReschedule).toHaveBeenCalledWith("notif-prefs-changed");
-
-    setup.initNotificationLifecycle(onReschedule);
-    expect(setup.addListenerMock).toHaveBeenCalledTimes(2);
-    expect(setup.addAppStateListenerMock).toHaveBeenCalledTimes(1);
-  });
-
-  it("invokes onReschedule with 'prayer-log-changed' when PRAYER_LOG_UPDATED_EVENT is emitted", async () => {
-    const setup = loadLifecycle();
-    const onReschedule = jest.fn();
-
-    setup.initNotificationLifecycle(onReschedule);
+    expect(onReschedule).toHaveBeenLastCalledWith("settings-changed");
 
     setup.eventCallbacks.PRAYER_LOG_UPDATED();
+    expect(onReschedule).toHaveBeenLastCalledWith("prayer-log-changed");
+  });
 
-    expect(onReschedule).toHaveBeenCalledWith("prayer-log-changed");
+  it.each([
+    ["Friday reminder", (s: LifecycleSetup) => s.settings.notifFridaySetting.applyRemote(false)],
+    ["Ramadan mode", (s: LifecycleSetup) => s.settings.ramadanModeSetting.set(false)],
+    ["sound mode", (s: LifecycleSetup) => s.settings.notifSoundModeSetting.set("adhan")],
+    ["prayer toggles", (s: LifecycleSetup) => s.settings.notifPrefsSetting.set({ ...s.settings.notifPrefsSetting.peek(), Fajr: false })],
+    ["window offset", (s: LifecycleSetup) => s.settings.notifWindowOffsetSetting.set(30)],
+    ["window prayers", (s: LifecycleSetup) => s.settings.notifWindowMapSetting.set({ Fajr: true, Dhuhr: true, Asr: true, Maghrib: true })],
+    ["the master switch", (s: LifecycleSetup) => s.storage.writeMasterEnabled(true)],
+    ["Pretend it's Ramadan", async (s: LifecycleSetup) => s.hijri.setPretendRamadan(true)],
+  ])("asks for a reschedule on its own when %s changes", async (_name, change) => {
+    const setup = loadLifecycle();
+    const onReschedule = jest.fn();
+    setup.initNotificationLifecycle(onReschedule);
+
+    await change(setup);
+
+    expect(onReschedule).toHaveBeenCalledWith("notif-prefs-changed");
   });
 
   it("schedules midnight rollover and re-schedules after firing", async () => {

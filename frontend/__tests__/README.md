@@ -17,7 +17,10 @@ This folder contains frontend automated tests for the Expo/React Native app.
 ## Phase Coverage
 
 - `notification scheduling lifecycle testing`
-  - `services/notificationService.test.ts`
+  - `services/notificationService.test.ts` — master/permission gate, apply schedule, cancel on failure, overlapping requests collapse into one extra run
+  - `services/notifications/planner.test.ts` — pure planner: alert/window/Friday/Iftar planning, seen keys, 60 budget, plan fingerprint
+  - `services/notifications/scheduler.test.ts` — IO layer: reads inputs, replaces pending notifications only when the plan changed, tops up otherwise
+  - `services/notifications/lifecycle.test.ts` — what triggers a reschedule (each synced setting, master switch, Pretend Ramadan, prayer log, foreground, midnight)
   - `services/notifications/*.test.ts`
   - `utils/notifications/fridayReminder.test.ts` — Friday reminder picks: 10+ messages, 9:00 to 10:59 window, same result for a given Friday, varies across weeks
   - `services/notifications/response.test.ts` — notification tap routing: `data.url` opens the route, other types do nothing, one response routes once

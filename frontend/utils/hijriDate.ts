@@ -19,8 +19,16 @@ const RAMADAN_MONTH = 9;
 
 // Dev-only preview: a Settings switch makes every day count as Ramadan. In memory, so a reload clears it.
 let pretendRamadan = false;
+const pretendListeners = new Set<() => void>();
 export function setPretendRamadan(on: boolean): void {
-  pretendRamadan = __DEV__ && on;
+  const next = __DEV__ && on;
+  if (next === pretendRamadan) return;
+  pretendRamadan = next;
+  for (const listener of [...pretendListeners]) listener();
+}
+export function subscribePretendRamadan(listener: () => void): () => void {
+  pretendListeners.add(listener);
+  return () => pretendListeners.delete(listener);
 }
 export function isPretendingRamadan(): boolean {
   return pretendRamadan;

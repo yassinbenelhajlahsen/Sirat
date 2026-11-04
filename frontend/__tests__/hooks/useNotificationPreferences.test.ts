@@ -3,11 +3,11 @@ import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { DeviceEventEmitter } from "react-native";
 
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
+import { subscribeMasterEnabled } from "@/services/notifications/storage";
 import { getSettingsMeta } from "@/services/sync/settingsMeta";
 import {
   DEFAULT_PREFS,
   DEFAULT_WINDOW_PREFS,
-  NOTIF_PREFS_UPDATED_EVENT,
   STORAGE_ENABLED,
   STORAGE_FRIDAY,
   STORAGE_MAP,
@@ -226,10 +226,11 @@ describe("useNotificationPreferences", () => {
     expect((await getSettingsMeta()).notifFriday).toBe(stampedAt);
   });
 
-  it("applies notifStatus overrides and persists emitted state", async () => {
+  it("applies notifStatus overrides, persists them, and announces only real changes", async () => {
     await AsyncStorage.setItem(STORAGE_ENABLED, "1");
 
-    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
+    const changes = jest.fn();
+    const off = subscribeMasterEnabled(changes);
 
     const { result, rerender } = renderHook(
       ({ notifStatus }: { notifStatus: string | null }) =>
@@ -242,7 +243,7 @@ describe("useNotificationPreferences", () => {
       expect(result.current.enabled).toBe(true);
     });
 
-    emitSpy.mockClear();
+    expect(changes).not.toHaveBeenCalled();
 
     rerender({ notifStatus: "denied" });
 
@@ -251,12 +252,7 @@ describe("useNotificationPreferences", () => {
     });
 
     expect(await AsyncStorage.getItem(STORAGE_ENABLED)).toBe("0");
-    expect(emitSpy).toHaveBeenCalledWith(
-      NOTIF_PREFS_UPDATED_EVENT,
-      expect.objectContaining({ enabled: false }),
-    );
-
-    emitSpy.mockClear();
+    expect(changes).toHaveBeenLastCalledWith(false);
 
     rerender({ notifStatus: "granted" });
 
@@ -265,9 +261,8 @@ describe("useNotificationPreferences", () => {
     });
 
     expect(await AsyncStorage.getItem(STORAGE_ENABLED)).toBe("1");
-    expect(emitSpy).toHaveBeenCalledWith(
-      NOTIF_PREFS_UPDATED_EVENT,
-      expect.objectContaining({ enabled: true }),
-    );
+    expect(changes).toHaveBeenLastCalledWith(true);
+    expect(changes).toHaveBeenCalledTimes(2);
+    off();
   });
 });

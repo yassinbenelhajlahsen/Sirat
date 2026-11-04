@@ -1,270 +1,93 @@
-import type { PrayerKey } from "@/utils/notifications/constants";
+type Reason = "init" | "midnight" | "notif-prefs-changed" | "settings-changed" | "app-foreground" | "prayer-log-changed";
 
-type NotificationServiceSetup = {
-  NotificationService: {
-    init: () => Promise<void>;
-    rescheduleAll: (reason: "init" | "midnight" | "notif-prefs-changed" | "settings-changed" | "app-foreground" | "prayer-log-changed") => Promise<void>;
-    cancelAll: () => Promise<void>;
-  };
-  lifecycleCallbackRef: { cb?: (reason: any) => void };
-  mocks: {
-    setNotificationHandler: jest.Mock;
-    getPrayerTimesToday: jest.Mock;
-    getEffectivePrayerSettings: jest.Mock;
-    resolveCityDisplay: jest.Mock;
-    initNotificationLifecycle: jest.Mock;
-    configureAndroidNotificationChannel: jest.Mock;
-    ensureNotificationPermissions: jest.Mock;
-    cancelPreviouslyScheduled: jest.Mock;
-    scheduleForHorizon: jest.Mock;
-    yyyymmdd: jest.Mock;
-    readDayFingerprint: jest.Mock;
-    readMasterEnabled: jest.Mock;
-    readPrefs: jest.Mock;
-    readSoundMode: jest.Mock;
-    readWindowMap: jest.Mock;
-    readWindowOffset: jest.Mock;
-    readFridayEnabled: jest.Mock;
-    readRamadanMode: jest.Mock;
-    writeDayFingerprint: jest.Mock;
-  };
-};
-
-const defaultPrefs: Record<PrayerKey, boolean> = {
-  Fajr: true,
-  Sunrise: true,
-  Dhuhr: true,
-  Asr: true,
-  Maghrib: true,
-  Isha: true,
-};
-
-async function loadNotificationService(overrides?:
-  Partial<NotificationServiceSetup["mocks"]>): Promise<NotificationServiceSetup> {
+async function load(overrides: Record<string, jest.Mock> = {}) {
   jest.resetModules();
-
-  const lifecycleCallbackRef: { cb?: (reason: any) => void } = {};
-
-  const mocks: NotificationServiceSetup["mocks"] = {
+  const lifecycleCallbackRef: { cb?: (reason: Reason) => void } = {};
+  const mocks = {
     setNotificationHandler: jest.fn(),
-    getPrayerTimesToday: jest.fn(async () => [{ label: "Fajr", time: "05:00 AM" }]),
-    getEffectivePrayerSettings: jest.fn(async () => ({ useLocation: true, method: 2, city: null })),
-    resolveCityDisplay: jest.fn(async () => "Chicago"),
     initNotificationLifecycle: jest.fn((cb) => {
       lifecycleCallbackRef.cb = cb;
     }),
     configureAndroidNotificationChannel: jest.fn(async () => {}),
     ensureNotificationPermissions: jest.fn(async () => true),
-    cancelPreviouslyScheduled: jest.fn(async () => {}),
-    scheduleForHorizon: jest.fn(async () => {}),
-    yyyymmdd: jest.fn(() => "2026-02-25"),
-    readDayFingerprint: jest.fn(async () => ""),
     readMasterEnabled: jest.fn(async () => true),
-    readPrefs: jest.fn(async () => defaultPrefs),
-    readSoundMode: jest.fn(async () => "default"),
-    readWindowMap: jest.fn(async () => ({
-      Fajr: false,
-      Dhuhr: true,
-      Asr: false,
-      Maghrib: false,
-    })),
-    readWindowOffset: jest.fn(async () => 15),
-    readFridayEnabled: jest.fn(async () => true),
-    readRamadanMode: jest.fn(async () => true),
-    writeDayFingerprint: jest.fn(async () => {}),
+    cancelPreviouslyScheduled: jest.fn(async () => {}),
+    readPlanInputs: jest.fn(async () => ({ plan: "inputs" })),
+    applySchedule: jest.fn(async () => {}),
+    ...overrides,
   };
 
-  Object.assign(mocks, overrides ?? {});
-
-  jest.doMock("expo-notifications", () => ({
-    setNotificationHandler: mocks.setNotificationHandler,
-  }));
-
-  jest.doMock("@/services/prayerTimes", () => ({
-    getPrayerTimesToday: mocks.getPrayerTimesToday,
-  }));
-
-  jest.doMock("@/services/notifications/cityResolver", () => ({
-    resolveCityDisplay: mocks.resolveCityDisplay,
-  }));
-
-  jest.doMock("@/services/prayerSettings", () => ({
-    getEffectivePrayerSettings: mocks.getEffectivePrayerSettings,
-  }));
-
-  jest.doMock("@/services/notifications/lifecycle", () => ({
-    initNotificationLifecycle: mocks.initNotificationLifecycle,
-  }));
-
+  jest.doMock("expo-notifications", () => ({ setNotificationHandler: mocks.setNotificationHandler }));
+  jest.doMock("@/services/notifications/lifecycle", () => ({ initNotificationLifecycle: mocks.initNotificationLifecycle }));
   jest.doMock("@/services/notifications/permissions", () => ({
     configureAndroidNotificationChannel: mocks.configureAndroidNotificationChannel,
     ensureNotificationPermissions: mocks.ensureNotificationPermissions,
   }));
-
   jest.doMock("@/services/notifications/scheduler", () => ({
     cancelPreviouslyScheduled: mocks.cancelPreviouslyScheduled,
-    scheduleForHorizon: mocks.scheduleForHorizon,
-    yyyymmdd: mocks.yyyymmdd,
+    readPlanInputs: mocks.readPlanInputs,
+    applySchedule: mocks.applySchedule,
   }));
+  jest.doMock("@/services/notifications/storage", () => ({ readMasterEnabled: mocks.readMasterEnabled }));
 
-  jest.doMock("@/services/notifications/storage", () => ({
-    readDayFingerprint: mocks.readDayFingerprint,
-    readMasterEnabled: mocks.readMasterEnabled,
-    writeDayFingerprint: mocks.writeDayFingerprint,
-  }));
-
-  jest.doMock("@/services/syncedSettings", () => ({
-    notifPrefsSetting: { get: mocks.readPrefs },
-    notifSoundModeSetting: { get: mocks.readSoundMode },
-    notifWindowMapSetting: { get: mocks.readWindowMap },
-    notifWindowOffsetSetting: { get: mocks.readWindowOffset },
-    notifFridaySetting: { get: mocks.readFridayEnabled },
-    ramadanModeSetting: { get: mocks.readRamadanMode },
-  }));
-
-  const mod = require("@/services/notificationService");
-
-  return {
-    NotificationService: mod.NotificationService,
-    lifecycleCallbackRef,
-    mocks,
-  };
+  const { NotificationService } = require("@/services/notificationService");
+  return { NotificationService, lifecycleCallbackRef, mocks };
 }
 
 describe("NotificationService", () => {
   it("cancels schedules when permissions are denied", async () => {
-    const { NotificationService, mocks } = await loadNotificationService({
-      ensureNotificationPermissions: jest.fn(async () => false),
-    });
-
+    const { NotificationService, mocks } = await load({ ensureNotificationPermissions: jest.fn(async () => false) });
     await NotificationService.rescheduleAll("init");
-
     expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
-    expect(mocks.scheduleForHorizon).not.toHaveBeenCalled();
+    expect(mocks.applySchedule).not.toHaveBeenCalled();
   });
 
-  it("cancels schedules when master toggle is disabled", async () => {
-    const { NotificationService, mocks } = await loadNotificationService({
-      readMasterEnabled: jest.fn(async () => false),
-    });
-
+  it("cancels schedules when the master toggle is off", async () => {
+    const { NotificationService, mocks } = await load({ readMasterEnabled: jest.fn(async () => false) });
     await NotificationService.rescheduleAll("init");
-
     expect(mocks.ensureNotificationPermissions).toHaveBeenCalledTimes(1);
     expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
-    expect(mocks.scheduleForHorizon).not.toHaveBeenCalled();
+    expect(mocks.applySchedule).not.toHaveBeenCalled();
   });
 
-  it("rebuilds schedule and writes fingerprint when state changes", async () => {
-    const { NotificationService, mocks } = await loadNotificationService({
-      readDayFingerprint: jest.fn(async () => "old-key"),
-    });
-
+  it("applies a schedule built from freshly read inputs when enabled", async () => {
+    const { NotificationService, mocks } = await load();
     await NotificationService.rescheduleAll("init");
-
-    expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
-    expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
-    expect(mocks.writeDayFingerprint).toHaveBeenCalledTimes(1);
-    expect(mocks.writeDayFingerprint.mock.calls[0][0]).toContain("day_2026-02-25");
-  });
-
-  it("avoids heavy rebuild on app foreground when fingerprint is unchanged", async () => {
-    const { NotificationService, mocks } = await loadNotificationService({
-      readDayFingerprint: jest.fn(async () => "old-key"),
-    });
-
-    await NotificationService.rescheduleAll("init");
-    const fingerprint = mocks.writeDayFingerprint.mock.calls[0][0];
-
-    mocks.readDayFingerprint.mockResolvedValue(fingerprint);
-    mocks.cancelPreviouslyScheduled.mockClear();
-    mocks.scheduleForHorizon.mockClear();
-    mocks.writeDayFingerprint.mockClear();
-
-    await NotificationService.rescheduleAll("app-foreground");
-
+    expect(mocks.applySchedule).toHaveBeenCalledWith({ plan: "inputs" });
     expect(mocks.cancelPreviouslyScheduled).not.toHaveBeenCalled();
-    expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
-    expect(mocks.writeDayFingerprint).not.toHaveBeenCalled();
   });
 
-  it("forces rebuild on settings change even with unchanged fingerprint", async () => {
-    const { NotificationService, mocks } = await loadNotificationService({
-      readDayFingerprint: jest.fn(async () => "old-key"),
-    });
-
+  it("cancels everything if building the schedule fails", async () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const { NotificationService, mocks } = await load({ readPlanInputs: jest.fn(async () => { throw new Error("offline"); }) });
     await NotificationService.rescheduleAll("init");
-    const fingerprint = mocks.writeDayFingerprint.mock.calls[0][0];
+    expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
 
-    mocks.readDayFingerprint.mockResolvedValue(fingerprint);
-    mocks.cancelPreviouslyScheduled.mockClear();
-    mocks.scheduleForHorizon.mockClear();
-    mocks.writeDayFingerprint.mockClear();
+  it("requests during a run collapse into exactly one more run afterwards", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const applySchedule = jest.fn(async () => { if (applySchedule.mock.calls.length === 1) await gate; });
+    const { NotificationService } = await load({ applySchedule });
 
+    const first = NotificationService.rescheduleAll("init");
+    await Promise.resolve();
     await NotificationService.rescheduleAll("settings-changed");
-
-    expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
-    expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
-    expect(mocks.writeDayFingerprint).toHaveBeenCalledTimes(1);
-  });
-
-  it("forces rebuild on prayer-log-changed even with unchanged fingerprint", async () => {
-    const { NotificationService, mocks } = await loadNotificationService({
-      readDayFingerprint: jest.fn(async () => "old-key"),
-    });
-
-    await NotificationService.rescheduleAll("init");
-    const fingerprint = mocks.writeDayFingerprint.mock.calls[0][0];
-
-    mocks.readDayFingerprint.mockResolvedValue(fingerprint);
-    mocks.cancelPreviouslyScheduled.mockClear();
-    mocks.scheduleForHorizon.mockClear();
-    mocks.writeDayFingerprint.mockClear();
-
+    await NotificationService.rescheduleAll("notif-prefs-changed");
     await NotificationService.rescheduleAll("prayer-log-changed");
+    expect(applySchedule).toHaveBeenCalledTimes(1);
 
-    expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
-    expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
-    expect(mocks.writeDayFingerprint).toHaveBeenCalledTimes(1);
+    release();
+    await first;
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(applySchedule).toHaveBeenCalledTimes(2);
   });
 
-  it("passes window preferences and offset through to scheduleForHorizon", async () => {
-    const { NotificationService, mocks } = await loadNotificationService({
-      readDayFingerprint: jest.fn(async () => "old-key"),
-    });
-
-    await NotificationService.rescheduleAll("init");
-
-    expect(mocks.scheduleForHorizon).toHaveBeenCalledTimes(1);
-    expect(mocks.scheduleForHorizon.mock.calls[0][0]).toEqual(
-      expect.objectContaining({
-        windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
-        windowOffset: 15,
-        fridayEnabled: true,
-        ramadanMode: true,
-      }),
-    );
-  });
-
-  it("rebuilds the schedule when only Ramadan mode differs from the stored fingerprint", async () => {
-    const first = await loadNotificationService();
-    await first.NotificationService.rescheduleAll("init");
-    const fingerprint = first.mocks.writeDayFingerprint.mock.calls[0][0];
-
-    const second = await loadNotificationService({
-      readDayFingerprint: jest.fn(async () => fingerprint),
-      readRamadanMode: jest.fn(async () => false),
-    });
-    await second.NotificationService.rescheduleAll("app-foreground");
-
-    expect(second.mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
-    expect(second.mocks.writeDayFingerprint).toHaveBeenCalledTimes(1);
-  });
-
-  it("initializes once and wires lifecycle callback", async () => {
-    const { NotificationService, lifecycleCallbackRef, mocks } = await loadNotificationService({
-      readMasterEnabled: jest.fn(async () => false),
-    });
+  it("initializes once and wires the lifecycle callback", async () => {
+    const { NotificationService, lifecycleCallbackRef, mocks } = await load({ readMasterEnabled: jest.fn(async () => false) });
 
     await NotificationService.init();
     await NotificationService.init();
@@ -273,8 +96,9 @@ describe("NotificationService", () => {
     expect(mocks.setNotificationHandler).toHaveBeenCalledTimes(1);
     expect(mocks.initNotificationLifecycle).toHaveBeenCalledTimes(1);
 
-    expect(typeof lifecycleCallbackRef.cb).toBe("function");
+    mocks.cancelPreviouslyScheduled.mockClear();
     await lifecycleCallbackRef.cb?.("app-foreground");
+    await new Promise((r) => setTimeout(r, 0));
     expect(mocks.cancelPreviouslyScheduled).toHaveBeenCalled();
   });
 });

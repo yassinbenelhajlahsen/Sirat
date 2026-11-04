@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Alert, DeviceEventEmitter, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import Screen from "@/components/ui/Screen";
@@ -14,7 +14,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useRamadanMode } from "@/hooks/useRamadanMode";
 import { isPretendingRamadan, setPretendRamadan } from "@/utils/hijriDate";
-import { NOTIF_PREFS_UPDATED_EVENT } from "@/utils/notifications/constants";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useAccountActions } from "@/hooks/useAccountActions";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
@@ -241,8 +240,6 @@ export default function Settings() {
                   onValueChange={(val) => {
                     setPretendRamadan(val);
                     setPretendRamadanState(val);
-                    // Rebuild notifications so the Maghrib/Iftar wording follows.
-                    DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
                   }}
                   trackColor={{ false: colors.grayDark, true: colors.accent }}
                 />

@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
-import { DeviceEventEmitter } from "react-native";
 
 import { useSyncedSetting } from "@/hooks/useSyncedSetting";
 import {
@@ -10,8 +9,8 @@ import {
   notifWindowMapSetting,
   notifWindowOffsetSetting,
 } from "@/services/syncedSettings";
+import { writeMasterEnabled } from "@/services/notifications/storage";
 import {
-  NOTIF_PREFS_UPDATED_EVENT,
   PrayerKey,
   SoundMode,
   STORAGE_ENABLED,
@@ -59,14 +58,12 @@ export function useNotificationPreferences({
     setEnabled(notifStatus === "granted");
   }, [notifStatus]);
 
-  // The master toggle and OS permission are device-only, so they are not a synced setting;
-  // the scheduler still needs to hear about them.
+  // The master toggle is device-only, so it is not a synced setting; it has its own change signal.
   useEffect(() => {
     if (!enabledLoaded) return;
-    AsyncStorage.setItem(STORAGE_ENABLED, enabled ? "1" : "0").catch(() => {
+    writeMasterEnabled(enabled).catch(() => {
       // ignore persist errors
     });
-    DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, { enabled });
   }, [enabled, enabledLoaded]);
 
   const setPrayerPreference = useCallback(

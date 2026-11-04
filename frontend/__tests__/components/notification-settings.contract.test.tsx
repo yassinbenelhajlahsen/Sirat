@@ -6,7 +6,6 @@ import { type PrayerKey, PRAYERS, type SoundMode, WINDOW_PRAYERS, WINDOW_OFFSET_
 
 const mockUseNotificationPreferences = jest.fn();
 const mockUseAdhanPreview = jest.fn();
-const mockUseNotificationPanelAnimation = jest.fn();
 
 const setPrayerPreference = jest.fn(async () => {});
 const updateSoundMode = jest.fn(async () => {});
@@ -42,11 +41,6 @@ jest.mock("@/hooks/useAdhanPreview", () => ({
   useAdhanPreview: (...args: unknown[]) => mockUseAdhanPreview(...args),
 }));
 
-jest.mock("@/hooks/useNotificationPanelAnimation", () => ({
-  useNotificationPanelAnimation: (...args: unknown[]) =>
-    mockUseNotificationPanelAnimation(...args),
-}));
-
 const buildPrefs = (overrides: Partial<Record<PrayerKey, boolean>> = {}) =>
   ({
     Fajr: true,
@@ -57,18 +51,6 @@ const buildPrefs = (overrides: Partial<Record<PrayerKey, boolean>> = {}) =>
     Isha: true,
     ...overrides,
   }) as Record<PrayerKey, boolean>;
-
-const buildBellAnimations = (): Record<PrayerKey, Animated.Value> =>
-  PRAYERS.reduce((acc, prayer) => {
-    acc[prayer] = new Animated.Value(1);
-    return acc;
-  }, {} as Record<PrayerKey, Animated.Value>);
-
-const buildWindowAnimations = (): Record<WindowPrayerKey, Animated.Value> =>
-  WINDOW_PRAYERS.reduce((acc, prayer) => {
-    acc[prayer] = new Animated.Value(1);
-    return acc;
-  }, {} as Record<WindowPrayerKey, Animated.Value>);
 
 function configureHookMocks({
   loaded = true,
@@ -96,23 +78,6 @@ function configureHookMocks({
     previewing,
     handlePreviewPress,
     stopPreview,
-  });
-
-  const soundIndicator = new Animated.Value(soundMode === "adhan" ? 1 : 0);
-
-  mockUseNotificationPanelAnimation.mockReturnValue({
-    headerScale: new Animated.Value(1),
-    bellAnimations: buildBellAnimations(),
-    contentOpacity: new Animated.Value(enabled ? 1 : 0),
-    contentTranslateY: new Animated.Value(0),
-    contentMaxHeight: new Animated.Value(enabled ? 820 : 0),
-    contentScale: new Animated.Value(1),
-    soundIndicator,
-    offsetIndicator: new Animated.Value(0),
-    windowPrayerAnimations: buildWindowAnimations(),
-    pulseHeader,
-    pulsePrayer,
-    pulseWindowPrayer,
   });
 }
 

@@ -1,8 +1,8 @@
 // frontend/components/NotificationSettings.tsx
 import { useTheme } from "@/context/ThemeContext";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Animated, Linking, Switch, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Easing, Linking, Switch, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
 import AppIcon from "@/components/ui/AppIcon";
@@ -11,7 +11,6 @@ import SettingsRow from "@/components/settings/SettingsRow";
 import SettingsSection from "@/components/settings/SettingsSection";
 import { Subhead } from "@/components/ui/Text";
 import { useAdhanPreview } from "../hooks/useAdhanPreview";
-import { useNotificationPanelAnimation } from "../hooks/useNotificationPanelAnimation";
 import { useNotificationPreferences } from "../hooks/useNotificationPreferences";
 import {
   PRAYERS,
@@ -23,8 +22,6 @@ import {
   type WindowPrayerKey,
 } from "../utils/notifications/constants";
 import { getNotificationStyles } from "../utils/notifications/styles";
-
-export { NOTIF_PREFS_UPDATED_EVENT } from "../utils/notifications/constants";
 
 const WINDOW_FOOTER =
   "A heads up before a prayer's time runs out. Sent only if you have not logged it yet.";
@@ -61,22 +58,31 @@ export default function NotificationSettings({ notifStatus }: Props) {
 
   const [revealHeight, setRevealHeight] = useState(0);
 
-  const offsetIndex = Math.max(
-    0,
-    (WINDOW_OFFSET_OPTIONS as readonly number[]).indexOf(windowOffset),
-  );
+  // The options reveal when notifications are on: fade, lift and grow. A first load or Reduce Motion snaps.
+  const [contentAnim] = useState(() => new Animated.Value(0));
+  const revealedOnce = useRef(false);
+  useEffect(() => {
+    if (!loaded) return;
+    if (!revealedOnce.current || reduceMotion) {
+      contentAnim.setValue(enabled ? 1 : 0);
+      revealedOnce.current = true;
+      return;
+    }
+    Animated.timing(contentAnim, {
+      toValue: enabled ? 1 : 0,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [contentAnim, enabled, loaded, reduceMotion]);
 
-  // Only the reveal fade is still rendered: the bell and header pulses went with
-  // the old toggle cards. The hook keeps its full signature.
-  const { contentOpacity, contentTranslateY, contentMaxHeight } =
-    useNotificationPanelAnimation({
-      loaded,
-      enabled,
-      soundMode,
-      contentHeight: revealHeight,
-      offsetIndex,
-      reduceMotion,
-    });
+  const contentOpacity = contentAnim;
+  const contentTranslateY = contentAnim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] });
+  // Until the content reports its real height this stays generous so nothing is clipped on the first frame.
+  const contentMaxHeight = contentAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, revealHeight > 0 ? revealHeight : 2000],
+  });
 
   const togglePrayer = useCallback(
     (k: PrayerKey, next: boolean) => {

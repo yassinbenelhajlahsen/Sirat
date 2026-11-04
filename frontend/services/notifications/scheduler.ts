@@ -1,85 +1,37 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-import type { PrayerSettings, PrayerTime } from "../prayerTimes";
 import { getPrayerTimesForDate } from "../prayerTimes";
+import { getEffectivePrayerSettings } from "../prayerSettings";
+import {
+  notifFridaySetting,
+  notifPrefsSetting,
+  notifSoundModeSetting,
+  notifWindowMapSetting,
+  notifWindowOffsetSetting,
+  ramadanModeSetting,
+} from "../syncedSettings";
 import { getDayStatuses } from "../tracking/prayerLog";
-import type { PrayerName } from "../tracking/types";
-import { MAX_PENDING_NOTIFICATIONS } from "./constants";
+import { isFastingDay } from "@/utils/hijriDate";
+import { HORIZON_DAYS, MAX_PENDING_NOTIFICATIONS } from "./constants";
+import { resolveCityDisplay } from "./cityResolver";
+import { planFingerprint, planNotifications, yyyymmdd, type PlanInput } from "./planner";
 import {
   clearScheduleStorage,
+  readDayFingerprint,
   readScheduledIds,
   readSeenKeys,
+  writeDayFingerprint,
   writeScheduledIds,
   writeSeenKeys,
 } from "./storage";
-import {
-  IOS_SOUND_MAP,
-  PRAYER_EMOJI,
-  type PrefMap,
-  type PrayerKey,
-  type SoundMode,
-} from "./types";
-import { isFastingDay } from "@/utils/hijriDate";
-import {
-  FRIDAY_TITLE,
-  FRIDAY_URL,
-  fridayReminderFor,
-} from "@/utils/notifications/fridayReminder";
-import {
-  WINDOW_PRAYERS,
-  type WindowPrayerKey,
-  type WindowPrefMap,
-} from "@/utils/notifications/constants";
+import { IOS_SOUND_MAP } from "./types";
 
-type Candidate = {
-  fireDate: Date;
-  seenKey: string;
-  content: Notifications.NotificationContentInput;
-};
-
-function parse12hToDate(base: Date, timeStr: string): Date {
-  const [hm, ampm] = timeStr.split(" ");
-  const [hStr, mStr] = hm.split(":");
-  let h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  if (ampm === "PM" && h !== 12) h += 12;
-  if (ampm === "AM" && h === 12) h = 0;
-  return new Date(base.getFullYear(), base.getMonth(), base.getDate(), h, m, 0, 0);
-}
-
-function makeSeenKey(label: PrayerKey, fireDate: Date): string {
-  const key = fireDate.toISOString().slice(0, 16);
-  return `${label}_${key}`;
-}
-
-function makeWindowSeenKey(label: PrayerKey, fireDate: Date): string {
-  const key = fireDate.toISOString().slice(0, 16);
-  return `window_${label}_${key}`;
-}
-
-function addDays(d: Date, offset: number): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + offset, 0, 0, 0, 0);
-}
-
-export function yyyymmdd(d = new Date()): string {
-  const y = d.getFullYear();
-  const m = `${d.getMonth() + 1}`.padStart(2, "0");
-  const day = `${d.getDate()}`.padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+export { yyyymmdd };
 
 export function msUntilNextLocalMidnightPlus(minutes: number): number {
   const now = new Date();
-  const next = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0,
-    minutes,
-    0,
-    0,
-  );
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, minutes, 0, 0);
   return Math.max(1000, next.getTime() - now.getTime());
 }
 
@@ -102,146 +54,74 @@ export async function cancelPreviouslyScheduled() {
   await clearScheduleStorage();
 }
 
-export async function scheduleForHorizon(params: {
-  days: number;
-  prefs: PrefMap;
-  cityDisplay: string;
-  effective: PrayerSettings;
-  soundMode: SoundMode;
-  windowPrefs: WindowPrefMap;
-  windowOffset: number;
-  fridayEnabled: boolean;
-  ramadanMode?: boolean;
-}) {
-  const {
+/** Gathers everything the planner needs: settings, this device's prayer times and marks for each day. */
+export async function readPlanInputs(): Promise<Omit<PlanInput, "now" | "seen" | "budget">> {
+  const [prefs, soundMode, windowPrefs, windowOffset, fridayEnabled, ramadanMode, effective] =
+    await Promise.all([
+      notifPrefsSetting.get(),
+      notifSoundModeSetting.get(),
+      notifWindowMapSetting.get(),
+      notifWindowOffsetSetting.get(),
+      notifFridaySetting.get(),
+      ramadanModeSetting.get(),
+      getEffectivePrayerSettings(),
+    ]);
+
+  const days: PlanInput["days"] = [];
+  for (let offset = 0; offset < HORIZON_DAYS; offset++) {
+    const now = new Date();
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+    days.push({
+      date,
+      times: await getPrayerTimesForDate(effective, date),
+      statuses: await getDayStatuses(yyyymmdd(date)),
+      fasting: ramadanMode && isFastingDay(date),
+    });
+  }
+
+  const iosSound = IOS_SOUND_MAP[soundMode] ?? "default";
+  return {
     days,
+    cityDisplay: await resolveCityDisplay(effective),
     prefs,
-    cityDisplay,
-    effective,
-    soundMode,
     windowPrefs,
     windowOffset,
     fridayEnabled,
-    ramadanMode = false,
-  } = params;
-  const now = Date.now();
+    prayerSound: Platform.OS === "ios" ? iosSound : "default",
+  };
+}
+
+/**
+ * Brings the OS in line with the plan. If anything that affects a notification changed since last
+ * time, everything pending is replaced; otherwise only notifications not yet scheduled are added.
+ */
+export async function applySchedule(inputs: Omit<PlanInput, "now" | "seen" | "budget">): Promise<void> {
+  const nextFingerprint = planFingerprint({ ...inputs, now: 0 });
+  if ((await readDayFingerprint()) !== nextFingerprint) {
+    await cancelPreviouslyScheduled();
+  }
 
   const seen = new Set<string>(await readSeenKeys());
-  const idsToPersist: string[] = [...(await readScheduledIds())];
+  const ids = [...(await readScheduledIds())];
+  const toSchedule = planNotifications({
+    ...inputs,
+    now: Date.now(),
+    seen,
+    budget: MAX_PENDING_NOTIFICATIONS - ids.length,
+  });
 
-  const iosSound = IOS_SOUND_MAP[soundMode] ?? "default";
-  const triggerSound = Platform.OS === "ios" ? iosSound : "default";
-
-  const anyWindowEnabled = WINDOW_PRAYERS.some((key) => windowPrefs[key]);
-
-  const candidates: Candidate[] = [];
-
-  for (let dayOffset = 0; dayOffset < days; dayOffset++) {
-    const day = addDays(new Date(), dayOffset);
-    const dayKey = yyyymmdd(day);
-    const times: PrayerTime[] = await getPrayerTimesForDate(effective, day);
-    const fasting = ramadanMode && isFastingDay(day);
-
-    // At-prayer-time alerts.
-    for (const prayer of times) {
-      const label = prayer.label as PrayerKey;
-      if (!prefs[label]) continue;
-      const fireDate = parse12hToDate(day, prayer.time);
-      if (fireDate.getTime() <= now) continue;
-      candidates.push({
-        fireDate,
-        seenKey: makeSeenKey(label, fireDate),
-        content: {
-          title: `${PRAYER_EMOJI[label] || "🕌"} ${
-            fasting && label === "Maghrib" ? "Maghrib/Iftar" : label
-          } time`,
-          body: `${prayer.time} in ${cityDisplay}`,
-          // Sunrise is not a prayer, so it gets no adhan.
-          sound: label === "Sunrise" ? "default" : triggerSound,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          data: {
-            type: "prayer",
-            label,
-            timeLocal: prayer.time,
-            city: cityDisplay,
-            dayKey,
-          },
-        },
-      });
-    }
-
-    // Friday reminder: a varied message at a varied time late morning, opens Surah Al-Kahf.
-    if (fridayEnabled && day.getDay() === 5) {
-      const { fireDate, body } = fridayReminderFor(day);
-      if (fireDate.getTime() > now) {
-        candidates.push({
-          fireDate,
-          seenKey: `friday_${fireDate.toISOString().slice(0, 16)}`,
-          content: {
-            title: FRIDAY_TITLE,
-            body,
-            sound: "default",
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            data: { type: "friday", url: FRIDAY_URL },
-          },
-        });
-      }
-    }
-
-    // Window reminders.
-    if (anyWindowEnabled) {
-      const dayStatuses = await getDayStatuses(dayKey);
-      for (let i = 0; i < times.length; i++) {
-        const label = times[i].label as PrayerKey;
-        if (!WINDOW_PRAYERS.includes(label as WindowPrayerKey)) continue;
-        if (!windowPrefs[label as WindowPrayerKey]) continue;
-        const next = times[i + 1];
-        if (!next) continue;
-        if (dayStatuses[label.toLowerCase() as PrayerName]) continue;
-        const fireDate = new Date(
-          parse12hToDate(day, next.time).getTime() - windowOffset * 60_000,
-        );
-        if (fireDate.getTime() <= now) continue;
-        const verb = next.label === "Sunrise" ? "is" : "begins";
-        candidates.push({
-          fireDate,
-          seenKey: makeWindowSeenKey(label, fireDate),
-          content: {
-            title: `${label} ending soon`,
-            body: `${next.label} ${verb} at ${next.time}, in ${windowOffset} min.`,
-            // The adhan is a call to prayer, so it never plays for "ending soon" reminders.
-            sound: "default",
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            data: {
-              type: "window_reminder",
-              label,
-              nextLabel: next.label,
-              nextTimeLocal: next.time,
-              offset: windowOffset,
-              dayKey,
-            },
-          },
-        });
-      }
-    }
+  for (const notification of toSchedule) {
+    const { fireDate, seenKey, ...content } = notification;
+    ids.push(
+      await Notifications.scheduleNotificationAsync({
+        content: { ...content, priority: Notifications.AndroidNotificationPriority.HIGH },
+        trigger: { type: "date", date: fireDate } as any,
+      }),
+    );
+    seen.add(seenKey);
   }
 
-  candidates.sort((a, b) => a.fireDate.getTime() - b.fireDate.getTime());
-
-  let remaining = MAX_PENDING_NOTIFICATIONS - idsToPersist.length;
-
-  for (const candidate of candidates) {
-    if (remaining <= 0) break;
-    if (seen.has(candidate.seenKey)) continue;
-    const id = await Notifications.scheduleNotificationAsync({
-      content: candidate.content,
-      trigger: { type: "date", date: candidate.fireDate } as any,
-    });
-    seen.add(candidate.seenKey);
-    idsToPersist.push(id);
-    remaining--;
-  }
-
-  await writeScheduledIds(idsToPersist);
+  await writeScheduledIds(ids);
   await writeSeenKeys(Array.from(seen));
+  await writeDayFingerprint(nextFingerprint);
 }

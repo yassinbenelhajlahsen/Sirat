@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
 
 jest.mock("@expo/vector-icons", () => ({ Ionicons: { font: {} } }));
 jest.mock("expo-asset", () => ({ Asset: { loadAsync: jest.fn(async () => {}) } }));
@@ -50,10 +49,10 @@ jest.mock("expo-notifications", () => ({
 }));
 
 import * as Notifications from "expo-notifications";
+import { subscribeMasterEnabled } from "@/services/notifications/storage";
 import {
   NOTIF_ENABLED_KEY,
   NOTIF_OS_STATUS_KEY,
-  NOTIF_PREFS_UPDATED_EVENT,
   syncNotificationPermissionToToggle,
 } from "@/app/_layout";
 
@@ -65,20 +64,18 @@ describe("usePrayerSettingsState Phase 4", () => {
     await AsyncStorage.clear();
   });
 
-  it("maps granted OS notification permission to enabled flag and emits update event", async () => {
+  it("maps granted OS notification permission to the enabled flag and announces the change", async () => {
     await AsyncStorage.setItem(NOTIF_ENABLED_KEY, "0");
     mockNotifications.getPermissionsAsync.mockResolvedValueOnce({ status: "granted" } as any);
 
-    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
+    const changes = jest.fn();
+    subscribeMasterEnabled(changes);
 
     await syncNotificationPermissionToToggle();
 
     expect(await AsyncStorage.getItem(NOTIF_ENABLED_KEY)).toBe("1");
     expect(await AsyncStorage.getItem(NOTIF_OS_STATUS_KEY)).toBe('"granted"');
-    expect(emitSpy).toHaveBeenCalledWith(NOTIF_PREFS_UPDATED_EVENT, {
-      enabled: true,
-      osStatus: "granted",
-    });
+    expect(changes).toHaveBeenCalledWith(true);
   });
 
   it("requests permission when undecided and syncs disabled state when denied", async () => {
@@ -86,16 +83,14 @@ describe("usePrayerSettingsState Phase 4", () => {
     mockNotifications.getPermissionsAsync.mockResolvedValueOnce({ status: "undetermined" } as any);
     mockNotifications.requestPermissionsAsync.mockResolvedValueOnce({ status: "denied" } as any);
 
-    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
+    const changes = jest.fn();
+    subscribeMasterEnabled(changes);
 
     await syncNotificationPermissionToToggle();
 
     expect(mockNotifications.requestPermissionsAsync).toHaveBeenCalledTimes(1);
     expect(await AsyncStorage.getItem(NOTIF_ENABLED_KEY)).toBe("0");
     expect(await AsyncStorage.getItem(NOTIF_OS_STATUS_KEY)).toBe('"denied"');
-    expect(emitSpy).toHaveBeenCalledWith(NOTIF_PREFS_UPDATED_EVENT, {
-      enabled: false,
-      osStatus: "denied",
-    });
+    expect(changes).toHaveBeenCalledWith(false);
   });
 });
