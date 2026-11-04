@@ -13,10 +13,10 @@ export type PrayerStatus = "prayed" | "late" | "missed";
 /** A synced value plus a last-modified stamp (epoch-ms) for LWW conflict resolution. */
 export type Cell<T> = { value: T; updatedAt: number };
 
-/** dateKey ("YYYY-MM-DD") -> prayer -> status cell. */
+/** dateKey ("YYYY-MM-DD") -> prayer -> status cell. A `null` value is a cleared mark: the user removed it. */
 export type PrayerLog = Record<
   string,
-  Partial<Record<PrayerName, Cell<PrayerStatus>>>
+  Partial<Record<PrayerName, Cell<PrayerStatus | null>>>
 >;
 
 export type HabitFrequency =

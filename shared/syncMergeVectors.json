@@ -1,0 +1,614 @@
+{
+  "_comment": "Shared by frontend/__tests__/services/tracking/merge.test.ts and backend/__tests__/syncMerge.test.ts. Each case calls merge(first, second); on an exact updatedAt tie the FIRST argument wins (frontend: local, backend: stored).",
+  "prayerLog": [
+    {
+      "name": "keeps the higher updatedAt per cell and unions prayers",
+      "first": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 10
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "late",
+            "updatedAt": 20
+          },
+          "dhuhr": {
+            "value": "prayed",
+            "updatedAt": 5
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "late",
+            "updatedAt": 20
+          },
+          "dhuhr": {
+            "value": "prayed",
+            "updatedAt": 5
+          }
+        }
+      }
+    },
+    {
+      "name": "keeps the first when it is newer",
+      "first": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 30
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "late",
+            "updatedAt": 20
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 30
+          }
+        }
+      }
+    },
+    {
+      "name": "keeps the first on an exact tie",
+      "first": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 10
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "late",
+            "updatedAt": 10
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 10
+          }
+        }
+      }
+    },
+    {
+      "name": "unions days present on only one side",
+      "first": {
+        "2026-06-18": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 1
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "asr": {
+            "value": "late",
+            "updatedAt": 2
+          }
+        }
+      },
+      "expected": {
+        "2026-06-18": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 1
+          }
+        },
+        "2026-06-19": {
+          "asr": {
+            "value": "late",
+            "updatedAt": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "a newer cleared mark beats an older mark (deletion reaches the other device)",
+      "first": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 10
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 20
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 20
+          }
+        }
+      }
+    },
+    {
+      "name": "a newer mark beats an older cleared mark (re-logging after a clear)",
+      "first": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 10
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "late",
+            "updatedAt": 20
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "late",
+            "updatedAt": 20
+          }
+        }
+      }
+    },
+    {
+      "name": "an older cleared mark does not erase a newer mark",
+      "first": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 30
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 20
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 30
+          }
+        }
+      }
+    },
+    {
+      "name": "a cleared mark and a mark with the same stamp keep the first",
+      "first": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 10
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": "prayed",
+            "updatedAt": 10
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 10
+          }
+        }
+      }
+    },
+    {
+      "name": "a cleared mark survives against a missing cell",
+      "first": {},
+      "second": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 10
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "fajr": {
+            "value": null,
+            "updatedAt": 10
+          }
+        }
+      }
+    }
+  ],
+  "habitLog": [
+    {
+      "name": "keeps the higher updatedAt per cell",
+      "first": {
+        "2026-06-19": {
+          "h1": {
+            "value": true,
+            "updatedAt": 30
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "h1": {
+            "value": false,
+            "updatedAt": 10
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "h1": {
+            "value": true,
+            "updatedAt": 30
+          }
+        }
+      }
+    },
+    {
+      "name": "takes the second when it is newer (unchecking reaches the other device)",
+      "first": {
+        "2026-06-19": {
+          "h1": {
+            "value": true,
+            "updatedAt": 10
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "h1": {
+            "value": false,
+            "updatedAt": 20
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "h1": {
+            "value": false,
+            "updatedAt": 20
+          }
+        }
+      }
+    },
+    {
+      "name": "keeps the first on an exact tie",
+      "first": {
+        "2026-06-19": {
+          "h1": {
+            "value": true,
+            "updatedAt": 15
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "h1": {
+            "value": false,
+            "updatedAt": 15
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "h1": {
+            "value": true,
+            "updatedAt": 15
+          }
+        }
+      }
+    },
+    {
+      "name": "unions habits on the same day",
+      "first": {
+        "2026-06-19": {
+          "h1": {
+            "value": true,
+            "updatedAt": 1
+          }
+        }
+      },
+      "second": {
+        "2026-06-19": {
+          "h2": {
+            "value": true,
+            "updatedAt": 2
+          }
+        }
+      },
+      "expected": {
+        "2026-06-19": {
+          "h1": {
+            "value": true,
+            "updatedAt": 1
+          },
+          "h2": {
+            "value": true,
+            "updatedAt": 2
+          }
+        }
+      }
+    }
+  ],
+  "habits": [
+    {
+      "name": "keeps the higher updatedAt and retains the tombstone",
+      "first": [
+        {
+          "id": "h1",
+          "name": "A",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 10
+        }
+      ],
+      "second": [
+        {
+          "id": "h1",
+          "name": "A2",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 20,
+          "deletedAt": 20
+        }
+      ],
+      "expected": [
+        {
+          "id": "h1",
+          "name": "A2",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 20,
+          "deletedAt": 20
+        }
+      ]
+    },
+    {
+      "name": "retains a habit only the first side has",
+      "first": [
+        {
+          "id": "h1",
+          "name": "A",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 5
+        }
+      ],
+      "second": [],
+      "expected": [
+        {
+          "id": "h1",
+          "name": "A",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 5
+        }
+      ]
+    },
+    {
+      "name": "keeps the first on an exact tie",
+      "first": [
+        {
+          "id": "h1",
+          "name": "First",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 10
+        }
+      ],
+      "second": [
+        {
+          "id": "h1",
+          "name": "Second",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 1,
+          "archived": true,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 10
+        }
+      ],
+      "expected": [
+        {
+          "id": "h1",
+          "name": "First",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 10
+        }
+      ]
+    },
+    {
+      "name": "an older tombstone does not delete a newer edit",
+      "first": [
+        {
+          "id": "h1",
+          "name": "Edited",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 30
+        }
+      ],
+      "second": [
+        {
+          "id": "h1",
+          "name": "A",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 20,
+          "deletedAt": 20
+        }
+      ],
+      "expected": [
+        {
+          "id": "h1",
+          "name": "Edited",
+          "icon": "i",
+          "frequency": {
+            "type": "daily"
+          },
+          "order": 0,
+          "archived": false,
+          "createdAtKey": "2026-06-01",
+          "updatedAt": 30
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "name": "keeps the higher updatedAt per key",
+      "first": {
+        "theme": {
+          "value": "dark",
+          "updatedAt": 10
+        }
+      },
+      "second": {
+        "theme": {
+          "value": "light",
+          "updatedAt": 20
+        }
+      },
+      "expected": {
+        "theme": {
+          "value": "light",
+          "updatedAt": 20
+        }
+      }
+    },
+    {
+      "name": "keeps the first on an exact tie",
+      "first": {
+        "theme": {
+          "value": "dark",
+          "updatedAt": 10
+        }
+      },
+      "second": {
+        "theme": {
+          "value": "light",
+          "updatedAt": 10
+        }
+      },
+      "expected": {
+        "theme": {
+          "value": "dark",
+          "updatedAt": 10
+        }
+      }
+    },
+    {
+      "name": "unions keys present on only one side",
+      "first": {
+        "theme": {
+          "value": "dark",
+          "updatedAt": 10
+        }
+      },
+      "second": {
+        "prayerSettings": {
+          "value": {
+            "method": 2
+          },
+          "updatedAt": 5
+        }
+      },
+      "expected": {
+        "theme": {
+          "value": "dark",
+          "updatedAt": 10
+        },
+        "prayerSettings": {
+          "value": {
+            "method": 2
+          },
+          "updatedAt": 5
+        }
+      }
+    }
+  ]
+}

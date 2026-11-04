@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import { DeviceEventEmitter } from "react-native";
+import { useCallback } from "react";
 
+import { useTrackerData } from "@/hooks/useTrackerData";
 import {
-  PRAYER_LOG_UPDATED_EVENT,
   clearPrayerStatus,
-  getDayStatuses,
+  prayerLogStore,
   setPrayerStatus,
   type PrayerName,
   type PrayerStatus,
@@ -12,28 +11,21 @@ import {
 
 type DayStatuses = Partial<Record<PrayerName, PrayerStatus>>;
 
-export function usePrayerLog(dateKey: string) {
-  const [statuses, setStatuses] = useState<DayStatuses>({});
+const NONE: DayStatuses = {};
 
-  useEffect(() => {
-    let mounted = true;
-    const reload = () => {
-      getDayStatuses(dateKey).then((s) => {
-        if (mounted) setStatuses(s);
-      });
-    };
-    reload();
-    const sub = DeviceEventEmitter.addListener(
-      PRAYER_LOG_UPDATED_EVENT,
-      (payload: { dateKey?: string | null }) => {
-        if (payload?.dateKey == null || payload.dateKey === dateKey) reload();
-      },
-    );
-    return () => {
-      mounted = false;
-      sub.remove();
-    };
-  }, [dateKey]);
+export function usePrayerLog(dateKey: string) {
+  const statuses = useTrackerData(
+    prayerLogStore,
+    (log) => {
+      const out: DayStatuses = {};
+      for (const [prayer, cell] of Object.entries(log[dateKey] ?? {})) {
+        if (cell?.value) out[prayer as PrayerName] = cell.value;
+      }
+      return out;
+    },
+    NONE,
+    dateKey,
+  );
 
   const setStatus = useCallback(
     (p: PrayerName, s: PrayerStatus) => setPrayerStatus(dateKey, p, s),

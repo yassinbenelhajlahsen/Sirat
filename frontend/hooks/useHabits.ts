@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { DeviceEventEmitter } from "react-native";
+import { useCallback } from "react";
 
+import { useTrackerData } from "@/hooks/useTrackerData";
 import {
-  HABITS_UPDATED_EVENT,
   createHabit,
   deleteHabit,
-  getActiveHabits,
+  activeHabits,
+  habitsStore,
   reorderHabits,
   updateHabit,
   type Habit,
@@ -17,23 +17,10 @@ type UpdatePatch = Partial<
   Pick<Habit, "name" | "icon" | "frequency" | "reminder" | "archived" | "order">
 >;
 
-export function useHabits() {
-  const [habits, setHabits] = useState<Habit[]>([]);
+const NONE: Habit[] = [];
 
-  useEffect(() => {
-    let mounted = true;
-    const reload = () => {
-      getActiveHabits().then((h) => {
-        if (mounted) setHabits(h);
-      });
-    };
-    reload();
-    const sub = DeviceEventEmitter.addListener(HABITS_UPDATED_EVENT, reload);
-    return () => {
-      mounted = false;
-      sub.remove();
-    };
-  }, []);
+export function useHabits() {
+  const habits = useTrackerData(habitsStore, activeHabits, NONE);
 
   const create = useCallback(
     (input: { name: string; icon: string; frequency: HabitFrequency; reminder?: HabitReminder }) =>

@@ -1,87 +1,20 @@
-import { mergePrayerLogs, mergeHabitLogs, mergeHabits, mergeSettings } from "@/services/tracking/merge";
-import type { Habit } from "@/services/tracking/types";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 
-describe("tracking/merge", () => {
-  it("mergePrayerLogs keeps the higher updatedAt per cell", () => {
-    const local = { "2026-06-19": { fajr: { value: "prayed" as const, updatedAt: 10 } } };
-    const remote = {
-      "2026-06-19": {
-        fajr: { value: "late" as const, updatedAt: 20 },
-        dhuhr: { value: "prayed" as const, updatedAt: 5 },
-      },
-    };
-    expect(mergePrayerLogs(local, remote)).toEqual({
-      "2026-06-19": {
-        fajr: { value: "late", updatedAt: 20 },
-        dhuhr: { value: "prayed", updatedAt: 5 },
-      },
-    });
-  });
+import { mergeHabitLogs, mergeHabits, mergePrayerLogs, mergeSettings } from "@/services/tracking/merge";
 
-  it("mergeHabitLogs keeps the higher updatedAt per cell", () => {
-    const local = { "2026-06-19": { h1: { value: true, updatedAt: 30 } } };
-    const remote = { "2026-06-19": { h1: { value: false, updatedAt: 10 } } };
-    expect(mergeHabitLogs(local, remote)).toEqual({
-      "2026-06-19": { h1: { value: true, updatedAt: 30 } },
-    });
-  });
+// Same vectors as backend/__tests__/syncMerge.test.ts, so the two merges cannot drift apart.
+const vectors = JSON.parse(readFileSync(resolve(process.cwd(), "../shared/syncMergeVectors.json"), "utf8"));
 
-  it("mergeHabits keeps higher updatedAt and retains tombstones", () => {
-    const base: Habit = {
-      id: "h1", name: "A", icon: "i", frequency: { type: "daily" },
-      order: 0, archived: false, createdAtKey: "2026-06-01", updatedAt: 10,
-    };
-    const local = [base];
-    const remote = [{ ...base, name: "A2", updatedAt: 20, deletedAt: 20 }];
-    const merged = mergeHabits(local, remote);
-    expect(merged).toHaveLength(1);
-    expect(merged[0].name).toBe("A2");
-    expect(merged[0].deletedAt).toBe(20);
-  });
+type Vector = { name: string; first: never; second: never; expected: unknown };
 
-  it("mergePrayerLogs on equal updatedAt keeps local value", () => {
-    const local = { "2026-06-19": { fajr: { value: "prayed" as const, updatedAt: 10 } } };
-    const remote = { "2026-06-19": { fajr: { value: "late" as const, updatedAt: 10 } } };
-    expect(mergePrayerLogs(local, remote)["2026-06-19"].fajr).toEqual({ value: "prayed", updatedAt: 10 });
-  });
-
-  it("mergePrayerLogs when local is newer keeps local", () => {
-    const local = { "2026-06-19": { fajr: { value: "prayed" as const, updatedAt: 30 } } };
-    const remote = { "2026-06-19": { fajr: { value: "late" as const, updatedAt: 20 } } };
-    expect(mergePrayerLogs(local, remote)["2026-06-19"].fajr).toEqual({ value: "prayed", updatedAt: 30 });
-  });
-
-  it("mergeHabits retains a local-only habit", () => {
-    const localHabit: Habit = {
-      id: "h1", name: "Local Only", icon: "leaf", frequency: { type: "daily" },
-      order: 0, archived: false, createdAtKey: "2026-06-01", updatedAt: 5,
-    };
-    const merged = mergeHabits([localHabit], []);
-    expect(merged).toHaveLength(1);
-    expect(merged[0].id).toBe("h1");
-    expect(merged[0].name).toBe("Local Only");
-  });
-});
-
-describe("mergeSettings", () => {
-  it("keeps the higher updatedAt per key", () => {
-    const local = { theme: { value: "dark", updatedAt: 10 } };
-    const remote = { theme: { value: "light", updatedAt: 20 } };
-    expect(mergeSettings(local, remote)).toEqual({ theme: { value: "light", updatedAt: 20 } });
-  });
-
-  it("keeps local on an exact tie", () => {
-    const local = { theme: { value: "dark", updatedAt: 10 } };
-    const remote = { theme: { value: "light", updatedAt: 10 } };
-    expect(mergeSettings(local, remote).theme).toEqual({ value: "dark", updatedAt: 10 });
-  });
-
-  it("unions keys present on only one side", () => {
-    const local = { theme: { value: "dark", updatedAt: 10 } };
-    const remote = { prayerSettings: { value: { method: 2 }, updatedAt: 5 } };
-    expect(mergeSettings(local, remote)).toEqual({
-      theme: { value: "dark", updatedAt: 10 },
-      prayerSettings: { value: { method: 2 }, updatedAt: 5 },
-    });
+describe.each([
+  ["prayerLog", mergePrayerLogs],
+  ["habitLog", mergeHabitLogs],
+  ["habits", mergeHabits],
+  ["settings", mergeSettings],
+] as const)("merge %s", (domain, merge) => {
+  it.each(vectors[domain] as Vector[])("$name", ({ first, second, expected }) => {
+    expect((merge as (a: unknown, b: unknown) => unknown)(first, second)).toEqual(expected);
   });
 });

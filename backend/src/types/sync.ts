@@ -4,8 +4,8 @@ export type Cell<T> = { value: T; updatedAt: number };
 export type PrayerName = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
 export type PrayerStatus = "prayed" | "late" | "missed";
 
-/** dateKey ("YYYY-MM-DD") -> prayer -> status cell. */
-export type PrayerLog = Record<string, Partial<Record<PrayerName, Cell<PrayerStatus>>>>;
+/** dateKey ("YYYY-MM-DD") -> prayer -> status cell. A `null` value is a cleared mark: the user removed it. */
+export type PrayerLog = Record<string, Partial<Record<PrayerName, Cell<PrayerStatus | null>>>>;
 
 export type HabitFrequency = { type: "daily" } | { type: "weekly"; days: number[] };
 export type HabitReminder = { enabled: boolean; time?: string };

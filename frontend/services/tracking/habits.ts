@@ -1,23 +1,10 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
-
 import { dateKeyFromDate } from "../holidayService";
 import type { Habit, HabitFrequency, HabitReminder } from "./types";
+import { createTrackerStore } from "./trackerStore";
 import { newId, nowMs } from "./util";
 
 export const HABITS_STORAGE_KEY = "tracking:habits_v1";
 export const HABITS_UPDATED_EVENT = "HABITS_UPDATED";
-
-let cache: Habit[] | null = null;
-let loadPromise: Promise<Habit[]> | null = null;
-
-function emit(): void {
-  try {
-    DeviceEventEmitter.emit(HABITS_UPDATED_EVENT);
-  } catch {
-    // best-effort
-  }
-}
 
 function migrateHabitFrequency(h: Habit): Habit {
   const f = h.frequency as { type?: string; days?: unknown };
@@ -27,43 +14,23 @@ function migrateHabitFrequency(h: Habit): Habit {
   return h;
 }
 
-export async function getAllHabits(): Promise<Habit[]> {
-  if (cache) return cache;
-  if (!loadPromise) {
-    loadPromise = (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(HABITS_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        cache = Array.isArray(parsed)
-          ? (parsed as Habit[]).map(migrateHabitFrequency)
-          : [];
-      } catch {
-        cache = [];
-      } finally {
-        loadPromise = null;
-      }
-      return cache as Habit[];
-    })();
-  }
-  return loadPromise;
-}
+export const habitsStore = createTrackerStore<Habit[]>({
+  storageKey: HABITS_STORAGE_KEY,
+  event: HABITS_UPDATED_EVENT,
+  empty: () => [],
+  parse: (raw) => (Array.isArray(raw) ? (raw as Habit[]).map(migrateHabitFrequency) : []),
+});
+
+export const getAllHabits = () => habitsStore.get();
+
+export const activeHabits = (all: Habit[]): Habit[] =>
+  all.filter((h) => !h.archived && h.deletedAt == null).sort((a, b) => a.order - b.order);
 
 export async function getActiveHabits(): Promise<Habit[]> {
-  const all = await getAllHabits();
-  return all
-    .filter((h) => !h.archived && h.deletedAt == null)
-    .sort((a, b) => a.order - b.order);
+  return activeHabits(await getAllHabits());
 }
 
-async function persist(habits: Habit[]): Promise<void> {
-  cache = habits;
-  try {
-    await AsyncStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(habits));
-  } catch {
-    // keep in-memory state even if persistence fails
-  }
-  emit();
-}
+const persist = (habits: Habit[]) => habitsStore.save(habits);
 
 export async function createHabit(input: {
   name: string;

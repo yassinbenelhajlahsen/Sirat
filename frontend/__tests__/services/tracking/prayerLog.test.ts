@@ -34,10 +34,47 @@ describe("tracking/prayerLog", () => {
     expect(emit).toHaveBeenCalledWith("PRAYER_LOG_UPDATED", { dateKey: "2026-06-19" });
   });
 
-  it("clears a status", async () => {
+  it("clearing writes a time-stamped cleared mark that reads as not logged", async () => {
     const svc = loadService();
     await svc.setPrayerStatus("2026-06-19", "asr", "late");
+    (Date.now as jest.Mock).mockReturnValue(1700000005000);
+    const emit = jest.spyOn(DeviceEventEmitter, "emit");
+
     await svc.clearPrayerStatus("2026-06-19", "asr");
+
+    expect(await svc.getDayStatuses("2026-06-19")).toEqual({});
+    const raw = JSON.parse((await AsyncStorage.getItem("tracking:prayer_log_v1")) as string);
+    expect(raw["2026-06-19"].asr).toEqual({ value: null, updatedAt: 1700000005000 });
+    expect(emit).toHaveBeenCalledWith("PRAYER_LOG_UPDATED", { dateKey: "2026-06-19" });
+  });
+
+  it("clearing an unlogged or already cleared prayer changes nothing", async () => {
+    const svc = loadService();
+    await svc.clearPrayerStatus("2026-06-19", "fajr");
+    expect(await AsyncStorage.getItem("tracking:prayer_log_v1")).toBeNull();
+
+    await svc.setPrayerStatus("2026-06-19", "fajr", "prayed");
+    await svc.clearPrayerStatus("2026-06-19", "fajr");
+    const emit = jest.spyOn(DeviceEventEmitter, "emit");
+    await svc.clearPrayerStatus("2026-06-19", "fajr");
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it("logging again after a clear replaces the cleared mark", async () => {
+    const svc = loadService();
+    await svc.setPrayerStatus("2026-06-19", "isha", "late");
+    await svc.clearPrayerStatus("2026-06-19", "isha");
+    await svc.setPrayerStatus("2026-06-19", "isha", "prayed");
+    expect(await svc.getDayStatuses("2026-06-19")).toEqual({ isha: "prayed" });
+  });
+
+  it("a cleared mark merged in from another device removes the mark here", async () => {
+    const svc = loadService();
+    await svc.setPrayerStatus("2026-06-19", "dhuhr", "prayed");
+    const { mergePrayerLogs } = require("@/services/tracking/merge");
+    await svc.replacePrayerLog(
+      mergePrayerLogs(await svc.getPrayerLog(), { "2026-06-19": { dhuhr: { value: null, updatedAt: 1800000000000 } } }),
+    );
     expect(await svc.getDayStatuses("2026-06-19")).toEqual({});
   });
 

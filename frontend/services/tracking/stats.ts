@@ -85,8 +85,8 @@ export function unwrapPrayerLog(log: PrayerLog): StatusesByDay {
   for (const [dateKey, day] of Object.entries(log)) {
     const unwrapped: DayStatuses = {};
     for (const p of Object.keys(day) as PrayerName[]) {
-      const cell = day[p];
-      if (cell) unwrapped[p] = cell.value;
+      const status = day[p]?.value;
+      if (status) unwrapped[p] = status;
     }
     out[dateKey] = unwrapped;
   }

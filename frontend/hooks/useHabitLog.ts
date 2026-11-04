@@ -1,36 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
-import { DeviceEventEmitter } from "react-native";
+import { useCallback } from "react";
 
-import {
-  HABIT_LOG_UPDATED_EVENT,
-  getDayHabitDone,
-  getHabitLog,
-  setHabitDone,
-  unwrapHabitLog,
-} from "@/services/habitTracker";
+import { useTrackerData } from "@/hooks/useTrackerData";
+import { habitLogStore, setHabitDone, unwrapHabitLog } from "@/services/habitTracker";
+
+const NONE: Record<string, boolean> = {};
+const NONE_BY_DAY: Record<string, Record<string, boolean>> = {};
 
 export function useHabitLog(dateKey: string) {
-  const [done, setDone] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    let mounted = true;
-    const reload = () => {
-      getDayHabitDone(dateKey).then((d) => {
-        if (mounted) setDone(d);
-      });
-    };
-    reload();
-    const sub = DeviceEventEmitter.addListener(
-      HABIT_LOG_UPDATED_EVENT,
-      (payload: { dateKey?: string | null }) => {
-        if (payload?.dateKey == null || payload.dateKey === dateKey) reload();
-      },
-    );
-    return () => {
-      mounted = false;
-      sub.remove();
-    };
-  }, [dateKey]);
+  const done = useTrackerData(
+    habitLogStore,
+    (log) => unwrapHabitLog({ [dateKey]: log[dateKey] ?? {} })[dateKey],
+    NONE,
+    dateKey,
+  );
 
   const toggle = useCallback(
     (habitId: string) => setHabitDone(dateKey, habitId, !done[habitId]),
@@ -41,22 +23,5 @@ export function useHabitLog(dateKey: string) {
 }
 
 export function useHabitLogAll() {
-  const [byDay, setByDay] = useState<Record<string, Record<string, boolean>>>({});
-
-  useEffect(() => {
-    let mounted = true;
-    const reload = () => {
-      getHabitLog().then((log) => {
-        if (mounted) setByDay(unwrapHabitLog(log));
-      });
-    };
-    reload();
-    const sub = DeviceEventEmitter.addListener(HABIT_LOG_UPDATED_EVENT, reload);
-    return () => {
-      mounted = false;
-      sub.remove();
-    };
-  }, []);
-
-  return byDay;
+  return useTrackerData(habitLogStore, unwrapHabitLog, NONE_BY_DAY);
 }

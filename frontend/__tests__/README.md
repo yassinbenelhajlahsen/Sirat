@@ -152,7 +152,9 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/tracking/habitLog.test.ts` — habit completion CRUD + events + preload
   - `services/tracking/stats.prayer.test.ts` — prayer streak, monthly completion, qada count
   - `services/tracking/stats.habit.test.ts` — daily + weekly habit streaks
-  - `services/tracking/merge.test.ts` — LWW merge for prayer log, habits, habit log
+  - `services/tracking/merge.test.ts` — LWW merge for prayer log, habit log, habits and settings, run against `shared/syncMergeVectors.json` (the same vectors as `backend/__tests__/syncMerge.test.ts`; includes cleared-mark cases)
+  - `services/tracking/trackerStore.test.ts` — tracker store: shared load, shape fallback, save persists + notifies, failed write keeps memory
+  - `hooks/useTrackerData.test.ts` — shared tracker hook: loads, follows changes, skips other days, unsubscribes
   - `services/tracking/facades.test.ts` — prayerTracker + habitTracker barrel re-exports
 - `prayer logging UI (Phase 2) testing`
   - `utils/prayerLabel.test.ts` — maps dial prayer labels to PrayerName (Sunrise → null)
@@ -190,7 +192,6 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/signIn.test.tsx` — SignIn screen: renders both provider buttons, Google/Apple SSO flow invocation, session activation
   - `screens/settings.account.test.tsx` — Settings account section integration + sign-out/delete confirmation flows
 - `cloud sync engine (Phase 3) testing`
-  - `services/tracking/merge.mergeSettings.test.ts` — shared `mergeSettings` LWW merge cases (drift-guard vector used by both frontend and backend)
   - `services/sync/replaceSetters.test.ts` — `replacePrayerLog` / `replaceHabitLog` / `replaceHabits` internal setters
   - `services/sync/settingsMeta.test.ts` — `sync:settings_meta_v1` stamp sidecar read/write and bump-on-event behavior
   - `hooks/useSyncedSetting.test.ts` — hook loads the stored value and keeps a change that lands during the first read

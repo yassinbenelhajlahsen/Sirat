@@ -82,3 +82,13 @@ describe("tracking/stats prayer", () => {
     ).toEqual({ "2026-06-01": { fajr: "prayed" } });
   });
 });
+
+describe("cleared marks in stats", () => {
+  it("unwrapPrayerLog treats a cleared mark as not logged", () => {
+    expect(
+      unwrapPrayerLog({
+        "2026-06-19": { fajr: { value: null, updatedAt: 2 }, dhuhr: { value: "prayed", updatedAt: 1 } },
+      }),
+    ).toEqual({ "2026-06-19": { dhuhr: "prayed" } });
+  });
+});
