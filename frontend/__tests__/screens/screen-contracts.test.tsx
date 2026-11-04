@@ -183,8 +183,7 @@ jest.mock("@/services/quranData", () => ({
 
 jest.mock("@/services/quranProgress", () => ({
   getLastReadAyahIndex: jest.fn(),
-  saveLastReadAyahIndex: jest.fn(),
-  saveLastReadSurahAndAyah: jest.fn(),
+  saveLastRead: jest.fn(),
 }));
 
 jest.mock("@/services/quranBookmarks", () => ({
@@ -475,7 +474,7 @@ import { deleteBookmark, getBookmarkKey, getBookmarks, upsertBookmark } from "@/
 import { getAllAyat, getAyatIndexForSurahAndAyah, getSurahMeta } from "@/services/quranData";
 import { getCachedMosques, getNearbyMosques } from "@/services/getNearbyMosques";
 import { dateKeyFromDate } from "@/services/holidayService";
-import { getLastReadAyahIndex, saveLastReadAyahIndex, saveLastReadSurahAndAyah } from "@/services/quranProgress";
+import { getLastReadAyahIndex, saveLastRead } from "@/services/quranProgress";
 import { buildPrayerDay } from "@/services/prayerDay";
 
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
@@ -521,12 +520,7 @@ const mockGetAyatIndexForSurahAndAyah =
   >;
 const mockGetLastReadAyahIndex =
   getLastReadAyahIndex as jest.MockedFunction<typeof getLastReadAyahIndex>;
-const mockSaveLastReadAyahIndex =
-  saveLastReadAyahIndex as jest.MockedFunction<typeof saveLastReadAyahIndex>;
-const mockSaveLastReadSurahAndAyah =
-  saveLastReadSurahAndAyah as jest.MockedFunction<
-    typeof saveLastReadSurahAndAyah
-  >;
+const mockSaveLastRead = saveLastRead as jest.MockedFunction<typeof saveLastRead>;
 const mockGetBookmarks = getBookmarks as jest.MockedFunction<typeof getBookmarks>;
 const mockGetBookmarkKey =
   getBookmarkKey as jest.MockedFunction<typeof getBookmarkKey>;
@@ -758,8 +752,7 @@ describe("Screen contracts", () => {
     mockGetSurahMeta.mockReturnValue([sampleSurah] as any);
     mockGetAyatIndexForSurahAndAyah.mockReturnValue(0 as any);
     mockGetLastReadAyahIndex.mockResolvedValue(0);
-    mockSaveLastReadAyahIndex.mockResolvedValue(undefined as any);
-    mockSaveLastReadSurahAndAyah.mockResolvedValue(undefined as any);
+    mockSaveLastRead.mockResolvedValue(undefined as any);
     mockGetBookmarks.mockResolvedValue([]);
     mockGetBookmarkKey.mockImplementation(
       ((surahNumber: number, ayahNumber: number) =>

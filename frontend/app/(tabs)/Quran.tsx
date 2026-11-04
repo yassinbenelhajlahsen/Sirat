@@ -25,11 +25,7 @@ import {
   getAyatIndexForSurahAndAyah,
   getSurahMeta,
 } from "@/services/quranData";
-import {
-  getLastReadAyahIndex,
-  saveLastReadAyahIndex,
-  saveLastReadSurahAndAyah,
-} from "@/services/quranProgress";
+import { getLastReadAyahIndex, saveLastRead } from "@/services/quranProgress";
 import {
   FlashList,
   FlashListRef,
@@ -873,8 +869,7 @@ function QuranScreen() {
         return;
       }
 
-      saveLastReadAyahIndex(topVisibleAyahItem.ayahGlobalIndex);
-      saveLastReadSurahAndAyah(ayah.surahNumber, ayah.ayahNumber);
+      saveLastRead(topVisibleAyahItem.ayahGlobalIndex, ayah.surahNumber, ayah.ayahNumber);
     },
     [],
   );

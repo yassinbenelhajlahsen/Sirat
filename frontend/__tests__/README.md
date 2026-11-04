@@ -211,7 +211,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useSyncEngine.test.ts` — `useSyncEngine` hook: mounts engine on sign-in, tears down on sign-out
   - `hooks/useSyncStatus.test.ts` — `useSyncStatus` hook: reads `sync:last_synced_v1`, updates on sync events
   - `services/quranBookmarks.test.ts` — quran bookmarks service (upsert/delete go through the synced setting)
-  - `services/quranProgress.test.ts` — quran reading-progress service (floors and validates before saving to the synced setting)
+  - `services/quranProgress.test.ts` — quran reading-progress service (floors and validates before saving to the synced setting; index and position save in one write so overlapping saves keep the newest spot)
   - `services/ramadanTracker.test.ts` — ramadan tracker service (mark/clear go through the synced setting)
   - `context/themeSync.test.tsx` — theme context follows a theme applied from another device
 

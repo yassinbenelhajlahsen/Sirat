@@ -3,8 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   getLastReadAyahIndex,
   getLastReadSurahAndAyah,
-  saveLastReadAyahIndex,
-  saveLastReadSurahAndAyah,
+  saveLastRead,
   getQuranProgress,
 } from "@/services/quranProgress";
 
@@ -22,14 +21,25 @@ describe("quranProgress", () => {
   });
 
   it("saves floored non-negative index and ignores invalid values", async () => {
-    await saveLastReadAyahIndex(12.8);
+    await saveLastRead(12.8, 1, 1);
     expect(await AsyncStorage.getItem("quran:last-read:index")).toBe("12");
 
-    await saveLastReadAyahIndex(-1);
+    await saveLastRead(-1, 1, 1);
     expect(await AsyncStorage.getItem("quran:last-read:index")).toBe("12");
 
-    await saveLastReadAyahIndex(Number.NaN);
+    await saveLastRead(Number.NaN, 1, 1);
     expect(await AsyncStorage.getItem("quran:last-read:index")).toBe("12");
+  });
+
+  it("keeps the newest spot when saves overlap", async () => {
+    for (let i = 6; i <= 9; i++) {
+      void saveLastRead(i, 1, i);
+    }
+    await saveLastRead(10, 1, 10);
+    expect(await getQuranProgress()).toEqual({
+      index: 10,
+      position: { surahNumber: 1, ayahNumber: 10 },
+    });
   });
 
   it("returns null for malformed position payloads", async () => {
@@ -46,13 +56,13 @@ describe("quranProgress", () => {
   });
 
   it("saves floored surah/ayah and rejects non-positive inputs", async () => {
-    await saveLastReadSurahAndAyah(2.9, 255.4);
+    await saveLastRead(0, 2.9, 255.4);
     expect(await getLastReadSurahAndAyah()).toEqual({ surahNumber: 2, ayahNumber: 255 });
 
-    await saveLastReadSurahAndAyah(0, 5);
+    await saveLastRead(0, 0, 5);
     expect(await getLastReadSurahAndAyah()).toEqual({ surahNumber: 2, ayahNumber: 255 });
 
-    await saveLastReadSurahAndAyah(3, -1);
+    await saveLastRead(0, 3, -1);
     expect(await getLastReadSurahAndAyah()).toEqual({ surahNumber: 2, ayahNumber: 255 });
   });
 

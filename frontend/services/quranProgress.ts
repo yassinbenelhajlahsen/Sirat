@@ -12,20 +12,21 @@ export async function getLastReadSurahAndAyah(): Promise<QuranProgress["position
   return (await quranProgressSetting.get()).position;
 }
 
-export async function saveLastReadAyahIndex(index: number): Promise<void> {
-  if (!Number.isFinite(index) || index < 0) return;
-  const current = await quranProgressSetting.get();
-  await quranProgressSetting.set({ ...current, index: Math.floor(index) });
-}
-
-export async function saveLastReadSurahAndAyah(
+/**
+ * Saves the reading spot in one write: two separate read-then-write saves fired together would each
+ * put back the other's old half. An invalid half keeps its saved value.
+ */
+export async function saveLastRead(
+  index: number,
   surahNumber: number,
-  ayahNumber: number
+  ayahNumber: number,
 ): Promise<void> {
+  const validIndex = Number.isFinite(index) && index >= 0;
+  const validPosition = Math.floor(surahNumber) > 0 && Math.floor(ayahNumber) > 0;
+  if (!validIndex && !validPosition) return;
   const current = await quranProgressSetting.get();
-  const next = { ...current, position: { surahNumber, ayahNumber } };
-  // An invalid position normalizes to null; skip rather than erase the saved one.
-  if (Math.floor(surahNumber) > 0 && Math.floor(ayahNumber) > 0) {
-    await quranProgressSetting.set(next);
-  }
+  await quranProgressSetting.set({
+    index: validIndex ? Math.floor(index) : current.index,
+    position: validPosition ? { surahNumber, ayahNumber } : current.position,
+  });
 }
