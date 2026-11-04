@@ -1,6 +1,11 @@
 require("react-native-gesture-handler/jestSetup");
 import "@testing-library/jest-native/extend-expect";
 
+// Jest's RN environment has no idle callbacks; the app uses them in place of InteractionManager.
+(globalThis as any).requestIdleCallback = (cb: (d: any) => void) =>
+  setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 }), 0);
+(globalThis as any).cancelIdleCallback = (id: any) => clearTimeout(id);
+
 // Prevent @clerk/expo from initialising its MessagePort (open handle) in tests.
 // Test files that need specific Clerk behaviour override this with their own jest.mock factory.
 jest.mock("@clerk/expo", () => ({

@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FlatList,
-  InteractionManager,
   ListRenderItem,
   StyleProp,
   StyleSheet,
@@ -111,7 +110,7 @@ function SurahTab({
   const handleSelect = useCallback(
     (surahNumber: number) => {
       onClose();
-      InteractionManager.runAfterInteractions(() => {
+      requestIdleCallback(() => {
         onSelectSurah(surahNumber);
       });
     },
@@ -121,7 +120,7 @@ function SurahTab({
   const handleSelectAyah = useCallback(
     (surahNumber: number, ayahNumber: number) => {
       onClose();
-      InteractionManager.runAfterInteractions(() => {
+      requestIdleCallback(() => {
         onSelectAyah(surahNumber, ayahNumber);
       });
     },
@@ -131,7 +130,7 @@ function SurahTab({
   const handleSelectJuz = useCallback(
     (juzNumber: number) => {
       onClose();
-      InteractionManager.runAfterInteractions(() => {
+      requestIdleCallback(() => {
         onSelectJuz(juzNumber);
       });
     },

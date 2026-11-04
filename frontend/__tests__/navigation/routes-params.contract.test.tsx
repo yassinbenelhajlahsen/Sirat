@@ -5,7 +5,7 @@ import {
   render,
   waitFor,
 } from "@testing-library/react-native";
-import { Animated, InteractionManager } from "react-native";
+import { Animated } from "react-native";
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
@@ -137,7 +137,7 @@ describe("route params and path wiring contract", () => {
   const firstMissedFastDate = new Date("2026-03-05T00:00:00.000Z");
 
   let timingSpy: jest.SpyInstance;
-  let interactionSpy: jest.SpyInstance;
+  let idleSpy: jest.SpyInstance;
   let loopSpy: jest.SpyInstance;
 
   beforeAll(() => {
@@ -161,13 +161,13 @@ describe("route params and path wiring contract", () => {
         }) as any,
     );
 
-    interactionSpy = jest
-      .spyOn(InteractionManager, "runAfterInteractions")
+    idleSpy = jest
+      .spyOn(global, "requestIdleCallback")
       .mockImplementation((task: any) => {
         if (typeof task === "function") {
-          task();
+          task({ didTimeout: false, timeRemaining: () => 50 });
         }
-        return { cancel: jest.fn() } as any;
+        return 1 as any;
       });
 
     loopSpy = jest.spyOn(Animated, "loop").mockImplementation(
@@ -183,7 +183,7 @@ describe("route params and path wiring contract", () => {
 
   afterAll(() => {
     timingSpy.mockRestore();
-    interactionSpy.mockRestore();
+    idleSpy.mockRestore();
     loopSpy.mockRestore();
   });
 

@@ -2,7 +2,6 @@ import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
-  InteractionManager,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -110,7 +109,7 @@ const BookmarkRow = memo(function BookmarkRow({
     }
     swipeableRef.current?.close();
     onClose();
-    InteractionManager.runAfterInteractions(() => {
+    requestIdleCallback(() => {
       onSelectBookmark(item.bookmark);
     });
   }, [isDeleting, item.bookmark, onClose, onSelectBookmark]);

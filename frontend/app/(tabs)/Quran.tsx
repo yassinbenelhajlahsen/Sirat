@@ -45,7 +45,6 @@ import {
   AppState,
   AppStateStatus,
   Clipboard,
-  InteractionManager,
   StyleSheet,
   View,
   ViewToken,
@@ -367,9 +366,7 @@ function QuranScreen() {
   const topVisibleAyahIndexRef = useRef<number | null>(null);
   const hasAppliedInitialScrollRef = useRef(false);
   const hasRestoredInitialPositionRef = useRef(false);
-  const displayModeAnchorInteractionRef = useRef<{
-    cancel: () => void;
-  } | null>(null);
+  const displayModeAnchorIdleRef = useRef<number | null>(null);
   const displayModeAnchorRafRef = useRef<number | null>(null);
   const displayModeAnchorResetRafRef = useRef<number | null>(null);
   const displayModeSignatureRef = useRef<string | null>(null);
@@ -520,14 +517,14 @@ function QuranScreen() {
       attemptScroll(false);
 
       if (!animateFinal) {
-        InteractionManager.runAfterInteractions(() => {
+        requestIdleCallback(() => {
           isProgrammaticScrollRef.current = false;
         });
         return;
       }
 
       animatedScrollTimeoutRef.current = setTimeout(() => {
-        InteractionManager.runAfterInteractions(() => {
+        requestIdleCallback(() => {
           attemptScroll(true);
           isProgrammaticScrollRef.current = false;
         });
@@ -620,7 +617,7 @@ function QuranScreen() {
       }
     }
 
-    InteractionManager.runAfterInteractions(() => {
+    requestIdleCallback(() => {
       isProgrammaticScrollRef.current = false;
     });
   }, []);
@@ -742,9 +739,9 @@ function QuranScreen() {
   }, [listReady, listOpacity, reduceMotion]);
 
   useEffect(() => {
-    if (displayModeAnchorInteractionRef.current) {
-      displayModeAnchorInteractionRef.current.cancel();
-      displayModeAnchorInteractionRef.current = null;
+    if (displayModeAnchorIdleRef.current != null) {
+      cancelIdleCallback(displayModeAnchorIdleRef.current);
+      displayModeAnchorIdleRef.current = null;
     }
     if (displayModeAnchorRafRef.current != null) {
       cancelAnimationFrame(displayModeAnchorRafRef.current);
@@ -763,9 +760,9 @@ function QuranScreen() {
         clearTimeout(initialRestoreTimeoutRef.current);
         initialRestoreTimeoutRef.current = null;
       }
-      if (displayModeAnchorInteractionRef.current) {
-        displayModeAnchorInteractionRef.current.cancel();
-        displayModeAnchorInteractionRef.current = null;
+      if (displayModeAnchorIdleRef.current != null) {
+        cancelIdleCallback(displayModeAnchorIdleRef.current);
+        displayModeAnchorIdleRef.current = null;
       }
       if (displayModeAnchorRafRef.current != null) {
         cancelAnimationFrame(displayModeAnchorRafRef.current);
@@ -798,9 +795,9 @@ function QuranScreen() {
     const index = topVisibleAyahIndexRef.current;
     if (index == null) return;
 
-    if (displayModeAnchorInteractionRef.current) {
-      displayModeAnchorInteractionRef.current.cancel();
-      displayModeAnchorInteractionRef.current = null;
+    if (displayModeAnchorIdleRef.current != null) {
+      cancelIdleCallback(displayModeAnchorIdleRef.current);
+      displayModeAnchorIdleRef.current = null;
     }
     if (displayModeAnchorRafRef.current != null) {
       cancelAnimationFrame(displayModeAnchorRafRef.current);
@@ -814,8 +811,8 @@ function QuranScreen() {
     const sequence = ++displayModeAnchorSequenceRef.current;
     isProgrammaticScrollRef.current = true;
 
-    displayModeAnchorInteractionRef.current =
-      InteractionManager.runAfterInteractions(() => {
+    displayModeAnchorIdleRef.current =
+      requestIdleCallback(() => {
         if (sequence !== displayModeAnchorSequenceRef.current) {
           return;
         }

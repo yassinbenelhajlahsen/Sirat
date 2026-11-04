@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo } from "react";
-import { InteractionManager, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Subhead } from "@/components/ui/Text";
 import { radii, withOpacity, type AppTheme } from "@/constants/theme";
@@ -40,7 +40,7 @@ function JuzTab({ onSelectJuz, onClose, bottomInset = 0 }: JuzTabProps) {
   const handleSelect = useCallback(
     (juz: number) => {
       onClose();
-      InteractionManager.runAfterInteractions(() => {
+      requestIdleCallback(() => {
         onSelectJuz(juz);
       });
     },
