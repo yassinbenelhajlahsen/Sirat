@@ -56,6 +56,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useDuaInteraction.test.ts`
   - `services/duaTopics.test.ts` — every category in duas.json maps to exactly one topic; "another dua" stays in the topic
   - `services/duaSaved.test.ts` — saved dua ids (newest first, own change event for sync stamping)
+  - `screens/settings-notifications.test.tsx` — Settings > Notifications page passes the OS permission status (granted, or denied on read failure)
   - `screens/Duas.test.tsx` — dua library sheet: Saved/Recent rows, topics, pushes inside the sheet; list page shows full duas, saving, Saved empty state
 - `location heavy features testing`
   - `hooks/useQibla.test.ts`

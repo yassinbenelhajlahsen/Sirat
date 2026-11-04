@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 
 import Screen from "@/components/ui/Screen";
 import { Footnote, Subhead } from "@/components/ui/Text";
-import NotificationSettings from "@/components/NotificationSettings";
 import { AccountSection } from "@/components/settings/AccountSection";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsRow from "@/components/settings/SettingsRow";
@@ -61,7 +60,7 @@ export default function Settings() {
     cityItems,
     selectCityByKey,
   } = usePrayerSettingsState();
-  const { permissionStatus, notifStatus, handleLocationToggle } =
+  const { permissionStatus, handleLocationToggle } =
     useSettingsPermissions({ useLocation, setUseLocation });
 
   const { ramadanMode, setRamadanMode } = useRamadanMode();
@@ -197,8 +196,15 @@ export default function Settings() {
           ) : null}
         </SettingsSection>
 
-        {/* Notifications owns its own grouped sections */}
-        <NotificationSettings notifStatus={notifStatus} />
+        <SettingsSection>
+          <SettingsRow
+            first
+            icon="notifications-outline"
+            title="Notifications"
+            showChevron
+            onPress={() => router.push("/Settings/notifications")}
+          />
+        </SettingsSection>
 
         <SettingsSection footer="Suhoor and iftar times during Ramadan.">
           <SettingsRow

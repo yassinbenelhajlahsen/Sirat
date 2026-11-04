@@ -872,14 +872,20 @@ describe("Screen contracts", () => {
 
   describe("Settings", () => {
     it("renders settings title and notifications contract", () => {
-      const { getByText } = render(<Settings />);
+      const { getByText, queryByText } = render(<Settings />);
 
       expect(
         getByText(
           "Using live location. Turn this off to choose a fixed city.",
         ),
       ).toBeTruthy();
-      expect(getByText("NotificationSettings:granted")).toBeTruthy();
+      expect(queryByText("NotificationSettings:granted")).toBeNull();
+    });
+
+    it("opens notification settings on their own page", () => {
+      const { getByText } = render(<Settings />);
+      fireEvent.press(getByText("Notifications"));
+      expect(mockPush).toHaveBeenCalledWith("/Settings/notifications");
     });
 
     it("routes location toggle changes through permissions hook", async () => {

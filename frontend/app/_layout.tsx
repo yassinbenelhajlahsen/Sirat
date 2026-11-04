@@ -210,7 +210,6 @@ function RootLayoutContent() {
   useSyncEngine();
   useWidgetSync();
   const { theme, isHydrated } = useTheme();
-  const settingsHeader = useNativeHeaderOptions("Settings", { large: false, titleSize: 26 });
   const trackerHeader = useNativeHeaderOptions("Tracker", { large: false, titleSize: 26 });
   const backgroundColor = isHydrated
     ? theme.colors.primaryDark
@@ -478,21 +477,7 @@ function RootLayoutContent() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="Settings"
-                  options={{
-                    ...settingsHeader,
-                    presentation: "modal",
-                    animation: "slide_from_bottom",
-                    unstable_headerRightItems: () => [
-                      {
-                        type: "button",
-                        label: "Close",
-                        icon: { type: "sfSymbol", name: "xmark" },
-                        variant: "prominent" as const,
-                        tintColor: glassTintFor(theme),
-                        onPress: () => router.back(),
-                      },
-                    ],
-                  }}
+                  options={{ presentation: "modal", animation: "slide_from_bottom" }}
                 />
                 <Stack.Screen
                   name="SignIn"
