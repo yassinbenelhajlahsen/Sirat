@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import PressableScale from "@/components/PressableScale";
 import AppIcon from "@/components/ui/AppIcon";
@@ -9,7 +9,9 @@ import { Body, Footnote } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
+import { useQuranReciter } from "@/hooks/useQuranReciter";
 import { useQuranTextScale } from "@/hooks/useQuranTextScale";
+import { QURAN_RECITERS } from "@/services/quranAudio";
 import { QuranDisplayMode } from "@/services/quranDisplayModes";
 import {
   QURAN_TEXT_SCALE_LABELS,
@@ -41,6 +43,7 @@ export default function QuranDisplaySettingsModal({
   const { displayModes, isModeEnabled, toggleDisplayMode } =
     useQuranDisplayModes();
   const { textScale, setTextScale } = useQuranTextScale();
+  const { reciterId, setReciterId } = useQuranReciter();
   const selectedDisplayModeCount = displayModes.length;
 
   const handleDisplayModePress = useCallback(
@@ -123,6 +126,35 @@ export default function QuranDisplaySettingsModal({
             );
           })}
         </View>
+
+        <View style={styles.sectionLabel}>
+          <SectionHeader title="Reciter" />
+        </View>
+        <ScrollView style={styles.reciterList} nestedScrollEnabled accessibilityRole="radiogroup">
+          {QURAN_RECITERS.map((reciter, index) => {
+            const selected = reciter.id === reciterId;
+            return (
+              <PressableScale
+                key={reciter.id}
+                variant="row"
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected, selected }}
+                onPress={() => void setReciterId(reciter.id)}
+                style={[
+                  styles.displayModeRow,
+                  index > 0 ? styles.displayModeRowSeparated : null,
+                ]}
+              >
+                <Body color={themeColors.white} style={styles.displayModeLabel}>
+                  {reciter.name}
+                </Body>
+                {selected ? (
+                  <AppIcon name="checkmark" size={18} color={themeColors.accent} />
+                ) : null}
+              </PressableScale>
+            );
+          })}
+        </ScrollView>
       </View>
     </NativeSheet>
   );
@@ -142,6 +174,15 @@ const createStyles = (theme: AppTheme) => {
       borderRadius: theme.radii.row,
       borderCurve: "continuous",
       overflow: "hidden",
+      backgroundColor: isLight
+        ? withOpacity(themeColors.black, 0.05)
+        : withOpacity(themeColors.white, 0.07),
+    },
+    reciterList: {
+      // Caps the sheet height so 8 rows don't overflow small phones; the half row hints at scrolling.
+      maxHeight: 264,
+      borderRadius: theme.radii.row,
+      borderCurve: "continuous",
       backgroundColor: isLight
         ? withOpacity(themeColors.black, 0.05)
         : withOpacity(themeColors.white, 0.07),

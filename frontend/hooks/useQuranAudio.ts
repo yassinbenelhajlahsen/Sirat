@@ -1,3 +1,4 @@
+import { useQuranReciter } from "@/hooks/useQuranReciter";
 import { getSurahAudioUrl } from "@/services/quranAudio";
 import type { AudioPlayer, AudioStatus } from "expo-audio";
 import {
@@ -41,6 +42,8 @@ export function useQuranAudio({
   const [activeSurahNumber, setActiveSurahNumber] = useState<number | null>(
     null
   );
+  const { reciterId } = useQuranReciter();
+  const [activeReciterId, setActiveReciterId] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [playbackDuration, setPlaybackDuration] = useState(0);
   const [playbackPosition, setPlaybackPosition] = useState(0);
@@ -197,7 +200,11 @@ export function useQuranAudio({
 
     await ensureAudioSession();
 
-    if (audioPlayer && activeSurahNumber === currentSurahNumber) {
+    if (
+      audioPlayer &&
+      activeSurahNumber === currentSurahNumber &&
+      activeReciterId === reciterId
+    ) {
       try {
         const status = audioPlayer.currentStatus;
         if (status?.didJustFinish) {
@@ -222,10 +229,11 @@ export function useQuranAudio({
         }
       }
 
-      const audioUrl = getSurahAudioUrl(currentSurahNumber);
+      const audioUrl = getSurahAudioUrl(currentSurahNumber, reciterId);
       const player = createAudioPlayer(audioUrl);
       setAudioPlayer(player);
       setActiveSurahNumber(currentSurahNumber);
+      setActiveReciterId(reciterId);
       setPlaybackDuration(0);
       setPlaybackPosition(0);
 
@@ -238,12 +246,14 @@ export function useQuranAudio({
       setIsAudioLoading(false);
     }
   }, [
+    activeReciterId,
     activeSurahNumber,
     audioPlayer,
     currentSurahNumber,
     ensureAudioSession,
     isAudioLoading,
     isOnline,
+    reciterId,
   ]);
 
   useEffect(() => {
@@ -334,7 +344,10 @@ export function useQuranAudio({
       return;
     }
 
-    if (activeSurahNumber === currentSurahNumber) {
+    if (
+      activeSurahNumber === currentSurahNumber &&
+      activeReciterId === reciterId
+    ) {
       return;
     }
 
@@ -344,21 +357,22 @@ export function useQuranAudio({
     try {
       audioPlayer.pause();
     } catch (error) {
-      console.warn("Failed to pause audio on surah change", error);
+      console.warn("Failed to pause audio on surah or reciter change", error);
     }
 
     audioPlayer
       .seekTo(0)
       .catch((error) =>
-        console.warn("Failed to reset audio position on surah change", error)
+        console.warn("Failed to reset audio position on surah or reciter change", error)
       );
 
     setIsPlaying(false);
     setAudioPlayer(null);
     setActiveSurahNumber(null);
+    setActiveReciterId(null);
     setPlaybackDuration(0);
     setPlaybackPosition(0);
-  }, [audioPlayer, activeSurahNumber, currentSurahNumber]);
+  }, [audioPlayer, activeSurahNumber, activeReciterId, currentSurahNumber, reciterId]);
 
   useEffect(() => {
     const wasOnline = previousOnlineStatusRef.current;

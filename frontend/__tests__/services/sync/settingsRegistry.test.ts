@@ -14,6 +14,7 @@ it("covers exactly the synced setting keys", () => {
       "quranBookmarks",
       "quranDisplayModes",
       "quranProgress",
+      "quranReciter",
       "ramadanTracker",
       "theme",
     ],
@@ -60,4 +61,15 @@ it("notif applyValue ignores malformed remote values", async () => {
 
   await byKey.notifWindowOffset.applyValue(7);
   expect(await byKey.notifWindowOffset.read()).toBe(15);
+});
+
+it("quranReciter entry stamps off its own event and ignores unknown ids", async () => {
+  const entry = SETTINGS_REGISTRY.find((e) => e.key === "quranReciter")!;
+  expect(entry.changeEvent).toBe("QURAN_RECITER_UPDATED");
+
+  await entry.applyValue("sudais");
+  expect(await entry.read()).toBe("sudais");
+
+  await entry.applyValue("nope");
+  expect(await entry.read()).toBe("sudais");
 });

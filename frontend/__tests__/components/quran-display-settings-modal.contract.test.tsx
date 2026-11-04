@@ -45,6 +45,11 @@ jest.mock("@/hooks/useQuranTextScale", () => ({
   useQuranTextScale: () => ({ textScale: 1, setTextScale: mockSetTextScale, loaded: true }),
 }));
 
+const mockSetReciterId = jest.fn(async (v: string) => v);
+jest.mock("@/hooks/useQuranReciter", () => ({
+  useQuranReciter: () => ({ reciterId: "alafasy", setReciterId: mockSetReciterId }),
+}));
+
 const mockUseQuranDisplayModes = useQuranDisplayModes as jest.MockedFunction<
   typeof useQuranDisplayModes
 >;
@@ -120,7 +125,7 @@ describe("QuranDisplaySettingsModal contract", () => {
 
     expect(getByText("TEXT SIZE")).toBeTruthy();
     const radios = getAllByRole("radio");
-    expect(radios).toHaveLength(4);
+    expect(radios.filter((r) => r.props.accessibilityLabel)).toHaveLength(4);
     expect(getByLabelText("Default text").props.accessibilityState).toEqual({
       checked: true,
       selected: true,
@@ -128,6 +133,29 @@ describe("QuranDisplaySettingsModal contract", () => {
 
     fireEvent.press(getByLabelText("Larger text"));
     expect(mockSetTextScale).toHaveBeenCalledWith(1.3);
+  });
+
+  it("lists the reciters, marks the current one, and saves a new pick", () => {
+    mockUseQuranDisplayModes.mockReturnValue({
+      displayModes: ["arabic"],
+      isModeEnabled: (mode: string) => mode === "arabic",
+      toggleDisplayMode: jest.fn(),
+    } as any);
+
+    const { getAllByRole, getByText } = render(
+      <QuranDisplaySettingsModal visible onClose={jest.fn()} />
+    );
+
+    expect(getByText("RECITER")).toBeTruthy();
+    const radios = getAllByRole("radio").filter(
+      (r) => r.props.accessibilityLabel === undefined
+    );
+    expect(radios).toHaveLength(8);
+    expect(radios[0].props.accessibilityState).toEqual({ checked: true, selected: true });
+    expect(radios[1].props.accessibilityState).toEqual({ checked: false, selected: false });
+
+    fireEvent.press(getByText("Yasser Al-Dosari"));
+    expect(mockSetReciterId).toHaveBeenCalledWith("dosari");
   });
 
   it("prevents toggling the last enabled mode while allowing other toggles", () => {

@@ -24,6 +24,12 @@ import {
   saveQuranDisplayModes,
   QURAN_DISPLAY_MODES_UPDATED_EVENT,
 } from "@/services/quranDisplayModes";
+import { sanitizeQuranReciterId } from "@/services/quranAudio";
+import {
+  getQuranReciter,
+  saveQuranReciter,
+  QURAN_RECITER_UPDATED_EVENT,
+} from "@/services/quranReciter";
 import {
   getBookmarks,
   replaceBookmarks,
@@ -69,6 +75,15 @@ export const SETTINGS_REGISTRY: SettingEntry[] = [
     changeEvent: QURAN_DISPLAY_MODES_UPDATED_EVENT,
     read: () => getQuranDisplayModes(),
     applyValue: async (v) => { if (Array.isArray(v)) await saveQuranDisplayModes(v); },
+  },
+  {
+    key: "quranReciter",
+    changeEvent: QURAN_RECITER_UPDATED_EVENT,
+    read: () => getQuranReciter(),
+    // An id this build doesn't know (newer app on another device) is ignored, not reset to default.
+    applyValue: async (v) => {
+      if (typeof v === "string" && sanitizeQuranReciterId(v) === v) await saveQuranReciter(v);
+    },
   },
   {
     key: "quranBookmarks",

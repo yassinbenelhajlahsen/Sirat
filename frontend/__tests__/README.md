@@ -40,6 +40,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useQuranDisplayModes.test.ts`
   - `services/quranTextScale.test.ts` — reader text size (`quran_text_scale_v1`): defaults, snapping, persistence, update event
   - `hooks/useQuranTextScale.test.ts`
+  - `services/quranAudio.test.ts` — reciter list, QuranicAudio URL builder (zero padding, every id), unknown-id fallback
+  - `services/quranReciter.test.ts` — reciter choice (`quran_reciter_v1`): default fallback, persistence, update event
   - `components/quran-ayah-card.contract.test.tsx` — tap reveals Bookmark/Copy actions, long-press copy shortcut, text scaling
   - `components/surah-banner.contract.test.tsx`
   - `components/surah-tab.contract.test.tsx` (navigator Surah tab — search-forward default: Continue reading + Popular, "All Sūrahs" reveal, search mode)

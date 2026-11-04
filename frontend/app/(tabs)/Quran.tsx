@@ -1369,7 +1369,8 @@ function QuranScreen() {
             ]}
           >
             <PressableScale
-              variant="row"
+              variant="button"
+              scaleTo={1}
               style={styles.headerText}
               onPress={() => openNavigator("surah")}
               accessibilityRole="button"
