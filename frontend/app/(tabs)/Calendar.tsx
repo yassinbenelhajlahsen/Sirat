@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Linking,
-  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -34,12 +32,10 @@ import { useHabits } from "@/hooks/useHabits";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useCalendarNavigationTransitions } from "@/hooks/useCalendarNavigationTransitions";
 import { useCalendarViewState } from "@/hooks/useCalendarViewState";
-import { useNextPrayer } from "@/hooks/useNextPrayer";
-import { usePrayerLog } from "@/hooks/usePrayerLog";
-import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { usePrayerDay } from "@/hooks/usePrayerDay";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
 import { dateKeyFromDate } from "@/services/holidayService";
-import type { PrayerName } from "@/services/prayerTracker";
+import { openAppSettings } from "@/utils/openAppSettings";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -76,8 +72,6 @@ export default function CalendarScreen() {
   const {
     holidayMap,
     loadingHolidays,
-    ramadanStart,
-    ramadanEnd,
     ramadanSummary,
     ramadanMonthActive,
     firstMissedFastDate,
@@ -130,40 +124,35 @@ export default function CalendarScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMonth, viewYear]);
 
+  // Select a day, bringing its month into view first when it is not the one showing; the
+  // selection-resolving effect above then consumes the pending pick.
+  const selectDate = useCallback(
+    (target: Date) => {
+      if (target.getMonth() !== viewMonthRef.current || target.getFullYear() !== viewYearRef.current) {
+        pendingSelectRef.current = target;
+        setViewYear(target.getFullYear());
+        setViewMonth(target.getMonth());
+      } else {
+        setSelectedDate(target);
+      }
+    },
+    [setViewMonth, setViewYear, viewMonthRef, viewYearRef],
+  );
+
   // Pre-select a day requested via the `date` param (e.g. "Finished all
-  // prayers!" on Home → tomorrow). Bring its month into view if needed and let
-  // the selection-resolving effect above consume the pending pick.
+  // prayers!" on Home → tomorrow).
   useEffect(() => {
     if (typeof date !== "string") return;
     const target = new Date(decodeURIComponent(date));
     if (isNaN(target.getTime())) return;
-    const m = target.getMonth();
-    const y = target.getFullYear();
-    if (m !== viewMonthRef.current || y !== viewYearRef.current) {
-      pendingSelectRef.current = target;
-      setViewYear(y);
-      setViewMonth(m);
-    } else {
-      setSelectedDate(target);
-    }
+    selectDate(target);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
 
-  const ramadanParam = useMemo(
-    () => ({
-      start: ramadanStart?.toISOString(),
-      end: ramadanEnd?.toISOString(),
-    }),
-    [ramadanStart, ramadanEnd],
-  );
-
-  const { prayerDay, loading, error, retry } = usePrayerTimes(selectedDate);
-  const { nextPrayer, timeLeft } = useNextPrayer(prayerDay);
-  const { isRamadan, isFastMissed, toggleMissedFast } = useRamadanTracker(
-    selectedDate,
-    ramadanParam.start,
-    ramadanParam.end,
-  );
+  const {
+    prayerDay, loading, error, retry, nextPrayer, timeLeft, hijri, statuses, logSheet, openLogSheet,
+  } = usePrayerDay(selectedDate);
+  const { isRamadan, isFastMissed, toggleMissedFast } = useRamadanTracker(selectedDate);
 
   const selectedIsToday =
     !!selectedDate && selectedDate.toDateString() === today.toDateString();
@@ -193,34 +182,17 @@ export default function CalendarScreen() {
   const handleRamadanSummaryPress = useCallback(() => {
     if (!firstMissedFastDate) return;
     haptics("selection");
-    const m = firstMissedFastDate.getMonth();
-    const y = firstMissedFastDate.getFullYear();
-    if (m !== viewMonth || y !== viewYear) {
-      pendingSelectRef.current = firstMissedFastDate;
-      setViewYear(y);
-      setViewMonth(m);
-    } else {
-      setSelectedDate(firstMissedFastDate);
-    }
-  }, [firstMissedFastDate, haptics, setViewMonth, setViewYear, viewMonth, viewYear]);
+    selectDate(firstMissedFastDate);
+  }, [firstMissedFastDate, haptics, selectDate]);
 
   const onToggleMissed = useCallback(async () => {
     haptics("light");
     await toggleMissedFast();
   }, [haptics, toggleMissedFast]);
 
-  const openSettings = useCallback(async () => {
-    try {
-      if (Platform.OS === "ios") await Linking.openURL("app-settings:");
-      else await Linking.openSettings();
-    } catch {}
-  }, []);
-
   const selectedDayKey = selectedDate ? dateKeyFromDate(selectedDate) : "";
-  const { statuses, setStatus, clearStatus } = usePrayerLog(selectedDayKey);
   const { habits } = useHabits();
   const { done: habitDone, toggle: toggleHabit } = useHabitLog(selectedDayKey);
-  const [prayerSheet, setPrayerSheet] = useState<{ name: PrayerName; label: string } | null>(null);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
   const openMonthPicker = useCallback(() => {
@@ -439,15 +411,16 @@ export default function CalendarScreen() {
                 date={selectedDate}
                 isToday={selectedIsToday}
                 holiday={selectedHoliday}
+                hijri={hijri}
                 loading={loading}
                 prayerDay={prayerDay}
                 error={error}
                 onRetry={retry}
-                onOpenSettings={openSettings}
+                onOpenSettings={openAppSettings}
                 nextPrayer={nextPrayer}
                 timeLeft={timeLeft}
                 statuses={statuses}
-                onPressPrayer={(name, label) => setPrayerSheet({ name, label })}
+                onPressPrayer={openLogSheet}
               />
               {ramadanSection}
               <HabitChecklist habits={habits} done={habitDone} date={selectedDate} onToggle={toggleHabit} />
@@ -476,15 +449,7 @@ export default function CalendarScreen() {
       onSelect={handleMonthPicked}
       onClose={() => setMonthPickerOpen(false)}
     />
-    <PrayerLogSheet
-      visible={prayerSheet !== null}
-      prayerName={prayerSheet?.name ?? null}
-      prayerLabel={prayerSheet?.label ?? ""}
-      currentStatus={prayerSheet ? statuses[prayerSheet.name] : undefined}
-      onSelect={(s) => { if (prayerSheet) setStatus(prayerSheet.name, s); setPrayerSheet(null); }}
-      onClear={() => { if (prayerSheet) clearStatus(prayerSheet.name); setPrayerSheet(null); }}
-      onClose={() => setPrayerSheet(null)}
-    />
+    <PrayerLogSheet {...logSheet} />
     </View>
   );
 }

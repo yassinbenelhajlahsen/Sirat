@@ -27,7 +27,7 @@ describe("DayDetailPanel logging", () => {
     const { getByLabelText } = render(
       wrap(
         <DayDetailPanel
-          date={past} isToday={false} holiday={null} loading={false}
+          date={past} isToday={false} holiday={null} hijri="" loading={false}
           prayerDay={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
           nextPrayer={null} timeLeft=""
           statuses={{}}
@@ -45,7 +45,7 @@ describe("DayDetailPanel logging", () => {
     const { getByTestId } = render(
       wrap(
         <DayDetailPanel
-          date={past} isToday={false} holiday={null} loading={false}
+          date={past} isToday={false} holiday={null} hijri="" loading={false}
           prayerDay={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
           nextPrayer={null} timeLeft=""
           statuses={statuses}
@@ -62,7 +62,7 @@ describe("DayDetailPanel logging", () => {
     const { queryByLabelText, queryByTestId, getByText } = render(
       wrap(
         <DayDetailPanel
-          date={future} isToday={false} holiday={null} loading={false}
+          date={future} isToday={false} holiday={null} hijri="" loading={false}
           prayerDay={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
           nextPrayer={null} timeLeft=""
           statuses={{}}

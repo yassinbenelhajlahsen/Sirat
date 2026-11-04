@@ -24,20 +24,24 @@ jest.mock("@/services/auth/authPrompts", () => ({
   shouldShowHomeCard: () => Promise.resolve(false),
   markHomeCardShown: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock("@/hooks/useHomePrayerTimes", () => ({
-  useHomePrayerTimes: () => ({
-    prayerDay: require("@/services/prayerDay").buildPrayerDay(new Date(), [
+// The real hook runs; only the data layer is stubbed.
+jest.mock("@/services/prayer-times/place", () => ({
+  resolvePlace: async () => ({ coords: undefined, label: "Tunis" }),
+}));
+jest.mock("@/services/prayerSettings", () => ({
+  getEffectivePrayerSettings: async () => ({ useLocation: false, method: 2 }),
+}));
+jest.mock("@/services/prayerTimes", () => ({
+  getPrayerTimesToday: async () => require("@/services/prayerDay").buildPrayerDay(new Date(), [
       { label: "Fajr", time: "5:12 AM" },
       { label: "Dhuhr", time: "1:01 PM" },
       { label: "Asr", time: "3:42 PM" },
       { label: "Maghrib", time: "6:30 PM" },
       { label: "Isha", time: "8:01 PM" },
     ]),
-    nextPrayer: { name: "Isha", at: new Date(2026, 0, 1, 20, 1) },
-    nextDayFajr: null, timeLeft: "1h", loading: false, refreshing: false,
-    banner: "", locationLabel: "Tunis", refresh: jest.fn(),
-  }),
+  getPrayerTimesForDate: async (_s: unknown, d: Date) => require("@/services/prayerDay").buildPrayerDay(d, []),
 }));
+
 
 const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
 
@@ -58,8 +62,8 @@ describe("Home prayer logging", () => {
   afterEach(() => { jest.useRealTimers(); });
 
   it("logs a prayer from the arc and persists it", async () => {
-    const { getByLabelText, getByText } = render(wrap(<Home />));
-    fireEvent.press(getByLabelText("Log Fajr"));
+    const { findByLabelText, getByText } = render(wrap(<Home />));
+    fireEvent.press(await findByLabelText("Log Fajr"));
     fireEvent.press(getByText("Prayed"));
     await waitFor(async () => {
       const today = new Intl.DateTimeFormat("en-CA").format(new Date()); // YYYY-MM-DD

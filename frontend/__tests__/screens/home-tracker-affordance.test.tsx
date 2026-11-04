@@ -19,18 +19,22 @@ jest.mock("@/services/auth/authPrompts", () => ({
   shouldShowHomeCard: () => Promise.resolve(false),
   markHomeCardShown: jest.fn().mockResolvedValue(undefined),
 }));
-jest.mock("@/hooks/useHomePrayerTimes", () => ({
-  useHomePrayerTimes: () => ({
-    prayerDay: require("@/services/prayerDay").buildPrayerDay(new Date(), [{ label: "Fajr", time: "5:12 AM" }]),
-    nextPrayer: { name: "Isha", at: new Date(2026, 0, 1, 20, 1) },
-    nextDayFajr: null, timeLeft: "1h", loading: false, refreshing: false,
-    banner: "", locationLabel: "Tunis", refresh: jest.fn(),
-  }),
+// The real hook runs; only the data layer is stubbed.
+jest.mock("@/services/prayer-times/place", () => ({
+  resolvePlace: async () => ({ coords: undefined, label: "Tunis" }),
 }));
+jest.mock("@/services/prayerSettings", () => ({
+  getEffectivePrayerSettings: async () => ({ useLocation: false, method: 2 }),
+}));
+jest.mock("@/services/prayerTimes", () => ({
+  getPrayerTimesToday: async () => require("@/services/prayerDay").buildPrayerDay(new Date(), [{ label: "Fajr", time: "5:12 AM" }]),
+  getPrayerTimesForDate: async (_s: unknown, d: Date) => require("@/services/prayerDay").buildPrayerDay(d, []),
+}));
+
 jest.mock("@/hooks/useTrackingStats", () => ({
   useTrackingStats: () => ({
     streak: 9,
-    completion: { overall: 0, byPrayer: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } },
+    completion: { overall: 0, byPrayer: { Fajr: 0, Dhuhr: 0, Asr: 0, Maghrib: 0, Isha: 0 } },
     qada: 0, dailyScores: [], year: 2026, monthIndex0: 5,
   }),
 }));

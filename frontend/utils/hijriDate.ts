@@ -48,6 +48,50 @@ export function isFastingDay(date: Date): boolean {
   return hijriDayAndMonth(noon).month === RAMADAN_MONTH;
 }
 
+export const MISSED_FAST_BUFFER_DAYS = 3;
+
+/**
+ * Whether a missed fast can be marked on this day: a Ramadan day or up to 3 days either side,
+ * since moon sighting varies by a day or two between communities.
+ */
+export function isMissedFastDay(date: Date): boolean {
+  for (let offset = -MISSED_FAST_BUFFER_DAYS; offset <= MISSED_FAST_BUFFER_DAYS; offset++) {
+    if (isFastingDay(new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export type RamadanPeriod = { start: Date; end: Date };
+
+const periodByYear = new Map<number, RamadanPeriod | null>();
+
+/**
+ * First and last fasting day of the Ramadan that begins in `year` (Umm al-Qura), or null when
+ * none does. A year with two Ramadans (rare) gets the first.
+ */
+export function ramadanPeriod(year: number): RamadanPeriod | null {
+  if (periodByYear.has(year)) return periodByYear.get(year) ?? null;
+  let start: Date | null = null;
+  let end: Date | null = null;
+  for (let i = 0; i < 400; i++) {
+    const day = new Date(year, 0, 1 + i, 12);
+    const inRamadan = hijriDayAndMonth(day).month === RAMADAN_MONTH;
+    if (!inRamadan) {
+      if (start) break;
+      continue;
+    }
+    if (!start && day.getFullYear() !== year) break;
+    const midnight = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+    start ??= midnight;
+    end = midnight;
+  }
+  const period = start && end ? { start, end } : null;
+  periodByYear.set(year, period);
+  return period;
+}
+
 /**
  * The Ramadan day number (1 to 30) at the moment `at`, rolling over at Maghrib like `formatHijriDate`,
  * or null outside Ramadan. The evening before the first fast already counts as Ramadan 1.

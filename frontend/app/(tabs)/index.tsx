@@ -19,8 +19,6 @@ import Screen from "@/components/ui/Screen";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { getGreeting } from "@/utils/greeting";
-import { maghribOf } from "@/services/prayerDay";
-import { formatHijriDate } from "@/utils/hijriDate";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
@@ -30,12 +28,10 @@ import { useRamadanMode } from "@/hooks/useRamadanMode";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import PressableScale from "../../components/PressableScale";
 import { useDuaInteraction } from "../../hooks/useDuaInteraction";
-import { useHomePrayerTimes } from "../../hooks/useHomePrayerTimes";
+import { usePrayerDay } from "../../hooks/usePrayerDay";
 import { useKeyboardAutoScroll } from "../../hooks/useKeyboardAutoScroll";
-import { usePrayerLog } from "@/hooks/usePrayerLog";
 import { useTrackingStats } from "@/hooks/useTrackingStats";
-import { dateKeyFromDate } from "@/services/holidayService";
-import type { PrayerName } from "@/services/prayerTracker";
+import { openAppSettings } from "@/utils/openAppSettings";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -46,9 +42,10 @@ export default function Home() {
 
   const router = useRouter();
   const {
-    prayerDay, nextPrayer, nextDayFajr, tomorrowFajr, timeLeft,
-    loading, refreshing, banner, locationLabel, coords, refresh,
-  } = useHomePrayerTimes();
+    prayerDay, nextPrayer, nextDayFajr, tomorrowFajr, timeLeft, hijri,
+    loading, refreshing, error, locationLabel, coords, refresh, retry,
+    statuses, logSheet, openLogSheet,
+  } = usePrayerDay("today");
   const { ramadanMode } = useRamadanMode();
   const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
@@ -59,13 +56,8 @@ export default function Home() {
   }, [submitDua, scrollViewRef]);
 
 
-  const onRefresh = async () => { await refresh(); };
-
   const today = new Date();
-  const todayKey = dateKeyFromDate(today);
-  const { statuses, setStatus, clearStatus } = usePrayerLog(todayKey);
   const stats = useTrackingStats();
-  const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
 
   const { isLoaded, isSignedIn, firstName } = useAuthState();
   const [showCard, setShowCard] = useState(false);
@@ -85,7 +77,6 @@ export default function Home() {
 
   const baseGreeting = getGreeting(today);
   const displayName = isSignedIn && firstName && firstName.length < 10 ? firstName : null;
-  const islamicDate = formatHijriDate(today, maghribOf(prayerDay));
   const gregorianDate = formatWeekdayMonthDay(today);
 
   const tomorrow = new Date(today);
@@ -108,24 +99,34 @@ export default function Home() {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />
         }
       >
-        {!!banner && (
+        {!!error && (
           <GlassSurface tier="row" radius={theme.radii.row} style={styles.bannerCard} accessibilityRole="alert">
             <View style={styles.bannerRow}>
               <AppIcon name="alert-circle" size={18} color={colors.accent} />
-              <Footnote color={colors.white} style={styles.bannerText}>{banner}</Footnote>
+              <Footnote color={colors.white} style={styles.bannerText}>{error.message}</Footnote>
             </View>
-            <Button
-              label="Try again"
-              variant="secondary"
-              size="sm"
-              icon="refresh"
-              onPress={onRefresh}
-              accessibilityLabel="Retry loading prayer times"
-              style={styles.bannerAction}
-            />
+            <View style={styles.bannerActions}>
+              <Button
+                label="Try again"
+                variant="secondary"
+                size="sm"
+                icon="refresh"
+                onPress={retry}
+                accessibilityLabel="Retry loading prayer times"
+              />
+              {error.code === "LOCATION" ? (
+                <Button
+                  label="Open Settings"
+                  variant="secondary"
+                  size="sm"
+                  onPress={openAppSettings}
+                  accessibilityLabel="Open app settings"
+                />
+              ) : null}
+            </View>
           </GlassSurface>
         )}
 
@@ -149,7 +150,7 @@ export default function Home() {
               {displayName ? `${baseGreeting}, ${displayName}` : baseGreeting}
             </Title1>
             <Title3 color={colors.accent} numberOfLines={1} style={styles.headerHijri}>
-              {islamicDate}
+              {hijri}
             </Title3>
             <Footnote color={colors.textTertiary} style={styles.headerDate}>
               {locationLabel ? `${gregorianDate} · ${locationLabel}` : gregorianDate}
@@ -175,7 +176,7 @@ export default function Home() {
             coords={coords}
             logging
             statuses={statuses}
-            onPressPrayer={(name, label) => setSheet({ name, label })}
+            onPressPrayer={openLogSheet}
             onPressCentre={
               !nextPrayer && nextDayFajr
                 ? () =>
@@ -248,15 +249,7 @@ export default function Home() {
           </Animated.View>
         </View>
       </ScrollView>
-      <PrayerLogSheet
-        visible={sheet !== null}
-        prayerName={sheet?.name ?? null}
-        prayerLabel={sheet?.label ?? ""}
-        currentStatus={sheet ? statuses[sheet.name] : undefined}
-        onSelect={(s) => { if (sheet) setStatus(sheet.name, s); setSheet(null); }}
-        onClear={() => { if (sheet) clearStatus(sheet.name); setSheet(null); }}
-        onClose={() => setSheet(null)}
-      />
+      <PrayerLogSheet {...logSheet} />
     </Screen>
   );
 }
@@ -267,7 +260,7 @@ const createStyles = (theme: AppTheme) => {
     bannerCard: { padding: spacing.md, marginBottom: spacing.lg, gap: spacing.sm },
     bannerRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
     bannerText: { flex: 1 },
-    bannerAction: { alignSelf: "flex-start" },
+    bannerActions: { flexDirection: "row", gap: spacing.sm, alignSelf: "flex-start" },
     headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.md },
     headerText: { flex: 1 },
     headerHijri: { marginTop: spacing.xs },

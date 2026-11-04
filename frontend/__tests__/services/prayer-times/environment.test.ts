@@ -1,3 +1,5 @@
+import { isLocationUnavailable } from "@/services/prayer-times/errors";
+
 type LocationMocks = {
   hasServicesEnabledAsync: jest.Mock;
   getForegroundPermissionsAsync: jest.Mock;
@@ -126,11 +128,11 @@ describe("prayer-times/environment", () => {
       requestForegroundPermissionsAsync: jest.fn(async () => ({ status: "denied" })),
     });
 
-    await expect(
-      resolveCoordsAndCountry({ useLocation: true, method: 2 }),
-    ).rejects.toThrow(
+    const error = await resolveCoordsAndCountry({ useLocation: true, method: 2 }).catch((e) => e);
+    expect(error.message).toBe(
       "Location unavailable. Enable Location Services or set a manual city in Settings.",
     );
+    expect(isLocationUnavailable(error)).toBe(true);
   });
   describe("when a fresh location fix fails", () => {
     const failFix = jest.fn(async () => {

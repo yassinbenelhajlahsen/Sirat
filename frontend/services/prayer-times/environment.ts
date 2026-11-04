@@ -1,5 +1,6 @@
 import * as Location from "expo-location";
 
+import { LocationUnavailableError } from "./errors";
 import type { PrayerLocationOverride, PrayerSettings, ResolvedEnv } from "./types";
 
 function coordBucket(lat: number, lng: number): string {
@@ -61,7 +62,7 @@ export async function resolveCoordsAndCountry(
 
   if (!settings.useLocation) {
     if (!settings.city) {
-      throw new Error("City must be provided when location is disabled");
+      throw new LocationUnavailableError("City must be provided when location is disabled");
     }
 
     const { lat, lng, country } = settings.city;
@@ -119,7 +120,5 @@ export async function resolveCoordsAndCountry(
     });
   }
 
-  throw new Error(
-    "Location unavailable. Enable Location Services or set a manual city in Settings.",
-  );
+  throw new LocationUnavailableError();
 }

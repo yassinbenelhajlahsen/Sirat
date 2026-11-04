@@ -11,8 +11,7 @@ const mockReplace = jest.fn();
 const mockBack = jest.fn();
 let mockLocalSearchParams: Record<string, unknown> = {};
 
-const mockUsePrayerTimes = jest.fn();
-const mockUseNextPrayer = jest.fn();
+const mockUsePrayerDay = jest.fn();
 const mockUseRamadanTracker = jest.fn();
 const mockGetHolidayMapForYear = jest.fn();
 const mockDateKeyFromDate = jest.fn();
@@ -137,11 +136,8 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("../../hooks/usePrayerTimes", () => ({
-  usePrayerTimes: (...args: any[]) => mockUsePrayerTimes(...args),
-}));
-jest.mock("../../hooks/useNextPrayer", () => ({
-  useNextPrayer: (...args: any[]) => mockUseNextPrayer(...args),
+jest.mock("../../hooks/usePrayerDay", () => ({
+  usePrayerDay: (...args: any[]) => mockUsePrayerDay(...args),
 }));
 jest.mock("../../hooks/useRamadanTracker", () => ({
   useRamadanTracker: (...args: any[]) => mockUseRamadanTracker(...args),
@@ -192,21 +188,21 @@ describe("navigation contracts", () => {
       .spyOn(AppState, "addEventListener")
       .mockReturnValue({ remove: jest.fn() } as any);
 
-    mockUsePrayerTimes.mockReturnValue({
-      prayerTimes: [{ label: "Fajr", time: "05:15" }],
+    mockUsePrayerDay.mockReturnValue({
+      prayerDay: require("@/services/prayerDay").buildPrayerDay(new Date(2026, 2, 22), [{ label: "Fajr", time: "5:15 AM" }]),
       loading: false,
       error: null,
       retry: jest.fn(),
-      prayerTimesDateKey: "2026-03-22",
-    });
-    mockUseNextPrayer.mockReturnValue({
       nextPrayer: null,
       timeLeft: "",
+      hijri: "",
+      statuses: {},
+      logSheet: { visible: false, prayerName: null, prayerLabel: "", currentStatus: undefined, onSelect: jest.fn(), onClear: jest.fn(), onClose: jest.fn() },
+      openLogSheet: jest.fn(),
     });
     mockUseRamadanTracker.mockReturnValue({
       isRamadan: false,
       isFastMissed: false,
-      loadingRamadan: false,
       toggleMissedFast: jest.fn(),
     });
     mockGetHolidayMapForYear.mockResolvedValue({});

@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
-import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { usePrayerDay } from "@/hooks/usePrayerDay";
 import { buildPrayerDay } from "@/services/prayerDay";
 import { getPrayerTimesForDate } from "@/services/prayerTimes";
 import { prayerSettingsSetting } from "@/services/syncedSettings";
@@ -26,14 +26,14 @@ beforeEach(async () => {
   mockGetPrayerTimesForDate.mockResolvedValue(buildPrayerDay(day, [{ label: "Fajr", time: "5:00 AM" }]));
 });
 
-describe("usePrayerTimes with the user's prayer settings", () => {
+describe("usePrayerDay with the user's prayer settings", () => {
   it("loads the day with the saved method and city", async () => {
     await AsyncStorage.setItem(
       "prayerSettings",
       JSON.stringify({ useLocation: false, method: 5, city: chicago }),
     );
 
-    renderHook(() => usePrayerTimes(day));
+    renderHook(() => usePrayerDay(day));
 
     await waitFor(() => expect(mockGetPrayerTimesForDate).toHaveBeenCalled());
     expect(mockGetPrayerTimesForDate.mock.calls[0][0]).toEqual({
@@ -44,7 +44,7 @@ describe("usePrayerTimes with the user's prayer settings", () => {
   });
 
   it("reloads the day when the prayer settings change", async () => {
-    renderHook(() => usePrayerTimes(day));
+    renderHook(() => usePrayerDay(day));
     await waitFor(() => expect(mockGetPrayerTimesForDate).toHaveBeenCalledTimes(1));
 
     await act(async () => {

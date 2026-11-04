@@ -5,6 +5,10 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { defaultTheme } from "@/constants/theme";
 
 const mockPush = jest.fn();
+const mockOpenAppSettings = jest.fn();
+jest.mock("@/utils/openAppSettings", () => ({
+  openAppSettings: (...args: unknown[]) => mockOpenAppSettings(...args),
+}));
 
 const mockRefresh = jest.fn(async () => {});
 const mockSubmitDua = jest.fn();
@@ -67,8 +71,8 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
-jest.mock("@/hooks/useHomePrayerTimes", () => ({
-  useHomePrayerTimes: jest.fn(),
+jest.mock("@/hooks/usePrayerDay", () => ({
+  usePrayerDay: jest.fn(),
 }));
 
 jest.mock("@/hooks/useDuaInteraction", () => ({
@@ -133,19 +137,10 @@ jest.mock("@/hooks/useCalendarSummaryTransition", () => ({
   useCalendarSummaryTransition: jest.fn(),
 }));
 
-jest.mock("@/hooks/usePrayerTimes", () => ({
-  usePrayerTimes: jest.fn(),
-}));
-jest.mock("@/hooks/useNextPrayer", () => ({
-  useNextPrayer: jest.fn(),
-}));
 jest.mock("@/hooks/useRamadanTracker", () => ({
   useRamadanTracker: jest.fn(),
 }));
 
-jest.mock("@/hooks/usePrayerLog", () => ({
-  usePrayerLog: jest.fn(),
-}));
 
 jest.mock("@/hooks/useHabits", () => ({
   useHabits: jest.fn(() => ({
@@ -464,7 +459,7 @@ import CalendarScreen from "@/app/(tabs)/Calendar";
 import MosqueScreen from "@/app/(tabs)/Mosques";
 import { useTheme } from "@/context/ThemeContext";
 import { useDuaInteraction } from "@/hooks/useDuaInteraction";
-import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
+import { usePrayerDay } from "@/hooks/usePrayerDay";
 import { useKeyboardAutoScroll } from "@/hooks/useKeyboardAutoScroll";
 import useModalTransition from "@/hooks/useModalTransition";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
@@ -475,10 +470,7 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 import { useCalendarNavigationTransitions } from "@/hooks/useCalendarNavigationTransitions";
 import { useCalendarSummaryTransition } from "@/hooks/useCalendarSummaryTransition";
 import { useCalendarViewState } from "@/hooks/useCalendarViewState";
-import { usePrayerTimes } from "@/hooks/usePrayerTimes";
-import { useNextPrayer } from "@/hooks/useNextPrayer";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
-import { usePrayerLog } from "@/hooks/usePrayerLog";
 import { deleteBookmark, getBookmarkKey, getBookmarks, upsertBookmark } from "@/services/quranBookmarks";
 import { getAllAyat, getAyatIndexForSurahAndAyah, getSurahMeta } from "@/services/quranData";
 import { getCachedMosques, getNearbyMosques } from "@/services/getNearbyMosques";
@@ -490,9 +482,7 @@ const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 const mockUseLocalSearchParams =
   useLocalSearchParams as jest.MockedFunction<typeof useLocalSearchParams>;
 const mockUseTheme = useTheme as jest.MockedFunction<typeof useTheme>;
-const mockUseHomePrayerTimes = useHomePrayerTimes as jest.MockedFunction<
-  typeof useHomePrayerTimes
->;
+const mockUsePrayerDay = usePrayerDay as jest.MockedFunction<typeof usePrayerDay>;
 const mockUseDuaInteraction = useDuaInteraction as jest.MockedFunction<
   typeof useDuaInteraction
 >;
@@ -521,10 +511,7 @@ const mockUseCalendarSummaryTransition =
   useCalendarSummaryTransition as jest.MockedFunction<
     typeof useCalendarSummaryTransition
   >;
-const mockUsePrayerTimes = usePrayerTimes as jest.MockedFunction<typeof usePrayerTimes>;
-const mockUseNextPrayer = useNextPrayer as jest.MockedFunction<typeof useNextPrayer>;
 const mockUseRamadanTracker = useRamadanTracker as jest.MockedFunction<typeof useRamadanTracker>;
-const mockUsePrayerLog = usePrayerLog as jest.MockedFunction<typeof usePrayerLog>;
 
 const mockGetAllAyat = getAllAyat as jest.MockedFunction<typeof getAllAyat>;
 const mockGetSurahMeta = getSurahMeta as jest.MockedFunction<typeof getSurahMeta>;
@@ -593,19 +580,32 @@ const sampleSurah = {
   juzRanges: [{ juzNumber: 1, startAyah: 1, endAyah: 7 }],
 };
 
-const ramadanStart = new Date("2026-03-01T00:00:00.000Z");
-const ramadanEnd = new Date("2026-03-30T00:00:00.000Z");
 const firstMissedFastDate = new Date("2026-03-05T00:00:00.000Z");
 
 const buildHomePrayerState = (overrides: Record<string, unknown> = {}) => ({
   prayerDay: buildPrayerDay(new Date(2026, 2, 10), [{ label: "Fajr", time: "5:00 AM" }]),
   nextPrayer: { name: "Dhuhr", at: new Date(2026, 2, 10, 12, 30) },
   nextDayFajr: null,
+  tomorrowFajr: null,
   timeLeft: "2h 12m",
+  hijri: "Jumada I 23, 1448 AH",
   loading: false,
   refreshing: false,
-  banner: null,
+  error: null,
+  retry: jest.fn(),
+  statuses: {},
+  logSheet: {
+    visible: false,
+    prayerName: null,
+    prayerLabel: "",
+    currentStatus: undefined,
+    onSelect: jest.fn(),
+    onClear: jest.fn(),
+    onClose: jest.fn(),
+  },
+  openLogSheet: jest.fn(),
   locationLabel: "Chicago, US",
+  coords: null,
   refresh: mockRefresh,
   ...overrides,
 });
@@ -684,14 +684,11 @@ const buildCalendarViewState = (overrides: Record<string, unknown> = {}) => ({
 const buildCalendarData = (overrides: Record<string, unknown> = {}) => ({
   holidayMap: {},
   loadingHolidays: false,
-  ramadanStart,
-  ramadanEnd,
   ramadanSummary: { totalMissed: 2, missedDays: ["Mar 5"] },
   ramadanMonthActive: true,
   firstMissedFastDate,
   missedDaysLabel: "Mar 5",
   showRamadanSummary: true,
-  reloadMissedFasts: jest.fn(),
   ...overrides,
 });
 
@@ -735,7 +732,7 @@ describe("Screen contracts", () => {
       setTheme: mockSetTheme,
     } as any);
 
-    mockUseHomePrayerTimes.mockReturnValue(buildHomePrayerState() as any);
+    mockUsePrayerDay.mockReturnValue(buildHomePrayerState() as any);
     mockUseDuaInteraction.mockReturnValue(buildDuaInteraction() as any);
     mockUseKeyboardAutoScroll.mockReturnValue({
       scrollViewRef: { current: null },
@@ -779,23 +776,10 @@ describe("Screen contracts", () => {
     mockUseCalendarSummaryTransition.mockReturnValue(
       buildCalendarSummaryTransition() as any,
     );
-    mockUsePrayerTimes.mockReturnValue({
-      prayerDay: buildPrayerDay(new Date(2026, 2, 10), [{ label: "Fajr", time: "5:31 AM" }]),
-      loading: false,
-      error: null,
-      retry: jest.fn(),
-    } as any);
-    mockUseNextPrayer.mockReturnValue({ nextPrayer: null, timeLeft: "" } as any);
     mockUseRamadanTracker.mockReturnValue({
       isRamadan: false,
       isFastMissed: false,
-      loadingRamadan: false,
       toggleMissedFast: jest.fn(),
-    } as any);
-    mockUsePrayerLog.mockReturnValue({
-      statuses: {},
-      setStatus: jest.fn(),
-      clearStatus: jest.fn(),
     } as any);
     mockDateKeyFromDate.mockImplementation((date: Date) =>
       date.toISOString().slice(0, 10),
@@ -816,6 +800,25 @@ describe("Screen contracts", () => {
   });
 
   describe("Home", () => {
+    it("shows the load error with a retry, and Open Settings only for a location error", () => {
+      const retry = jest.fn();
+      mockUsePrayerDay.mockReturnValue(
+        buildHomePrayerState({ error: { code: "GENERIC", message: "Could not load" }, retry }) as any,
+      );
+      const generic = render(<Home />);
+      fireEvent.press(generic.getByLabelText("Retry loading prayer times"));
+      expect(retry).toHaveBeenCalledTimes(1);
+      expect(generic.queryByLabelText("Open app settings")).toBeNull();
+      generic.unmount();
+
+      mockUsePrayerDay.mockReturnValue(
+        buildHomePrayerState({ error: { code: "LOCATION", message: "Location is off" } }) as any,
+      );
+      const location = render(<Home />);
+      fireEvent.press(location.getByLabelText("Open app settings"));
+      expect(mockOpenAppSettings).toHaveBeenCalledTimes(1);
+    });
+
     it("renders the prayer and dua sections contract", () => {
       const { getByText, getByTestId, getByLabelText } = render(<Home />);
 
@@ -843,7 +846,7 @@ describe("Screen contracts", () => {
     });
 
     it("navigates to the calendar with tomorrow selected from the completion branch", () => {
-      mockUseHomePrayerTimes.mockReturnValue(
+      mockUsePrayerDay.mockReturnValue(
         buildHomePrayerState({
           nextPrayer: null,
           nextDayFajr: new Date(2026, 2, 11, 5, 11),

@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSyncedSetting } from "@/hooks/useSyncedSetting";
 import { ramadanTrackerSetting } from "@/services/syncedSettings";
-import { getHolidayMapForYear, getHolidaysForYear } from "../services/holidayService";
-import {
-  computeRamadanEnd,
-  findRamadanStart,
-  getRamadanPeriodSummary,
-  isInRamadanWindow,
-} from "../services/ramadanTracker";
+import { getHolidayMapForYear } from "../services/holidayService";
+import { getRamadanPeriodSummary, missedFastsInPeriod } from "../services/ramadanTracker";
+import { MISSED_FAST_BUFFER_DAYS, ramadanPeriod } from "@/utils/hijriDate";
 
 function parseDateKey(dateStr: string): Date | null {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -18,11 +14,7 @@ function parseDateKey(dateStr: string): Date | null {
 export function useCalendarData(viewYear: number, viewMonth: number) {
   const [holidayMap, setHolidayMap] = useState<Record<string, string>>({});
   const [loadingHolidays, setLoadingHolidays] = useState(false);
-
   const { value: missedFastsMap } = useSyncedSetting(ramadanTrackerSetting);
-  const [ramadanMonthActive, setRamadanMonthActive] = useState(false);
-  const [ramadanStart, setRamadanStart] = useState<Date | null>(null);
-  const [ramadanEnd, setRamadanEnd] = useState<Date | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -44,81 +36,30 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
     };
   }, [viewYear]);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const holidays = await getHolidaysForYear(viewYear);
-        const startDate = findRamadanStart(holidays);
+  const period = useMemo(() => ramadanPeriod(viewYear), [viewYear]);
 
-        if (startDate) {
-          const endDate = computeRamadanEnd(startDate);
-          const firstOfMonth = new Date(viewYear, viewMonth, 1);
-          const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
+  // The month shows the Ramadan section when it touches Ramadan or the days either side that can be marked.
+  const ramadanMonthActive = useMemo(() => {
+    if (!period) return false;
+    const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
+    const firstOfMonth = new Date(viewYear, viewMonth, 1);
+    const from = new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate() - MISSED_FAST_BUFFER_DAYS);
+    const to = new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate() + MISSED_FAST_BUFFER_DAYS);
+    return firstOfMonth <= to && lastOfMonth >= from;
+  }, [period, viewMonth, viewYear]);
 
-          const monthInWindow =
-            isInRamadanWindow(firstOfMonth, startDate, endDate) ||
-            isInRamadanWindow(lastOfMonth, startDate, endDate);
-
-          if (mounted) {
-            setRamadanMonthActive(monthInWindow);
-            setRamadanStart(startDate);
-            setRamadanEnd(endDate);
-          }
-        } else if (mounted) {
-          setRamadanMonthActive(false);
-          setRamadanStart(null);
-          setRamadanEnd(null);
-        }
-      } catch (e) {
-        console.warn("Failed to load Ramadan data:", e);
-        if (mounted) {
-          setRamadanMonthActive(false);
-          setRamadanStart(null);
-          setRamadanEnd(null);
-        }
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [viewMonth, viewYear]);
-
-  const ramadanSummary = useMemo(() => {
-    if (!ramadanMonthActive || !ramadanStart || !ramadanEnd) return null;
-    return getRamadanPeriodSummary(missedFastsMap, ramadanStart, ramadanEnd);
-  }, [missedFastsMap, ramadanEnd, ramadanMonthActive, ramadanStart]);
+  const ramadanSummary = useMemo(
+    () => (ramadanMonthActive && period ? getRamadanPeriodSummary(missedFastsMap, period) : null),
+    [missedFastsMap, period, ramadanMonthActive],
+  );
 
   const firstMissedFastDate = useMemo(() => {
-    if (!ramadanMonthActive || !ramadanStart || !ramadanEnd) return null;
+    if (!ramadanMonthActive || !period) return null;
+    const first = missedFastsInPeriod(missedFastsMap, period)[0];
+    return first ? parseDateKey(first) : null;
+  }, [missedFastsMap, period, ramadanMonthActive]);
 
-    const windowStart = new Date(ramadanStart);
-    windowStart.setDate(windowStart.getDate() - 3);
-    windowStart.setHours(0, 0, 0, 0);
-
-    const windowEnd = new Date(ramadanEnd);
-    windowEnd.setDate(windowEnd.getDate() + 3);
-    windowEnd.setHours(0, 0, 0, 0);
-
-    const earliestDateKey = Object.entries(missedFastsMap)
-      .filter(([, isMissed]) => isMissed)
-      .map(([dateKey]) => dateKey)
-      .sort()
-      .find((dateKey) => {
-        const parsed = parseDateKey(dateKey);
-        if (!parsed) return false;
-        parsed.setHours(0, 0, 0, 0);
-        return parsed >= windowStart && parsed <= windowEnd;
-      });
-
-    return earliestDateKey ? parseDateKey(earliestDateKey) : null;
-  }, [missedFastsMap, ramadanEnd, ramadanMonthActive, ramadanStart]);
-
-  const missedDaysLabel = useMemo(() => {
-    if (!ramadanSummary || ramadanSummary.missedDays.length === 0) return "";
-    return ramadanSummary.missedDays.join(", ");
-  }, [ramadanSummary]);
+  const missedDaysLabel = ramadanSummary?.missedDays.join(", ") ?? "";
 
   const showRamadanSummary =
     !!ramadanSummary && ramadanSummary.totalMissed > 0 && !!firstMissedFastDate;
@@ -128,11 +69,9 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
     loadingHolidays,
     missedFastsMap,
     ramadanMonthActive,
-    ramadanStart,
-    ramadanEnd,
     ramadanSummary,
     firstMissedFastDate,
     missedDaysLabel,
     showRamadanSummary,
-    };
+  };
 }

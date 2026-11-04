@@ -16,8 +16,7 @@ const mockUseCalendarViewState = jest.fn();
 const mockUseCalendarData = jest.fn();
 const mockUseCalendarNavigationTransitions = jest.fn();
 const mockUseCalendarSummaryTransition = jest.fn();
-const mockUsePrayerTimes = jest.fn();
-const mockUseNextPrayer = jest.fn();
+const mockUsePrayerDay = jest.fn();
 const mockUseRamadanTracker = jest.fn();
 const mockGetHolidayMapForYear = jest.fn();
 const mockDateKeyFromDate = jest.fn();
@@ -113,12 +112,8 @@ jest.mock("../../hooks/useCalendarSummaryTransition", () => ({
     mockUseCalendarSummaryTransition(...args),
 }));
 
-jest.mock("../../hooks/usePrayerTimes", () => ({
-  usePrayerTimes: (...args: any[]) => mockUsePrayerTimes(...args),
-}));
-
-jest.mock("../../hooks/useNextPrayer", () => ({
-  useNextPrayer: (...args: any[]) => mockUseNextPrayer(...args),
+jest.mock("../../hooks/usePrayerDay", () => ({
+  usePrayerDay: (...args: any[]) => mockUsePrayerDay(...args),
 }));
 
 jest.mock("../../hooks/useRamadanTracker", () => ({
@@ -139,8 +134,6 @@ import CalendarScreen from "@/app/(tabs)/Calendar";
 import MosqueScreen from "@/app/(tabs)/Mosques";
 
 describe("route params and path wiring contract", () => {
-  const ramadanStart = new Date("2026-03-01T00:00:00.000Z");
-  const ramadanEnd = new Date("2026-03-30T00:00:00.000Z");
   const firstMissedFastDate = new Date("2026-03-05T00:00:00.000Z");
 
   let timingSpy: jest.SpyInstance;
@@ -229,8 +222,6 @@ describe("route params and path wiring contract", () => {
     mockUseCalendarData.mockReturnValue({
       holidayMap: {},
       loadingHolidays: false,
-      ramadanStart,
-      ramadanEnd,
       ramadanSummary: {
         totalMissed: 2,
         missedDays: ["Mar 5", "Mar 6"],
@@ -239,7 +230,6 @@ describe("route params and path wiring contract", () => {
       firstMissedFastDate,
       missedDaysLabel: "Mar 5, Mar 6",
       showRamadanSummary: true,
-      reloadMissedFasts: jest.fn(),
     });
 
     mockUseCalendarNavigationTransitions.mockReturnValue({
@@ -259,23 +249,22 @@ describe("route params and path wiring contract", () => {
       renderRamadanSummary: true,
     });
 
-    mockUsePrayerTimes.mockReturnValue({
-      prayerTimes: [{ label: "Fajr", time: "05:15" }],
+    mockUsePrayerDay.mockReturnValue({
+      prayerDay: require("@/services/prayerDay").buildPrayerDay(new Date(2026, 2, 22), [{ label: "Fajr", time: "5:15 AM" }]),
       loading: false,
       error: null,
       retry: jest.fn(),
-      prayerTimesDateKey: "2026-03-22",
-    });
-
-    mockUseNextPrayer.mockReturnValue({
       nextPrayer: null,
       timeLeft: "",
+      hijri: "",
+      statuses: {},
+      logSheet: { visible: false, prayerName: null, prayerLabel: "", currentStatus: undefined, onSelect: jest.fn(), onClear: jest.fn(), onClose: jest.fn() },
+      openLogSheet: jest.fn(),
     });
 
     mockUseRamadanTracker.mockReturnValue({
       isRamadan: false,
       isFastMissed: false,
-      loadingRamadan: false,
       toggleMissedFast: jest.fn(),
     });
 
@@ -304,7 +293,7 @@ describe("route params and path wiring contract", () => {
     fireEvent.press(getByLabelText("Select March 10, 2026"));
 
     expect(mockPush).not.toHaveBeenCalled();
-    const calls = mockUsePrayerTimes.mock.calls;
+    const calls = mockUsePrayerDay.mock.calls;
     const lastArg = calls[calls.length - 1][0] as Date | null;
     expect(lastArg?.toISOString()).toBe(expectedIso);
   });
@@ -315,7 +304,7 @@ describe("route params and path wiring contract", () => {
     fireEvent.press(getByLabelText("Open first missed Ramadan fast date"));
 
     expect(mockPush).not.toHaveBeenCalled();
-    const calls = mockUsePrayerTimes.mock.calls;
+    const calls = mockUsePrayerDay.mock.calls;
     const lastArg = calls[calls.length - 1][0] as Date | null;
     // firstMissedFastDate (2026-03-05) is in the viewed month (March) → selected directly.
     expect(lastArg?.toISOString()).toBe(firstMissedFastDate.toISOString());
@@ -331,10 +320,31 @@ describe("route params and path wiring contract", () => {
     render(<CalendarScreen />);
 
     await waitFor(() => {
-      const calls = mockUsePrayerTimes.mock.calls;
+      const calls = mockUsePrayerDay.mock.calls;
       const lastArg = calls[calls.length - 1][0] as Date | null;
       expect(lastArg?.toISOString()).toBe("2026-03-22T00:00:00.000Z");
     });
   });
 
+  it("brings the month into view for a `date` param outside the month showing", async () => {
+    const setViewMonth = jest.fn();
+    const setViewYear = jest.fn();
+    mockUseCalendarViewState.mockReturnValue({
+      ...mockUseCalendarViewState(),
+      setViewMonth,
+      setViewYear,
+    });
+    mockLocalSearchParams = {
+      date: encodeURIComponent("2026-04-12T12:00:00.000Z"),
+      month: "3",
+      year: "2026",
+    };
+
+    render(<CalendarScreen />);
+
+    await waitFor(() => {
+      expect(setViewMonth).toHaveBeenCalledWith(3);
+      expect(setViewYear).toHaveBeenCalledWith(2026);
+    });
+  });
 });

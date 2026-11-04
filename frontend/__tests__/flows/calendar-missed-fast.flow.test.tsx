@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react-native";
 
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
-import { getHolidayMapForYear, getHolidaysForYear } from "@/services/holidayService";
+import { getHolidayMapForYear } from "@/services/holidayService";
 
 let triggerFocusEffect: (() => void) | null = null;
 
@@ -15,14 +15,10 @@ jest.mock("expo-router/react-navigation", () => ({
 
 jest.mock("@/services/holidayService", () => ({
   getHolidayMapForYear: jest.fn(),
-  getHolidaysForYear: jest.fn(),
 }));
 
 const mockGetHolidayMapForYear = getHolidayMapForYear as jest.MockedFunction<
   typeof getHolidayMapForYear
->;
-const mockGetHolidaysForYear = getHolidaysForYear as jest.MockedFunction<
-  typeof getHolidaysForYear
 >;
 
 describe("flows/calendar-missed-fast", () => {
@@ -33,12 +29,7 @@ describe("flows/calendar-missed-fast", () => {
   });
 
   it("updates calendar Ramadan summary after toggling missed fast state", async () => {
-    mockGetHolidayMapForYear.mockResolvedValue({
-      "2026-02-20": "1st day of Ramadan",
-    });
-    mockGetHolidaysForYear.mockResolvedValue([
-      { date: "2026-02-20", name: "1st day of Ramadan" },
-    ]);
+    mockGetHolidayMapForYear.mockResolvedValue({});
 
     const calendar = renderHook(() => useCalendarData(2026, 1));
 
@@ -49,15 +40,9 @@ describe("flows/calendar-missed-fast", () => {
     });
 
     const selectedDate = new Date(2026, 1, 24);
-    const tracker = renderHook(() =>
-      useRamadanTracker(selectedDate, undefined, undefined),
-    );
-
-    await waitFor(() => {
-      expect(tracker.result.current.loadingRamadan).toBe(false);
-      expect(tracker.result.current.isRamadan).toBe(true);
-      expect(tracker.result.current.isFastMissed).toBe(false);
-    });
+    const tracker = renderHook(() => useRamadanTracker(selectedDate));
+    expect(tracker.result.current.isRamadan).toBe(true);
+    expect(tracker.result.current.isFastMissed).toBe(false);
 
     await act(async () => {
       await tracker.result.current.toggleMissedFast();
@@ -99,14 +84,12 @@ describe("flows/calendar-missed-fast", () => {
     });
   });
 
-  it("transitions holiday loading into error-safe fallback state", async () => {
+  it("falls back to no holidays when the feed is down, and Ramadan still works", async () => {
     const consoleErrorSpy = jest
       .spyOn(console, "error")
       .mockImplementation(() => {});
-    const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
 
     mockGetHolidayMapForYear.mockRejectedValueOnce(new Error("holiday backend down"));
-    mockGetHolidaysForYear.mockRejectedValueOnce(new Error("holiday backend down"));
 
     const { result } = renderHook(() => useCalendarData(2026, 1));
 
@@ -115,11 +98,8 @@ describe("flows/calendar-missed-fast", () => {
     });
 
     expect(result.current.holidayMap).toEqual({});
-    expect(result.current.ramadanMonthActive).toBe(false);
-    expect(result.current.ramadanStart).toBeNull();
-    expect(result.current.ramadanEnd).toBeNull();
+    expect(result.current.ramadanMonthActive).toBe(true);
     expect(result.current.showRamadanSummary).toBe(false);
     expect(consoleErrorSpy).toHaveBeenCalled();
-    expect(consoleWarnSpy).toHaveBeenCalled();
   });
 });

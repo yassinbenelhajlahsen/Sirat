@@ -30,8 +30,10 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/prayerDay.test.ts` — prayer day: 12-hour parsing onto a date, dropped bad rows, next slot, window end, Maghrib, clock formatting
   - `services/prayer-times/*.test.ts`
 - `home prayer feature behavior testing`
-  - `hooks/usePrayerTimes.test.ts`
-  - `hooks/useHomePrayerTimes.test.ts`
+  - `hooks/usePrayerDay.test.ts` — browsed day: backoff retry, gives up after three retries, location vs generic errors
+  - `hooks/usePrayerDay.live.test.ts` — today view (Home): place label, tomorrow's Fajr, reload on settings change and foreground
+  - `hooks/usePrayerDay.location.test.ts` — the real facade and location code throw the typed error that offers Open Settings
+  - `hooks/usePrayerDay.marks.test.ts` — prayer marks, log sheet wiring, Hijri date (turns at Maghrib for today)
 - `settings permission sync on bootstrap testing`
   - `app/root-layout-permission-sync.test.ts`
   - `hooks/useSettingsPermissions.test.ts`
@@ -200,7 +202,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useSyncedSetting.test.ts` — hook loads the stored value and keeps a change that lands during the first read
   - `services/prayerSettings.test.ts` — prayer settings (defaults, cityKey, legacy `selectedCity`, malformed values) and effective settings (OS permission applied on read, never stored)
   - `hooks/usePrayerSettingsEdits.test.ts` — Settings screen state: no save on load, real edits saved and stamped, follows remote changes
-  - `hooks/usePrayerTimes.settings.test.ts` — Calendar day loads with the user's saved method/city and reloads when they change
+  - `hooks/usePrayerDay.settings.test.ts` — a day loads with the user's saved method/city and reloads when they change
   - `services/syncedSettings/syncedSettings.test.ts` — synced setting module: the 14 declared keys, `set` (persist + stamp + notify) vs `applyRemote` (persist + notify, never stamps), per-setting codecs and defaults, malformed remote values
   - `services/sync/settingsAdapter.test.ts` — settings domain adapter `read()` / `applyMerged()` round-trip
   - `services/sync/trackerAdapters.test.ts` — prayer-log, habits, habit-log adapter `read()` / `applyMerged()` round-trips

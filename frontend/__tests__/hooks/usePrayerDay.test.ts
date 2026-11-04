@@ -1,6 +1,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react-native";
 
-import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { usePrayerDay } from "@/hooks/usePrayerDay";
+import { LocationUnavailableError } from "@/services/prayer-times/errors";
 import { buildPrayerDay } from "@/services/prayerDay";
 
 jest.mock("@/services/prayerTimes", () => ({
@@ -13,7 +14,7 @@ const mockGetPrayerTimesForDate = getPrayerTimesForDate as jest.MockedFunction<
   typeof getPrayerTimesForDate
 >;
 
-describe("usePrayerTimes", () => {
+describe("usePrayerDay", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
@@ -36,7 +37,7 @@ describe("usePrayerTimes", () => {
 
     const setTimeoutSpy = jest.spyOn(global, "setTimeout");
 
-    const { result } = renderHook(() => usePrayerTimes(selectedDate));
+    const { result } = renderHook(() => usePrayerDay(selectedDate));
 
     await waitFor(() => {
       expect(mockGetPrayerTimesForDate).toHaveBeenCalledTimes(1);
@@ -57,18 +58,36 @@ describe("usePrayerTimes", () => {
     });
   });
 
-  it("classifies location permission errors as PERMISSION without retrying", async () => {
+  it("gives up after three retries and shows the banner", async () => {
     const selectedDate = new Date(2026, 1, 25);
-    mockGetPrayerTimesForDate.mockRejectedValueOnce(
-      new Error("Location permission not granted"),
-    );
+    mockGetPrayerTimesForDate.mockRejectedValue(new Error("Failed to fetch"));
+
+    const { result } = renderHook(() => usePrayerDay(selectedDate));
+
+    for (const wait of [2000, 4000, 8000]) {
+      await waitFor(() => expect(mockGetPrayerTimesForDate).toHaveBeenCalled());
+      expect(result.current.error).toBeNull();
+      await act(async () => {
+        jest.advanceTimersByTime(wait);
+      });
+    }
+
+    await waitFor(() => expect(result.current.error?.code).toBe("GENERIC"));
+    expect(mockGetPrayerTimesForDate).toHaveBeenCalledTimes(4);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.prayerDay).toBeNull();
+  });
+
+  it("shows a location error with Open Settings and does not retry", async () => {
+    const selectedDate = new Date(2026, 1, 25);
+    mockGetPrayerTimesForDate.mockRejectedValueOnce(new LocationUnavailableError());
 
     const setTimeoutSpy = jest.spyOn(global, "setTimeout");
 
-    const { result } = renderHook(() => usePrayerTimes(selectedDate));
+    const { result } = renderHook(() => usePrayerDay(selectedDate));
 
     await waitFor(() => {
-      expect(result.current.error?.code).toBe("PERMISSION");
+      expect(result.current.error?.code).toBe("LOCATION");
     });
 
     expect(result.current.loading).toBe(false);
@@ -76,20 +95,18 @@ describe("usePrayerTimes", () => {
     expect(setTimeoutSpy).not.toHaveBeenCalled();
   });
 
-  it("classifies non-transient failures as GENERIC", async () => {
+  it("classifies non-transient failures as GENERIC without retrying", async () => {
     const selectedDate = new Date(2026, 1, 25);
     mockGetPrayerTimesForDate.mockRejectedValueOnce(new Error("unexpected failure"));
 
-    const { result } = renderHook(() => usePrayerTimes(selectedDate));
+    const { result } = renderHook(() => usePrayerDay(selectedDate));
 
     await waitFor(() => {
-      expect(result.current.error).toEqual({
-        code: "GENERIC",
-        message: "Could not load prayer times. Please try again later.",
-      });
+      expect(result.current.error?.code).toBe("GENERIC");
     });
 
     expect(result.current.loading).toBe(false);
     expect(result.current.prayerDay).toBeNull();
+    expect(mockGetPrayerTimesForDate).toHaveBeenCalledTimes(1);
   });
 });

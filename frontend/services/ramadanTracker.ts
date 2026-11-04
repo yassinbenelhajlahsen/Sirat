@@ -1,9 +1,6 @@
-import { Holiday } from "./holidayService";
 import { ramadanTrackerSetting } from "@/services/syncedSettings";
 import { dateKeyFromDate } from "@/utils/dateKey";
-
-// Buffer days before/after Ramadan for universal compatibility
-const RAMADAN_BUFFER_DAYS = 3;
+import { MISSED_FAST_BUFFER_DAYS, type RamadanPeriod } from "@/utils/hijriDate";
 
 /**
  * Get all missed fast days from storage
@@ -39,111 +36,28 @@ export async function clearMissedFast(date: Date): Promise<void> {
 }
 
 /**
- * Check if a date is within the Ramadan visibility window
- * Applies ±3 day buffer to accommodate different madhabs and moon sightings
- *
- * @param date - Date to check
- * @param ramadanStart - First day of Ramadan (from holiday service)
- * @param ramadanEnd - Last day of Ramadan (computed as start + 29 days)
- * @returns true if date is within buffered window
+ * Missed fasts ("YYYY-MM-DD", oldest first) inside a Ramadan period, counting the 3 days either side
+ * that can be marked.
  */
-export function isInRamadanWindow(
-  date: Date,
-  ramadanStart: Date,
-  ramadanEnd: Date,
-): boolean {
-  // Clone dates to avoid mutation
-  const start = new Date(ramadanStart);
-  const end = new Date(ramadanEnd);
-
-  // Apply buffer
-  start.setDate(start.getDate() - RAMADAN_BUFFER_DAYS);
-  end.setDate(end.getDate() + RAMADAN_BUFFER_DAYS);
-
-  // Reset time parts for date-only comparison
-  const checkDate = new Date(date);
-  checkDate.setHours(0, 0, 0, 0);
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-
-  return checkDate >= start && checkDate <= end;
+export function missedFastsInPeriod(map: Record<string, boolean>, period: RamadanPeriod): string[] {
+  const from = dateKeyFromDate(new Date(period.start.getFullYear(), period.start.getMonth(), period.start.getDate() - MISSED_FAST_BUFFER_DAYS));
+  const to = dateKeyFromDate(new Date(period.end.getFullYear(), period.end.getMonth(), period.end.getDate() + MISSED_FAST_BUFFER_DAYS));
+  return Object.keys(map)
+    .filter((key) => map[key] && key >= from && key <= to)
+    .sort();
 }
 
-/**
- * Extract Ramadan start date from holiday list
- * @param holidays - Array of holidays for the year
- * @returns Date object for first day of Ramadan, or null if not found
- */
-export function findRamadanStart(holidays: Holiday[]): Date | null {
-  const ramadanHoliday = holidays.find(
-    (h) => /ramadan/i.test(h.name) && /1st|first|start|beginning/i.test(h.name),
-  );
-  return ramadanHoliday ? new Date(ramadanHoliday.date) : null;
-}
-
-/**
- * Compute Ramadan end date (start + 29 days)
- * Ramadan is 29-30 days; we use 29 to be conservative with buffer
- * @param ramadanStart - First day of Ramadan
- * @returns Date object for estimated last day
- */
-export function computeRamadanEnd(ramadanStart: Date): Date {
-  const end = new Date(ramadanStart);
-  end.setDate(end.getDate() + 29);
-  return end;
-}
-
-/**
- * Get Ramadan summary for the entire Ramadan period (35-38 days including buffer)
- * @param map - Full missed fast days map
- * @param ramadanStart - First day of Ramadan
- * @param ramadanEnd - Last day of Ramadan
- * @returns Summary with missed count and formatted date strings for entire period
- */
+/** Missed-fast count and "Feb 19"-style labels for a Ramadan period. */
 export function getRamadanPeriodSummary(
   map: Record<string, boolean>,
-  ramadanStart: Date,
-  ramadanEnd: Date,
-): {
-  totalMissed: number;
-  missedDays: string[];
-} {
-  const missed: string[] = [];
-
-  // Calculate buffered window
-  const windowStart = new Date(ramadanStart);
-  windowStart.setDate(windowStart.getDate() - RAMADAN_BUFFER_DAYS);
-  const windowEnd = new Date(ramadanEnd);
-  windowEnd.setDate(windowEnd.getDate() + RAMADAN_BUFFER_DAYS);
-
-  // Reset time parts for comparison
-  windowStart.setHours(0, 0, 0, 0);
-  windowEnd.setHours(0, 0, 0, 0);
-
-  for (const [dateStr, isMissed] of Object.entries(map)) {
-    if (!isMissed) continue;
-
-    // Parse date string parts directly to avoid timezone issues
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    date.setHours(0, 0, 0, 0);
-
-    // Check if date is within the Ramadan window
-    if (date >= windowStart && date <= windowEnd) {
-      missed.push(dateStr);
-    }
-  }
-
-  // Sort chronologically and format as "Month Day" (e.g., "Feb 19")
+  period: RamadanPeriod,
+): { totalMissed: number; missedDays: string[] } {
+  const missed = missedFastsInPeriod(map, period);
   return {
     totalMissed: missed.length,
-    missedDays: missed.sort().map((dateStr) => {
-      const [y, m, d] = dateStr.split("-").map(Number);
-      const date = new Date(y, m - 1, d);
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
+    missedDays: missed.map((key) => {
+      const [y, m, d] = key.split("-").map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }),
   };
 }

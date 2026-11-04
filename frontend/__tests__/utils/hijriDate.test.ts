@@ -1,5 +1,5 @@
 import { buildPrayerDay, maghribOf } from "@/services/prayerDay";
-import { formatHijriDate, isFastingDay, ramadanDayAt, setPretendRamadan, isPretendingRamadan } from "@/utils/hijriDate";
+import { formatHijriDate, isFastingDay, isMissedFastDay, ramadanDayAt, ramadanPeriod, setPretendRamadan, isPretendingRamadan } from "@/utils/hijriDate";
 
 // Nov 3 2026 is 23 Jumada I 1448 in Umm al-Qura, the calendar the holiday feed uses.
 const nov3 = (h: number, m = 0) => new Date(2026, 10, 3, h, m);
@@ -79,5 +79,27 @@ describe("dev pretend-Ramadan switch", () => {
     expect(isPretendingRamadan()).toBe(true);
     expect(isFastingDay(shawwal)).toBe(true);
     expect(ramadanDayAt(shawwal)).toBe(1);
+  });
+});
+
+describe("ramadanPeriod", () => {
+  it("finds the first and last fasting day from Umm al-Qura", () => {
+    expect(ramadanPeriod(2027)).toEqual({ start: new Date(2027, 1, 8), end: new Date(2027, 2, 8) });
+    expect(ramadanPeriod(2026)).toEqual({ start: new Date(2026, 1, 18), end: new Date(2026, 2, 19) });
+  });
+
+  it("runs on past a year end when Ramadan does", () => {
+    expect(ramadanPeriod(2028)).toEqual({ start: new Date(2028, 0, 28), end: new Date(2028, 1, 25) });
+  });
+});
+
+describe("isMissedFastDay", () => {
+  it("allows Ramadan days and 3 days either side, since moon sighting varies", () => {
+    expect(isMissedFastDay(new Date(2027, 1, 3))).toBe(false);
+    expect(isMissedFastDay(new Date(2027, 1, 4))).toBe(false);
+    expect(isMissedFastDay(new Date(2027, 1, 5))).toBe(true);
+    expect(isMissedFastDay(new Date(2027, 1, 20))).toBe(true);
+    expect(isMissedFastDay(new Date(2027, 2, 11))).toBe(true);
+    expect(isMissedFastDay(new Date(2027, 2, 12))).toBe(false);
   });
 });

@@ -49,6 +49,7 @@ const baseProps = {
   date: new Date(2026, 2, 15),
   isToday: false,
   holiday: null as string | null,
+  hijri: "Jumada I 24, 1448 AH",
   loading: false,
   prayerDay: buildPrayerDay(new Date(2026, 2, 15), [{ label: "Fajr", time: "5:31 AM" }]),
   error: null,
@@ -71,6 +72,26 @@ describe("DayDetailPanel", () => {
     const { queryByTestId, getByText } = render(<DayDetailPanel {...baseProps} isToday />);
     expect(queryByTestId("prayer-dial")).toBeNull();
     expect(getByText("5:31 AM")).toBeTruthy();
+  });
+
+  it("shows the Hijri date it is given on the supporting line", () => {
+    const { getByText } = render(<DayDetailPanel {...baseProps} />);
+    expect(getByText(/Jumada I 24, 1448 AH/)).toBeTruthy();
+  });
+
+  it("offers Open Settings only when the error is about location", () => {
+    const onOpenSettings = jest.fn();
+    const generic = render(
+      <DayDetailPanel {...baseProps} error={{ code: "GENERIC", message: "boom" }} onOpenSettings={onOpenSettings} />,
+    );
+    expect(generic.queryByText("Open Settings")).toBeNull();
+    generic.unmount();
+
+    const location = render(
+      <DayDetailPanel {...baseProps} error={{ code: "LOCATION", message: "Location is off" }} onOpenSettings={onOpenSettings} />,
+    );
+    fireEvent.press(location.getByText("Open Settings"));
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
   it("appends the holiday to the supporting line", () => {

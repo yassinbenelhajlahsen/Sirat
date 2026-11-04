@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { AppState, DeviceEventEmitter } from "react-native";
 
-import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
+import { usePrayerDay } from "@/hooks/usePrayerDay";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
 import { clearPrayerCache, getPrayerTimesToday } from "@/services/prayerTimes";
 import { buildPrayerDay } from "@/services/prayerDay";
@@ -99,7 +99,7 @@ describe("flows/home-settings-refresh", () => {
     const { emitSpy } = wireDeviceEventEmitter();
     const setItemSpy = jest.spyOn(AsyncStorage, "setItem");
 
-    const home = renderHook(() => useHomePrayerTimes());
+    const home = renderHook(() => usePrayerDay("today"));
 
     await waitFor(() => {
       expect(home.result.current.loading).toBe(false);
@@ -138,14 +138,14 @@ describe("flows/home-settings-refresh", () => {
       }),
     );
     expect(home.result.current.loading).toBe(false);
-    expect(home.result.current.banner).toBe("");
+    expect(home.result.current.error).toBeNull();
   });
 
   it("transitions from load success to refresh error and surfaces the fallback banner", async () => {
     freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
 
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
+    const consoleWarnSpy = jest
+      .spyOn(console, "warn")
       .mockImplementation(() => {});
 
     jest
@@ -159,11 +159,11 @@ describe("flows/home-settings-refresh", () => {
       ]))
       .mockRejectedValueOnce(new Error("calendar upstream failed"));
 
-    const { result } = renderHook(() => useHomePrayerTimes());
+    const { result } = renderHook(() => usePrayerDay("today"));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-      expect(result.current.banner).toBe("");
+      expect(result.current.error).toBeNull();
     });
 
     await act(async () => {
@@ -174,7 +174,7 @@ describe("flows/home-settings-refresh", () => {
     expect(result.current.loading).toBe(false);
     expect(result.current.refreshing).toBe(false);
     expect(result.current.prayerDay).toBeNull();
-    expect(result.current.banner).toContain("We could not load prayer times");
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(result.current.error?.message).toContain("We could not load prayer times");
+    expect(consoleWarnSpy).toHaveBeenCalled();
   });
 });

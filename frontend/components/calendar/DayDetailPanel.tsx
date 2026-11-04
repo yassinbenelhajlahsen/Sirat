@@ -9,20 +9,21 @@ import SectionHeader from "@/components/ui/SectionHeader";
 import { AppText, Body, Footnote, Headline, Title2 } from "@/components/ui/Text";
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
-import { emptyPrayerDay, maghribOf, type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
+import type { PrayerDayError } from "@/hooks/usePrayerDay";
+import { emptyPrayerDay, type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { useRamadanMode } from "@/hooks/useRamadanMode";
-import { formatHijriDate, isFastingDay } from "@/utils/hijriDate";
+import { isFastingDay } from "@/utils/hijriDate";
 
 type DayDetailPanelProps = {
   date: Date;
   isToday: boolean;
   holiday: string | null;
+  hijri: string;
   loading: boolean;
   prayerDay: PrayerDay | null;
-  error: PrayerTimesError | null;
+  error: PrayerDayError | null;
   onRetry: () => void;
   onOpenSettings: () => void;
   nextPrayer: PrayerSlot | null;
@@ -35,6 +36,7 @@ export default function DayDetailPanel({
   date,
   isToday,
   holiday,
+  hijri,
   loading,
   prayerDay,
   error,
@@ -53,11 +55,6 @@ export default function DayDetailPanel({
   const dateLine = formatWeekdayMonthDay(date);
 
   const ramadanDay = ramadanMode && isFastingDay(date);
-
-  // Only today's panel tracks the clock; other days show their daytime date, which is the one holidays are keyed to.
-  const hijri = isToday
-    ? formatHijriDate(new Date(), maghribOf(prayerDay))
-    : formatHijriDate(date);
 
   return (
     <View style={styles.root}>
@@ -98,7 +95,7 @@ export default function DayDetailPanel({
               onPress={onRetry}
               accessibilityLabel="Retry loading prayer times"
             />
-            {error.code === "PERMISSION" ? (
+            {error.code === "LOCATION" ? (
               <Button
                 label="Open Settings"
                 variant="secondary"

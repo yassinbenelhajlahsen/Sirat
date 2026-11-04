@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { renderHook, waitFor, act } from "@testing-library/react-native";
 import { AppState } from "react-native";
 
-import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
+import { usePrayerDay } from "@/hooks/usePrayerDay";
 import { prayerSettingsSetting } from "@/services/syncedSettings";
 
 jest.mock("expo-location", () => ({
@@ -45,7 +45,7 @@ const mockGetPrayerTimesToday = getPrayerTimesToday as jest.MockedFunction<
 const mockReverseGeocode = Location.reverseGeocodeAsync as jest.Mock;
 const mockGetLastKnown = Location.getLastKnownPositionAsync as jest.Mock;
 
-describe("useHomePrayerTimes", () => {
+describe("usePrayerDay (today)", () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     await AsyncStorage.clear();
@@ -78,7 +78,7 @@ describe("useHomePrayerTimes", () => {
     mockGetPrayerTimesToday.mockResolvedValue(dayOf([{ label: "Fajr", time: "5:00 AM" }]));
     jest.spyOn(AppState, "addEventListener").mockImplementation((() => ({ remove: jest.fn() })) as any);
 
-    const { result } = renderHook(() => useHomePrayerTimes());
+    const { result } = renderHook(() => usePrayerDay("today"));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.locationLabel).toBe("Chicago");
@@ -105,7 +105,7 @@ describe("useHomePrayerTimes", () => {
       return { remove: jest.fn() } as any;
     }) as any);
 
-    const { result } = renderHook(() => useHomePrayerTimes());
+    const { result } = renderHook(() => usePrayerDay("today"));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -143,7 +143,7 @@ describe("useHomePrayerTimes", () => {
       { label: "Dhuhr", time: "12:05 PM" },
     ]));
 
-    const { result } = renderHook(() => useHomePrayerTimes());
+    const { result } = renderHook(() => usePrayerDay("today"));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -170,7 +170,7 @@ describe("useHomePrayerTimes", () => {
     });
 
     it("shows the resolved city when reverse geocoding succeeds", async () => {
-      const { result } = renderHook(() => useHomePrayerTimes());
+      const { result } = renderHook(() => usePrayerDay("today"));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -184,7 +184,7 @@ describe("useHomePrayerTimes", () => {
       mockReverseGeocode.mockRejectedValue(new Error("kCLErrorDomain"));
       mockGetLastKnown.mockResolvedValue(null);
 
-      const { result } = renderHook(() => useHomePrayerTimes());
+      const { result } = renderHook(() => usePrayerDay("today"));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -198,7 +198,7 @@ describe("useHomePrayerTimes", () => {
       mockReverseGeocode.mockRejectedValue(new Error("kCLErrorDomain"));
       mockGetLastKnown.mockResolvedValue(null);
 
-      const { result } = renderHook(() => useHomePrayerTimes());
+      const { result } = renderHook(() => usePrayerDay("today"));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
