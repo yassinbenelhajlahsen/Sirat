@@ -52,8 +52,7 @@ jest.mock("expo-location", () => ({
 import * as Location from "expo-location";
 import { prayerSettingsSetting } from "@/services/syncedSettings";
 import {
-  PRAYER_SETTINGS_KEY,
-  syncLocationPermissionToSettings,
+  requestLocationPermissionIfUndecided,
 } from "@/app/_layout";
 
 const mockLocation = Location as jest.Mocked<typeof Location>;
@@ -64,40 +63,28 @@ describe("useSettingsPermissions Phase 4", () => {
     await AsyncStorage.clear();
   });
 
-  it("maps granted OS location permission to prayerSettings.useLocation=true and notifies subscribers", async () => {
-    await AsyncStorage.setItem(
-      PRAYER_SETTINGS_KEY,
-      JSON.stringify({ method: 2, city: { name: "Chicago" }, useLocation: false }),
-    );
-
-    mockLocation.getForegroundPermissionsAsync.mockResolvedValueOnce({ status: "granted" } as any);
-    mockLocation.hasServicesEnabledAsync.mockResolvedValueOnce(true as any);
+  it("never writes prayer settings, whatever the permission says", async () => {
+    await AsyncStorage.setItem("prayerSettings", JSON.stringify({ method: 2, useLocation: true }));
+    mockLocation.getForegroundPermissionsAsync.mockResolvedValueOnce({ status: "denied" } as any);
 
     const changed = jest.fn();
-    prayerSettingsSetting.subscribe(changed);
+    const off = prayerSettingsSetting.subscribe(changed);
 
-    await syncLocationPermissionToSettings();
+    await requestLocationPermissionIfUndecided();
 
-    const stored = JSON.parse((await AsyncStorage.getItem(PRAYER_SETTINGS_KEY)) || "{}");
-    expect(stored.useLocation).toBe(true);
-    expect(stored.method).toBe(2);
-    expect(stored.city).toEqual({ name: "Chicago" });
-    expect(changed).toHaveBeenCalledWith(expect.objectContaining({ useLocation: true }), "local");
+    expect(mockLocation.requestForegroundPermissionsAsync).not.toHaveBeenCalled();
+    expect(changed).not.toHaveBeenCalled();
+    expect(JSON.parse((await AsyncStorage.getItem("prayerSettings")) || "{}").useLocation).toBe(true);
+    off();
   });
 
-  it("requests location permission when status is undecided and stores false when denied", async () => {
+  it("asks once when the permission is undecided, and still writes nothing when it is denied", async () => {
     mockLocation.getForegroundPermissionsAsync.mockResolvedValueOnce({ status: "undetermined" } as any);
     mockLocation.requestForegroundPermissionsAsync.mockResolvedValueOnce({ status: "denied" } as any);
-    mockLocation.hasServicesEnabledAsync.mockResolvedValueOnce(true as any);
 
-    const changed = jest.fn();
-    prayerSettingsSetting.subscribe(changed);
+    await requestLocationPermissionIfUndecided();
 
-    await syncLocationPermissionToSettings();
-
-    const stored = JSON.parse((await AsyncStorage.getItem(PRAYER_SETTINGS_KEY)) || "{}");
     expect(mockLocation.requestForegroundPermissionsAsync).toHaveBeenCalledTimes(1);
-    expect(stored.useLocation).toBe(false);
-    expect(changed).toHaveBeenCalledWith(expect.objectContaining({ useLocation: false }), "local");
+    expect(await AsyncStorage.getItem("prayerSettings")).toBeNull();
   });
 });

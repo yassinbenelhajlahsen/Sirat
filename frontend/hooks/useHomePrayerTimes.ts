@@ -2,17 +2,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
+import { getEffectivePrayerSettings } from "@/services/prayerSettings";
 import { prayerSettingsSetting } from "@/services/syncedSettings";
 import { dateKeyFromDate } from "../services/holidayService";
 import { resolveCityDisplay } from "../services/notifications/cityResolver";
 import { STORAGE_CITY_DISPLAY_LOC } from "../services/notifications/constants";
 import { getPrayerTimesForDate, getPrayerTimesToday, PrayerSettings, PrayerTime } from "../services/prayerTimes";
-import CITIES, { City, cityKey } from "../utils/cities";
 import { isFastingDay } from "../utils/hijriDate";
 import { useNextPrayer } from "./useNextPrayer";
-
-const DEFAULT_METHOD = 2;
-const DEFAULT_CITY: City = CITIES[0];
 
 function parseTimeToDate(timeStr: string, baseDate: Date): Date {
   const [time, modifier] = timeStr.split(" ");
@@ -24,61 +21,6 @@ function parseTimeToDate(timeStr: string, baseDate: Date): Date {
   const d = new Date(baseDate);
   d.setHours(hours, minutes, 0, 0);
   return d;
-}
-
-async function readSettings(): Promise<PrayerSettings> {
-  const raw = await AsyncStorage.getItem("prayerSettings");
-  if (!raw) {
-    return { useLocation: true, method: DEFAULT_METHOD, city: DEFAULT_CITY };
-  }
-
-  const base = JSON.parse(raw) as PrayerSettings & { cityKey?: string };
-  let city: City | undefined = base.city;
-  if (!city && base.cityKey) {
-    city = CITIES.find((c) => cityKey(c) === base.cityKey) ?? DEFAULT_CITY;
-  }
-
-  return {
-    useLocation: base.useLocation ?? true,
-    method: base.method ?? DEFAULT_METHOD,
-    city: city ?? DEFAULT_CITY,
-  };
-}
-
-async function writeSettings(settings: PrayerSettings) {
-  const save = {
-    useLocation: settings.useLocation,
-    method: settings.method,
-    cityKey: settings.city ? cityKey(settings.city) : undefined,
-    city: settings.city,
-  };
-
-  await prayerSettingsSetting.set(save);
-  if (!settings.useLocation && settings.city) {
-    await AsyncStorage.setItem("selectedCity", cityKey(settings.city));
-  }
-}
-
-async function osAllowsLocation(): Promise<boolean> {
-  const servicesEnabled = await Location.hasServicesEnabledAsync();
-  const perm = await Location.getForegroundPermissionsAsync();
-  return servicesEnabled && perm.status === "granted";
-}
-
-async function readSyncedSettings(): Promise<PrayerSettings> {
-  let settings = await readSettings();
-  if (settings.useLocation) {
-    const canUse = await osAllowsLocation();
-    if (!canUse) {
-      settings = {
-        ...settings,
-        useLocation: false,
-        city: settings.city ?? DEFAULT_CITY,
-      };
-      await writeSettings(settings);
-    }
-  }
-  return settings;
 }
 
 /**
@@ -193,7 +135,7 @@ export function useHomePrayerTimes() {
       }
       setBanner("");
 
-      const effective = await readSyncedSettings();
+      const effective = await getEffectivePrayerSettings();
       const { coords, country, label } = await resolveCoordsAndLabel(effective);
       setLocationLabel(label);
       setCoords(coords ?? null);

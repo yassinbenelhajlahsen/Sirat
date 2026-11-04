@@ -21,7 +21,7 @@ import SplashSky from "@/components/splash/SplashSky";
 import { useSplashChoreography } from "@/components/splash/useSplashChoreography";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
-import { readPrayerSettings } from "@/services/notifications/storage";
+import { getEffectivePrayerSettings } from "@/services/prayerSettings";
 import { formatHijriDate } from "@/utils/hijriDate";
 import { sunDay } from "@/utils/sky";
 import hadiths from "../assets/data/hadiths.json";
@@ -63,9 +63,9 @@ const SUNSET_LOOKUP_CAP_MS = 300;
  */
 async function sunsetToday(now: Date): Promise<Date | null> {
   try {
-    const settings = await readPrayerSettings();
+    const settings = await getEffectivePrayerSettings();
     let coords: { latitude: number; longitude: number } | null = null;
-    if (settings.useLocation && (await Location.getForegroundPermissionsAsync()).status === "granted") {
+    if (settings.useLocation) {
       coords = (await Location.getLastKnownPositionAsync())?.coords ?? null;
     }
     if (!coords && settings.city) coords = { latitude: settings.city.lat, longitude: settings.city.lng };

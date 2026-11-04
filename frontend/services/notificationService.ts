@@ -1,9 +1,9 @@
 import * as Notifications from "expo-notifications";
 
 import { getPrayerTimesToday } from "./prayerTimes";
+import { getEffectivePrayerSettings } from "./prayerSettings";
+import type { PrayerSettings } from "./prayer-times/types";
 import {
-  canUseOSLocation,
-  deriveEffectiveSettings,
   resolveCityDisplay,
 } from "./notifications/cityResolver";
 import { HORIZON_DAYS } from "./notifications/constants";
@@ -21,7 +21,6 @@ import { isPretendingRamadan } from "@/utils/hijriDate";
 import {
   readDayFingerprint,
   readMasterEnabled,
-  readPrayerSettings,
   writeDayFingerprint,
 } from "./notifications/storage";
 import {
@@ -38,16 +37,14 @@ export { NOTIF_PREFS_UPDATED_EVENT } from "../utils/notifications/constants";
 
 type TodaySnapshot = {
   times: Awaited<ReturnType<typeof getPrayerTimesToday>>;
-  effective: Awaited<ReturnType<typeof deriveEffectiveSettings>>;
+  effective: PrayerSettings;
 };
 
 let rescheduleInProgress = false;
 let initDone = false;
 
 async function fetchTodayTimesWithEffective(): Promise<TodaySnapshot> {
-  const settings = await readPrayerSettings();
-  const canUse = await canUseOSLocation();
-  const effective = deriveEffectiveSettings(settings, canUse);
+  const effective = await getEffectivePrayerSettings();
   const times = await getPrayerTimesToday(effective);
   return { times, effective };
 }
@@ -62,7 +59,7 @@ function buildScheduleFingerprint(params: {
   cityDisplay: string;
   soundMode: Awaited<ReturnType<typeof notifSoundModeSetting.get>>;
   times: Awaited<ReturnType<typeof getPrayerTimesToday>>;
-  effective: Awaited<ReturnType<typeof deriveEffectiveSettings>>;
+  effective: PrayerSettings;
   windowPrefs: Awaited<ReturnType<typeof notifWindowMapSetting.get>>;
   windowOffset: Awaited<ReturnType<typeof notifWindowOffsetSetting.get>>;
   fridayEnabled: boolean;

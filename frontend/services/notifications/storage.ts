@@ -1,13 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import type { PrayerSettings } from "../prayerTimes";
 import { STORAGE_ENABLED } from "../../utils/notifications/constants";
 import {
   STORAGE_DAYKEY,
   STORAGE_SCHEDULE_IDS,
   STORAGE_SEEN_KEYS,
 } from "./constants";
-import type { CityLike, RawPrayerSettings } from "./types";
+import type { CityLike } from "./types";
 
 export function normalizeCity(raw: unknown): CityLike | null {
   if (!raw) return null;
@@ -46,29 +45,6 @@ export async function readMasterEnabled(): Promise<boolean> {
   return raw === "1";
 }
 
-export async function readPrayerSettings(): Promise<RawPrayerSettings> {
-  const raw = await AsyncStorage.getItem("prayerSettings");
-  if (!raw) {
-    return {
-      useLocation: true,
-      method: -1,
-      city: null,
-    };
-  }
-
-  const parsed = JSON.parse(raw) as {
-    useLocation?: unknown;
-    method?: unknown;
-    city?: unknown;
-  };
-
-  return {
-    useLocation: Boolean(parsed.useLocation ?? true),
-    method: typeof parsed.method === "number" ? parsed.method : -1,
-    city: normalizeCity(parsed.city),
-  };
-}
-
 export async function readDayFingerprint(): Promise<string> {
   return (await AsyncStorage.getItem(STORAGE_DAYKEY)) || "";
 }
@@ -97,21 +73,4 @@ export async function writeSeenKeys(keys: string[]) {
 
 export async function clearScheduleStorage() {
   await AsyncStorage.multiRemove([STORAGE_SCHEDULE_IDS, STORAGE_SEEN_KEYS]);
-}
-
-export function buildEffectiveSettings(
-  s: RawPrayerSettings,
-  canUse: boolean,
-): PrayerSettings {
-  const manualCity = s.city ?? null;
-
-  if (!s.useLocation) {
-    return { useLocation: false, method: s.method, city: manualCity as any };
-  }
-
-  if (s.useLocation && !canUse) {
-    return { useLocation: false, method: s.method, city: manualCity as any };
-  }
-
-  return { useLocation: true, method: s.method, city: manualCity as any };
 }

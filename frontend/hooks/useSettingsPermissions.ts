@@ -4,13 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, AppState, Linking } from "react-native";
 
 export function useSettingsPermissions({
-  useLocation,
   setUseLocation,
 }: {
-  useLocation: boolean;
   setUseLocation: (value: boolean) => void;
 }) {
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
+  // Null until checked. Whether this device can use location is shown, never saved over the user's choice.
+  const [locationAllowed, setLocationAllowed] = useState<boolean | null>(null);
   const [notifStatus, setNotifStatus] = useState<string | null>(null);
 
   const refreshPermissionStatus = useCallback(async () => {
@@ -20,17 +20,13 @@ export function useSettingsPermissions({
       const notifPerm = await Notifications.getPermissionsAsync();
 
       setPermissionStatus(perm.status);
+      setLocationAllowed(servicesEnabled && perm.status === "granted");
       setNotifStatus(notifPerm.granted ? "granted" : "denied");
-
-      if (useLocation && (!servicesEnabled || perm.status !== "granted")) {
-        setUseLocation(false);
-      }
     } catch (e) {
       console.warn("Permission refresh failed:", e);
-      if (useLocation) setUseLocation(false);
       setNotifStatus("denied");
     }
-  }, [setUseLocation, useLocation]);
+  }, []);
 
   useEffect(() => {
     void refreshPermissionStatus();
@@ -64,7 +60,6 @@ export function useSettingsPermissions({
               { text: "Cancel", style: "cancel" },
             ],
           );
-          setUseLocation(false);
           return;
         }
 
@@ -76,6 +71,7 @@ export function useSettingsPermissions({
         setPermissionStatus(perm.status);
 
         if (perm.status === "granted") {
+          setLocationAllowed(true);
           setUseLocation(true);
           return;
         }
@@ -88,10 +84,8 @@ export function useSettingsPermissions({
             { text: "Cancel", style: "cancel" },
           ],
         );
-        setUseLocation(false);
       } catch (e) {
         console.warn("handleLocationToggle error:", e);
-        setUseLocation(false);
       }
     },
     [setUseLocation],
@@ -99,6 +93,7 @@ export function useSettingsPermissions({
 
   return {
     permissionStatus,
+    locationAllowed,
     notifStatus,
     handleLocationToggle,
   };

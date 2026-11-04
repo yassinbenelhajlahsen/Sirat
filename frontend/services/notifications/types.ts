@@ -1,4 +1,3 @@
-import type { PrayerSettings } from "../prayerTimes";
 import {
   DEFAULT_PREFS,
   type PrayerKey,
@@ -16,10 +15,6 @@ export type CityLike = {
   lng: number;
   country?: string;
   id?: string;
-};
-
-export type RawPrayerSettings = Omit<PrayerSettings, "city"> & {
-  city?: CityLike | null;
 };
 
 export const PRAYER_EMOJI: Record<PrayerKey, string> = {

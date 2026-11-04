@@ -10,8 +10,7 @@ type NotificationServiceSetup = {
   mocks: {
     setNotificationHandler: jest.Mock;
     getPrayerTimesToday: jest.Mock;
-    canUseOSLocation: jest.Mock;
-    deriveEffectiveSettings: jest.Mock;
+    getEffectivePrayerSettings: jest.Mock;
     resolveCityDisplay: jest.Mock;
     initNotificationLifecycle: jest.Mock;
     configureAndroidNotificationChannel: jest.Mock;
@@ -22,7 +21,6 @@ type NotificationServiceSetup = {
     readDayFingerprint: jest.Mock;
     readMasterEnabled: jest.Mock;
     readPrefs: jest.Mock;
-    readPrayerSettings: jest.Mock;
     readSoundMode: jest.Mock;
     readWindowMap: jest.Mock;
     readWindowOffset: jest.Mock;
@@ -50,8 +48,7 @@ async function loadNotificationService(overrides?:
   const mocks: NotificationServiceSetup["mocks"] = {
     setNotificationHandler: jest.fn(),
     getPrayerTimesToday: jest.fn(async () => [{ label: "Fajr", time: "05:00 AM" }]),
-    canUseOSLocation: jest.fn(async () => true),
-    deriveEffectiveSettings: jest.fn((settings) => settings),
+    getEffectivePrayerSettings: jest.fn(async () => ({ useLocation: true, method: 2, city: null })),
     resolveCityDisplay: jest.fn(async () => "Chicago"),
     initNotificationLifecycle: jest.fn((cb) => {
       lifecycleCallbackRef.cb = cb;
@@ -64,7 +61,6 @@ async function loadNotificationService(overrides?:
     readDayFingerprint: jest.fn(async () => ""),
     readMasterEnabled: jest.fn(async () => true),
     readPrefs: jest.fn(async () => defaultPrefs),
-    readPrayerSettings: jest.fn(async () => ({ useLocation: true, method: 2, city: null })),
     readSoundMode: jest.fn(async () => "default"),
     readWindowMap: jest.fn(async () => ({
       Fajr: false,
@@ -89,9 +85,11 @@ async function loadNotificationService(overrides?:
   }));
 
   jest.doMock("@/services/notifications/cityResolver", () => ({
-    canUseOSLocation: mocks.canUseOSLocation,
-    deriveEffectiveSettings: mocks.deriveEffectiveSettings,
     resolveCityDisplay: mocks.resolveCityDisplay,
+  }));
+
+  jest.doMock("@/services/prayerSettings", () => ({
+    getEffectivePrayerSettings: mocks.getEffectivePrayerSettings,
   }));
 
   jest.doMock("@/services/notifications/lifecycle", () => ({
@@ -112,7 +110,6 @@ async function loadNotificationService(overrides?:
   jest.doMock("@/services/notifications/storage", () => ({
     readDayFingerprint: mocks.readDayFingerprint,
     readMasterEnabled: mocks.readMasterEnabled,
-    readPrayerSettings: mocks.readPrayerSettings,
     writeDayFingerprint: mocks.writeDayFingerprint,
   }));
 

@@ -83,7 +83,7 @@ describe("notifications/lifecycle", () => {
 
     setup.eventCallbacks.NOTIF_PREFS_UPDATED();
     setup.appStateRef.cb?.("active");
-    await setup.settings.prayerSettingsSetting.set({ method: 2 });
+    await setup.settings.prayerSettingsSetting.set({ useLocation: true, method: 2, city: null });
 
     expect(onReschedule).toHaveBeenCalledWith("notif-prefs-changed");
     expect(onReschedule).toHaveBeenCalledWith("settings-changed");

@@ -68,6 +68,23 @@ describe("useHomePrayerTimes", () => {
     jest.restoreAllMocks();
   });
 
+  it("uses the manual city when location is denied, without rewriting the saved choice", async () => {
+    freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
+    const saved = { useLocation: true, method: 2, city: { name: "Chicago", country: "US", lat: 41.88, lng: -87.63 } };
+    await AsyncStorage.setItem("prayerSettings", JSON.stringify(saved));
+    (Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ status: "denied" });
+    mockGetPrayerTimesToday.mockResolvedValue([{ label: "Fajr", time: "5:00 AM" }] as any);
+    jest.spyOn(AppState, "addEventListener").mockImplementation((() => ({ remove: jest.fn() })) as any);
+
+    const { result } = renderHook(() => useHomePrayerTimes());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.locationLabel).toBe("Chicago");
+    expect(JSON.parse((await AsyncStorage.getItem("prayerSettings"))!)).toEqual(saved);
+    expect(await AsyncStorage.getItem("sync:settings_meta_v1")).toBeNull();
+    (Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ status: "granted" });
+  });
+
   it("reloads when prayer settings change and on app foreground", async () => {
     freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
 
@@ -95,7 +112,7 @@ describe("useHomePrayerTimes", () => {
     expect(mockGetPrayerTimesToday).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      await prayerSettingsSetting.set({ useLocation: false, method: 3 });
+      await prayerSettingsSetting.set({ useLocation: false, method: 3, city: null });
     });
 
     await waitFor(() => {

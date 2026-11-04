@@ -193,6 +193,10 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/tracking/merge.mergeSettings.test.ts` — shared `mergeSettings` LWW merge cases (drift-guard vector used by both frontend and backend)
   - `services/sync/replaceSetters.test.ts` — `replacePrayerLog` / `replaceHabitLog` / `replaceHabits` internal setters
   - `services/sync/settingsMeta.test.ts` — `sync:settings_meta_v1` stamp sidecar read/write and bump-on-event behavior
+  - `hooks/useSyncedSetting.test.ts` — hook loads the stored value and keeps a change that lands during the first read
+  - `services/prayerSettings.test.ts` — prayer settings (defaults, cityKey, legacy `selectedCity`, malformed values) and effective settings (OS permission applied on read, never stored)
+  - `hooks/usePrayerSettingsEdits.test.ts` — Settings screen state: no save on load, real edits saved and stamped, follows remote changes
+  - `hooks/usePrayerTimes.settings.test.ts` — Calendar day loads with the user's saved method/city and reloads when they change
   - `services/syncedSettings/syncedSettings.test.ts` — synced setting module: the 14 declared keys, `set` (persist + stamp + notify) vs `applyRemote` (persist + notify, never stamps), per-setting codecs and defaults, malformed remote values
   - `services/sync/settingsAdapter.test.ts` — settings domain adapter `read()` / `applyMerged()` round-trip
   - `services/sync/trackerAdapters.test.ts` — prayer-log, habits, habit-log adapter `read()` / `applyMerged()` round-trips

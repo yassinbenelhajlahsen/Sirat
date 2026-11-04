@@ -57,7 +57,7 @@ describe("hooks/useSettingsPermissions behavior", () => {
     jest.restoreAllMocks();
   });
 
-  it("bootstraps permission/notif status and disables stale useLocation preference", async () => {
+  it("bootstraps permission/notif status and reports location as not allowed without saving anything", async () => {
     const setUseLocation = jest.fn();
     mockLocation.hasServicesEnabledAsync.mockResolvedValue(false as never);
     mockLocation.getForegroundPermissionsAsync.mockResolvedValue({
@@ -69,7 +69,6 @@ describe("hooks/useSettingsPermissions behavior", () => {
 
     const { result } = renderHook(() =>
       useSettingsPermissions({
-        useLocation: true,
         setUseLocation,
       }),
     );
@@ -77,9 +76,10 @@ describe("hooks/useSettingsPermissions behavior", () => {
     await waitFor(() => {
       expect(result.current.permissionStatus).toBe("granted");
       expect(result.current.notifStatus).toBe("denied");
+      expect(result.current.locationAllowed).toBe(false);
     });
 
-    expect(setUseLocation).toHaveBeenCalledWith(false);
+    expect(setUseLocation).not.toHaveBeenCalled();
   });
 
   it("refreshes statuses when app state returns to active", async () => {
@@ -96,7 +96,6 @@ describe("hooks/useSettingsPermissions behavior", () => {
 
     const { result } = renderHook(() =>
       useSettingsPermissions({
-        useLocation: true,
         setUseLocation,
       }),
     );
@@ -118,8 +117,9 @@ describe("hooks/useSettingsPermissions behavior", () => {
     await waitFor(() => {
       expect(result.current.permissionStatus).toBe("denied");
       expect(result.current.notifStatus).toBe("denied");
+      expect(result.current.locationAllowed).toBe(false);
     });
-    expect(setUseLocation).toHaveBeenCalledWith(false);
+    expect(setUseLocation).not.toHaveBeenCalled();
   });
 
   it("turns off location immediately when toggle is disabled", async () => {
@@ -127,7 +127,6 @@ describe("hooks/useSettingsPermissions behavior", () => {
 
     const { result } = renderHook(() =>
       useSettingsPermissions({
-        useLocation: false,
         setUseLocation,
       }),
     );
@@ -152,7 +151,6 @@ describe("hooks/useSettingsPermissions behavior", () => {
 
     const { result } = renderHook(() =>
       useSettingsPermissions({
-        useLocation: false,
         setUseLocation,
       }),
     );
@@ -174,7 +172,7 @@ describe("hooks/useSettingsPermissions behavior", () => {
     buttons[0]?.onPress?.();
 
     expect(Linking.openSettings).toHaveBeenCalledTimes(1);
-    expect(setUseLocation).toHaveBeenCalledWith(false);
+    expect(setUseLocation).not.toHaveBeenCalled();
   });
 
   it("requests permission and enables location when permission is granted", async () => {
@@ -188,7 +186,6 @@ describe("hooks/useSettingsPermissions behavior", () => {
 
     const { result } = renderHook(() =>
       useSettingsPermissions({
-        useLocation: false,
         setUseLocation,
       }),
     );
@@ -217,7 +214,6 @@ describe("hooks/useSettingsPermissions behavior", () => {
 
     const { result } = renderHook(() =>
       useSettingsPermissions({
-        useLocation: false,
         setUseLocation,
       }),
     );
@@ -235,6 +231,6 @@ describe("hooks/useSettingsPermissions behavior", () => {
     );
     expect(permissionCall).toBeTruthy();
     expect(mockLocation.requestForegroundPermissionsAsync).toHaveBeenCalledTimes(1);
-    expect(setUseLocation).toHaveBeenCalledWith(false);
+    expect(setUseLocation).not.toHaveBeenCalled();
   });
 });

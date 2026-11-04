@@ -80,7 +80,7 @@ describe("Root layout initial sync ordering", () => {
     const habitLog = deferred();
 
     const deps = {
-      syncLocationPermissionToSettings: jest.fn(() => loc.promise),
+      requestLocationPermissionIfUndecided: jest.fn(() => loc.promise),
       syncNotificationPermissionToToggle: jest.fn(() => notif.promise),
       preloadQuranData: jest.fn(() => quran.promise),
       preloadQuranDisplayModes: jest.fn(() => displayModes.promise),
@@ -94,7 +94,7 @@ describe("Root layout initial sync ordering", () => {
       finished = true;
     });
 
-    expect(deps.syncLocationPermissionToSettings).toHaveBeenCalledTimes(1);
+    expect(deps.requestLocationPermissionIfUndecided).toHaveBeenCalledTimes(1);
     expect(deps.syncNotificationPermissionToToggle).toHaveBeenCalledTimes(1);
     expect(deps.preloadQuranData).toHaveBeenCalledTimes(1);
     expect(deps.preloadQuranDisplayModes).toHaveBeenCalledTimes(1);

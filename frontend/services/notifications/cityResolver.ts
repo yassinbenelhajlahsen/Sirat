@@ -1,27 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 
-import type { PrayerSettings } from "../prayerTimes";
 import {
   STORAGE_CITY_DISPLAY_LOC,
   STORAGE_CITY_DISPLAY_MAN,
   STORAGE_LAST_MANUAL_CITY,
 } from "./constants";
-import { type RawPrayerSettings } from "./types";
-import { buildEffectiveSettings, normalizeCity } from "./storage";
-
-export async function canUseOSLocation(): Promise<boolean> {
-  const servicesEnabled = await Location.hasServicesEnabledAsync();
-  const perm = await Location.getForegroundPermissionsAsync();
-  return servicesEnabled && perm.status === "granted";
-}
-
-export function deriveEffectiveSettings(
-  settings: RawPrayerSettings,
-  canUseLocation: boolean,
-): PrayerSettings {
-  return buildEffectiveSettings(settings, canUseLocation);
-}
+import { normalizeCity } from "./storage";
 
 async function reverseGeocodeToLabel(coords: {
   latitude: number;

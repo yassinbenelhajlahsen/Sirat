@@ -3,8 +3,7 @@
 
 import { themeSetting } from "@/services/syncedSettings";
 import type { NormalizedAyah } from "@/services/quranData";
-import { canUseOSLocation, deriveEffectiveSettings } from "@/services/notifications/cityResolver";
-import { readPrayerSettings } from "@/services/notifications/storage";
+import { getEffectivePrayerSettings } from "@/services/prayerSettings";
 import { getPrayerTimesOn } from "@/services/prayerTimes";
 import NextPrayer from "@/widgets/NextPrayerWidget";
 import PrayerTimes from "@/widgets/PrayerTimesWidget";
@@ -21,7 +20,7 @@ const HORIZON_DAYS = 7;
 const readTheme = async () => widgetTheme(await themeSetting.get());
 
 async function syncPrayerWidgets(now: Date) {
-  const settings = deriveEffectiveSettings(await readPrayerSettings(), await canUseOSLocation());
+  const settings = await getEffectivePrayerSettings();
   // One day at a time, today first: a day missing from the cache starts a yearly
   // fetch, and seven of those at once is wasteful. A later day failing only
   // shortens the timeline; today failing leaves the widgets as they were.

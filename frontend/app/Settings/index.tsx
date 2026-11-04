@@ -60,8 +60,10 @@ export default function Settings() {
     cityItems,
     selectCityByKey,
   } = usePrayerSettingsState();
-  const { permissionStatus, handleLocationToggle } =
-    useSettingsPermissions({ useLocation, setUseLocation });
+  const { permissionStatus, locationAllowed, handleLocationToggle } =
+    useSettingsPermissions({ setUseLocation });
+  // What this device does, not what is saved: a denied permission shows off but keeps the user's choice.
+  const locationOn = useLocation && locationAllowed !== false;
 
   const { ramadanMode, setRamadanMode } = useRamadanMode();
   const [pretendRamadan, setPretendRamadanState] = useState(isPretendingRamadan);
@@ -173,7 +175,7 @@ export default function Settings() {
             trailing={
               <Switch
                 accessibilityLabel="Use my location"
-                value={useLocation}
+                value={locationOn}
                 onValueChange={(val) => {
                   haptics("light");
                   void handleLocationToggle(val);
@@ -182,7 +184,7 @@ export default function Settings() {
               />
             }
           />
-          {!useLocation ? (
+          {!locationOn ? (
             <SettingsRow
               icon="business-outline"
               title="Manual city"

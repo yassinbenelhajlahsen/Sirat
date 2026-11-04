@@ -17,7 +17,7 @@ describe("useWidgetSync", () => {
   });
 
   it.each([
-    ["prayer settings", () => prayerSettingsSetting.set({ method: 2 })],
+    ["prayer settings", () => prayerSettingsSetting.set({ useLocation: true, method: 2, city: null })],
     ["the theme", () => themeSetting.set("dark")],
   ])("syncs again when %s change", async (_name, change) => {
     renderHook(() => useWidgetSync());
@@ -45,7 +45,7 @@ describe("useWidgetSync", () => {
     const { unmount } = renderHook(() => useWidgetSync());
     unmount();
     mockSyncWidgets.mockClear();
-    await prayerSettingsSetting.set({ method: 3 });
+    await prayerSettingsSetting.set({ useLocation: true, method: 3, city: null });
     expect(mockSyncWidgets).not.toHaveBeenCalled();
   });
 });

@@ -9,11 +9,18 @@ export function useSyncedSetting<T>(setting: SyncedSetting<T>): { value: T; load
 
   useEffect(() => {
     let active = true;
+    // A change that lands while the first read is in flight is newer than that read.
+    let changedSinceLoad = false;
     const unsubscribe = setting.subscribe((next) => {
+      changedSinceLoad = true;
       if (active) setValue(next);
     });
     void setting.get().then((next) => {
       if (!active) return;
+      if (changedSinceLoad) {
+        setLoaded(true);
+        return;
+      }
       setValue(next);
       setLoaded(true);
     });

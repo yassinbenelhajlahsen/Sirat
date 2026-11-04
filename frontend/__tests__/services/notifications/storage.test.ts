@@ -1,10 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
-  buildEffectiveSettings,
   normalizeCity,
   readMasterEnabled,
-  readPrayerSettings,
   readScheduledIds,
   readSeenKeys,
   writeScheduledIds,
@@ -53,31 +51,6 @@ describe("notifications/storage", () => {
     await expect(readMasterEnabled()).resolves.toBe(false);
   });
 
-  it("reads prayer settings with defaults when storage is empty", async () => {
-    await expect(readPrayerSettings()).resolves.toEqual({
-      useLocation: true,
-      method: -1,
-      city: null,
-    });
-  });
-
-  it("reads prayer settings and normalizes city", async () => {
-    await AsyncStorage.setItem(
-      "prayerSettings",
-      JSON.stringify({
-        useLocation: false,
-        method: 4,
-        city: { name: "  Chicago ", lat: "41.8", lng: "-87.6" },
-      }),
-    );
-
-    await expect(readPrayerSettings()).resolves.toEqual({
-      useLocation: false,
-      method: 4,
-      city: { name: "Chicago", lat: 41.8, lng: -87.6, country: undefined, id: undefined },
-    });
-  });
-
   it("persists and reads scheduled ids / seen keys", async () => {
     await writeScheduledIds(["id-1", "id-2"]);
     await writeSeenKeys(["Fajr_2026-01-01T05:00"]);
@@ -87,15 +60,5 @@ describe("notifications/storage", () => {
 
     expect(await AsyncStorage.getItem(SCHEDULE_KEY)).toBeTruthy();
     expect(await AsyncStorage.getItem(SEEN_KEY)).toBeTruthy();
-  });
-
-  it("builds effective settings based on OS location availability", () => {
-    const withLocation = { useLocation: true, method: 2, city: { name: "X", lat: 1, lng: 2 } };
-
-    expect(buildEffectiveSettings(withLocation, true).useLocation).toBe(true);
-    expect(buildEffectiveSettings(withLocation, false).useLocation).toBe(false);
-
-    const manual = { useLocation: false, method: 2, city: { name: "X", lat: 1, lng: 2 } };
-    expect(buildEffectiveSettings(manual, true).useLocation).toBe(false);
   });
 });

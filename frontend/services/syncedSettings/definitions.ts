@@ -19,6 +19,7 @@ import {
   type WindowPrefMap,
 } from "@/utils/notifications/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CITIES, { cityKey, type City } from "@/utils/cities";
 import { defineSetting } from "./core";
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -100,13 +101,76 @@ export const themeSetting = defineSetting<ThemeName>({
   normalize: (v) => (typeof v === "string" && isThemeName(v) ? v : undefined),
 });
 
-// Piece 2 gives this module its own shape (defaults, legacy city migration); until then it is an opaque object.
-export const prayerSettingsSetting = defineSetting<Record<string, unknown> | null>({
+export const DEFAULT_PRAYER_METHOD = -1;
+/** The city shown, and used, when location is off and none was ever picked. */
+export const DEFAULT_PRAYER_CITY: City = CITIES[0];
+
+/**
+ * What the user chose. `cityKey` is still written so an older build on another device can read it.
+ * Never holds the OS permission: that is applied on read, see `getEffectivePrayerSettings`.
+ */
+export type PrayerSettingsValue = {
+  useLocation: boolean;
+  method: number;
+  city: City | null;
+  cityKey?: string;
+};
+
+function normalizeCity(input: unknown): City | null {
+  if (!isRecord(input)) return null;
+  const lat = Number(input.lat);
+  const lng = Number(input.lng);
+  if (typeof input.name !== "string" || !input.name.trim() || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null;
+  }
+  return {
+    name: input.name.trim(),
+    country: typeof input.country === "string" ? input.country : "",
+    lat,
+    lng,
+  };
+}
+
+const cityFromKey = (key: unknown): City | null =>
+  typeof key === "string" ? (CITIES.find((c) => cityKey(c) === key) ?? null) : null;
+
+function normalizePrayerSettings(input: unknown): PrayerSettingsValue | undefined {
+  if (!isRecord(input)) return undefined;
+  const city = normalizeCity(input.city) ?? cityFromKey(input.cityKey);
+  return {
+    useLocation: typeof input.useLocation === "boolean" ? input.useLocation : true,
+    method: typeof input.method === "number" ? input.method : DEFAULT_PRAYER_METHOD,
+    city,
+    ...(city ? { cityKey: cityKey(city) } : {}),
+  };
+}
+
+const PRAYER_SETTINGS_KEY = "prayerSettings";
+// Written by builds before prayerSettings existed; only read when prayerSettings is missing.
+const LEGACY_SELECTED_CITY_KEY = "selectedCity";
+
+export const prayerSettingsSetting = defineSetting<PrayerSettingsValue>({
   envelopeKey: "prayerSettings",
-  storageKey: "prayerSettings",
+  storageKey: PRAYER_SETTINGS_KEY,
   encoding: "json",
-  defaultValue: null,
-  normalize: (v) => (isRecord(v) ? v : undefined),
+  defaultValue: { useLocation: true, method: DEFAULT_PRAYER_METHOD, city: null },
+  normalize: normalizePrayerSettings,
+  io: {
+    async load() {
+      const raw = await AsyncStorage.getItem(PRAYER_SETTINGS_KEY);
+      if (raw != null) {
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return undefined;
+        }
+      }
+      return { cityKey: await AsyncStorage.getItem(LEGACY_SELECTED_CITY_KEY) };
+    },
+    async save(value) {
+      await AsyncStorage.setItem(PRAYER_SETTINGS_KEY, JSON.stringify(value));
+    },
+  },
 });
 
 export const quranDisplayModesSetting = defineSetting<QuranDisplayMode[]>({

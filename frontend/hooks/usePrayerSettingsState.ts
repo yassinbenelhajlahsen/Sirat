@@ -1,15 +1,16 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { prayerSettingsSetting } from "@/services/syncedSettings";
-import { clearPrayerCache } from "../services/prayerTimes";
-import CITIES, { City, cityKey } from "../utils/cities";
+import { useCallback, useMemo, useState } from "react";
 
+import { useSyncedSetting } from "@/hooks/useSyncedSetting";
+import { DEFAULT_PRAYER_CITY, prayerSettingsSetting } from "@/services/syncedSettings";
+import { clearPrayerCache } from "../services/prayerTimes";
+import CITIES, { cityKey } from "../utils/cities";
+
+/** The user's prayer settings for the Settings screen. Only real edits are saved. */
 export function usePrayerSettingsState() {
-  const [useLocation, setUseLocation] = useState(true);
-  const [method, setMethod] = useState(-1);
-  const [city, setCity] = useState<City>(CITIES[0]);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const { value } = useSyncedSetting(prayerSettingsSetting);
   const [cityModalVisible, setCityModalVisible] = useState(false);
+
+  const city = value.city ?? DEFAULT_PRAYER_CITY;
 
   const cityItems = useMemo(
     () =>
@@ -20,69 +21,31 @@ export function usePrayerSettingsState() {
     [],
   );
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem("prayerSettings");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setUseLocation(parsed.useLocation ?? true);
-          setMethod(parsed.method ?? -1);
-          if (parsed.cityKey) {
-            const found = CITIES.find((c) => cityKey(c) === parsed.cityKey);
-            if (found) setCity(found);
-          } else if (parsed.city) {
-            setCity(parsed.city);
-          }
-        } else {
-          const legacy = await AsyncStorage.getItem("selectedCity");
-          if (legacy) {
-            const found = CITIES.find((c) => cityKey(c) === legacy);
-            if (found) setCity(found);
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to load prayer settings:", e);
-      } finally {
-        setSettingsLoaded(true);
-      }
-    })();
+  const save = useCallback(async (change: Partial<typeof value>) => {
+    try {
+      await prayerSettingsSetting.set({ ...(await prayerSettingsSetting.get()), ...change });
+    } catch (e) {
+      console.warn("Failed to persist prayer settings:", e);
+    }
+    void clearPrayerCache();
   }, []);
 
-  useEffect(() => {
-    if (!settingsLoaded) return;
+  const setUseLocation = useCallback((useLocation: boolean) => void save({ useLocation }), [save]);
+  const setMethod = useCallback((method: number) => void save({ method }), [save]);
 
-    (async () => {
-      const payload = {
-        useLocation,
-        method,
-        cityKey: cityKey(city),
-        city,
-      };
-
-      try {
-        await prayerSettingsSetting.set(payload);
-        if (!useLocation) {
-          await AsyncStorage.setItem("selectedCity", cityKey(city));
-        }
-      } catch (e) {
-        console.warn("Failed to persist prayer settings:", e);
-      }
-
-      void clearPrayerCache();
-    })();
-  }, [city, method, settingsLoaded, useLocation]);
-
-  const selectCityByKey = useCallback((value: string) => {
-    const selected = CITIES.find((c) => cityKey(c) === value) || CITIES[0];
-    setCity(selected);
-    setCityModalVisible(false);
-  }, []);
+  const selectCityByKey = useCallback(
+    (key: string) => {
+      const selected = CITIES.find((c) => cityKey(c) === key) || CITIES[0];
+      void save({ city: selected });
+      setCityModalVisible(false);
+    },
+    [save],
+  );
 
   return {
-    useLocation,
+    useLocation: value.useLocation,
     setUseLocation,
-    method,
+    method: value.method,
     setMethod,
     city,
     cityModalVisible,

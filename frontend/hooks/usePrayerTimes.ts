@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { dateKeyFromDate } from "../services/holidayService";
-import {
-  getPrayerTimesForDate,
-  PrayerSettings,
-  PrayerTime,
-} from "../services/prayerTimes";
+import { getEffectivePrayerSettings } from "../services/prayerSettings";
+import { getPrayerTimesForDate, PrayerTime } from "../services/prayerTimes";
+import { prayerSettingsSetting } from "../services/syncedSettings";
 
 export type PrayerTimesError =
   | { code: "PERMISSION"; message: string }
@@ -86,7 +84,7 @@ export function usePrayerTimes(selectedDate: Date | null) {
       setError(null);
 
       try {
-        const settings: PrayerSettings = { useLocation: true, method: 2 };
+        const settings = await getEffectivePrayerSettings();
         const times = await getPrayerTimesForDate(settings, selectedDate);
         if (!mounted) return;
 
@@ -134,6 +132,12 @@ export function usePrayerTimes(selectedDate: Date | null) {
       clearRetry();
     };
   }, [clearRetry, fetchNonce, resetRetry, scheduleRetry, selectedDate]);
+
+  // A changed method or city (here or synced from another device) reloads the day.
+  useEffect(
+    () => prayerSettingsSetting.subscribe(() => setFetchNonce((n) => n + 1)),
+    [],
+  );
 
   const retry = useCallback(() => {
     resetRetry();

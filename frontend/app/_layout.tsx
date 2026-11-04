@@ -21,7 +21,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { prayerSettingsSetting } from "@/services/syncedSettings";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
@@ -67,7 +66,6 @@ const RELOAD_SKY_IMAGES: Record<ThemeName, number> = {
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 // Storage keys and events used elsewhere in your app
-export const PRAYER_SETTINGS_KEY = "prayerSettings";
 export const NOTIF_ENABLED_KEY = "notif_enabled_v1";
 export const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
@@ -85,33 +83,15 @@ function parseJSON<T>(raw: string | null, fallback: T): T {
   }
 }
 
-export async function syncLocationPermissionToSettings() {
-  // 1) Read current OS permission without prompting
-  const { status: currentStatus } =
-    await Location.getForegroundPermissionsAsync();
-  let status = currentStatus;
-
-  // 2) If undecided, request now (first launch behavior)
+/**
+ * Asks for location on first launch. Only asks: whether this device may use location is applied
+ * when prayer settings are read, and is never written back into the user's synced choice.
+ */
+export async function requestLocationPermissionIfUndecided() {
+  const { status } = await Location.getForegroundPermissionsAsync();
   if (status !== "granted" && status !== "denied") {
-    const res = await Location.requestForegroundPermissionsAsync();
-    status = res.status;
+    await Location.requestForegroundPermissionsAsync();
   }
-
-  // 3) Some users disable Location Services globally
-  const servicesEnabled = await Location.hasServicesEnabledAsync();
-  const granted = status === "granted" && servicesEnabled;
-
-  // 4) Persist to prayerSettings.useLocation so Home/Settings start in sync
-  const existingRaw = await AsyncStorage.getItem(PRAYER_SETTINGS_KEY);
-  const existing = parseJSON<{
-    useLocation?: boolean;
-    method?: number;
-    city?: any;
-    cityKey?: string;
-  }>(existingRaw, {});
-  const next = { ...existing, useLocation: granted };
-
-  await prayerSettingsSetting.set(next);
 }
 
 export async function syncNotificationPermissionToToggle() {
@@ -153,7 +133,7 @@ export async function syncNotificationPermissionToToggle() {
 }
 
 type InitialSyncDeps = {
-  syncLocationPermissionToSettings: () => Promise<void>;
+  requestLocationPermissionIfUndecided: () => Promise<void>;
   syncNotificationPermissionToToggle: () => Promise<void>;
   preloadQuranData: () => Promise<void>;
   preloadQuranDisplayModes: () => Promise<void>;
@@ -164,7 +144,7 @@ type InitialSyncDeps = {
 
 export async function runInitialAppSync(
   deps: InitialSyncDeps = {
-    syncLocationPermissionToSettings,
+    requestLocationPermissionIfUndecided,
     syncNotificationPermissionToToggle,
     preloadQuranData,
     preloadQuranDisplayModes,
@@ -174,7 +154,7 @@ export async function runInitialAppSync(
   },
 ) {
   await Promise.all([
-    deps.syncLocationPermissionToSettings(),
+    deps.requestLocationPermissionIfUndecided(),
     deps.syncNotificationPermissionToToggle(),
     deps.preloadQuranData(),
     deps.preloadQuranDisplayModes(),
@@ -418,10 +398,7 @@ function RootLayoutContent() {
       appStateRef.current = state;
       if (wasBgToActive) {
         try {
-          await Promise.all([
-            syncLocationPermissionToSettings(),
-            syncNotificationPermissionToToggle(),
-          ]);
+          await syncNotificationPermissionToToggle();
         } catch (error) {
           console.error("Failed to re-sync permissions on foreground", error);
         }
