@@ -36,7 +36,7 @@ export default function Segmented<T extends string | number>({
       accessibilityLabel={accessibilityLabel}
       testID={testID}
     >
-      <Host matchContents={{ vertical: true }} style={styles.host}>
+      <Host style={styles.host}>
         <Picker selection={value} onSelectionChange={onChange} modifiers={SEGMENTED}>
           {options.map((option) => (
             <Text
@@ -56,6 +56,8 @@ export default function Segmented<T extends string | number>({
 }
 
 const styles = StyleSheet.create({
-  host: { width: "100%" },
+  // Fixed at the system control height. `matchContents` resolved a frame late,
+  // so the picker first drew top-aligned in an oversized host, then jumped.
+  host: { width: "100%", height: 32 },
   disabled: { opacity: 0.45 },
 });

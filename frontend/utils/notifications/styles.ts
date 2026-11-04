@@ -7,11 +7,7 @@ export function getNotificationStyles(theme: AppTheme) {
   const { spacing } = theme;
   return StyleSheet.create({
     dimmed: { opacity: 0.55 },
-    segmentRow: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl,
-      paddingBottom: spacing.md,
-    },
+    segmentRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
     soundTrailing: { flexDirection: "row", alignItems: "center", gap: spacing.md },
     previewAction: { fontWeight: "600" },
   });
