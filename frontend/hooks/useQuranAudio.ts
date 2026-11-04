@@ -360,6 +360,24 @@ export function useQuranAudio({
       console.warn("Failed to pause audio on surah or reciter change", error);
     }
 
+    // Reciter pace differs, so a mid-surah position can't carry over: restart
+    // the same surah from the top with the new reciter.
+    if (isPlaying && isOnline && activeSurahNumber === currentSurahNumber) {
+      try {
+        const player = createAudioPlayer(
+          getSurahAudioUrl(currentSurahNumber, reciterId)
+        );
+        setAudioPlayer(player);
+        setActiveReciterId(reciterId);
+        setPlaybackDuration(0);
+        setPlaybackPosition(0);
+        player.play();
+        return;
+      } catch (error) {
+        console.warn("Failed to restart audio with new reciter", error);
+      }
+    }
+
     audioPlayer
       .seekTo(0)
       .catch((error) =>
@@ -372,7 +390,15 @@ export function useQuranAudio({
     setActiveReciterId(null);
     setPlaybackDuration(0);
     setPlaybackPosition(0);
-  }, [audioPlayer, activeSurahNumber, activeReciterId, currentSurahNumber, reciterId]);
+  }, [
+    audioPlayer,
+    activeSurahNumber,
+    activeReciterId,
+    currentSurahNumber,
+    reciterId,
+    isPlaying,
+    isOnline,
+  ]);
 
   useEffect(() => {
     const wasOnline = previousOnlineStatusRef.current;
