@@ -127,4 +127,30 @@ describe("buildPrayerTimeline", () => {
     expect(entries).toHaveLength(1);
     expect(entries[0].props.stale).toBe(true);
   });
+
+  describe("Hijri date", () => {
+    // Nov 3 2026 is 23 Jumada I 1448; the Islamic day turns at Maghrib (6:21 PM here).
+    const nov3 = day(2026, 11, 3);
+    const nov4 = day(2026, 11, 4);
+    const hijriAt = (h: number, m: number) =>
+      buildPrayerTimeline([nov3, nov4], new Date(2026, 10, 3, h, m))[0].props.hijri;
+
+    it("shows the day's date before Maghrib", () => {
+      expect(hijriAt(12, 0)).toBe("Jumada I 23, 1448");
+    });
+
+    it("rolls over at Maghrib, before the list moves to tomorrow", () => {
+      expect(hijriAt(18, 30)).toBe("Jumada I 24, 1448");
+    });
+
+    it("does not add a second day once the list moves to tomorrow after Isha", () => {
+      expect(hijriAt(19, 40)).toBe("Jumada I 24, 1448");
+    });
+
+    it("rolls the entry that starts at Maghrib", () => {
+      const entries = buildPrayerTimeline([nov3, nov4], new Date(2026, 10, 3, 12, 0));
+      const atMaghrib = entries.find((e) => e.date.getTime() === new Date(2026, 10, 3, 18, 21).getTime());
+      expect(atMaghrib?.props.hijri).toBe("Jumada I 24, 1448");
+    });
+  });
 });

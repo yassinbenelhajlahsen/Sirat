@@ -2,6 +2,7 @@ import { darkTheme, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFonts } from "expo-font";
+import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated as RNAnimated,
@@ -20,6 +21,9 @@ import SplashSky from "@/components/splash/SplashSky";
 import { useSplashChoreography } from "@/components/splash/useSplashChoreography";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
+import { readPrayerSettings } from "@/services/notifications/storage";
+import { formatHijriDate } from "@/utils/hijriDate";
+import { sunDay } from "@/utils/sky";
 import hadiths from "../assets/data/hadiths.json";
 
 const LAST_SPLASH_KEY = "lastSplashDate";
@@ -49,6 +53,29 @@ const DWELL_FIRST_MS = 2750;
 const DWELL_REPEAT_MS = 1250;
 
 type Launch = "unknown" | "first" | "repeat";
+
+const SUNSET_LOOKUP_CAP_MS = 300;
+
+/**
+ * Tonight's sunset (Maghrib), worked out on the device from where it already is: the
+ * OS's cached fix, else the manual city. Never prompts and never waits on GPS or the
+ * network, so the splash needs no prayer times to turn the Hijri date at sunset.
+ */
+async function sunsetToday(now: Date): Promise<Date | null> {
+  try {
+    const settings = await readPrayerSettings();
+    let coords: { latitude: number; longitude: number } | null = null;
+    if (settings.useLocation && (await Location.getForegroundPermissionsAsync()).status === "granted") {
+      coords = (await Location.getLastKnownPositionAsync())?.coords ?? null;
+    }
+    if (!coords && settings.city) coords = { latitude: settings.city.lat, longitude: settings.city.lng };
+    if (!coords) return null;
+    const { sunset } = sunDay(now, coords.latitude, coords.longitude);
+    return sunset === null ? null : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, sunset);
+  } catch {
+    return null;
+  }
+}
 
 type Props = {
   // When true, start the fade out and call onFinished at the end
@@ -85,6 +112,7 @@ export default function SplashScreen({ ready, onReadyToHideNative, onFinished }:
     source: string;
   } | null>(null);
   const [launch, setLaunch] = useState<Launch>("unknown");
+  const [hijriDate, setHijriDate] = useState(() => formatHijriDate(new Date()));
 
   // Hold the opening until the Arabic face is in (or has failed), so the Arabic
   // never visibly swaps faces and a failed load never blocks the splash.
@@ -102,8 +130,20 @@ export default function SplashScreen({ ready, onReadyToHideNative, onFinished }:
   useEffect(() => {
     const checkFirstLaunch = async () => {
       try {
-        const today = new Date().toDateString();
-        const lastSplash = await AsyncStorage.getItem(LAST_SPLASH_KEY);
+        const now = new Date();
+        const today = now.toDateString();
+        // Resolved alongside the launch check, which already holds the masthead back,
+        // so the date appears already turned rather than flipping mid-splash.
+        const [lastSplash, sunset] = await Promise.all([
+          AsyncStorage.getItem(LAST_SPLASH_KEY),
+          // Capped: this check also gates leaving the splash, so a slow location answer
+          // falls back to the daytime date (off by one only between sunset and midnight).
+          Promise.race([
+            sunsetToday(now),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), SUNSET_LOOKUP_CAP_MS)),
+          ]),
+        ]);
+        setHijriDate(formatHijriDate(now, sunset));
 
         if (lastSplash !== today) {
           setLaunch("first");
@@ -168,15 +208,6 @@ export default function SplashScreen({ ready, onReadyToHideNative, onFinished }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, launch]);
 
-  const hijriDate = useMemo(
-    () =>
-      new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(new Date()),
-    [],
-  );
 
   const longArabic = (hadith?.arabic.length ?? 0) > LONG_ARABIC_CHARS;
 

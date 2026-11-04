@@ -91,6 +91,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `visual refresh foundations (Plan 1) testing`
   - `utils/greeting.test.ts`
   - `utils/formatDate.test.ts` — ordinal day suffixes (1st/2nd/3rd/11th-13th) for the dial centre and calendar day title
+  - `utils/hijriDate.test.ts` — shared Hijri date: Umm al-Qura (matches the holiday feed), rolls to the next day at Maghrib
   - `constants/motion.test.ts`
   - `hooks/useHaptics.test.ts`
   - `components/glass-surface.contract.test.tsx` — glass vs fallback, and the borderless-over-glass default (hairline in the fallback, 1px when `bordered`)
@@ -130,7 +131,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/screen-contracts.test.tsx` — dropdown-picker and CitySearchModal mocks removed; city-search-modal.contract.test.tsx suite deleted
 
 - `widgets testing`
-  - `services/widgets/timeline.test.ts` — prayer timeline entries: next prayer per boundary, tomorrow's list after Isha, stale when stored days run out
+  - `services/widgets/timeline.test.ts` — prayer timeline entries: next prayer per boundary, tomorrow's list after Isha, Hijri date turns once at Maghrib (no double rollover after Isha), stale when stored days run out
   - `services/widgets/verseFit.test.ts` — verse layout tiers; every verse in the Quran fits at or above the minimum size
   - `services/widgets/sync.test.ts` — themed timeline push, 7-day horizon, offline keeps old data, verse pinning and push
   - `hooks/useWidgetSync.test.ts` — syncs on mount, foreground, settings and theme changes

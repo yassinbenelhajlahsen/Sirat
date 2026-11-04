@@ -1,4 +1,5 @@
 import type { PrayerTime } from "@/services/prayerTimes";
+import { formatHijriDate } from "@/utils/hijriDate";
 import { parsePrayerTime } from "@/utils/prayerDial";
 
 export const WIDGET_PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"] as const;
@@ -40,22 +41,20 @@ function parseDay({ date, times }: WidgetDay): ParsedDay | null {
   return { date, prayers, sunrise, sunriseAt };
 }
 
-// Same calls Home uses, so the widget shows the dates the app shows.
-function dateLabels(date: Date) {
+// Same calls Home uses, so the widget shows the dates the app shows. The Gregorian date
+// is the listed day's; the Hijri date follows the moment `at`, turning at that evening's
+// Maghrib (after Isha the list is tomorrow's, but the moment is still tonight).
+function dateLabels(day: Date, at: Date, parsed: ParsedDay[]) {
+  const sameDay = parsed.find((p) => p.date.toDateString() === at.toDateString());
+  const maghrib = sameDay?.prayers.find((p) => p.name === "Maghrib")?.at;
   return {
     gregorian: new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-    }).format(date),
+    }).format(day),
     // The era suffix (" AH") is dropped: it is what the lock screen truncates.
-    hijri: new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    })
-      .format(date)
-      .replace(/\s*AH$/, ""),
+    hijri: formatHijriDate(at, maghrib ? new Date(maghrib) : null).replace(/\s*AH$/, ""),
   };
 }
 
@@ -93,7 +92,7 @@ export function buildPrayerTimeline(days: WidgetDay[], now: Date): PrayerTimelin
       next: day?.prayers[day.prayers.length - 1] ?? EMPTY_SLOT,
       prayers: day?.prayers ?? [],
       sunrise: day?.sunrise ?? "",
-      ...dateLabels(day?.date ?? date),
+      ...dateLabels(day?.date ?? date, date, parsed),
     },
   });
 
@@ -108,7 +107,7 @@ export function buildPrayerTimeline(days: WidgetDay[], now: Date): PrayerTimelin
         next: slot,
         prayers: day.prayers,
         sunrise: day.sunrise,
-        ...dateLabels(day.date),
+        ...dateLabels(day.date, date, parsed),
       },
     };
   };

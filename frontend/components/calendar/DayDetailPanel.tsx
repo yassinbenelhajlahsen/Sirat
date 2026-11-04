@@ -13,6 +13,7 @@ import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
+import { formatHijriDate, maghribOn } from "@/utils/hijriDate";
 
 type DayDetailPanelProps = {
   date: Date;
@@ -49,11 +50,10 @@ export default function DayDetailPanel({
 
   const dateLine = formatWeekdayMonthDay(date);
 
-  const hijri = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date);
+  // Only today's panel tracks the clock; other days show their daytime date, which is the one holidays are keyed to.
+  const hijri = isToday
+    ? formatHijriDate(new Date(), maghribOn(date, prayerTimes))
+    : formatHijriDate(date);
 
   return (
     <View style={styles.root}>

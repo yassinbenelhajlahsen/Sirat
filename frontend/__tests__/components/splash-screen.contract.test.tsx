@@ -1,11 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import * as Location from "expo-location";
 import { StyleSheet } from "react-native";
 
 import SplashScreen from "@/components/SplashScreen";
 import { ThemeProvider } from "@/context/ThemeContext";
 import hadiths from "@/assets/data/hadiths.json";
 import { darkTheme, lightTheme } from "@/constants/theme";
+
+jest.mock("expo-location", () => ({
+  getForegroundPermissionsAsync: jest.fn(async () => ({ status: "undetermined" })),
+  getLastKnownPositionAsync: jest.fn(async () => null),
+}));
 
 const LAST_SPLASH_KEY = "lastSplashDate";
 
@@ -25,6 +31,18 @@ describe("SplashScreen", () => {
   // The wordmark stays on the system face, but sets above the type scale: the
   // scale tops out at 34 for screens that also carry UI, and this one carries
   // none, so it is set for a page rather than an interface.
+  // The launch check gates both the masthead and leaving the splash, so a location
+  // call that never answers must not hold it: the sunset lookup gives up after 300ms.
+  it("finishes the launch check when the location never answers", async () => {
+    jest.mocked(Location.getForegroundPermissionsAsync).mockResolvedValueOnce({
+      status: "granted",
+    } as Location.LocationPermissionResponse);
+    jest.mocked(Location.getLastKnownPositionAsync).mockReturnValueOnce(new Promise(() => {}));
+
+    const { getByTestId } = renderSplash();
+    await waitFor(() => expect(getByTestId("splash-passage")).toBeTruthy());
+  });
+
   it("sets the wordmark large, in the system face", async () => {
     const { getByTestId, getByText } = renderSplash();
     await waitFor(() => expect(getByTestId("splash-wordmark")).toBeTruthy());

@@ -19,6 +19,7 @@ import Screen from "@/components/ui/Screen";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { getGreeting } from "@/utils/greeting";
+import { formatHijriDate, maghribOn } from "@/utils/hijriDate";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
@@ -80,9 +81,7 @@ export default function Home() {
 
   const baseGreeting = getGreeting(today);
   const displayName = isSignedIn && firstName && firstName.length < 10 ? firstName : null;
-  const islamicDate = new Intl.DateTimeFormat("en-TN-u-ca-islamic", {
-    day: "numeric", month: "long", year: "numeric",
-  }).format(today);
+  const islamicDate = formatHijriDate(today, maghribOn(today, prayerTimes));
   const gregorianDate = formatWeekdayMonthDay(today);
 
   const tomorrow = new Date(today);
