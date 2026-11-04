@@ -30,7 +30,7 @@ import {
   QuranAudioProvider,
   useQuranAudioController,
 } from "@/context/QuranAudioProvider";
-import { glassTintFor } from "@/constants/theme";
+import { glassTintFor, type ThemeName } from "@/constants/theme";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { useNativeHeaderOptions } from "@/hooks/useNativeHeaderOptions";
 import { preloadQuranData } from "@/services/quranData";
@@ -42,6 +42,7 @@ import { NotificationService } from "../services/notificationService";
 import { routeNotificationResponse } from "@/services/notifications/response";
 import ForceUpdateGate from "@/components/ForceUpdateGate";
 import SplashScreen from "@/components/SplashScreen";
+import { SkyGradient } from "@/components/splash/SplashSky";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
 import { getVersionHeaders } from "@/services/appVersion";
 import { useSyncEngine } from "@/hooks/useSyncEngine";
@@ -52,6 +53,15 @@ ExpoSplash.preventAutoHideAsync().catch(() => {});
 const LAUNCH_BACKGROUND_COLOR = "#0E1117";
 const LAUNCH_UPDATE_TIMEOUT_MS = 3000;
 SystemUI.setBackgroundColorAsync(LAUNCH_BACKGROUND_COLOR).catch(() => {});
+
+// The splash sky's backdrop baked per theme (scripts/generate-reload-sky.ts). The
+// native reload screen can only show a color or an image, so this is how it gets
+// the same gradient the splash then draws its stars and text onto.
+const RELOAD_SKY_IMAGES: Record<ThemeName, number> = {
+  default: require("../assets/reload/sky-default.png"),
+  dark: require("../assets/reload/sky-dark.png"),
+  light: require("../assets/reload/sky-light.png"),
+};
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
@@ -231,10 +241,10 @@ function RootLayoutContent() {
   const isApplyingUpdateRef = useRef(false);
   const audioPlayingRef = useRef(false);
   // Read at reload time so applyUpdate stays stable across theme hydration.
-  const reloadColorsRef = useRef(theme.colors);
+  const reloadThemeRef = useRef(theme);
   useEffect(() => {
-    reloadColorsRef.current = theme.colors;
-  }, [theme.colors]);
+    reloadThemeRef.current = theme;
+  }, [theme]);
   const mountedRef = useRef(true);
 
   // Resolves true once an update is downloaded and waiting to be applied.
@@ -289,8 +299,9 @@ function RootLayoutContent() {
     if (isApplyingUpdateRef.current) return;
     isApplyingUpdateRef.current = true;
 
-    // primary is the middle of the Screen/Splash gradient; primaryDark reads as gray.
-    const { primary, accent } = reloadColorsRef.current;
+    const reloadTheme = reloadThemeRef.current;
+    // primary sits mid-gradient; it only shows if the sky image fails to load.
+    const { primary, accent } = reloadTheme.colors;
     SystemUI.setBackgroundColorAsync(primary).catch(() => {});
     setShowReloadCover(true);
     setShowSplash(true);
@@ -313,8 +324,15 @@ function RootLayoutContent() {
 
       await Updates.reloadAsync({
         reloadScreenOptions: {
+          // Stretched full screen so each row lands where the splash gradient
+          // draws it. The view is clear until the image decodes, which shows the
+          // matching cover below rather than a flat color.
+          image: RELOAD_SKY_IMAGES[reloadTheme.name],
+          imageFullScreen: true,
+          imageResizeMode: "stretch",
           backgroundColor: primary,
-          spinner: { color: accent },
+          // No spinner; it only comes back (in gold) if the image fails to load.
+          spinner: { enabled: false, color: accent },
           fade: true,
         },
       });
@@ -539,7 +557,8 @@ function RootLayoutContent() {
           </View>
         )}
 
-        {/* Opaque fallback used right before runtime OTA reload to prevent white-frame flashes */}
+        {/* Covers the app right before an OTA reload with the same sky the native
+            reload screen and the next splash use, so the handoff doesn't flash. */}
         <View
           style={{
             position: "absolute",
@@ -551,7 +570,9 @@ function RootLayoutContent() {
             opacity: showReloadCover ? 1 : 0,
           }}
           pointerEvents={showReloadCover ? "auto" : "none"}
-        />
+        >
+          {showReloadCover ? <SkyGradient theme={theme} /> : null}
+        </View>
 
         <ForceUpdateGate
           visible={forceUpdate !== null}

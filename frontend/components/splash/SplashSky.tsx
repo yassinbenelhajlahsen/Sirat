@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
+import { skyBackdrop, VIGNETTE_HEIGHT } from "@/components/splash/skyBackdrop";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 
 /** `x`/`y` are percentages of the parent. `opacity` dims one star within its layer. */
@@ -153,6 +154,26 @@ export function StarLayerView({
 }
 
 /**
+ * The sky's gradient and vignette, without the glow or stars. Also drawn as the
+ * cover just before an OTA reload, and baked into `assets/reload/` for the native
+ * reload screen, so all three line up.
+ */
+export function SkyGradient({ theme }: { theme: Pick<AppTheme, "name" | "colors"> }) {
+  const { colors, locations, vignette } = skyBackdrop(theme);
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <LinearGradient colors={colors} locations={locations} style={StyleSheet.absoluteFill} />
+      {vignette ? (
+        <LinearGradient
+          colors={[withOpacity(vignette.color, vignette.alpha), "transparent"]}
+          style={styles.vignette}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+/**
  * Night sky for the splash: a vertical gradient, a horizon glow that breathes,
  * (only when given a glow to follow), and three layers of twinkling stars. On the Light theme it is a dawn: cream
  * sky with faint gold dust. Absolute-fill and non-interactive.
@@ -193,21 +214,7 @@ export default function SplashSky({
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <LinearGradient
-        colors={
-          isLight
-            ? [colors.primaryLift, colors.primary, colors.primaryDeep]
-            : [colors.primaryDark, colors.primaryDeep, colors.primaryLift]
-        }
-        locations={isLight ? [0, 0.5, 1] : [0, 0.4, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-      {isLight ? null : (
-        <LinearGradient
-          colors={[withOpacity(colors.black, 0.5), "transparent"]}
-          style={styles.vignette}
-        />
-      )}
+      <SkyGradient theme={theme} />
       {glow ? (
         <Animated.View
           testID={`splash-glow-${glow.variant}`}
@@ -244,7 +251,7 @@ export default function SplashSky({
 }
 
 const styles = StyleSheet.create({
-  vignette: { position: "absolute", left: 0, right: 0, top: 0, height: "40%" },
+  vignette: { position: "absolute", left: 0, right: 0, top: 0, height: `${VIGNETTE_HEIGHT * 100}%` as const },
   horizon: {
     position: "absolute",
     left: "-25%",

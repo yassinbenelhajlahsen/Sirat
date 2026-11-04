@@ -125,6 +125,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `splash screen (night sky + khatam) testing`
   - `components/splash-screen.contract.test.tsx` — wordmark set above the type scale in the system face with Dynamic Type pinned off and no tagline, the emblem lettering and the hadith Arabic in Amiri (smaller for a long hadith), today's hadith on the first launch of the day and none on a repeat launch, Hijri date only (no Gregorian), the wordmark anchored identically on both launch paths, and the native splash hidden only after a layout pass
   - `components/splash-sky.test.tsx` — the seeded star field stays at 3–4 twinkle layers with every star inside the screen, and one view renders per star
+  - `components/reload-sky.test.ts` — the committed OTA reload-screen PNGs (`assets/reload/sky-*.png`) match the splash sky's gradient and vignette row for row for every theme (re-run `scripts/generate-reload-sky.ts` if it fails)
 - `home prayer arc (horizontal progress thumb) testing`
   - `utils/prayer-dial.test.ts` — dial geometry (noon at top, markers at true angular time), ring construction, disc stops, star field, marker fallbacks
   - `utils/sky.test.ts` — solar palette: pins that `suncalc` altitude is in DEGREES, plus horizon/zenith behaviour at low, high and negative sun

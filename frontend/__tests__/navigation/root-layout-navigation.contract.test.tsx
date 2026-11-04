@@ -154,6 +154,15 @@ describe("root layout navigation contract", () => {
     await waitFor(() => {
       expect(updates.reloadAsync).toHaveBeenCalled();
     });
+    // The native reload screen shows the splash sky image full screen, with no spinner.
+    expect(updates.reloadAsync).toHaveBeenCalledWith({
+      reloadScreenOptions: expect.objectContaining({
+        image: expect.anything(),
+        imageFullScreen: true,
+        imageResizeMode: "stretch",
+        spinner: expect.objectContaining({ enabled: false }),
+      }),
+    });
 
     (global as any).__DEV__ = devFlag;
     updates.isEnabled = false;
