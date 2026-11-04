@@ -21,9 +21,6 @@ export function minVersionGate(
   }
 
   const version = req.headers["x-sirat-app-version"] as string | undefined;
-  const platform = req.headers["x-sirat-platform"] as string | undefined;
-
-  // Enforcement mode
   const currentVersion = version ?? "unknown";
   const isOutdated =
     !version || isVersionLessThan(version, ENV.MIN_SUPPORTED_APP_VERSION);

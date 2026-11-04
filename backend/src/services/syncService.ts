@@ -14,6 +14,8 @@ function emptyDoc(domain: SyncDomain): unknown {
   return domain === "habits" ? [] : {};
 }
 
+// Stored and incoming docs are untyped JSON; each branch hands them to that domain's typed merge.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mergeDomain(domain: SyncDomain, stored: any, incoming: any): unknown {
   switch (domain) {
     case "prayer_log":

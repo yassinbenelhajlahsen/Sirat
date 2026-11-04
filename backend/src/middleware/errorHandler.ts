@@ -2,10 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import { ENV } from "../config/env.js";
 
 export function errorHandler(
-  err: any,
+  err: { status?: number; message?: string },
   req: Request,
   res: Response,
-  next: NextFunction,
+  // Express only treats a 4-argument middleware as an error handler.
+  _next: NextFunction,
 ) {
   console.error("❌ Unhandled error:", err);
 

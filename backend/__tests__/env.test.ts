@@ -28,7 +28,6 @@ describe("ENV configuration", () => {
     delete process.env.FRONTEND_URL;
     delete process.env.LOG_LEVEL;
     delete process.env.MIN_SUPPORTED_APP_VERSION;
-    delete process.env.ENFORCE_MIN_VERSION;
 
     const { ENV } = await import("../src/config/env.js");
 
@@ -40,7 +39,6 @@ describe("ENV configuration", () => {
     expect(ENV.FRONTEND_URL).toBe("http://localhost:8081");
     expect(ENV.LOG_LEVEL).toBe("info");
     expect(ENV.MIN_SUPPORTED_APP_VERSION).toBe("1.0.0");
-    expect(ENV.ENFORCE_MIN_VERSION).toBe("false");
   });
 
   it("should use custom values when env vars are set", async () => {
@@ -52,7 +50,6 @@ describe("ENV configuration", () => {
     process.env.FRONTEND_URL = "https://example.com";
     process.env.LOG_LEVEL = "debug";
     process.env.MIN_SUPPORTED_APP_VERSION = "2.0.0";
-    process.env.ENFORCE_MIN_VERSION = "true";
 
     const { ENV } = await import("../src/config/env.js");
 
@@ -64,7 +61,6 @@ describe("ENV configuration", () => {
     expect(ENV.FRONTEND_URL).toBe("https://example.com");
     expect(ENV.LOG_LEVEL).toBe("debug");
     expect(ENV.MIN_SUPPORTED_APP_VERSION).toBe("2.0.0");
-    expect(ENV.ENFORCE_MIN_VERSION).toBe("true");
   });
 
   it("should handle missing OPENAI_API_KEY gracefully", async () => {

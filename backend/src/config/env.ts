@@ -8,7 +8,6 @@ export const ENV = {
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:8081",
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
   MIN_SUPPORTED_APP_VERSION: process.env.MIN_SUPPORTED_APP_VERSION || "1.0.0",
-  ENFORCE_MIN_VERSION: process.env.ENFORCE_MIN_VERSION || "false",
   DATABASE_URL: process.env.DATABASE_URL || "",
   SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL || "",
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || "",

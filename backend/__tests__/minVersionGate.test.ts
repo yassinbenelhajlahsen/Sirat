@@ -55,7 +55,6 @@ describe("minVersionGate middleware", () => {
 
   describe("exempt paths", () => {
     it("passes through GET /", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "99.0.0";
       const mw = await loadMiddleware();
       const { res } = buildRes();
@@ -67,7 +66,6 @@ describe("minVersionGate middleware", () => {
     });
 
     it("passes through /api/app/version", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "99.0.0";
       const mw = await loadMiddleware();
       const { res } = buildRes();
@@ -83,7 +81,6 @@ describe("minVersionGate middleware", () => {
     });
 
     it("passes through any /health path", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "99.0.0";
       const mw = await loadMiddleware();
 
@@ -102,63 +99,8 @@ describe("minVersionGate middleware", () => {
     });
   });
 
-  describe("monitor mode (ENFORCE_MIN_VERSION=false)", () => {
-    it("passes all requests through, including missing headers", async () => {
-      process.env.ENFORCE_MIN_VERSION = "false";
-      const mw = await loadMiddleware();
-      const { res } = buildRes();
-
-      mw(
-        buildReq("/api/dua") as Request,
-        res as Response,
-        nextMock as NextFunction,
-      );
-
-      expect(nextMock).toHaveBeenCalledTimes(1);
-      expect(res.status).not.toHaveBeenCalled();
-    });
-
-    it("passes outdated versions through in monitor mode", async () => {
-      process.env.ENFORCE_MIN_VERSION = "false";
-      process.env.MIN_SUPPORTED_APP_VERSION = "99.0.0";
-      const mw = await loadMiddleware();
-      const { res } = buildRes();
-
-      mw(
-        buildReq("/api/dua", {
-          "x-sirat-app-version": "0.0.1",
-        }) as Request,
-        res as Response,
-        nextMock as NextFunction,
-      );
-
-      expect(nextMock).toHaveBeenCalledTimes(1);
-      expect(res.status).not.toHaveBeenCalled();
-    });
-
-    it("logs version info in monitor mode", async () => {
-      process.env.ENFORCE_MIN_VERSION = "false";
-      const mw = await loadMiddleware();
-      const { res } = buildRes();
-
-      mw(
-        buildReq("/api/dua", {
-          "x-sirat-app-version": "1.0.10",
-          "x-sirat-platform": "ios",
-        }) as Request,
-        res as Response,
-        nextMock as NextFunction,
-      );
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("1.0.10"),
-      );
-    });
-  });
-
-  describe("enforcement mode (ENFORCE_MIN_VERSION=true)", () => {
+  describe("enforcement", () => {
     it("passes through a current version", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "1.0.10";
       const mw = await loadMiddleware();
       const { res } = buildRes();
@@ -174,7 +116,6 @@ describe("minVersionGate middleware", () => {
     });
 
     it("passes through a newer version", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "1.0.10";
       const mw = await loadMiddleware();
       const { res } = buildRes();
@@ -189,7 +130,6 @@ describe("minVersionGate middleware", () => {
     });
 
     it("returns 426 for an outdated version", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "1.0.10";
       const mw = await loadMiddleware();
       const { res, statusMock, jsonMock } = buildRes();
@@ -210,7 +150,6 @@ describe("minVersionGate middleware", () => {
     });
 
     it("returns 426 when version header is missing", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "1.0.10";
       const mw = await loadMiddleware();
       const { res, statusMock, jsonMock } = buildRes();
@@ -228,7 +167,6 @@ describe("minVersionGate middleware", () => {
     });
 
     it("does not include storeUrl in the 426 response", async () => {
-      process.env.ENFORCE_MIN_VERSION = "true";
       process.env.MIN_SUPPORTED_APP_VERSION = "99.0.0";
       const mw = await loadMiddleware();
       const { res, jsonMock } = buildRes();

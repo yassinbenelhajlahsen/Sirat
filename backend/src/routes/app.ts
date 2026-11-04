@@ -7,7 +7,7 @@ const router = Router();
 
 /**
  * GET /api/app/version
- * Proactive version compatibility check — always available regardless of ENFORCE_MIN_VERSION.
+ * Proactive version compatibility check — exempt from the version gate, so outdated builds can still ask.
  * Reads x-sirat-app-version header.
  */
 router.get("/version", (req: Request, res: Response): void => {

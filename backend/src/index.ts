@@ -46,7 +46,7 @@ app.use(
   }),
 );
 
-// Version gate middleware (monitor mode by default, enforcement via ENFORCE_MIN_VERSION=true)
+// Version gate: always blocks builds below MIN_SUPPORTED_APP_VERSION with 426.
 app.use(minVersionGate);
 
 // Routes
