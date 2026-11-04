@@ -22,6 +22,7 @@ import { useSplashChoreography } from "@/components/splash/useSplashChoreography
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { getEffectivePrayerSettings } from "@/services/prayerSettings";
+import { getAlwaysFirstSplash } from "@/utils/devSplash";
 import { formatHijriDate } from "@/utils/hijriDate";
 import { sunDay } from "@/utils/sky";
 import hadiths from "../assets/data/hadiths.json";
@@ -134,8 +135,9 @@ export default function SplashScreen({ ready, onReadyToHideNative, onFinished }:
         const today = now.toDateString();
         // Resolved alongside the launch check, which already holds the masthead back,
         // so the date appears already turned rather than flipping mid-splash.
-        const [lastSplash, sunset] = await Promise.all([
+        const [lastSplash, alwaysFirst, sunset] = await Promise.all([
           AsyncStorage.getItem(LAST_SPLASH_KEY),
+          getAlwaysFirstSplash(),
           // Capped: this check also gates leaving the splash, so a slow location answer
           // falls back to the daytime date (off by one only between sunset and midnight).
           Promise.race([
@@ -145,7 +147,7 @@ export default function SplashScreen({ ready, onReadyToHideNative, onFinished }:
         ]);
         setHijriDate(formatHijriDate(now, sunset));
 
-        if (lastSplash !== today) {
+        if (alwaysFirst || lastSplash !== today) {
           setLaunch("first");
           await AsyncStorage.setItem(LAST_SPLASH_KEY, today);
         } else {

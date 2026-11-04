@@ -1,5 +1,7 @@
+import { appNow } from "./devClock";
+
 export default function getTimeUntil(nextTime: Date): string {
-  const now = new Date();
+  const now = appNow();
   const diffMs = nextTime.getTime() - now.getTime();
 
   if (diffMs <= 0) return "Now";

@@ -102,6 +102,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `flows/nearby-mosques-refresh.flow.test.tsx`
 - `visual refresh foundations (Plan 1) testing`
   - `utils/greeting.test.ts`
+  - `utils/devClock.test.ts` — dev-only pretend time of day: real time by default, moves today's clock to the chosen hour and minute, clears back to real time
   - `utils/formatDate.test.ts` — ordinal day suffixes (1st/2nd/3rd/11th-13th) for the dial centre and calendar day title
   - `utils/hijriDate.test.ts` — shared Hijri date: Umm al-Qura (matches the holiday feed), rolls to the next day at Maghrib; `isFastingDay` / `ramadanDayAt` on the Ramadan 1448 boundaries
   - `utils/ramadanCountdown.test.ts` — Home Ramadan card state: hidden/shown, suhoor vs iftar target, Maghrib rollover, last-day end
@@ -125,7 +126,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/ui/aurora.test.tsx` — the exported bloom opacities stay toned down
   - `hooks/useScreenMargin.test.ts` — 16 under 400pt, 20 at 430pt
 - `splash screen (night sky + khatam) testing`
-  - `components/splash-screen.contract.test.tsx` — wordmark set above the type scale in the system face with Dynamic Type pinned off and no tagline, the emblem lettering and the hadith Arabic in Amiri (smaller for a long hadith), today's hadith on the first launch of the day and none on a repeat launch, Hijri date only (no Gregorian), the wordmark anchored identically on both launch paths, and the native splash hidden only after a layout pass
+  - `components/splash-screen.contract.test.tsx` — wordmark set above the type scale in the system face with Dynamic Type pinned off and no tagline, the emblem lettering and the hadith Arabic in Amiri (smaller for a long hadith), today's hadith on the first launch of the day and none on a repeat launch (unless the dev-only "always first-launch splash" switch is on), Hijri date only (no Gregorian), the wordmark anchored identically on both launch paths, and the native splash hidden only after a layout pass
   - `components/splash-sky.test.tsx` — the seeded star field stays at 3–4 twinkle layers with every star inside the screen, and one view renders per star
   - `components/reload-sky.test.ts` — the committed OTA reload-screen PNGs (`assets/reload/sky-*.png`) match the splash sky's gradient and vignette row for row for every theme (re-run `scripts/generate-reload-sky.ts` if it fails)
 - `home prayer arc (horizontal progress thumb) testing`

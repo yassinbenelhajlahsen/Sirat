@@ -32,6 +32,7 @@ import { usePrayerDay } from "../../hooks/usePrayerDay";
 import { useKeyboardAutoScroll } from "../../hooks/useKeyboardAutoScroll";
 import { useTrackingStats } from "@/hooks/useTrackingStats";
 import { openAppSettings } from "@/utils/openAppSettings";
+import { appNow } from "@/utils/devClock";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -56,7 +57,7 @@ export default function Home() {
   }, [submitDua, scrollViewRef]);
 
 
-  const today = new Date();
+  const today = appNow();
   const stats = useTrackingStats();
 
   const { isLoaded, isSignedIn, firstName } = useAuthState();

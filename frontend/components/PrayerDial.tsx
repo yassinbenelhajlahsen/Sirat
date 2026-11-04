@@ -40,6 +40,7 @@ import {
   type RingSegment,
 } from "@/utils/prayerDial";
 import { sunDay } from "@/utils/sky";
+import { appNow, usePretendClock } from "@/utils/devClock";
 
 /**
  * The sky moves slowly. Colour never shifts more than ~0.011 Oklab in a minute,
@@ -141,13 +142,14 @@ export default function PrayerDial({
   const reduceMotion = useReducedMotion();
 
   // The sky advances on its own clock. `now` short-circuits it for tests.
-  const [tick, setTick] = useState(() => now ?? new Date());
+  const pretend = usePretendClock();
+  const [tick, setTick] = useState(() => now ?? appNow());
   useEffect(() => {
     if (now || !live) return;
-    setTick(new Date());
-    const id = setInterval(() => setTick(new Date()), SKY_TICK_MS);
+    setTick(appNow());
+    const id = setInterval(() => setTick(appNow()), SKY_TICK_MS);
     return () => clearInterval(id);
-  }, [now, live]);
+  }, [now, live, pretend]);
   const at = now ?? tick;
 
   // Turning stars move between dark and lit patches, so their brightness needs

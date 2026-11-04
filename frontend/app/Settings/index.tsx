@@ -9,11 +9,11 @@ import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsRow from "@/components/settings/SettingsRow";
 import ThemePicker from "@/components/settings/ThemePicker";
 import PickerDialog from "@/components/settings/PickerDialog";
+import DeveloperSection from "@/components/settings/DeveloperSection";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useRamadanMode } from "@/hooks/useRamadanMode";
-import { isPretendingRamadan, setPretendRamadan } from "@/utils/hijriDate";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useAccountActions } from "@/hooks/useAccountActions";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
@@ -65,7 +65,6 @@ export default function Settings() {
   const locationOn = useLocation && locationAllowed !== false;
 
   const { ramadanMode, setRamadanMode } = useRamadanMode();
-  const [pretendRamadan, setPretendRamadanState] = useState(isPretendingRamadan);
 
   const [methodModalVisible, setMethodModalVisible] = useState(false);
 
@@ -229,26 +228,7 @@ export default function Settings() {
         </SettingsSection>
 
         {/* About */}
-        {__DEV__ ? (
-          <SettingsSection label="Developer" footer="Treats every day as Ramadan to preview Ramadan mode. Resets when the app reloads.">
-            <SettingsRow
-              first
-              icon="construct-outline"
-              title="Pretend it's Ramadan"
-              trailing={
-                <Switch
-                  accessibilityLabel="Pretend it's Ramadan"
-                  value={pretendRamadan}
-                  onValueChange={(val) => {
-                    setPretendRamadan(val);
-                    setPretendRamadanState(val);
-                  }}
-                  trackColor={{ false: colors.grayDark, true: colors.accent }}
-                />
-              }
-            />
-          </SettingsSection>
-        ) : null}
+        {__DEV__ ? <DeveloperSection /> : null}
 
         <SettingsSection label="About">
           <SettingsRow first icon="star-outline" title="Rate Sirat" showChevron onPress={rateApp} />

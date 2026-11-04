@@ -145,6 +145,7 @@ jest.mock("@expo/ui/swift-ui", () => {
   const Passthrough = ({ children }: any) => React.createElement(View, null, children);
   return {
     Host: Passthrough,
+    DatePicker: () => null,
     Group: Passthrough,
     RNHostView: Passthrough,
     BottomSheet: ({ isPresented, children }: any) =>
@@ -184,6 +185,7 @@ jest.mock("@expo/ui/swift-ui/modifiers", () => {
     tag: (tag: unknown) => ({ tag }),
     accessibilityLabel: (accessibilityLabel: string) => ({ accessibilityLabel }),
     pickerStyle: modifier,
+    datePickerStyle: modifier,
     interactiveDismissDisabled: modifier,
     preferredColorScheme: modifier,
     presentationBackgroundInteraction: modifier,

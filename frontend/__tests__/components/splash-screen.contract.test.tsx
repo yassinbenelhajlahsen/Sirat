@@ -7,6 +7,7 @@ import SplashScreen from "@/components/SplashScreen";
 import { ThemeProvider } from "@/context/ThemeContext";
 import hadiths from "@/assets/data/hadiths.json";
 import { darkTheme, lightTheme } from "@/constants/theme";
+import { DEV_ALWAYS_FIRST_SPLASH_KEY } from "@/utils/devSplash";
 
 jest.mock("expo-location", () => ({
   getForegroundPermissionsAsync: jest.fn(async () => ({ status: "undetermined" })),
@@ -122,6 +123,14 @@ describe("SplashScreen", () => {
     await waitFor(async () =>
       expect(await AsyncStorage.getItem(LAST_SPLASH_KEY)).toBe(new Date().toDateString()),
     );
+  });
+
+  it("shows the passage on every launch when the dev switch is on", async () => {
+    await AsyncStorage.setItem(LAST_SPLASH_KEY, new Date().toDateString());
+    await AsyncStorage.setItem(DEV_ALWAYS_FIRST_SPLASH_KEY, "1");
+
+    const { getByTestId } = renderSplash();
+    await waitFor(() => expect(getByTestId("splash-passage")).toBeTruthy());
   });
 
   // The passage is the first launch of the day only; every launch after that is

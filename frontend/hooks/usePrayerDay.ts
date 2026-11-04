@@ -11,6 +11,7 @@ import { getPrayerTimesForDate, getPrayerTimesToday } from "@/services/prayerTim
 import type { PrayerName } from "@/services/prayerTracker";
 import { prayerSettingsSetting } from "@/services/syncedSettings";
 import { dateKeyFromDate } from "@/utils/dateKey";
+import { appNow } from "@/utils/devClock";
 import { formatHijriDate, isFastingDay } from "@/utils/hijriDate";
 
 export type PrayerDayError = { code: "LOCATION" | "GENERIC"; message: string };
@@ -86,8 +87,8 @@ export function usePrayerDay(source: Date | "today" | null) {
         if (!mounted) return;
 
         if (live) {
-          const hasUpcoming = nextSlot(day, new Date()) !== null;
-          const tomorrow = new Date();
+          const hasUpcoming = nextSlot(day, appNow()) !== null;
+          const tomorrow = appNow();
           tomorrow.setDate(tomorrow.getDate() + 1);
           const tomorrowFasting = isFastingDay(tomorrow);
           let fajr: Date | null = null;
@@ -171,7 +172,7 @@ export function usePrayerDay(source: Date | "today" | null) {
   const shown = live || prayerDay?.dateKey === dayKey ? prayerDay : null;
   const { nextPrayer, timeLeft } = useNextPrayer(shown);
 
-  const markKey = live ? dateKeyFromDate(new Date()) : (dayKey ?? "");
+  const markKey = live ? dateKeyFromDate(appNow()) : (dayKey ?? "");
   const { statuses, setStatus, clearStatus } = usePrayerLog(markKey);
   const [sheet, setSheet] = useState<{ name: PrayerName; label: string } | null>(null);
   const logSheet = {
@@ -194,11 +195,11 @@ export function usePrayerDay(source: Date | "today" | null) {
     [],
   );
 
-  const isToday = live || markKey === dateKeyFromDate(new Date());
+  const isToday = live || markKey === dateKeyFromDate(appNow());
   // Only today's date follows the clock (it turns at Maghrib); other days show their daytime date,
   // which is the one holidays are keyed to.
   const hijri = isToday
-    ? formatHijriDate(new Date(), maghribOf(shown))
+    ? formatHijriDate(appNow(), maghribOf(shown))
     : date
       ? formatHijriDate(date)
       : "";
