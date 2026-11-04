@@ -6,6 +6,7 @@ beforeEach(async () => { await AsyncStorage.clear(); });
 it("covers exactly the synced setting keys", () => {
   expect(SETTINGS_REGISTRY.map((e) => e.key).sort()).toEqual(
     [
+      "duaSaved",
       "notifFriday",
       "notifPrefs",
       "notifSoundMode",

@@ -835,6 +835,12 @@ describe("Screen contracts", () => {
       expect(mockPush).toHaveBeenCalledWith("/Settings");
     });
 
+    it("opens the dua library from the Browse duas link", () => {
+      const { getByLabelText } = render(<Home />);
+      fireEvent.press(getByLabelText("Browse duas"));
+      expect(mockPush).toHaveBeenCalledWith("/Duas");
+    });
+
     it("navigates to the calendar with tomorrow selected from the completion branch", () => {
       mockUseHomePrayerTimes.mockReturnValue(
         buildHomePrayerState({

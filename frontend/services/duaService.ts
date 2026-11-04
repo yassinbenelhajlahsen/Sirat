@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Network from "expo-network";
 import { AppUpdateRequiredError, apiPost } from "./apiClient";
 import { matchByRegex } from "./duaMatcher";
+import { topicForCategory, type DuaTopic } from "./duaTopics";
 
 /**
  * Frontend Dua Service (offline-first)
@@ -62,16 +63,25 @@ function getRandomDuaByCategory(category: string): Dua | null {
   return toDua(matches[randomIndex]);
 }
 
-// A different dua for the same need — never the one currently shown. Prefers the
-// same category; falls back to the wider pool when the category has no other dua.
-export function getAnotherDua(category: string, excludeId: number): Dua | null {
-  const sameCategory = LOCAL_DUAS.filter(
-    (dua) => dua.category === category && dua.id !== excludeId,
-  );
+export function getDuasForTopic(topicId: string): Dua[] {
+  return LOCAL_DUAS.filter((dua) => topicForCategory(dua.category)?.id === topicId).map(toDua);
+}
+
+export function getDuaById(id: number): Dua | null {
+  const found = LOCAL_DUAS.find((dua) => dua.id === id);
+  return found ? toDua(found) : null;
+}
+
+// A different dua for the same need, never the one currently shown. Prefers the
+// displayed topic; falls back to the wider pool when the topic has no other dua.
+export function getAnotherDua(topic: DuaTopic | undefined, excludeId: number): Dua | null {
+  const sameTopic = topic
+    ? LOCAL_DUAS.filter(
+        (dua) => dua.id !== excludeId && topicForCategory(dua.category)?.id === topic.id,
+      )
+    : [];
   const pool =
-    sameCategory.length > 0
-      ? sameCategory
-      : LOCAL_DUAS.filter((dua) => dua.id !== excludeId);
+    sameTopic.length > 0 ? sameTopic : LOCAL_DUAS.filter((dua) => dua.id !== excludeId);
   if (pool.length === 0) {
     return null;
   }
@@ -183,15 +193,10 @@ export async function saveDuaToHistory(dua: Dua): Promise<void> {
     const raw = await AsyncStorage.getItem("dua_history_v1");
     const history: Dua[] = raw ? JSON.parse(raw) : [];
 
-    // Add to front
-    history.unshift(dua);
+    // Newest first, one entry per dua, last 10
+    const next = [dua, ...history.filter((d) => d.id !== dua.id)].slice(0, 10);
 
-    // Keep only last 10
-    if (history.length > 10) {
-      history.pop();
-    }
-
-    await AsyncStorage.setItem("dua_history_v1", JSON.stringify(history));
+    await AsyncStorage.setItem("dua_history_v1", JSON.stringify(next));
   } catch (err) {
     console.error("❌ Error saving dua to history:", err);
     // Non-fatal: don't throw, just log
@@ -211,6 +216,12 @@ export async function getDuaHistory(): Promise<Dua[]> {
     console.error("❌ Error retrieving dua history:", err);
     return [];
   }
+}
+
+/** History newest first, one entry per dua (older builds could store repeats). */
+export async function getRecentDuas(): Promise<Dua[]> {
+  const seen = new Set<number>();
+  return (await getDuaHistory()).filter((d) => !seen.has(d.id) && seen.add(d.id)).slice(0, 10);
 }
 
 /**

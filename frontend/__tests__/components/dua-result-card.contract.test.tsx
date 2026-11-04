@@ -91,6 +91,17 @@ describe("DuaResultCard contract", () => {
     expect(withoutAnother.queryByLabelText("Find another dua")).toBeNull();
   });
 
+  it("toggles the saved state from the bookmark button", async () => {
+    const { getByLabelText, findByLabelText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} />
+    );
+
+    fireEvent.press(getByLabelText("Save dua"));
+    fireEvent.press(await findByLabelText("Remove from saved duas"));
+
+    expect(await findByLabelText("Save dua")).toBeTruthy();
+  });
+
   it("wires share button with expected payload", async () => {
     const shareSpy = jest
       .spyOn(Share, "share")

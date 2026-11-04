@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Network from "expo-network";
 
-import { clearDuaHistory, getDuaHistory, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
+import { clearDuaHistory, getDuaHistory, getRecentDuas, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
 
 jest.mock("@/services/apiClient", () => ({
   apiPost: jest.fn(),
@@ -152,5 +152,34 @@ describe("services/duaService", () => {
     const history = await getDuaHistory();
     expect(history).toHaveLength(10);
     expect(history[0].id).toBe(11);
+  });
+
+  it("moves a re-shown dua to the front instead of repeating it", async () => {
+    await clearDuaHistory();
+    const make = (id: number): Dua => ({
+      id,
+      category: "c",
+      arabic: "a",
+      english: "e",
+      transliteration: "t",
+      reference: "r",
+      source: "test",
+    });
+
+    await saveDuaToHistory(make(1));
+    await saveDuaToHistory(make(2));
+    await saveDuaToHistory(make(1));
+
+    expect((await getDuaHistory()).map((d) => d.id)).toEqual([1, 2]);
+  });
+
+  it("getRecentDuas drops repeats left by older builds", async () => {
+    const make = (id: number) => ({ id, category: "c", arabic: "a", english: "e", transliteration: "t", reference: "r", source: "s" });
+    await AsyncStorage.setItem(
+      "dua_history_v1",
+      JSON.stringify([make(4), make(2), make(4), make(1)]),
+    );
+
+    expect((await getRecentDuas()).map((d) => d.id)).toEqual([4, 2, 1]);
   });
 });

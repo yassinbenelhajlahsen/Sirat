@@ -53,6 +53,9 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/duaMatcher.test.ts`
   - `services/duaService.test.ts`
   - `hooks/useDuaInteraction.test.ts`
+  - `services/duaTopics.test.ts` — every category in duas.json maps to exactly one topic; "another dua" stays in the topic
+  - `services/duaSaved.test.ts` — saved dua ids (newest first, own change event for sync stamping)
+  - `screens/Duas.test.tsx` — dua library: ask box, Saved/Recent (and empty states), topics, topic list
 - `location heavy features testing`
   - `hooks/useQibla.test.ts`
   - `components/compass-dial.contract.test.tsx` (CompassDial contract — bearing/distance readout, cardinals, aligned swap)

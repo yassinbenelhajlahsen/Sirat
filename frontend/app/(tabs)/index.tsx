@@ -209,6 +209,19 @@ export default function Home() {
         <View style={styles.section} onLayout={onDuaSectionLayout}>
           <SectionHeader title="Dua" />
           {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
+          <PressableScale
+            variant="row"
+            radius={theme.radii.row}
+            onPress={() => router.push("/Duas")}
+            accessibilityRole="button"
+            accessibilityLabel="Browse duas"
+            style={styles.browseDuas}
+          >
+            <GlassSurface tier="row" radius={theme.radii.row} style={styles.trackerRow}>
+              <Body style={styles.trackerLabel}>Browse duas</Body>
+              <Subhead color={colors.textTertiary}>Topics &amp; saved</Subhead>
+            </GlassSurface>
+          </PressableScale>
         </View>
       </ScrollView>
       <PrayerLogSheet
@@ -245,6 +258,7 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: spacing.lg,
     },
     trackerLabel: { flex: 1 },
+    browseDuas: { marginTop: spacing.md },
     flame: { fontSize: 17 },
     signInCardSlot: { marginBottom: spacing.md },
   });

@@ -49,6 +49,12 @@ import {
   RAMADAN_TRACKER_UPDATED_EVENT,
 } from "@/services/ramadanTracker";
 
+import {
+  getSavedDuaIds,
+  replaceSavedDuaIds,
+  DUA_SAVED_UPDATED_EVENT,
+} from "@/services/duaSaved";
+
 async function readJson(key: string): Promise<unknown> {
   const raw = await AsyncStorage.getItem(key);
   if (raw == null) return null;
@@ -108,6 +114,14 @@ export const SETTINGS_REGISTRY: SettingEntry[] = [
     read: () => getMissedFastDays(),
     applyValue: async (v) => {
       if (v && typeof v === "object") await replaceMissedFastDays(v as Record<string, boolean>);
+    },
+  },
+  {
+    key: "duaSaved",
+    changeEvent: DUA_SAVED_UPDATED_EVENT,
+    read: () => getSavedDuaIds(),
+    applyValue: async (v) => {
+      if (Array.isArray(v)) await replaceSavedDuaIds(v.filter((id): id is number => Number.isInteger(id)));
     },
   },
   {

@@ -8,6 +8,7 @@ import { Caption, Footnote, Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useSavedDuas } from "@/hooks/useSavedDuas";
 import type { Dua } from "@/services/duaService";
 import React from "react";
 import { Clipboard, ScrollView, Share, StyleSheet, Text, View } from "react-native";
@@ -25,6 +26,8 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const haptic = useHaptics();
+  const { isSaved, toggle } = useSavedDuas();
+  const saved = isSaved(dua.id);
 
   const [mode, setMode] = React.useState<Mode>("translation");
   const [toastVisible, setToastVisible] = React.useState(false);
@@ -58,6 +61,11 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
     setToastVisible(true);
   };
 
+  const handleToggleSave = () => {
+    haptic("light");
+    void toggle(dua.id);
+  };
+
   const handleAnother = () => {
     haptic("light");
     onAnother?.();
@@ -70,13 +78,22 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
           <View style={styles.headerRow}>
             <Footnote color={colors.textTertiary}>{categoryLabel}</Footnote>
 
-            <IconButton
-              icon="close"
-              size={32}
-              iconSize={18}
-              onPress={onClose}
-              accessibilityLabel="Close dua details"
-            />
+            <View style={styles.headerButtons}>
+              <IconButton
+                icon={saved ? "bookmark" : "bookmark-outline"}
+                size={32}
+                iconSize={18}
+                onPress={handleToggleSave}
+                accessibilityLabel={saved ? "Remove from saved duas" : "Save dua"}
+              />
+              <IconButton
+                icon="close"
+                size={32}
+                iconSize={18}
+                onPress={onClose}
+                accessibilityLabel="Close dua details"
+              />
+            </View>
           </View>
 
           <View style={styles.flourish}>
@@ -170,6 +187,11 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
+    },
+    headerButtons: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
     },
     flourish: {
       flexDirection: "row",

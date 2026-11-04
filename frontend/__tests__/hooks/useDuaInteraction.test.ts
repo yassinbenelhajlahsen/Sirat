@@ -2,13 +2,15 @@ import { renderHook, act, waitFor } from "@testing-library/react-native";
 import { Alert, Animated } from "react-native";
 
 import { useDuaInteraction } from "@/hooks/useDuaInteraction";
-import { requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
+import { getAnotherDua, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
 
 jest.mock("@/services/duaService", () => ({
   requestDua: jest.fn(),
   saveDuaToHistory: jest.fn(),
+  getAnotherDua: jest.fn(),
 }));
 
+const mockGetAnotherDua = getAnotherDua as jest.MockedFunction<typeof getAnotherDua>;
 const mockRequestDua = requestDua as jest.MockedFunction<typeof requestDua>;
 const mockSaveDuaToHistory = saveDuaToHistory as jest.MockedFunction<typeof saveDuaToHistory>;
 
@@ -109,6 +111,56 @@ describe("hooks/useDuaInteraction", () => {
     await waitFor(() => {
       expect(result.current.selectedDua).toBeNull();
     });
+  });
+
+  it("showDua records history and shows the dua", async () => {
+    const dua: Dua = {
+      id: 5,
+      category: "sleep",
+      arabic: "arabic",
+      english: "english",
+      transliteration: "translit",
+      reference: "ref",
+      source: "source",
+    };
+    mockSaveDuaToHistory.mockResolvedValue();
+
+    const { result } = renderHook(() => useDuaInteraction());
+    await act(async () => {
+      await result.current.showDua(dua);
+    });
+
+    expect(mockSaveDuaToHistory).toHaveBeenCalledWith(dua);
+    expect(result.current.selectedDua).toEqual(dua);
+  });
+
+  it("asks for another dua within the shown dua's topic", async () => {
+    const shown: Dua = {
+      id: 7,
+      category: "healing",
+      arabic: "arabic",
+      english: "english",
+      transliteration: "translit",
+      reference: "ref",
+      source: "source",
+    };
+    const next: Dua = { ...shown, id: 8, category: "visiting_sick" };
+    mockSaveDuaToHistory.mockResolvedValue();
+    mockGetAnotherDua.mockReturnValue(next);
+
+    const { result } = renderHook(() => useDuaInteraction());
+    await act(async () => {
+      await result.current.showDua(shown);
+    });
+    await act(async () => {
+      result.current.anotherDua();
+    });
+
+    expect(mockGetAnotherDua).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "illness-healing" }),
+      7,
+    );
+    expect(result.current.selectedDua).toEqual(next);
   });
 
   // Both dua cards are GlassSurface, and iOS Liquid Glass renders as nothing
