@@ -37,19 +37,19 @@ jest.mock("@/context/ThemeContext", () => {
 });
 
 import PrayerDial from "@/components/PrayerDial";
+import { buildPrayerDay, slotAt } from "@/services/prayerDay";
 
 const COORDS = { latitude: 33.5731, longitude: -7.5898 };
 
-const FULL = [
+const DAY = new Date(2026, 2, 4);
+const FULL = buildPrayerDay(DAY, [
   { label: "Fajr", time: "5:35 AM" },
   { label: "Sunrise", time: "6:57 AM" },
   { label: "Dhuhr", time: "1:00 PM" },
   { label: "Asr", time: "4:15 PM" },
   { label: "Maghrib", time: "6:33 PM" },
   { label: "Isha", time: "7:53 PM" },
-];
-
-const DAY = new Date(2026, 2, 4);
+]);
 const AFTERNOON = new Date(2026, 2, 4, 17, 30, 0);
 
 describe("PrayerDial columns", () => {
@@ -57,8 +57,8 @@ describe("PrayerDial columns", () => {
     const { getByText, queryByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
-        nextPrayer={{ label: "Maghrib", time: "6:33 PM" }}
+        prayerDay={FULL}
+        nextPrayer={{ name: "Maghrib", at: slotAt(FULL, "Maghrib")! }}
         now={AFTERNOON}
         date={DAY}
         coords={COORDS}
@@ -76,7 +76,7 @@ describe("PrayerDial columns", () => {
     const { getByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
         live={false}
         date={DAY}
@@ -89,7 +89,7 @@ describe("PrayerDial columns", () => {
     const { getByText, queryByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
         live={false}
         date={DAY}
@@ -103,7 +103,7 @@ describe("PrayerDial columns", () => {
     const { getAllByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={[{ label: "Fajr", time: "5:35 AM" }]}
+        prayerDay={buildPrayerDay(DAY, [{ label: "Fajr", time: "5:35 AM" }])}
         nextPrayer={null}
         live={false}
         date={DAY}
@@ -118,8 +118,8 @@ describe("PrayerDial centre", () => {
     const { getByTestId, getByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
-        nextPrayer={{ label: "Maghrib", time: "6:33 PM" }}
+        prayerDay={FULL}
+        nextPrayer={{ name: "Maghrib", at: slotAt(FULL, "Maghrib")! }}
         timeLeft="1h 3m 12s"
         now={AFTERNOON}
         date={DAY}
@@ -136,9 +136,9 @@ describe("PrayerDial centre", () => {
     const { getByTestId, getByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
-        tomorrowFajr="5:34 AM"
+        tomorrowFajr={new Date(2026, 2, 5, 5, 34)}
         now={new Date(2026, 2, 4, 22, 0, 0)}
         date={DAY}
         coords={COORDS}
@@ -154,9 +154,9 @@ describe("PrayerDial centre", () => {
     const { getByLabelText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
-        tomorrowFajr="5:34 AM"
+        tomorrowFajr={new Date(2026, 2, 5, 5, 34)}
         now={new Date(2026, 2, 4, 22, 0, 0)}
         date={DAY}
         coords={COORDS}
@@ -174,7 +174,7 @@ describe("PrayerDial on a day that is not today", () => {
     const { getByTestId, getByText, queryByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
         live={false}
         date={PAST}
@@ -191,12 +191,12 @@ describe("PrayerDial on a day that is not today", () => {
     const { getByText, queryByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
         live={false}
         date={PAST}
         coords={COORDS}
-        statuses={{ fajr: "prayed", dhuhr: "prayed", asr: "late", isha: "missed" }}
+        statuses={{ Fajr: "prayed", Dhuhr: "prayed", Asr: "late", Isha: "missed" }}
       />,
     );
     expect(getByText("3 of 5 prayed")).toBeTruthy();
@@ -210,7 +210,7 @@ describe("PrayerDial on a day that is not today", () => {
     const { getByText, queryByText } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
         live={false}
         date={future}
@@ -225,7 +225,7 @@ describe("PrayerDial on a day that is not today", () => {
     const { UNSAFE_queryAllByProps } = render(
       <PrayerDial
         loading={false}
-        prayerTimes={FULL}
+        prayerDay={FULL}
         nextPrayer={null}
         live={false}
         date={new Date(Date.now() + 7 * 864e5)}
@@ -239,7 +239,7 @@ describe("PrayerDial on a day that is not today", () => {
     const past = new Date(2026, 2, 3, 9, 30, 0);
     const before = past.getTime();
     render(
-      <PrayerDial loading={false} prayerTimes={FULL} nextPrayer={null} live={false} date={past} />,
+      <PrayerDial loading={false} prayerDay={FULL} nextPrayer={null} live={false} date={past} />,
     );
     expect(past.getTime()).toBe(before);
   });
@@ -248,7 +248,7 @@ describe("PrayerDial on a day that is not today", () => {
 describe("PrayerDial loading", () => {
   it("renders the labels with no centre value and does not crash", () => {
     const { getByText, queryByText } = render(
-      <PrayerDial loading prayerTimes={[]} nextPrayer={null} now={AFTERNOON} date={DAY} />,
+      <PrayerDial loading prayerDay={null} nextPrayer={null} now={AFTERNOON} date={DAY} />,
     );
     expect(getByText("Fajr")).toBeTruthy();
     expect(queryByText("6:33")).toBeNull();

@@ -17,7 +17,7 @@ describe("useTrackingStats", () => {
     await waitFor(() => expect(result.current).not.toBeNull());
     expect(result.current!.qada).toBe(0);
     await act(async () => {
-      await setPrayerStatus(todayKey, "asr", "missed");
+      await setPrayerStatus(todayKey, "Asr", "missed");
     });
     await waitFor(() => expect(result.current!.qada).toBe(1));
   });

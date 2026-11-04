@@ -1,6 +1,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react-native";
 
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { buildPrayerDay } from "@/services/prayerDay";
 
 jest.mock("@/services/prayerTimes", () => ({
   getPrayerTimesForDate: jest.fn(),
@@ -31,7 +32,7 @@ describe("usePrayerTimes", () => {
 
     mockGetPrayerTimesForDate
       .mockRejectedValueOnce(new Error("Failed to fetch"))
-      .mockResolvedValueOnce([{ label: "Fajr", time: "5:00 AM" }]);
+      .mockResolvedValueOnce(buildPrayerDay(selectedDate, [{ label: "Fajr", time: "5:00 AM" }]));
 
     const setTimeoutSpy = jest.spyOn(global, "setTimeout");
 
@@ -50,7 +51,7 @@ describe("usePrayerTimes", () => {
 
     await waitFor(() => {
       expect(mockGetPrayerTimesForDate).toHaveBeenCalledTimes(2);
-      expect(result.current.prayerTimes).toEqual([{ label: "Fajr", time: "5:00 AM" }]);
+      expect(result.current.prayerDay?.slots.map((x) => x.name)).toEqual(["Fajr"]);
       expect(result.current.error).toBeNull();
       expect(result.current.loading).toBe(false);
     });
@@ -71,7 +72,7 @@ describe("usePrayerTimes", () => {
     });
 
     expect(result.current.loading).toBe(false);
-    expect(result.current.prayerTimes).toEqual([]);
+    expect(result.current.prayerDay).toBeNull();
     expect(setTimeoutSpy).not.toHaveBeenCalled();
   });
 
@@ -89,6 +90,6 @@ describe("usePrayerTimes", () => {
     });
 
     expect(result.current.loading).toBe(false);
-    expect(result.current.prayerTimes).toEqual([]);
+    expect(result.current.prayerDay).toBeNull();
   });
 });

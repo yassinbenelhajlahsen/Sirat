@@ -1,23 +1,21 @@
-export type PrayerName = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
+export type PrayerName = "Fajr" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 
-export const PRAYER_NAMES: readonly PrayerName[] = [
-  "fajr",
-  "dhuhr",
-  "asr",
-  "maghrib",
-  "isha",
-];
+export const PRAYER_NAMES: readonly PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+
+export const isPrayerName = (name: string): name is PrayerName =>
+  (PRAYER_NAMES as readonly string[]).includes(name);
 
 export type PrayerStatus = "prayed" | "late" | "missed";
 
 /** A synced value plus a last-modified stamp (epoch-ms) for LWW conflict resolution. */
 export type Cell<T> = { value: T; updatedAt: number };
 
-/** dateKey ("YYYY-MM-DD") -> prayer -> status cell. A `null` value is a cleared mark: the user removed it. */
-export type PrayerLog = Record<
-  string,
-  Partial<Record<PrayerName, Cell<PrayerStatus | null>>>
->;
+/**
+ * dateKey ("YYYY-MM-DD") -> prayer -> status cell, as stored and synced. The prayer keys are lowercase
+ * ("fajr"), unlike `PrayerName`; the prayer log module converts at its edge. A `null` value is a cleared
+ * mark: the user removed it.
+ */
+export type PrayerLog = Record<string, Partial<Record<string, Cell<PrayerStatus | null>>>>;
 
 export type HabitFrequency =
   | { type: "daily" }

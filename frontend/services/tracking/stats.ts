@@ -1,3 +1,4 @@
+import { dateKeyFromDate } from "@/utils/dateKey";
 import { PRAYER_NAMES } from "./types";
 import type { Habit, HabitLog, PrayerLog, PrayerName, PrayerStatus } from "./types";
 
@@ -8,9 +9,7 @@ type StatusesByDay = Record<string, DayStatuses>;
 export function addDaysKey(dateKey: string, delta: number): string {
   const [y, m, d] = dateKey.split("-").map(Number);
   const date = new Date(y, m - 1, d + delta);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
+  return dateKeyFromDate(date);
 }
 
 export function isDayComplete(day: DayStatuses | undefined): boolean {
@@ -39,7 +38,7 @@ export function monthlyCompletion(
   year: number,
   monthIndex0: number,
 ): { overall: number; byPrayer: Record<PrayerName, number> } {
-  const prefix = `${year}-${String(monthIndex0 + 1).padStart(2, "0")}-`;
+  const prefix = dateKeyFromDate(new Date(year, monthIndex0, 1)).slice(0, 8);
   const loggedTotals = { count: 0, ok: 0 };
   const byPrayerCount = {} as Record<PrayerName, number>;
   const byPrayerOk = {} as Record<PrayerName, number>;
@@ -80,16 +79,22 @@ export function qadaCount(statusesByDay: StatusesByDay): number {
   return n;
 }
 
+/** The key a prayer is stored under in the log. Stored keys stay lowercase so no data migrates. */
+export const logKey = (p: PrayerName): string => p.toLowerCase();
+
+/** One stored day as marks by prayer. A cleared mark counts as not logged. */
+export function unwrapDay(day: PrayerLog[string] | undefined): DayStatuses {
+  const out: DayStatuses = {};
+  for (const p of PRAYER_NAMES) {
+    const status = day?.[logKey(p)]?.value;
+    if (status) out[p] = status;
+  }
+  return out;
+}
+
 export function unwrapPrayerLog(log: PrayerLog): StatusesByDay {
   const out: StatusesByDay = {};
-  for (const [dateKey, day] of Object.entries(log)) {
-    const unwrapped: DayStatuses = {};
-    for (const p of Object.keys(day) as PrayerName[]) {
-      const status = day[p]?.value;
-      if (status) unwrapped[p] = status;
-    }
-    out[dateKey] = unwrapped;
-  }
+  for (const [dateKey, day] of Object.entries(log)) out[dateKey] = unwrapDay(day);
   return out;
 }
 
@@ -165,7 +170,7 @@ export function monthDailyScores(
   const daysInMonth = new Date(year, monthIndex0 + 1, 0).getDate();
   const scores: number[] = [];
   for (let d = 1; d <= daysInMonth; d += 1) {
-    const key = `${year}-${String(monthIndex0 + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const key = dateKeyFromDate(new Date(year, monthIndex0, d));
     const day = statusesByDay[key];
     if (!day) {
       scores.push(0);

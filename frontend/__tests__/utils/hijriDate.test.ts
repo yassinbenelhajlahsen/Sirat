@@ -1,4 +1,5 @@
-import { formatHijriDate, isFastingDay, maghribOn, ramadanDayAt, setPretendRamadan, isPretendingRamadan } from "@/utils/hijriDate";
+import { buildPrayerDay, maghribOf } from "@/services/prayerDay";
+import { formatHijriDate, isFastingDay, ramadanDayAt, setPretendRamadan, isPretendingRamadan } from "@/utils/hijriDate";
 
 // Nov 3 2026 is 23 Jumada I 1448 in Umm al-Qura, the calendar the holiday feed uses.
 const nov3 = (h: number, m = 0) => new Date(2026, 10, 3, h, m);
@@ -16,16 +17,16 @@ describe("formatHijriDate", () => {
   });
 
   it("keeps the day's date before Maghrib", () => {
-    expect(formatHijriDate(nov3(16, 54), maghribOn(nov3(0), times))).toBe("Jumada I 23, 1448 AH");
+    expect(formatHijriDate(nov3(16, 54), maghribOf(buildPrayerDay(nov3(0), times)))).toBe("Jumada I 23, 1448 AH");
   });
 
   it("rolls to the next date at Maghrib", () => {
-    expect(formatHijriDate(nov3(16, 55), maghribOn(nov3(0), times))).toBe("Jumada I 24, 1448 AH");
-    expect(formatHijriDate(nov3(19, 16), maghribOn(nov3(0), times))).toBe("Jumada I 24, 1448 AH");
+    expect(formatHijriDate(nov3(16, 55), maghribOf(buildPrayerDay(nov3(0), times)))).toBe("Jumada I 24, 1448 AH");
+    expect(formatHijriDate(nov3(19, 16), maghribOf(buildPrayerDay(nov3(0), times)))).toBe("Jumada I 24, 1448 AH");
   });
 
   it("follows the Gregorian day when Maghrib is unknown", () => {
-    expect(maghribOn(nov3(0), [])).toBeNull();
+    expect(maghribOf(buildPrayerDay(nov3(0), []))).toBeNull();
     expect(formatHijriDate(nov3(19, 16), null)).toBe("Jumada I 23, 1448 AH");
   });
 });

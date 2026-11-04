@@ -1,11 +1,5 @@
+import { dateKeyFromDate } from "@/utils/dateKey";
 import type { BackendCalendarDay, PrayerTime, RequiredTimingMap } from "./types";
-
-export function dateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 export function formatTo12Hour(time24: string): string {
   const clean = time24.split(" ")[0];
@@ -36,7 +30,7 @@ export function mergeCalendarDayIntoStore(
   if (!greg || !day.timings) return;
 
   const [dd, mm, yy] = greg.split("-").map((x: string) => parseInt(x, 10));
-  const key = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  const key = dateKeyFromDate(new Date(yy, mm - 1, dd));
 
   allTimes[key] = mapTimingsToPrayerTimes(day.timings);
 }

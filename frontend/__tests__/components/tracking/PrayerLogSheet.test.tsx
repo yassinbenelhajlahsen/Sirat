@@ -22,7 +22,7 @@ describe("PrayerLogSheet", () => {
       wrap(
         <PrayerLogSheet
           visible
-          prayerName="dhuhr"
+          prayerName="Dhuhr"
           prayerLabel="Dhuhr"
           onSelect={onSelect}
           onClear={jest.fn()}
@@ -38,13 +38,13 @@ describe("PrayerLogSheet", () => {
     const onClear = jest.fn();
     const { queryByText, rerender } = render(
       wrap(
-        <PrayerLogSheet visible prayerName="fajr" prayerLabel="Fajr" onSelect={jest.fn()} onClear={onClear} onClose={jest.fn()} />,
+        <PrayerLogSheet visible prayerName="Fajr" prayerLabel="Fajr" onSelect={jest.fn()} onClear={onClear} onClose={jest.fn()} />,
       ),
     );
     expect(queryByText("Clear")).toBeNull();
     rerender(
       wrap(
-        <PrayerLogSheet visible prayerName="fajr" prayerLabel="Fajr" currentStatus="prayed" onSelect={jest.fn()} onClear={onClear} onClose={jest.fn()} />,
+        <PrayerLogSheet visible prayerName="Fajr" prayerLabel="Fajr" currentStatus="prayed" onSelect={jest.fn()} onClear={onClear} onClose={jest.fn()} />,
       ),
     );
     fireEvent.press(queryByText("Clear")!);

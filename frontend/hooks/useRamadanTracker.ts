@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSyncedSetting } from "@/hooks/useSyncedSetting";
 import { getHolidaysForYear } from "../services/holidayService";
 import { ramadanTrackerSetting } from "@/services/syncedSettings";
+import { dateKeyFromDate } from "@/utils/dateKey";
 import {
   clearMissedFast,
   computeRamadanEnd,
-  dateKey,
   findRamadanStart,
   isInRamadanWindow,
   markFastAsMissed,
@@ -80,7 +80,7 @@ export function useRamadanTracker(
   }, [endParam, selectedDate, startParam]);
 
   const isFastMissed =
-    isRamadan && !!selectedDate && missedFastsMap[dateKey(selectedDate)] === true;
+    isRamadan && !!selectedDate && missedFastsMap[dateKeyFromDate(selectedDate)] === true;
 
   const toggleMissedFast = useCallback(async () => {
     if (!selectedDate) return;

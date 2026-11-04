@@ -11,19 +11,10 @@ export interface PrayerTime {
   time: string;
 }
 
-export type BackendErrorShape = {
-  error?:
-    | {
-        code?: string;
-        message?: string;
-      }
-    | string;
-};
-
 export type BackendProxyResponse<T> = {
   success?: boolean;
   data?: T;
-} & BackendErrorShape;
+};
 
 export type RequiredTimingMap = {
   Fajr: string;

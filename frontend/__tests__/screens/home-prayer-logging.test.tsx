@@ -26,14 +26,14 @@ jest.mock("@/services/auth/authPrompts", () => ({
 }));
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: () => ({
-    prayerTimes: [
+    prayerDay: require("@/services/prayerDay").buildPrayerDay(new Date(), [
       { label: "Fajr", time: "5:12 AM" },
       { label: "Dhuhr", time: "1:01 PM" },
       { label: "Asr", time: "3:42 PM" },
       { label: "Maghrib", time: "6:30 PM" },
       { label: "Isha", time: "8:01 PM" },
-    ],
-    nextPrayer: { label: "Isha", time: "8:01 PM" },
+    ]),
+    nextPrayer: { name: "Isha", at: new Date(2026, 0, 1, 20, 1) },
     nextDayFajr: null, timeLeft: "1h", loading: false, refreshing: false,
     banner: "", locationLabel: "Tunis", refresh: jest.fn(),
   }),
@@ -63,7 +63,7 @@ describe("Home prayer logging", () => {
     fireEvent.press(getByText("Prayed"));
     await waitFor(async () => {
       const today = new Intl.DateTimeFormat("en-CA").format(new Date()); // YYYY-MM-DD
-      expect((await getDayStatuses(today)).fajr).toBe("prayed");
+      expect((await getDayStatuses(today)).Fajr).toBe("prayed");
     });
   });
 });

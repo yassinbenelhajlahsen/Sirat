@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { dateKeyFromDate } from "../services/holidayService";
 import { getEffectivePrayerSettings } from "../services/prayerSettings";
-import { getPrayerTimesForDate, PrayerTime } from "../services/prayerTimes";
+import type { PrayerDay } from "../services/prayerDay";
+import { getPrayerTimesForDate } from "../services/prayerTimes";
 import { prayerSettingsSetting } from "../services/syncedSettings";
 
 export type PrayerTimesError =
@@ -28,15 +28,12 @@ function isTransientError(error: unknown): boolean {
 }
 
 export function usePrayerTimes(selectedDate: Date | null) {
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
-  const [prayerTimesDateKey, setPrayerTimesDateKey] = useState<string | null>(
-    null,
-  );
+  const [prayerDay, setPrayerDay] = useState<PrayerDay | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<PrayerTimesError | null>(null);
   const [fetchNonce, setFetchNonce] = useState(0);
 
-  const prayerTimesRef = useRef<PrayerTime[]>([]);
+  const prayerDayRef = useRef<PrayerDay | null>(null);
   const retryRef = useRef<{
     attempt: number;
     t: ReturnType<typeof setTimeout> | null;
@@ -46,8 +43,8 @@ export function usePrayerTimes(selectedDate: Date | null) {
   });
 
   useEffect(() => {
-    prayerTimesRef.current = prayerTimes;
-  }, [prayerTimes]);
+    prayerDayRef.current = prayerDay;
+  }, [prayerDay]);
 
   const clearRetry = useCallback(() => {
     if (retryRef.current.t) clearTimeout(retryRef.current.t);
@@ -75,22 +72,18 @@ export function usePrayerTimes(selectedDate: Date | null) {
     let mounted = true;
 
     (async () => {
-      const requestedDateKey = dateKeyFromDate(selectedDate);
-      setPrayerTimesDateKey(null);
-
-      if (prayerTimesRef.current.length === 0) {
+      if (!prayerDayRef.current?.slots.length) {
         setLoading(true);
       }
       setError(null);
 
       try {
         const settings = await getEffectivePrayerSettings();
-        const times = await getPrayerTimesForDate(settings, selectedDate);
+        const day = await getPrayerTimesForDate(settings, selectedDate);
         if (!mounted) return;
 
         resetRetry();
-        setPrayerTimes(times);
-        setPrayerTimesDateKey(requestedDateKey);
+        setPrayerDay(day);
         setLoading(false);
       } catch (err) {
         if (!mounted) return;
@@ -103,15 +96,14 @@ export function usePrayerTimes(selectedDate: Date | null) {
             message:
               "Location is off. Turn it on in Settings or choose a saved city, then try again.",
           });
-          setPrayerTimes([]);
-          setPrayerTimesDateKey(null);
+          setPrayerDay(null);
           setLoading(false);
           return;
         }
 
         if (isTransientError(err)) {
           setError(null);
-          setLoading(prayerTimesRef.current.length === 0);
+          setLoading(!prayerDayRef.current?.slots.length);
           scheduleRetry();
           return;
         }
@@ -121,8 +113,7 @@ export function usePrayerTimes(selectedDate: Date | null) {
           code: "GENERIC",
           message: "Could not load prayer times. Please try again later.",
         });
-        setPrayerTimes([]);
-        setPrayerTimesDateKey(null);
+        setPrayerDay(null);
         setLoading(false);
       }
     })();
@@ -145,10 +136,9 @@ export function usePrayerTimes(selectedDate: Date | null) {
   }, [resetRetry]);
 
   return {
-    prayerTimes,
+    prayerDay,
     loading,
     error,
     retry,
-    prayerTimesDateKey,
   };
 }

@@ -20,21 +20,21 @@ describe("usePrayerLog", () => {
     await waitFor(() => expect(result.current.statuses).toEqual({}));
 
     await act(async () => {
-      await result.current.setStatus("fajr", "prayed");
+      await result.current.setStatus("Fajr", "prayed");
     });
-    await waitFor(() => expect(result.current.statuses.fajr).toBe("prayed"));
+    await waitFor(() => expect(result.current.statuses.Fajr).toBe("prayed"));
   });
 
   it("clears a status", async () => {
     const { result } = renderHook(() => usePrayerLog("2026-06-19"));
     await act(async () => {
-      await result.current.setStatus("asr", "late");
+      await result.current.setStatus("Asr", "late");
     });
-    await waitFor(() => expect(result.current.statuses.asr).toBe("late"));
+    await waitFor(() => expect(result.current.statuses.Asr).toBe("late"));
     await act(async () => {
-      await result.current.clearStatus("asr");
+      await result.current.clearStatus("Asr");
     });
-    await waitFor(() => expect(result.current.statuses.asr).toBeUndefined());
+    await waitFor(() => expect(result.current.statuses.Asr).toBeUndefined());
   });
 
   it("re-reads on a matching-dateKey event", async () => {
@@ -46,9 +46,9 @@ describe("usePrayerLog", () => {
 
     // Set a status; this triggers both hook update (via internal event) and persistence
     await act(async () => {
-      await tracker.setPrayerStatus("2026-06-19", "fajr", "prayed");
+      await tracker.setPrayerStatus("2026-06-19", "Fajr", "prayed");
     });
-    await waitFor(() => expect(result.current.statuses.fajr).toBe("prayed"));
+    await waitFor(() => expect(result.current.statuses.Fajr).toBe("prayed"));
 
     // Directly emit an event to the hook without going through setPrayerStatus
     // This tests that the hook re-reads when it receives a matching event
@@ -59,7 +59,7 @@ describe("usePrayerLog", () => {
     // After the event, the hook should re-read (even if the underlying data is the same)
     // We can't easily assert that it re-read without a spy, but we can at least verify
     // that the statuses are still there and accessible
-    await waitFor(() => expect(result.current.statuses.fajr).toBe("prayed"));
+    await waitFor(() => expect(result.current.statuses.Fajr).toBe("prayed"));
   });
 
   it("does not re-read on a non-matching-dateKey event", async () => {
@@ -69,7 +69,7 @@ describe("usePrayerLog", () => {
     await waitFor(() => expect(result.current.statuses).toEqual({}));
 
     await act(async () => {
-      await tracker.setPrayerStatus("2099-01-01", "fajr", "prayed");
+      await tracker.setPrayerStatus("2099-01-01", "Fajr", "prayed");
     });
 
     await act(async () => {});
@@ -85,7 +85,7 @@ describe("usePrayerLog", () => {
     unmount();
 
     await act(async () => {
-      await tracker.setPrayerStatus("2026-06-21", "fajr", "prayed");
+      await tracker.setPrayerStatus("2026-06-21", "Fajr", "prayed");
     });
 
     await act(async () => {});

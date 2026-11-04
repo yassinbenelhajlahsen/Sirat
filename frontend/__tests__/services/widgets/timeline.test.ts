@@ -1,16 +1,20 @@
+import { buildPrayerDay, emptyPrayerDay } from "@/services/prayerDay";
 import { buildPrayerTimeline, type WidgetDay } from "@/services/widgets/timeline";
 
-const day = (y: number, m: number, d: number, shift = 0): WidgetDay => ({
-  date: new Date(y, m - 1, d),
-  times: [
+const day = (y: number, m: number, d: number, shift = 0): WidgetDay => {
+  const date = new Date(y, m - 1, d);
+  return {
+    date,
+    prayerDay: buildPrayerDay(date, [
     { label: "Fajr", time: `${5 + shift}:48 AM` },
     { label: "Sunrise", time: `${7 + shift}:02 AM` },
     { label: "Dhuhr", time: "12:43 PM" },
     { label: "Asr", time: "3:52 PM" },
     { label: "Maghrib", time: "6:21 PM" },
     { label: "Isha", time: "7:36 PM" },
-  ],
-});
+  ]),
+  };
+};
 
 const oct9 = day(2026, 10, 9);
 const oct10 = day(2026, 10, 10);
@@ -58,7 +62,10 @@ describe("buildPrayerTimeline", () => {
   it("skips Sunrise when the day has none", () => {
     const noSunrise: WidgetDay = {
       date: oct9.date,
-      times: oct9.times.filter((t) => t.label !== "Sunrise"),
+      prayerDay: {
+        ...oct9.prayerDay,
+        slots: oct9.prayerDay.slots.filter((t) => t.name !== "Sunrise"),
+      },
     };
     const [first] = buildPrayerTimeline([noSunrise], new Date(2026, 9, 9, 6, 0));
     expect(first.props.next.name).toBe("Dhuhr");
@@ -115,7 +122,7 @@ describe("buildPrayerTimeline", () => {
 
   it("stops at the first day with missing times", () => {
     const now = new Date(2026, 9, 9, 11, 45);
-    const empty: WidgetDay = { date: new Date(2026, 9, 10), times: [] };
+    const empty: WidgetDay = { date: new Date(2026, 9, 10), prayerDay: emptyPrayerDay(new Date(2026, 9, 10)) };
     const entries = buildPrayerTimeline([oct9, empty, day(2026, 10, 11)], now);
 
     expect(entries[entries.length - 1].props.stale).toBe(true);

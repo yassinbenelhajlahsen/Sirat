@@ -1,3 +1,5 @@
+import { DeviceEventEmitter } from "react-native";
+
 import { fetchPrayerProxy } from "@/services/prayer-times/apiClient";
 
 describe("prayer-times/apiClient", () => {
@@ -62,7 +64,7 @@ describe("prayer-times/apiClient", () => {
 
     await expect(
       fetchPrayerProxy("/api/prayer-times/timings", { latitude: 1, longitude: 2, method: 2 }),
-    ).rejects.toThrow("Prayer times API error (503)");
+    ).rejects.toThrow("API error (503)");
   });
 
   it("throws when success envelope is invalid", async () => {
@@ -74,5 +76,20 @@ describe("prayer-times/apiClient", () => {
     await expect(
       fetchPrayerProxy("/api/prayer-times/calendar/year", { latitude: 1, longitude: 2, method: 2, year: 2026 }),
     ).rejects.toThrow("Invalid response from prayer times API");
+  });
+
+  it("raises the force-update gate on a 426", async () => {
+    const emit = jest.spyOn(DeviceEventEmitter, "emit");
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 426,
+      json: async () => ({ error: { minVersion: "2.0.0", currentVersion: "1.0.0" } }),
+    });
+
+    await expect(
+      fetchPrayerProxy("/api/prayer-times/timings", { latitude: 1, longitude: 2, method: 2 }),
+    ).rejects.toThrow("APP_UPDATE_REQUIRED");
+    expect(emit).toHaveBeenCalledWith("FORCE_UPDATE_REQUIRED", { minVersion: "2.0.0", currentVersion: "1.0.0" });
+    emit.mockRestore();
   });
 });

@@ -19,7 +19,8 @@ import Screen from "@/components/ui/Screen";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { getGreeting } from "@/utils/greeting";
-import { formatHijriDate, maghribOn } from "@/utils/hijriDate";
+import { maghribOf } from "@/services/prayerDay";
+import { formatHijriDate } from "@/utils/hijriDate";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
@@ -45,7 +46,7 @@ export default function Home() {
 
   const router = useRouter();
   const {
-    prayerTimes, nextPrayer, nextDayFajr, tomorrowFajr, timeLeft,
+    prayerDay, nextPrayer, nextDayFajr, tomorrowFajr, timeLeft,
     loading, refreshing, banner, locationLabel, coords, refresh,
   } = useHomePrayerTimes();
   const { ramadanMode } = useRamadanMode();
@@ -84,7 +85,7 @@ export default function Home() {
 
   const baseGreeting = getGreeting(today);
   const displayName = isSignedIn && firstName && firstName.length < 10 ? firstName : null;
-  const islamicDate = formatHijriDate(today, maghribOn(today, prayerTimes));
+  const islamicDate = formatHijriDate(today, maghribOf(prayerDay));
   const gregorianDate = formatWeekdayMonthDay(today);
 
   const tomorrow = new Date(today);
@@ -167,7 +168,7 @@ export default function Home() {
         <View style={styles.dialSlot}>
           <PrayerDial
             loading={loading}
-            prayerTimes={prayerTimes}
+            prayerDay={prayerDay}
             nextPrayer={nextPrayer}
             timeLeft={timeLeft}
             tomorrowFajr={nextDayFajr}
@@ -194,7 +195,7 @@ export default function Home() {
         <View style={styles.ramadanSlot}>
           <RamadanCard
             enabled={ramadanMode}
-            prayerTimes={prayerTimes}
+            prayerDay={prayerDay}
             tomorrowFajr={tomorrowFajr}
             onLogMissedFast={() =>
               router.push({

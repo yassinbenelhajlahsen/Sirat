@@ -1,6 +1,3 @@
-import type { PrayerTime } from "@/services/prayerTimes";
-import { parsePrayerTime } from "@/utils/prayerDial";
-
 // Umm al-Qura is the calendar the holiday feed uses (Aladhan's HJCoSA), so the date
 // shown always agrees with the holidays and the Ramadan tracker.
 const HIJRI = new Intl.DateTimeFormat("en-TN-u-ca-islamic-umalqura", {
@@ -61,12 +58,6 @@ export function ramadanDayAt(at: Date, maghrib: Date | null = null): number | nu
   const h = hijriDayAndMonth(day);
   if (pretendRamadan) return h.day;
   return h.month === RAMADAN_MONTH ? h.day : null;
-}
-
-/** That day's Maghrib, or null when the times don't include it. */
-export function maghribOn(date: Date, times: PrayerTime[]): Date | null {
-  const time = times.find((t) => t.label === "Maghrib")?.time;
-  return time ? parsePrayerTime(time, date) : null;
 }
 
 /**

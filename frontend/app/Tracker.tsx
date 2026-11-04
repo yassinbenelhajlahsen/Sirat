@@ -138,7 +138,7 @@ export default function Tracker() {
   );
 }
 
-const EMPTY_BY_PRAYER = { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
+const EMPTY_BY_PRAYER = { Fajr: 0, Dhuhr: 0, Asr: 0, Maghrib: 0, Isha: 0 };
 
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing } = theme;

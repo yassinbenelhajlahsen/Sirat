@@ -12,10 +12,11 @@ import {
   ramadanModeSetting,
 } from "../syncedSettings";
 import { getDayStatuses } from "../tracking/prayerLog";
+import { dateKeyFromDate } from "@/utils/dateKey";
 import { isFastingDay } from "@/utils/hijriDate";
 import { HORIZON_DAYS, MAX_PENDING_NOTIFICATIONS } from "./constants";
 import { resolveCityDisplay } from "./cityResolver";
-import { planFingerprint, planNotifications, yyyymmdd, type PlanInput } from "./planner";
+import { planFingerprint, planNotifications, type PlanInput } from "./planner";
 import {
   clearScheduleStorage,
   readDayFingerprint,
@@ -27,7 +28,6 @@ import {
 } from "./storage";
 import { IOS_SOUND_MAP } from "./types";
 
-export { yyyymmdd };
 
 export function msUntilNextLocalMidnightPlus(minutes: number): number {
   const now = new Date();
@@ -73,8 +73,8 @@ export async function readPlanInputs(): Promise<Omit<PlanInput, "now" | "seen" |
     const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
     days.push({
       date,
-      times: await getPrayerTimesForDate(effective, date),
-      statuses: await getDayStatuses(yyyymmdd(date)),
+      prayerDay: await getPrayerTimesForDate(effective, date),
+      statuses: await getDayStatuses(dateKeyFromDate(date)),
       fasting: ramadanMode && isFastingDay(date),
     });
   }

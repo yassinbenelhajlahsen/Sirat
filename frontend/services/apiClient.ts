@@ -66,10 +66,13 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
+    const err = responseBody?.error;
     const message =
-      typeof responseBody?.error === "string"
-        ? responseBody.error
-        : `API error (${res.status})`;
+      typeof err === "string"
+        ? err
+        : typeof err?.message === "string" && err.message
+          ? err.message
+          : `API error (${res.status})`;
     throw new Error(message);
   }
 

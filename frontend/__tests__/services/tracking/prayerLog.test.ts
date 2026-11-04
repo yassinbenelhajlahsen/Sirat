@@ -24,9 +24,9 @@ describe("tracking/prayerLog", () => {
     const svc = loadService();
     const emit = jest.spyOn(DeviceEventEmitter, "emit");
 
-    await svc.setPrayerStatus("2026-06-19", "fajr", "prayed");
+    await svc.setPrayerStatus("2026-06-19", "Fajr", "prayed");
 
-    expect(await svc.getDayStatuses("2026-06-19")).toEqual({ fajr: "prayed" });
+    expect(await svc.getDayStatuses("2026-06-19")).toEqual({ Fajr: "prayed" });
     const raw = JSON.parse(
       (await AsyncStorage.getItem("tracking:prayer_log_v1")) as string,
     );
@@ -36,11 +36,11 @@ describe("tracking/prayerLog", () => {
 
   it("clearing writes a time-stamped cleared mark that reads as not logged", async () => {
     const svc = loadService();
-    await svc.setPrayerStatus("2026-06-19", "asr", "late");
+    await svc.setPrayerStatus("2026-06-19", "Asr", "late");
     (Date.now as jest.Mock).mockReturnValue(1700000005000);
     const emit = jest.spyOn(DeviceEventEmitter, "emit");
 
-    await svc.clearPrayerStatus("2026-06-19", "asr");
+    await svc.clearPrayerStatus("2026-06-19", "Asr");
 
     expect(await svc.getDayStatuses("2026-06-19")).toEqual({});
     const raw = JSON.parse((await AsyncStorage.getItem("tracking:prayer_log_v1")) as string);
@@ -50,27 +50,27 @@ describe("tracking/prayerLog", () => {
 
   it("clearing an unlogged or already cleared prayer changes nothing", async () => {
     const svc = loadService();
-    await svc.clearPrayerStatus("2026-06-19", "fajr");
+    await svc.clearPrayerStatus("2026-06-19", "Fajr");
     expect(await AsyncStorage.getItem("tracking:prayer_log_v1")).toBeNull();
 
-    await svc.setPrayerStatus("2026-06-19", "fajr", "prayed");
-    await svc.clearPrayerStatus("2026-06-19", "fajr");
+    await svc.setPrayerStatus("2026-06-19", "Fajr", "prayed");
+    await svc.clearPrayerStatus("2026-06-19", "Fajr");
     const emit = jest.spyOn(DeviceEventEmitter, "emit");
-    await svc.clearPrayerStatus("2026-06-19", "fajr");
+    await svc.clearPrayerStatus("2026-06-19", "Fajr");
     expect(emit).not.toHaveBeenCalled();
   });
 
   it("logging again after a clear replaces the cleared mark", async () => {
     const svc = loadService();
-    await svc.setPrayerStatus("2026-06-19", "isha", "late");
-    await svc.clearPrayerStatus("2026-06-19", "isha");
-    await svc.setPrayerStatus("2026-06-19", "isha", "prayed");
-    expect(await svc.getDayStatuses("2026-06-19")).toEqual({ isha: "prayed" });
+    await svc.setPrayerStatus("2026-06-19", "Isha", "late");
+    await svc.clearPrayerStatus("2026-06-19", "Isha");
+    await svc.setPrayerStatus("2026-06-19", "Isha", "prayed");
+    expect(await svc.getDayStatuses("2026-06-19")).toEqual({ Isha: "prayed" });
   });
 
   it("a cleared mark merged in from another device removes the mark here", async () => {
     const svc = loadService();
-    await svc.setPrayerStatus("2026-06-19", "dhuhr", "prayed");
+    await svc.setPrayerStatus("2026-06-19", "Dhuhr", "prayed");
     const { mergePrayerLogs } = require("@/services/tracking/merge");
     await svc.replacePrayerLog(
       mergePrayerLogs(await svc.getPrayerLog(), { "2026-06-19": { dhuhr: { value: null, updatedAt: 1800000000000 } } }),

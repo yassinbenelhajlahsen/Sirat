@@ -15,11 +15,11 @@ describe("CompletionRings", () => {
     const { getByTestId, getByText } = render(
       wrap(
         <CompletionRings
-          byPrayer={{ fajr: 0.86, dhuhr: 0.97, asr: 0.65, maghrib: 1, isha: 0.5 }}
+          byPrayer={{ Fajr: 0.86, Dhuhr: 0.97, Asr: 0.65, Maghrib: 1, Isha: 0.5 }}
         />,
       ),
     );
-    expect(getByTestId("ring-fajr")).toBeTruthy();
+    expect(getByTestId("ring-Fajr")).toBeTruthy();
     expect(getByText("86")).toBeTruthy();
     expect(getByText("100")).toBeTruthy();
   });
@@ -28,10 +28,10 @@ describe("CompletionRings", () => {
     const { getByTestId } = render(
       wrap(
         <CompletionRings
-          byPrayer={{ fajr: 0.86, dhuhr: 0.97, asr: 0.65, maghrib: 1, isha: 0.5 }}
+          byPrayer={{ Fajr: 0.86, Dhuhr: 0.97, Asr: 0.65, Maghrib: 1, Isha: 0.5 }}
         />,
       ),
     );
-    expect(getByTestId("ring-asr").props.accessibilityLabel).toBe("Asr: 65% logged this month");
+    expect(getByTestId("ring-Asr").props.accessibilityLabel).toBe("Asr: 65% logged this month");
   });
 });

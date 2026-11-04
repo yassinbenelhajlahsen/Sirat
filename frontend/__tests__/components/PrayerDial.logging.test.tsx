@@ -2,6 +2,7 @@
 import { fireEvent, render } from "@testing-library/react-native";
 import PrayerDial from "@/components/PrayerDial";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { buildPrayerDay, slotAt } from "@/services/prayerDay";
 
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
@@ -11,16 +12,17 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
-const TIMES = [
+const ROWS = [
   { label: "Fajr", time: "5:12 AM" },
   { label: "Sunrise", time: "6:40 AM" },
   { label: "Dhuhr", time: "1:01 PM" },
   { label: "Asr", time: "3:42 PM" },
   { label: "Maghrib", time: "6:30 PM" },
   { label: "Isha", time: "8:01 PM" },
-] as any;
+];
 
 const DAY = new Date(2026, 2, 4);
+const TIMES = buildPrayerDay(DAY, ROWS);
 const AFTERNOON = new Date(2026, 2, 4, 16, 0, 0);
 
 const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
@@ -31,12 +33,12 @@ describe("PrayerDial logging mode", () => {
       wrap(
         <PrayerDial
           loading={false}
-          prayerTimes={TIMES}
-          nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          prayerDay={TIMES}
+          nextPrayer={{ name: "Asr", at: slotAt(TIMES, "Asr")! }}
           live={false}
           date={DAY}
           logging
-          statuses={{ fajr: "prayed", dhuhr: "late" }}
+          statuses={{ Fajr: "prayed", Dhuhr: "late" }}
         />,
       ),
     );
@@ -50,8 +52,8 @@ describe("PrayerDial logging mode", () => {
       wrap(
         <PrayerDial
           loading={false}
-          prayerTimes={TIMES}
-          nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          prayerDay={TIMES}
+          nextPrayer={{ name: "Asr", at: slotAt(TIMES, "Asr")! }}
           now={AFTERNOON}
           date={DAY}
           live
@@ -62,7 +64,7 @@ describe("PrayerDial logging mode", () => {
       ),
     );
     fireEvent.press(getByLabelText("Log Fajr"));
-    expect(onPress).toHaveBeenCalledWith("fajr", "Fajr");
+    expect(onPress).toHaveBeenCalledWith("Fajr", "Fajr");
   });
 
   it("exposes the logged status to assistive tech without changing the label", () => {
@@ -70,13 +72,13 @@ describe("PrayerDial logging mode", () => {
       wrap(
         <PrayerDial
           loading={false}
-          prayerTimes={TIMES}
-          nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          prayerDay={TIMES}
+          nextPrayer={{ name: "Asr", at: slotAt(TIMES, "Asr")! }}
           now={AFTERNOON}
           date={DAY}
           live
           logging
-          statuses={{ fajr: "prayed" }}
+          statuses={{ Fajr: "prayed" }}
           onPressPrayer={jest.fn()}
         />,
       ),
@@ -90,7 +92,7 @@ describe("PrayerDial logging mode", () => {
       wrap(
         <PrayerDial
           loading={false}
-          prayerTimes={TIMES}
+          prayerDay={TIMES}
           nextPrayer={null}
           live={false}
           date={DAY}
@@ -108,8 +110,8 @@ describe("PrayerDial logging mode", () => {
       wrap(
         <PrayerDial
           loading={false}
-          prayerTimes={TIMES}
-          nextPrayer={{ label: "Asr", time: "3:42 PM" }}
+          prayerDay={TIMES}
+          nextPrayer={{ name: "Asr", at: slotAt(TIMES, "Asr")! }}
           now={AFTERNOON}
           date={DAY}
           live

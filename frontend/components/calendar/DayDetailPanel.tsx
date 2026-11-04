@@ -10,22 +10,22 @@ import { AppText, Body, Footnote, Headline, Title2 } from "@/components/ui/Text"
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
+import { emptyPrayerDay, maghribOf, type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
-import type { PrayerTime } from "@/services/prayerTimes";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { useRamadanMode } from "@/hooks/useRamadanMode";
-import { formatHijriDate, isFastingDay, maghribOn } from "@/utils/hijriDate";
+import { formatHijriDate, isFastingDay } from "@/utils/hijriDate";
 
 type DayDetailPanelProps = {
   date: Date;
   isToday: boolean;
   holiday: string | null;
   loading: boolean;
-  prayerTimes: PrayerTime[];
+  prayerDay: PrayerDay | null;
   error: PrayerTimesError | null;
   onRetry: () => void;
   onOpenSettings: () => void;
-  nextPrayer: { label: string; time: string } | null;
+  nextPrayer: PrayerSlot | null;
   timeLeft: string;
   statuses: Partial<Record<PrayerName, PrayerStatus>>;
   onPressPrayer: (name: PrayerName, label: string) => void;
@@ -36,7 +36,7 @@ export default function DayDetailPanel({
   isToday,
   holiday,
   loading,
-  prayerTimes,
+  prayerDay,
   error,
   onRetry,
   onOpenSettings,
@@ -56,7 +56,7 @@ export default function DayDetailPanel({
 
   // Only today's panel tracks the clock; other days show their daytime date, which is the one holidays are keyed to.
   const hijri = isToday
-    ? formatHijriDate(new Date(), maghribOn(date, prayerTimes))
+    ? formatHijriDate(new Date(), maghribOf(prayerDay))
     : formatHijriDate(date);
 
   return (
@@ -69,7 +69,7 @@ export default function DayDetailPanel({
             {hijri}
             {isToday && nextPrayer ? (
               <AppText variant="footnote" color={colors.accent}>
-                {` · ${nextPrayer.label}${timeLeft ? ` in ${timeLeft}` : ""}`}
+                {` · ${nextPrayer.name}${timeLeft ? ` in ${timeLeft}` : ""}`}
               </AppText>
             ) : null}
             {holiday ? (
@@ -108,7 +108,7 @@ export default function DayDetailPanel({
             ) : null}
           </View>
         </GlassSurface>
-      ) : !loading && prayerTimes.length === 0 ? (
+      ) : !loading && !prayerDay?.slots.length ? (
         <GlassSurface tier="card" radius={theme.radii.card} style={styles.stateCard}>
           <Body color={colors.textSecondary} style={styles.emptyText}>
             No prayer times available for this date.
@@ -124,7 +124,7 @@ export default function DayDetailPanel({
         <View style={styles.prayers}>
           <SectionHeader title="Prayers" inset={0} />
           <PrayerTimesList
-            prayerTimes={prayerTimes}
+            prayerDay={prayerDay ?? emptyPrayerDay(date)}
             statuses={statuses}
             isToday={isToday}
             nextPrayer={nextPrayer}

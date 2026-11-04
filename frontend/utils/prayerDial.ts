@@ -1,4 +1,4 @@
-import type { PrayerTime } from "@/services/prayerTimes";
+import { formatClock, slotAt, type PrayerDay, type SlotName } from "@/services/prayerDay";
 
 import { lightAt, mixColors, skyAltAt, starLevel, sunAltitude } from "./sky";
 
@@ -265,22 +265,6 @@ export const STARS: Star[] = (() => {
 
 export { starLevel, sunAltitude };
 
-/** Parse "h:mm AM/PM" onto `baseDate`. Returns null on anything unreadable. */
-export function parsePrayerTime(timeStr: string, baseDate: Date): Date | null {
-  if (!timeStr) return null;
-  const [time, modifier] = timeStr.split(" ");
-  if (!time) return null;
-  const [hoursStr, minutesStr] = time.split(":");
-  let hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
-  if (modifier === "PM" && hours !== 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
-  const d = new Date(baseDate);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
-
 export type DialMarker = {
   label: string;
   time: string | null;
@@ -292,20 +276,22 @@ export type DialMarker = {
 };
 
 /** Marker positions for a day's prayer times, in dial order. */
-export function dialMarkers(
-  prayerTimes: Pick<PrayerTime, "label" | "time">[],
-  date: Date,
-): DialMarker[] {
-  const byLabel = new Map(prayerTimes.map((p) => [p.label, p.time]));
-  const order = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+export function dialMarkers(prayerDay: PrayerDay | null): DialMarker[] {
+  const order: SlotName[] = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
   return order.map((label, i) => {
-    const time = byLabel.get(label) ?? null;
-    const parsed = time ? parsePrayerTime(time, date) : null;
+    const at = slotAt(prayerDay, label);
     // Fall back to an even spread so a partial day still draws something sane.
-    const minutes = parsed ? minutesOfDay(parsed) : null;
+    const minutes = at ? minutesOfDay(at) : null;
     const angle = angleForMinutes(minutes ?? 300 + i * 180);
-    return { label, time, minutes, angle, point: pointOnRing(angle), notch: label === "Sunrise" };
+    return {
+      label,
+      time: at ? formatClock(at) : null,
+      minutes,
+      angle,
+      point: pointOnRing(angle),
+      notch: label === "Sunrise",
+    };
   });
 }
 

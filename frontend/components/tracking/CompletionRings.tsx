@@ -10,11 +10,11 @@ import { useTheme } from "@/context/ThemeContext";
 import type { PrayerName } from "@/services/prayerTracker";
 
 const ORDER: { name: PrayerName; label: string }[] = [
-  { name: "fajr", label: "Fajr" },
-  { name: "dhuhr", label: "Dhuhr" },
-  { name: "asr", label: "Asr" },
-  { name: "maghrib", label: "Maghrib" },
-  { name: "isha", label: "Isha" },
+  { name: "Fajr", label: "Fajr" },
+  { name: "Dhuhr", label: "Dhuhr" },
+  { name: "Asr", label: "Asr" },
+  { name: "Maghrib", label: "Maghrib" },
+  { name: "Isha", label: "Isha" },
 ];
 
 const SIZE = 54;

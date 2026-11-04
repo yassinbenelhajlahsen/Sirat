@@ -19,9 +19,9 @@ jest.mock("@/widgets/NextPrayerWidget", () => forward(() => mockNextPrayer));
 jest.mock("@/widgets/PrayerTimesWidget", () => forward(() => mockPrayerTimes));
 jest.mock("@/widgets/VerseWidget", () => forward(() => mockVerse));
 
-const mockGetPrayerTimesOn = jest.fn();
+const mockGetPrayerTimes = jest.fn();
 jest.mock("@/services/prayerTimes", () => ({
-  getPrayerTimesOn: (...args: unknown[]) => mockGetPrayerTimesOn(...args),
+  getPrayerTimesForDate: (...args: unknown[]) => mockGetPrayerTimes(...args),
 }));
 jest.mock("@/services/notifications/storage", () => ({
   readPrayerSettings: async () => ({ useLocation: false, method: 2, city: null }),
@@ -31,6 +31,7 @@ jest.mock("@/services/notifications/cityResolver", () => ({
   deriveEffectiveSettings: (s: unknown) => s,
 }));
 
+import { buildPrayerDay } from "@/services/prayerDay";
 import { readPinnedVerse } from "@/services/widgets/pinnedVerse";
 import { pinVerse, syncWidgets } from "@/services/widgets/sync";
 
@@ -57,7 +58,7 @@ const now = new Date(2026, 9, 9, 11, 45);
 
 beforeEach(async () => {
   await AsyncStorage.clear();
-  mockGetPrayerTimesOn.mockImplementation(async () => times());
+  mockGetPrayerTimes.mockImplementation(async (_s: unknown, d: Date) => buildPrayerDay(d, times()));
 });
 
 describe("syncWidgets", () => {
@@ -75,7 +76,7 @@ describe("syncWidgets", () => {
   });
 
   it("reads seven days and stops at the first day without times", async () => {
-    mockGetPrayerTimesOn.mockImplementation(async (d: Date) => (d.getDate() >= 12 ? [] : times()));
+    mockGetPrayerTimes.mockImplementation(async (_s: unknown, d: Date) => buildPrayerDay(d, d.getDate() >= 12 ? [] : times()));
     await syncWidgets(now);
 
     const entries = mockNextPrayer.updateTimeline.mock.calls[0][0];
@@ -86,14 +87,14 @@ describe("syncWidgets", () => {
 
   it("asks for seven days starting today", async () => {
     await syncWidgets(now);
-    const asked = mockGetPrayerTimesOn.mock.calls.map(([d]) => (d as Date).getDate());
+    const asked = mockGetPrayerTimes.mock.calls.map(([, d]) => (d as Date).getDate());
     expect(asked).toEqual([9, 10, 11, 12, 13, 14, 15]);
   });
 
   it("still pushes the days it could read when a later day fails", async () => {
-    mockGetPrayerTimesOn.mockImplementation(async (d: Date) => {
+    mockGetPrayerTimes.mockImplementation(async (_s: unknown, d: Date) => {
       if (d.getDate() >= 11) throw new Error("offline");
-      return times();
+      return buildPrayerDay(d, times());
     });
     await syncWidgets(now);
 
@@ -104,16 +105,16 @@ describe("syncWidgets", () => {
   });
 
   it("does not request later days once one has failed", async () => {
-    mockGetPrayerTimesOn.mockImplementation(async (d: Date) => {
+    mockGetPrayerTimes.mockImplementation(async (_s: unknown, d: Date) => {
       if (d.getDate() >= 11) throw new Error("offline");
-      return times();
+      return buildPrayerDay(d, times());
     });
     await syncWidgets(now);
-    expect(mockGetPrayerTimesOn).toHaveBeenCalledTimes(3);
+    expect(mockGetPrayerTimes).toHaveBeenCalledTimes(3);
   });
 
   it("leaves the widgets alone when today's prayer times cannot be read", async () => {
-    mockGetPrayerTimesOn.mockRejectedValue(new Error("offline"));
+    mockGetPrayerTimes.mockRejectedValue(new Error("offline"));
     await expect(syncWidgets(now)).resolves.toBeUndefined();
     expect(mockNextPrayer.updateTimeline).not.toHaveBeenCalled();
     expect(mockPrayerTimes.updateTimeline).not.toHaveBeenCalled();
@@ -154,7 +155,9 @@ describe("props sent to the native widget", () => {
   it("never contains null, which the native side cannot convert", async () => {
     // Long enough that the English is dropped, and no Sunrise in the day.
     await pinVerse({ ...ayah, arabicText: "ك".repeat(1100), englishText: "x".repeat(1300) });
-    mockGetPrayerTimesOn.mockImplementation(async () => times().filter((t) => t.label !== "Sunrise"));
+    mockGetPrayerTimes.mockImplementation(async (_s: unknown, d: Date) =>
+      buildPrayerDay(d, times().filter((t) => t.label !== "Sunrise")),
+    );
     await syncWidgets(now);
 
     expect(mockVerse.updateSnapshot).toHaveBeenCalled();

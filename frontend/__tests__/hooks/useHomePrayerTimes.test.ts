@@ -35,6 +35,8 @@ const mockGetPrayerTimesForDate = getPrayerTimesForDate as jest.MockedFunction<
   typeof getPrayerTimesForDate
 >;
 import * as Location from "expo-location";
+import { buildPrayerDay, formatClock } from "@/services/prayerDay";
+const dayOf = (rows: { label: string; time: string }[], date = new Date()) => buildPrayerDay(date, rows);
 
 const mockGetPrayerTimesToday = getPrayerTimesToday as jest.MockedFunction<
   typeof getPrayerTimesToday
@@ -73,7 +75,7 @@ describe("useHomePrayerTimes", () => {
     const saved = { useLocation: true, method: 2, city: { name: "Chicago", country: "US", lat: 41.88, lng: -87.63 } };
     await AsyncStorage.setItem("prayerSettings", JSON.stringify(saved));
     (Location.getForegroundPermissionsAsync as jest.Mock).mockResolvedValue({ status: "denied" });
-    mockGetPrayerTimesToday.mockResolvedValue([{ label: "Fajr", time: "5:00 AM" }] as any);
+    mockGetPrayerTimesToday.mockResolvedValue(dayOf([{ label: "Fajr", time: "5:00 AM" }]));
     jest.spyOn(AppState, "addEventListener").mockImplementation((() => ({ remove: jest.fn() })) as any);
 
     const { result } = renderHook(() => useHomePrayerTimes());
@@ -88,11 +90,11 @@ describe("useHomePrayerTimes", () => {
   it("reloads when prayer settings change and on app foreground", async () => {
     freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
 
-    mockGetPrayerTimesToday.mockResolvedValue([
+    mockGetPrayerTimesToday.mockResolvedValue(dayOf([
       { label: "Fajr", time: "5:00 AM" },
       { label: "Dhuhr", time: "12:00 PM" },
       { label: "Isha", time: "8:00 PM" },
-    ] as any);
+    ]));
 
     let appStateListener: ((state: string) => void | Promise<void>) | null = null;
 
@@ -131,21 +133,21 @@ describe("useHomePrayerTimes", () => {
   it("loads next-day fajr when there are no upcoming prayers today", async () => {
     freezeTestTime(new Date(2026, 1, 25, 21, 0, 0));
 
-    mockGetPrayerTimesToday.mockResolvedValueOnce([
+    mockGetPrayerTimesToday.mockResolvedValueOnce(dayOf([
       { label: "Fajr", time: "5:00 AM" },
       { label: "Dhuhr", time: "12:00 PM" },
       { label: "Isha", time: "8:00 PM" },
-    ] as any);
-    mockGetPrayerTimesForDate.mockResolvedValueOnce([
+    ]));
+    mockGetPrayerTimesForDate.mockResolvedValueOnce(dayOf([
       { label: "Fajr", time: "5:10 AM" },
       { label: "Dhuhr", time: "12:05 PM" },
-    ] as any);
+    ]));
 
     const { result } = renderHook(() => useHomePrayerTimes());
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-      expect(result.current.nextDayFajr).toBe("5:10 AM");
+      expect(formatClock(result.current.nextDayFajr!)).toBe("5:10 AM");
     });
 
     expect(result.current.locationLabel).toBe("Chicago");
@@ -160,11 +162,11 @@ describe("useHomePrayerTimes", () => {
         "prayerSettings",
         JSON.stringify({ useLocation: true, method: 2, city: null }),
       );
-      mockGetPrayerTimesToday.mockResolvedValue([
+      mockGetPrayerTimesToday.mockResolvedValue(dayOf([
         { label: "Fajr", time: "5:00 AM" },
         { label: "Dhuhr", time: "12:00 PM" },
         { label: "Isha", time: "8:00 PM" },
-      ] as any);
+      ]));
     });
 
     it("shows the resolved city when reverse geocoding succeeds", async () => {

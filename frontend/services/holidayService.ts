@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { handleForceUpdate } from "@/services/apiClient";
 import { getVersionHeaders } from "@/services/appVersion";
+import { dateKeyFromDate } from "@/utils/dateKey";
 
 const HOLIDAY_API_BASE = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 const YYYY_MM_DD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -102,15 +103,7 @@ async function loadFromStorage(year: number): Promise<Holiday[] | null> {
   }
 }
 
-// Local date key from parts
-function formatDateKeyFromParts(year: number, month: number, day: number): string {
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-// Local date key from Date
-export function dateKeyFromDate(d: Date): string {
-  return formatDateKeyFromParts(d.getFullYear(), d.getMonth() + 1, d.getDate());
-}
+export { dateKeyFromDate };
 
 function buildQueryString(params: Record<string, string | number>): string {
   return Object.entries(params)

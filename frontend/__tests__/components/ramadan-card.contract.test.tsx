@@ -1,6 +1,7 @@
 import { fireEvent, render } from "@testing-library/react-native";
 
 import RamadanCard from "@/components/home/RamadanCard";
+import { buildPrayerDay } from "@/services/prayerDay";
 
 jest.mock("@/context/ThemeContext", () => {
   const { defaultTheme } = jest.requireActual("@/constants/theme");
@@ -16,10 +17,10 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
-const TIMES = [
+const TIMES = buildPrayerDay(new Date(2027, 1, 10), [
   { label: "Fajr", time: "5:30 AM" },
   { label: "Maghrib", time: "5:30 PM" },
-];
+]);
 
 describe("RamadanCard", () => {
   afterEach(() => resetTestTime());
@@ -28,7 +29,7 @@ describe("RamadanCard", () => {
     freezeTestTime(new Date(2027, 1, 10, 12, 0, 0)); // Ramadan 3, midday
     const onLog = jest.fn();
     const { getByText, getByLabelText } = render(
-      <RamadanCard enabled prayerTimes={TIMES as any} tomorrowFajr="5:29 AM" onLogMissedFast={onLog} />,
+      <RamadanCard enabled prayerDay={TIMES} tomorrowFajr={new Date(2027, 1, 11, 5, 29)} onLogMissedFast={onLog} />,
     );
 
     expect(getByText("Ramadan 3")).toBeTruthy();
@@ -42,13 +43,13 @@ describe("RamadanCard", () => {
   it("renders nothing outside Ramadan or when the mode is off", () => {
     freezeTestTime(new Date(2026, 10, 4, 12, 0, 0));
     const outside = render(
-      <RamadanCard enabled prayerTimes={TIMES as any} tomorrowFajr={null} onLogMissedFast={jest.fn()} />,
+      <RamadanCard enabled prayerDay={TIMES} tomorrowFajr={null} onLogMissedFast={jest.fn()} />,
     );
     expect(outside.queryByLabelText("Log a missed fast")).toBeNull();
 
     freezeTestTime(new Date(2027, 1, 10, 12, 0, 0));
     const off = render(
-      <RamadanCard enabled={false} prayerTimes={TIMES as any} tomorrowFajr={null} onLogMissedFast={jest.fn()} />,
+      <RamadanCard enabled={false} prayerDay={TIMES} tomorrowFajr={null} onLogMissedFast={jest.fn()} />,
     );
     expect(off.queryByLabelText("Log a missed fast")).toBeNull();
   });

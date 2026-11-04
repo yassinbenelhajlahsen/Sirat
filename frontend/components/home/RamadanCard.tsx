@@ -6,14 +6,14 @@ import GlassSurface from "@/components/ui/GlassSurface";
 import { Body, Footnote, Headline, Subhead } from "@/components/ui/Text";
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import type { PrayerTime } from "@/services/prayerTimes";
+import type { PrayerDay } from "@/services/prayerDay";
 import getTimeUntil from "@/utils/getTimeUntil";
 import { getRamadanCardState } from "@/utils/ramadanCountdown";
 
 type Props = {
   enabled: boolean;
-  prayerTimes: PrayerTime[];
-  tomorrowFajr: string | null;
+  prayerDay: PrayerDay | null;
+  tomorrowFajr: Date | null;
   onLogMissedFast: () => void;
 };
 
@@ -21,7 +21,7 @@ function formatClock(d: Date): string {
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-export default function RamadanCard({ enabled, prayerTimes, tomorrowFajr, onLogMissedFast }: Props) {
+export default function RamadanCard({ enabled, prayerDay, tomorrowFajr, onLogMissedFast }: Props) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -33,7 +33,7 @@ export default function RamadanCard({ enabled, prayerTimes, tomorrowFajr, onLogM
     return () => clearInterval(id);
   }, [enabled]);
 
-  const state = getRamadanCardState({ now, enabled, prayerTimes, tomorrowFajr });
+  const state = getRamadanCardState({ now, enabled, prayerDay, tomorrowFajr });
   if (!state) return null;
 
   const { day, target } = state;

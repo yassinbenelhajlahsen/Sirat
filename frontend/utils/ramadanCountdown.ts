@@ -1,6 +1,5 @@
-import type { PrayerTime } from "@/services/prayerTimes";
-import { isFastingDay, maghribOn, ramadanDayAt } from "@/utils/hijriDate";
-import { parsePrayerTime } from "@/utils/prayerDial";
+import { maghribOf, slotAt, type PrayerDay } from "@/services/prayerDay";
+import { isFastingDay, ramadanDayAt } from "@/utils/hijriDate";
 
 export type RamadanTarget = { kind: "suhoor" | "iftar"; at: Date };
 
@@ -18,26 +17,24 @@ export type RamadanCardState = {
 export function getRamadanCardState(params: {
   now: Date;
   enabled: boolean;
-  prayerTimes: PrayerTime[];
-  tomorrowFajr: string | null;
+  prayerDay: PrayerDay | null;
+  tomorrowFajr: Date | null;
 }): RamadanCardState | null {
-  const { now, enabled, prayerTimes, tomorrowFajr } = params;
+  const { now, enabled, prayerDay, tomorrowFajr } = params;
   if (!enabled) return null;
 
-  const maghrib = maghribOn(now, prayerTimes);
+  const maghrib = maghribOf(prayerDay);
   const day = ramadanDayAt(now, maghrib);
   if (day == null) return null;
 
-  const fajrStr = prayerTimes.find((t) => t.label === "Fajr")?.time;
-  const fajr = fajrStr ? parsePrayerTime(fajrStr, now) : null;
+  const fajr = slotAt(prayerDay, "Fajr");
 
   if (fajr && now < fajr) return { day, target: { kind: "suhoor", at: fajr } };
   if (maghrib && now < maghrib) return { day, target: { kind: "iftar", at: maghrib } };
 
   const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  const nextFajr = tomorrowFajr ? parsePrayerTime(tomorrowFajr, tomorrow) : null;
-  if (nextFajr && isFastingDay(tomorrow)) {
-    return { day, target: { kind: "suhoor", at: nextFajr } };
+  if (tomorrowFajr && isFastingDay(tomorrow)) {
+    return { day, target: { kind: "suhoor", at: tomorrowFajr } };
   }
   return { day, target: null };
 }

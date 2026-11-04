@@ -294,20 +294,20 @@ jest.mock("@/components/PrayerDial", () => {
 
   return function PrayerDialMock({
     loading,
-    prayerTimes,
+    prayerDay,
     nextPrayer,
     onPressCentre,
   }: {
     loading: boolean;
-    prayerTimes: unknown[];
-    nextPrayer: { label: string } | null;
+    prayerDay: { slots: unknown[] } | null;
+    nextPrayer: { name: string } | null;
     onPressCentre?: () => void;
   }) {
     return (
       <>
         <Text testID="prayer-dial">
-          loading:{String(loading)} count:{prayerTimes.length} next:
-          {nextPrayer?.label ?? "none"}
+          loading:{String(loading)} count:{prayerDay?.slots.length ?? 0} next:
+          {nextPrayer?.name ?? "none"}
         </Text>
         {onPressCentre ? (
           <TouchableOpacity
@@ -484,6 +484,7 @@ import { getAllAyat, getAyatIndexForSurahAndAyah, getSurahMeta } from "@/service
 import { getCachedMosques, getNearbyMosques } from "@/services/getNearbyMosques";
 import { dateKeyFromDate } from "@/services/holidayService";
 import { getLastReadAyahIndex, saveLastReadAyahIndex, saveLastReadSurahAndAyah } from "@/services/quranProgress";
+import { buildPrayerDay } from "@/services/prayerDay";
 
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 const mockUseLocalSearchParams =
@@ -597,8 +598,8 @@ const ramadanEnd = new Date("2026-03-30T00:00:00.000Z");
 const firstMissedFastDate = new Date("2026-03-05T00:00:00.000Z");
 
 const buildHomePrayerState = (overrides: Record<string, unknown> = {}) => ({
-  prayerTimes: [{ label: "Fajr", time: "5:00 AM" }],
-  nextPrayer: { label: "Dhuhr", time: "12:30 PM" },
+  prayerDay: buildPrayerDay(new Date(2026, 2, 10), [{ label: "Fajr", time: "5:00 AM" }]),
+  nextPrayer: { name: "Dhuhr", at: new Date(2026, 2, 10, 12, 30) },
   nextDayFajr: null,
   timeLeft: "2h 12m",
   loading: false,
@@ -779,11 +780,10 @@ describe("Screen contracts", () => {
       buildCalendarSummaryTransition() as any,
     );
     mockUsePrayerTimes.mockReturnValue({
-      prayerTimes: [{ label: "Fajr", time: "5:31 AM" }],
+      prayerDay: buildPrayerDay(new Date(2026, 2, 10), [{ label: "Fajr", time: "5:31 AM" }]),
       loading: false,
       error: null,
       retry: jest.fn(),
-      prayerTimesDateKey: "2026-03-10",
     } as any);
     mockUseNextPrayer.mockReturnValue({ nextPrayer: null, timeLeft: "" } as any);
     mockUseRamadanTracker.mockReturnValue({
@@ -846,7 +846,7 @@ describe("Screen contracts", () => {
       mockUseHomePrayerTimes.mockReturnValue(
         buildHomePrayerState({
           nextPrayer: null,
-          nextDayFajr: "5:11 AM",
+          nextDayFajr: new Date(2026, 2, 11, 5, 11),
         }) as any,
       );
 

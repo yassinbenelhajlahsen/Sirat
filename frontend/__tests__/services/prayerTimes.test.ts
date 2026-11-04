@@ -1,3 +1,5 @@
+import { formatClock, type PrayerDay } from "@/services/prayerDay";
+
 type PrayerTimesModuleSetup = {
   mod: typeof import("@/services/prayerTimes");
   mocks: {
@@ -16,6 +18,8 @@ type PrayerTimesModuleSetup = {
   memStore: Map<string, any>;
   storageStore: Map<string, any>;
 };
+
+const timesOf = (day: PrayerDay) => day.slots.map((s) => ({ label: s.name, time: formatClock(s.at) }));
 
 function to12(time24: string): string {
   const [hStr, mStr] = time24.split(":");
@@ -152,7 +156,7 @@ describe("services/prayerTimes", () => {
 
     const result = await mod.getPrayerTimesForDate({ useLocation: true, method: 2 }, date);
 
-    expect(result).toEqual([{ label: "Fajr", time: "5:00 AM" }]);
+    expect(timesOf(result)).toEqual([{ label: "Fajr", time: "5:00 AM" }]);
     expect(mocks.loadPrayerStorageCache).not.toHaveBeenCalled();
     expect(mocks.fetchPrayerProxy).not.toHaveBeenCalled();
   });
@@ -172,7 +176,7 @@ describe("services/prayerTimes", () => {
 
     const result = await mod.getPrayerTimesForDate({ useLocation: true, method: 2 }, date);
 
-    expect(result).toEqual([{ label: "Fajr", time: "5:00 AM" }]);
+    expect(timesOf(result)).toEqual([{ label: "Fajr", time: "5:00 AM" }]);
     expect(mocks.writePrayerMemoryCache).toHaveBeenCalledTimes(1);
     expect(mocks.fetchPrayerProxy).not.toHaveBeenCalled();
   });
@@ -203,7 +207,7 @@ describe("services/prayerTimes", () => {
       new Date(2026, 1, 25, 10, 0, 0),
     );
 
-    expect(result[0]).toEqual({ label: "Fajr", time: "5:00 AM" });
+    expect(timesOf(result)[0]).toEqual({ label: "Fajr", time: "5:00 AM" });
     expect(mocks.fetchPrayerProxy).toHaveBeenCalledWith(
       "/api/prayer-times/timings",
       expect.objectContaining({ method: "auto", country: "US" }),
@@ -244,7 +248,7 @@ describe("services/prayerTimes", () => {
       new Date(2026, 1, 25, 13, 0, 0),
     );
 
-    expect(result[0]).toEqual({ label: "Fajr", time: "5:00 AM" });
+    expect(timesOf(result)[0]).toEqual({ label: "Fajr", time: "5:00 AM" });
     expect(mocks.fetchPrayerProxy).toHaveBeenCalledWith(
       "/api/prayer-times/timings",
       expect.any(Object),
@@ -284,7 +288,7 @@ describe("services/prayerTimes", () => {
       new Date(2026, 0, 15, 12, 0, 0),
     );
 
-    expect(result[0]).toEqual({ label: "Fajr", time: "5:00 AM" });
+    expect(timesOf(result)[0]).toEqual({ label: "Fajr", time: "5:00 AM" });
 
     const monthlyCalls = mocks.fetchPrayerProxy.mock.calls.filter(
       ([path]) => path === "/api/prayer-times/calendar",
@@ -314,8 +318,8 @@ describe("services/prayerTimes", () => {
     const m2 = await mod.getPrayerTimesForDate({ useLocation: true, method: 2 }, date);
     const m3 = await mod.getPrayerTimesForDate({ useLocation: true, method: 3 }, date);
 
-    expect(m2[0].time).toBe("5:00 AM");
-    expect(m3[0].time).toBe("6:00 AM");
+    expect(timesOf(m2)[0].time).toBe("5:00 AM");
+    expect(timesOf(m3)[0].time).toBe("6:00 AM");
 
     expect(mocks.loadPrayerStorageCache.mock.calls[0][0]).not.toBe(
       mocks.loadPrayerStorageCache.mock.calls[1][0],
@@ -337,7 +341,7 @@ describe("services/prayerTimes", () => {
       { coords: { latitude: 43.65, longitude: -79.38 }, country: "CA" },
     );
 
-    expect(result).toEqual([{ label: "Fajr", time: "5:00 AM" }]);
+    expect(timesOf(result)).toEqual([{ label: "Fajr", time: "5:00 AM" }]);
     expect(mocks.resolveCoordsAndCountry).toHaveBeenCalledWith(
       { useLocation: true, method: 2 },
       {

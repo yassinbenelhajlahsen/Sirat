@@ -8,6 +8,7 @@ import {
   type PrayerName,
   type PrayerStatus,
 } from "@/services/prayerTracker";
+import { unwrapDay } from "@/services/tracking/stats";
 
 type DayStatuses = Partial<Record<PrayerName, PrayerStatus>>;
 
@@ -16,13 +17,7 @@ const NONE: DayStatuses = {};
 export function usePrayerLog(dateKey: string) {
   const statuses = useTrackerData(
     prayerLogStore,
-    (log) => {
-      const out: DayStatuses = {};
-      for (const [prayer, cell] of Object.entries(log[dateKey] ?? {})) {
-        if (cell?.value) out[prayer as PrayerName] = cell.value;
-      }
-      return out;
-    },
+    (log) => unwrapDay(log[dateKey]),
     NONE,
     dateKey,
   );

@@ -19,8 +19,8 @@ import { Caption } from "@/components/ui/Text";
 import { darkTheme, withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
-import type { PrayerTime } from "@/services/prayerTimes";
+import { isPrayerName, type PrayerName, type PrayerStatus } from "@/services/prayerTracker";
+import { formatClock, type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
 import {
   DIAL,
   DIAL_TEXT_BOX,
@@ -39,7 +39,6 @@ import {
   sunAltitude,
   type RingSegment,
 } from "@/utils/prayerDial";
-import { prayerNameForArcLabel } from "@/utils/prayerLabel";
 import { sunDay } from "@/utils/sky";
 
 /**
@@ -98,12 +97,12 @@ type Coords = { latitude: number; longitude: number };
 
 type PrayerDialProps = {
   loading: boolean;
-  prayerTimes: PrayerTime[];
-  nextPrayer: { label: string; time: string } | null;
+  prayerDay: PrayerDay | null;
+  nextPrayer: PrayerSlot | null;
   /** Live countdown string, already formatted (e.g. "1h 24m 33s"). */
   timeLeft?: string;
   /** Tomorrow's Fajr, shown once today's prayers are done. */
-  tomorrowFajr?: string | null;
+  tomorrowFajr?: Date | null;
   /** The day being shown. Defaults to today. */
   date?: Date;
   /** Override "now" for tests and stable snapshots. */
@@ -119,7 +118,7 @@ type PrayerDialProps = {
 
 export default function PrayerDial({
   loading,
-  prayerTimes,
+  prayerDay,
   nextPrayer,
   timeLeft,
   tomorrowFajr,
@@ -162,7 +161,7 @@ export default function PrayerDial({
   }, [now, live, hasSky]);
 
   const day = useMemo(() => date ?? new Date(), [date]);
-  const markers = useMemo(() => dialMarkers(prayerTimes, day), [prayerTimes, day]);
+  const markers = useMemo(() => dialMarkers(prayerDay), [prayerDay]);
 
   // Ring colours depend only on the date and the place, so they survive every
   // tick. Keyed on a coarse coordinate bucket for the same reason.
@@ -353,7 +352,7 @@ export default function PrayerDial({
               </G>
             );
           }
-          const name = prayerNameForArcLabel(m.label);
+          const name = isPrayerName(m.label) ? m.label : null;
           const status = name ? statuses?.[name] : undefined;
           return (
             <G key={m.label}>
@@ -476,9 +475,9 @@ export default function PrayerDial({
         {markers
           .filter((m) => !m.notch)
           .map((m) => {
-            const name = logging ? prayerNameForArcLabel(m.label) : null;
+            const name = logging && isPrayerName(m.label) ? m.label : null;
             const status = name ? statuses?.[name] : undefined;
-            const isNext = live && nextPrayer?.label === m.label;
+            const isNext = live && nextPrayer?.name === m.label;
             const passed = live && nowMinutes != null && m.minutes != null && m.minutes <= nowMinutes;
             const loggable = logging && name != null && (!live || passed || isNext);
 
@@ -574,9 +573,9 @@ function centreContent({
 }: {
   live: boolean;
   loading: boolean;
-  nextPrayer: { label: string; time: string } | null;
+  nextPrayer: PrayerSlot | null;
   timeLeft?: string;
-  tomorrowFajr?: string | null;
+  tomorrowFajr?: Date | null;
   day: Date;
   statuses?: Partial<Record<PrayerName, PrayerStatus>>;
   daylight: string | null;
@@ -588,8 +587,8 @@ function centreContent({
 
   if (live && nextPrayer) {
     return {
-      label: nextPrayer.label.toUpperCase(),
-      value: shortTime(nextPrayer.time),
+      label: nextPrayer.name.toUpperCase(),
+      value: shortTime(formatClock(nextPrayer.at)),
       size: TIME_SIZE,
       sub: timeLeft ? `in ${timeLeft}` : null,
       subColor: colors.accent,
@@ -600,7 +599,7 @@ function centreContent({
     // Everything is prayed for today, so the dial rolls over to tomorrow.
     return {
       label: "FAJR TOMORROW",
-      value: tomorrowFajr ? shortTime(tomorrowFajr) : null,
+      value: tomorrowFajr ? shortTime(formatClock(tomorrowFajr)) : null,
       size: TIME_SIZE,
       sub: "Prayers done for today",
       subColor: colors.textSecondary,

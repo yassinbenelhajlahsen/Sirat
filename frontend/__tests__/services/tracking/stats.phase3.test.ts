@@ -15,8 +15,8 @@ describe("unwrapHabitLog", () => {
 describe("monthDailyScores", () => {
   it("returns a non-missed fraction per day of the month", () => {
     const byDay = {
-      "2026-06-01": { fajr: "prayed", dhuhr: "prayed", asr: "prayed", maghrib: "prayed", isha: "late" },
-      "2026-06-02": { fajr: "prayed", dhuhr: "missed", asr: "prayed" },
+      "2026-06-01": { Fajr: "prayed", Dhuhr: "prayed", Asr: "prayed", Maghrib: "prayed", Isha: "late" },
+      "2026-06-02": { Fajr: "prayed", Dhuhr: "missed", Asr: "prayed" },
     } as const;
     const scores = monthDailyScores(byDay as any, 2026, 5); // June (0-indexed)
     expect(scores).toHaveLength(30);

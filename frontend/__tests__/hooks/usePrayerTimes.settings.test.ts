@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { buildPrayerDay } from "@/services/prayerDay";
 import { getPrayerTimesForDate } from "@/services/prayerTimes";
 import { prayerSettingsSetting } from "@/services/syncedSettings";
 
@@ -22,7 +23,7 @@ const chicago = { name: "Chicago", country: "US", lat: 41.88, lng: -87.63 };
 beforeEach(async () => {
   jest.clearAllMocks();
   await AsyncStorage.clear();
-  mockGetPrayerTimesForDate.mockResolvedValue([{ label: "Fajr", time: "5:00 AM" }]);
+  mockGetPrayerTimesForDate.mockResolvedValue(buildPrayerDay(day, [{ label: "Fajr", time: "5:00 AM" }]));
 });
 
 describe("usePrayerTimes with the user's prayer settings", () => {

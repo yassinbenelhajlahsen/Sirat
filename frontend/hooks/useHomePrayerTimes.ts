@@ -4,24 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { getEffectivePrayerSettings } from "@/services/prayerSettings";
 import { prayerSettingsSetting } from "@/services/syncedSettings";
-import { dateKeyFromDate } from "../services/holidayService";
 import { resolveCityDisplay } from "../services/notifications/cityResolver";
 import { STORAGE_CITY_DISPLAY_LOC } from "../services/notifications/constants";
-import { getPrayerTimesForDate, getPrayerTimesToday, PrayerSettings, PrayerTime } from "../services/prayerTimes";
+import { nextSlot, slotAt, type PrayerDay } from "../services/prayerDay";
+import { getPrayerTimesForDate, getPrayerTimesToday, PrayerSettings } from "../services/prayerTimes";
 import { isFastingDay } from "../utils/hijriDate";
 import { useNextPrayer } from "./useNextPrayer";
-
-function parseTimeToDate(timeStr: string, baseDate: Date): Date {
-  const [time, modifier] = timeStr.split(" ");
-  const [hoursStr, minutesStr] = time.split(":");
-  let hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
-  if (modifier === "PM" && hours !== 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
-  const d = new Date(baseDate);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
 
 /**
  * The chosen city's coordinates. Prayer times already resolve through these
@@ -99,37 +87,27 @@ async function resolveCoordsAndLabel(effective: PrayerSettings): Promise<{
 }
 
 export function useHomePrayerTimes() {
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
-  const prayerTimesRef = useRef(prayerTimes);
-  useEffect(() => { prayerTimesRef.current = prayerTimes; }, [prayerTimes]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [prayerTimesDateKey, setPrayerTimesDateKey] = useState<string | null>(
-    null,
-  );
-  const [nextDayFajr, setNextDayFajr] = useState<string | null>(null);
+  const [prayerDay, setPrayerDay] = useState<PrayerDay | null>(null);
+  const prayerDayRef = useRef(prayerDay);
+  useEffect(() => { prayerDayRef.current = prayerDay; }, [prayerDay]);
+  const [nextDayFajr, setNextDayFajr] = useState<Date | null>(null);
   // Only loaded when tomorrow is a fasting day: the Ramadan card needs it after Maghrib.
-  const [tomorrowFajr, setTomorrowFajr] = useState<string | null>(null);
+  const [tomorrowFajr, setTomorrowFajr] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [banner, setBanner] = useState("");
   const [locationLabel, setLocationLabel] = useState("");
   // Surfaced so the dial can compute the sun's position for this place.
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const { nextPrayer, timeLeft } = useNextPrayer(
-    selectedDate,
-    prayerTimes,
-    prayerTimesDateKey,
-  );
+  const { nextPrayer, timeLeft } = useNextPrayer(prayerDay);
 
   const loadData = useCallback(async (reset = false) => {
     try {
-      if (reset || prayerTimesRef.current.length === 0) {
+      if (reset || !prayerDayRef.current?.slots.length) {
         setLoading(true);
       }
       if (reset) {
-        setPrayerTimes([]);
-        setSelectedDate(null);
-        setPrayerTimesDateKey(null);
+        setPrayerDay(null);
         setNextDayFajr(null);
         setTomorrowFajr(null);
       }
@@ -141,25 +119,19 @@ export function useHomePrayerTimes() {
       setCoords(coords ?? null);
 
       const resolvedDate = new Date();
-      const times = await getPrayerTimesToday(effective, { coords, country });
-      setPrayerTimes(times);
-      setSelectedDate(resolvedDate);
-      setPrayerTimesDateKey(dateKeyFromDate(resolvedDate));
+      const today = await getPrayerTimesToday(effective, { coords, country });
+      setPrayerDay(today);
 
-      const now = new Date();
-      const hasUpcoming = times
-        .map((pt) => parseTimeToDate(pt.time, resolvedDate))
-        .some((dateObj) => dateObj > now);
+      const hasUpcoming = nextSlot(today, new Date()) !== null;
 
       const tomorrow = new Date(resolvedDate);
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowFasting = isFastingDay(tomorrow);
 
       if (!hasUpcoming || tomorrowFasting) {
-        let fajr: string | null = null;
+        let fajr: Date | null = null;
         try {
-          const tomorrowTimes = await getPrayerTimesForDate(effective, tomorrow);
-          fajr = tomorrowTimes.find((p) => p.label === "Fajr")?.time ?? null;
+          fajr = slotAt(await getPrayerTimesForDate(effective, tomorrow), "Fajr");
         } catch (err) {
           // Only the dial's "next day" state treats this as fatal; the Ramadan card can do without.
           if (!hasUpcoming) throw err;
@@ -207,7 +179,7 @@ export function useHomePrayerTimes() {
   }, [loadData]);
 
   return {
-    prayerTimes,
+    prayerDay,
     nextPrayer,
     nextDayFajr,
     tomorrowFajr,

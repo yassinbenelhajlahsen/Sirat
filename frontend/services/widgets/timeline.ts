@@ -1,11 +1,10 @@
-import type { PrayerTime } from "@/services/prayerTimes";
+import { formatClock, slotAt, type PrayerDay } from "@/services/prayerDay";
 import { formatHijriDate } from "@/utils/hijriDate";
-import { parsePrayerTime } from "@/utils/prayerDial";
 
 export const WIDGET_PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"] as const;
 export type WidgetPrayerName = (typeof WIDGET_PRAYERS)[number];
 
-export type WidgetDay = { date: Date; times: PrayerTime[] };
+export type WidgetDay = { date: Date; prayerDay: PrayerDay };
 
 export type PrayerSlot = { name: WidgetPrayerName; time: string; at: number };
 
@@ -28,17 +27,20 @@ export type PrayerTimelineEntry = { date: Date; props: PrayerEntryProps };
 
 type ParsedDay = { date: Date; prayers: PrayerSlot[]; sunrise: string; sunriseAt: number | null };
 
-function parseDay({ date, times }: WidgetDay): ParsedDay | null {
+function parseDay({ date, prayerDay }: WidgetDay): ParsedDay | null {
   const prayers: PrayerSlot[] = [];
   for (const name of WIDGET_PRAYERS) {
-    const time = times.find((t) => t.label === name)?.time;
-    const at = time ? parsePrayerTime(time, date) : null;
-    if (!time || !at) return null;
-    prayers.push({ name, time, at: at.getTime() });
+    const at = slotAt(prayerDay, name);
+    if (!at) return null;
+    prayers.push({ name, time: formatClock(at), at: at.getTime() });
   }
-  const sunrise = times.find((t) => t.label === "Sunrise")?.time ?? "";
-  const sunriseAt = sunrise ? (parsePrayerTime(sunrise, date)?.getTime() ?? null) : null;
-  return { date, prayers, sunrise, sunriseAt };
+  const sunriseDate = slotAt(prayerDay, "Sunrise");
+  return {
+    date,
+    prayers,
+    sunrise: sunriseDate ? formatClock(sunriseDate) : "",
+    sunriseAt: sunriseDate ? sunriseDate.getTime() : null,
+  };
 }
 
 // Same calls Home uses, so the widget shows the dates the app shows. The Gregorian date

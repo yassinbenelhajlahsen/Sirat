@@ -1,3 +1,4 @@
+import { buildPrayerDay } from "@/services/prayerDay";
 import { getRamadanCardState } from "@/utils/ramadanCountdown";
 
 const times = [
@@ -7,7 +8,13 @@ const times = [
 ];
 const at = (month: number, day: number, h: number, m = 0) => new Date(2027, month, day, h, m);
 const state = (now: Date, extra: object = {}) =>
-  getRamadanCardState({ now, enabled: true, prayerTimes: times, tomorrowFajr: "5:29 AM", ...extra });
+  getRamadanCardState({
+    now,
+    enabled: true,
+    prayerDay: buildPrayerDay(now, times),
+    tomorrowFajr: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 5, 29),
+    ...extra,
+  });
 
 describe("getRamadanCardState", () => {
   it("is hidden when Ramadan mode is off or outside Ramadan", () => {

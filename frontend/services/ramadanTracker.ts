@@ -1,19 +1,9 @@
 import { Holiday } from "./holidayService";
 import { ramadanTrackerSetting } from "@/services/syncedSettings";
+import { dateKeyFromDate } from "@/utils/dateKey";
 
 // Buffer days before/after Ramadan for universal compatibility
 const RAMADAN_BUFFER_DAYS = 3;
-
-/**
- * Convert Date to local date key "YYYY-MM-DD"
- * Matches holidayService.ts dateKeyFromDate pattern
- */
-export function dateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 /**
  * Get all missed fast days from storage
@@ -27,7 +17,7 @@ export const getMissedFastDays = () => ramadanTrackerSetting.get();
  */
 export async function wasFastMissed(date: Date): Promise<boolean> {
   const map = await getMissedFastDays();
-  return map[dateKey(date)] === true;
+  return map[dateKeyFromDate(date)] === true;
 }
 
 /**
@@ -36,7 +26,7 @@ export async function wasFastMissed(date: Date): Promise<boolean> {
  */
 export async function markFastAsMissed(date: Date): Promise<void> {
   const map = await getMissedFastDays();
-  await ramadanTrackerSetting.set({ ...map, [dateKey(date)]: true });
+  await ramadanTrackerSetting.set({ ...map, [dateKeyFromDate(date)]: true });
 }
 
 /**
@@ -44,7 +34,7 @@ export async function markFastAsMissed(date: Date): Promise<void> {
  * @param date - Date to clear
  */
 export async function clearMissedFast(date: Date): Promise<void> {
-  const { [dateKey(date)]: _removed, ...rest } = await getMissedFastDays();
+  const { [dateKeyFromDate(date)]: _removed, ...rest } = await getMissedFastDays();
   await ramadanTrackerSetting.set(rest);
 }
 

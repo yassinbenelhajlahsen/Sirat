@@ -7,7 +7,7 @@ beforeEach(async () => { await AsyncStorage.clear(); });
 it("prayerLogAdapter.applyMerged keeps the newer cell per LWW", async () => {
   // local has a newer fajr edit; server has an older fajr + a maghrib.
   await prayerLogAdapter.applyMerged({}); // seed empty
-  await setPrayerStatus("2026-06-20", "fajr", "prayed");
+  await setPrayerStatus("2026-06-20", "Fajr", "prayed");
   const localFajr = getCachedPrayerLog()["2026-06-20"].fajr!;
   await prayerLogAdapter.applyMerged({
     "2026-06-20": {

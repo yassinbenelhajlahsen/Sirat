@@ -2,6 +2,7 @@ import { fireEvent, render } from "@testing-library/react-native";
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 import { ThemeProvider } from "@/context/ThemeContext";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
+import { buildPrayerDay } from "@/services/prayerDay";
 
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
@@ -12,10 +13,10 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 
-const TIMES = [
+const TIMES = buildPrayerDay(new Date(2026, 2, 4), [
   { label: "Fajr", time: "5:12 AM" }, { label: "Dhuhr", time: "1:01 PM" },
   { label: "Asr", time: "3:42 PM" }, { label: "Maghrib", time: "6:30 PM" }, { label: "Isha", time: "8:01 PM" },
-] as any;
+]);
 
 const wrap = (ui: React.ReactElement) => <ThemeProvider>{ui}</ThemeProvider>;
 
@@ -27,7 +28,7 @@ describe("DayDetailPanel logging", () => {
       wrap(
         <DayDetailPanel
           date={past} isToday={false} holiday={null} loading={false}
-          prayerTimes={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
+          prayerDay={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
           nextPrayer={null} timeLeft=""
           statuses={{}}
           onPressPrayer={onPressPrayer}
@@ -35,17 +36,17 @@ describe("DayDetailPanel logging", () => {
       ),
     );
     fireEvent.press(getByLabelText("Log Maghrib"));
-    expect(onPressPrayer).toHaveBeenCalledWith("maghrib" as PrayerName, "Maghrib");
+    expect(onPressPrayer).toHaveBeenCalledWith("Maghrib" as PrayerName, "Maghrib");
   });
 
   it("renders the prayed dot when statuses contain a prayed prayer", () => {
     const past = new Date(2025, 5, 16);
-    const statuses: Partial<Record<PrayerName, PrayerStatus>> = { fajr: "prayed" };
+    const statuses: Partial<Record<PrayerName, PrayerStatus>> = { Fajr: "prayed" };
     const { getByTestId } = render(
       wrap(
         <DayDetailPanel
           date={past} isToday={false} holiday={null} loading={false}
-          prayerTimes={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
+          prayerDay={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
           nextPrayer={null} timeLeft=""
           statuses={statuses}
           onPressPrayer={jest.fn()}
@@ -62,7 +63,7 @@ describe("DayDetailPanel logging", () => {
       wrap(
         <DayDetailPanel
           date={future} isToday={false} holiday={null} loading={false}
-          prayerTimes={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
+          prayerDay={TIMES} error={null} onRetry={jest.fn()} onOpenSettings={jest.fn()}
           nextPrayer={null} timeLeft=""
           statuses={{}}
           onPressPrayer={jest.fn()}

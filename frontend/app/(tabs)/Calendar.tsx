@@ -157,13 +157,8 @@ export default function CalendarScreen() {
     [ramadanStart, ramadanEnd],
   );
 
-  const { prayerTimes, loading, error, retry, prayerTimesDateKey } =
-    usePrayerTimes(selectedDate);
-  const { nextPrayer, timeLeft } = useNextPrayer(
-    selectedDate,
-    prayerTimes,
-    prayerTimesDateKey,
-  );
+  const { prayerDay, loading, error, retry } = usePrayerTimes(selectedDate);
+  const { nextPrayer, timeLeft } = useNextPrayer(prayerDay);
   const { isRamadan, isFastMissed, toggleMissedFast } = useRamadanTracker(
     selectedDate,
     ramadanParam.start,
@@ -445,7 +440,7 @@ export default function CalendarScreen() {
                 isToday={selectedIsToday}
                 holiday={selectedHoliday}
                 loading={loading}
-                prayerTimes={prayerTimes}
+                prayerDay={prayerDay}
                 error={error}
                 onRetry={retry}
                 onOpenSettings={openSettings}

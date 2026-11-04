@@ -12,8 +12,8 @@ import {
   cancelPreviouslyScheduled,
   msUntilNextLocalMidnightPlus,
   readPlanInputs,
-  yyyymmdd,
 } from "@/services/notifications/scheduler";
+import { buildPrayerDay } from "@/services/prayerDay";
 import type { PlanInput } from "@/services/notifications/planner";
 import { notifPrefsSetting, notifSoundModeSetting } from "@/services/syncedSettings";
 
@@ -33,22 +33,20 @@ const cancelAll = Notifications.cancelAllScheduledNotificationsAsync as jest.Moc
 const allPrefs = (on: boolean) => ({ Fajr: on, Sunrise: on, Dhuhr: on, Asr: on, Maghrib: on, Isha: on });
 const NO_WINDOW = { Fajr: false, Dhuhr: false, Asr: false, Maghrib: false };
 const FULL_DAY = [
-  { label: "Fajr", time: "05:00 AM" },
-  { label: "Sunrise", time: "06:30 AM" },
-  { label: "Dhuhr", time: "01:00 PM" },
-  { label: "Asr", time: "05:30 PM" },
-  { label: "Maghrib", time: "08:30 PM" },
+  { label: "Fajr", time: "5:00 AM" },
+  { label: "Sunrise", time: "6:30 AM" },
+  { label: "Dhuhr", time: "1:00 PM" },
+  { label: "Asr", time: "5:30 PM" },
+  { label: "Maghrib", time: "8:30 PM" },
   { label: "Isha", time: "10:00 PM" },
 ];
 
 function inputs(count: number, over: Partial<Omit<PlanInput, "now" | "seen" | "budget">> = {}) {
   return {
-    days: Array.from({ length: count }, (_, i) => ({
-      date: new Date(2026, 0, 1 + i),
-      times: FULL_DAY,
-      statuses: {},
-      fasting: false,
-    })),
+    days: Array.from({ length: count }, (_, i) => {
+      const date = new Date(2026, 0, 1 + i);
+      return { date, prayerDay: buildPrayerDay(date, FULL_DAY), statuses: {}, fasting: false };
+    }),
     cityDisplay: "Chicago",
     prefs: allPrefs(true),
     windowPrefs: NO_WINDOW,
@@ -65,10 +63,6 @@ beforeEach(async () => {
 });
 
 describe("notifications/scheduler helpers", () => {
-  it("formats yyyymmdd deterministically", () => {
-    expect(yyyymmdd(new Date(2026, 1, 3, 10, 11, 12))).toBe("2026-02-03");
-  });
-
   it("computes ms until next local midnight plus offset", () => {
     freezeTestTime(new Date(2026, 0, 1, 23, 59, 0));
     const ms = msUntilNextLocalMidnightPlus(5);
@@ -102,7 +96,7 @@ describe("applySchedule", () => {
     expect(schedule).toHaveBeenCalledTimes(1);
     const arg = schedule.mock.calls[0][0];
     expect(arg.content).toEqual(
-      expect.objectContaining({ title: "🌅 Fajr time", body: "05:00 AM in Chicago", sound: "default", priority: Notifications.AndroidNotificationPriority.HIGH }),
+      expect.objectContaining({ title: "🌅 Fajr time", body: "5:00 AM in Chicago", sound: "default", priority: Notifications.AndroidNotificationPriority.HIGH }),
     );
     expect(arg.trigger).toEqual({ type: "date", date: new Date(2026, 0, 1, 5, 0) });
     expect(JSON.parse((await AsyncStorage.getItem(STORAGE_SCHEDULE_IDS))!)).toHaveLength(1);
@@ -159,15 +153,16 @@ describe("applySchedule", () => {
 
 describe("readPlanInputs", () => {
   it("gathers settings, a full horizon of days with times and marks, and the platform sound", async () => {
-    (getPrayerTimesForDate as jest.Mock).mockResolvedValue(FULL_DAY);
-    (getDayStatuses as jest.Mock).mockResolvedValue({ fajr: "prayed" });
+    const day = buildPrayerDay(new Date(), FULL_DAY);
+    (getPrayerTimesForDate as jest.Mock).mockResolvedValue(day);
+    (getDayStatuses as jest.Mock).mockResolvedValue({ Fajr: "prayed" });
     await notifPrefsSetting.set({ ...allPrefs(true), Isha: false });
     await notifSoundModeSetting.set("adhan");
 
     const result = await readPlanInputs();
 
     expect(result.days).toHaveLength(HORIZON_DAYS);
-    expect(result.days[0]).toEqual(expect.objectContaining({ times: FULL_DAY, statuses: { fajr: "prayed" }, fasting: false }));
+    expect(result.days[0]).toEqual(expect.objectContaining({ prayerDay: day, statuses: { Fajr: "prayed" }, fasting: false }));
     expect(result.prefs.Isha).toBe(false);
     expect(result.cityDisplay).toBe("Chicago");
     expect(result.prayerSound).toBe("adhan.caf");

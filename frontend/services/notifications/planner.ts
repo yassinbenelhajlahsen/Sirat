@@ -1,4 +1,4 @@
-import type { PrayerTime } from "../prayer-times/types";
+import { formatClock, windowEnd, type PrayerDay } from "../prayerDay";
 import type { PrayerName, PrayerStatus } from "../tracking/types";
 import type { PrefMap, PrayerKey } from "./types";
 import { PRAYER_EMOJI } from "./types";
@@ -15,7 +15,7 @@ import {
 
 export type PlanDay = {
   date: Date;
-  times: PrayerTime[];
+  prayerDay: PrayerDay;
   /** Marks the user has set for this day; a cleared mark is simply absent. */
   statuses: Partial<Record<PrayerName, PrayerStatus>>;
   /** A Ramadan day, so Maghrib reads as Iftar. */
@@ -48,23 +48,6 @@ export type PlannedNotification = {
   data: Record<string, unknown>;
 };
 
-export function yyyymmdd(d = new Date()): string {
-  const y = d.getFullYear();
-  const m = `${d.getMonth() + 1}`.padStart(2, "0");
-  const day = `${d.getDate()}`.padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function parse12hToDate(base: Date, timeStr: string): Date {
-  const [hm, ampm] = timeStr.split(" ");
-  const [hStr, mStr] = hm.split(":");
-  let h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  if (ampm === "PM" && h !== 12) h += 12;
-  if (ampm === "AM" && h === 12) h = 0;
-  return new Date(base.getFullYear(), base.getMonth(), base.getDate(), h, m, 0, 0);
-}
-
 const minuteKey = (d: Date) => d.toISOString().slice(0, 16);
 
 /** What to schedule: every alert and reminder still ahead, soonest first, within the budget. */
@@ -73,23 +56,22 @@ export function planNotifications(input: PlanInput): PlannedNotification[] {
   const anyWindowEnabled = WINDOW_PRAYERS.some((key) => windowPrefs[key]);
   const planned: PlannedNotification[] = [];
 
-  for (const { date: day, times, statuses, fasting } of input.days) {
-    const dayKey = yyyymmdd(day);
+  for (const { date: day, prayerDay, statuses, fasting } of input.days) {
+    const dayKey = prayerDay.dateKey;
 
     // At-prayer-time alerts.
-    for (const prayer of times) {
-      const label = prayer.label as PrayerKey;
+    for (const { name: label, at: fireDate } of prayerDay.slots) {
       if (!prefs[label]) continue;
-      const fireDate = parse12hToDate(day, prayer.time);
       if (fireDate.getTime() <= now) continue;
+      const timeLocal = formatClock(fireDate);
       planned.push({
         fireDate,
         seenKey: `${label}_${minuteKey(fireDate)}`,
         title: `${PRAYER_EMOJI[label] || "🕌"} ${fasting && label === "Maghrib" ? "Maghrib/Iftar" : label} time`,
-        body: `${prayer.time} in ${cityDisplay}`,
+        body: `${timeLocal} in ${cityDisplay}`,
         // Sunrise is not a prayer, so it gets no adhan.
         sound: label === "Sunrise" ? "default" : prayerSound,
-        data: { type: "prayer", label, timeLocal: prayer.time, city: cityDisplay, dayKey },
+        data: { type: "prayer", label, timeLocal, city: cityDisplay, dayKey },
       });
     }
 
@@ -110,27 +92,27 @@ export function planNotifications(input: PlanInput): PlannedNotification[] {
 
     // Window reminders: shortly before a prayer's time runs out, unless it is already logged.
     if (!anyWindowEnabled) continue;
-    for (let i = 0; i < times.length; i++) {
-      const label = times[i].label as PrayerKey;
+    for (const { name: label } of prayerDay.slots) {
       if (!WINDOW_PRAYERS.includes(label as WindowPrayerKey)) continue;
       if (!windowPrefs[label as WindowPrayerKey]) continue;
-      const next = times[i + 1];
+      const next = windowEnd(prayerDay, label);
       if (!next) continue;
-      if (statuses[label.toLowerCase() as PrayerName]) continue;
-      const fireDate = new Date(parse12hToDate(day, next.time).getTime() - windowOffset * 60_000);
+      if (statuses[label as PrayerName]) continue;
+      const fireDate = new Date(next.at.getTime() - windowOffset * 60_000);
       if (fireDate.getTime() <= now) continue;
+      const nextTimeLocal = formatClock(next.at);
       planned.push({
         fireDate,
         seenKey: `window_${label}_${minuteKey(fireDate)}`,
         title: `${label} ending soon`,
-        body: `${next.label} ${next.label === "Sunrise" ? "is" : "begins"} at ${next.time}, in ${windowOffset} min.`,
+        body: `${next.name} ${next.name === "Sunrise" ? "is" : "begins"} at ${nextTimeLocal}, in ${windowOffset} min.`,
         // The adhan is a call to prayer, so it never plays for "ending soon" reminders.
         sound: "default",
         data: {
           type: "window_reminder",
           label,
-          nextLabel: next.label,
-          nextTimeLocal: next.time,
+          nextLabel: next.name,
+          nextTimeLocal,
           offset: windowOffset,
           dayKey,
         },

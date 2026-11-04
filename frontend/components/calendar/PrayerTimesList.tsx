@@ -5,16 +5,15 @@ import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
 import { Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
-import type { PrayerTime } from "@/services/prayerTimes";
-import { prayerNameForArcLabel } from "@/utils/prayerLabel";
+import { formatClock, type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
+import { isPrayerName, type PrayerName, type PrayerStatus } from "@/services/prayerTracker";
 
 type PrayerTimesListProps = {
-  prayerTimes: PrayerTime[];
+  prayerDay: PrayerDay;
   statuses: Partial<Record<PrayerName, PrayerStatus>>;
   /** Only today highlights the next prayer and holds back prayers still ahead. */
   isToday: boolean;
-  nextPrayer: { label: string; time: string } | null;
+  nextPrayer: PrayerSlot | null;
   /** Past days and today can be logged; future days only list the times. */
   canLog: boolean;
   onPressPrayer: (name: PrayerName, label: string) => void;
@@ -31,7 +30,7 @@ const STATUS_VALUE: Record<PrayerStatus, string> = {
 };
 
 export default function PrayerTimesList({
-  prayerTimes,
+  prayerDay,
   statuses,
   isToday,
   nextPrayer,
@@ -44,26 +43,26 @@ export default function PrayerTimesList({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   // Today logs up to and including the next prayer; once all are done, every one.
-  const nextIdx = isToday && nextPrayer ? prayerTimes.findIndex((p) => p.label === nextPrayer.label) : -1;
+  const nextIdx = isToday && nextPrayer ? prayerDay.slots.findIndex((p) => p.name === nextPrayer.name) : -1;
 
   return (
     <View style={styles.list}>
-      {prayerTimes.map((p, fi) => {
-        const name = prayerNameForArcLabel(p.label);
+      {prayerDay.slots.map((p, fi) => {
+        const name = isPrayerName(p.name) ? p.name : null;
         const status = name ? statuses[name] : undefined;
         const isNext = fi === nextIdx;
         const passed = isToday && nextIdx !== -1 && fi < nextIdx;
         const loggable = canLog && name != null && (!isToday || nextIdx === -1 || fi <= nextIdx);
-        const ramadanLabel = ramadan ? RAMADAN_LABELS[p.label] : undefined;
+        const ramadanLabel = ramadan ? RAMADAN_LABELS[p.name] : undefined;
         const nameColor = isNext || ramadanLabel ? colors.accent : passed ? colors.textTertiary : colors.textSecondary;
         const timeColor = isNext || ramadanLabel ? colors.accent : passed ? colors.textTertiary : colors.white;
         const row = (
           <View style={[styles.row, fi > 0 && styles.separator]}>
             <Subhead color={nameColor} style={styles.name}>
-              {ramadanLabel ?? p.label}
+              {ramadanLabel ?? p.name}
             </Subhead>
             <Subhead color={timeColor} style={styles.time}>
-              {p.time}
+              {formatClock(p.at)}
             </Subhead>
             {canLog ? (
               <View style={styles.dot}>
@@ -74,10 +73,10 @@ export default function PrayerTimesList({
         );
         return loggable ? (
           <Pressable
-            key={p.label}
-            onPress={() => onPressPrayer(name, p.label)}
+            key={p.name}
+            onPress={() => onPressPrayer(name, p.name)}
             accessibilityRole="button"
-            accessibilityLabel={`Log ${p.label}`}
+            accessibilityLabel={`Log ${p.name}`}
             accessibilityValue={{ text: status ? STATUS_VALUE[status] : "Not logged" }}
             accessibilityHint="Opens the prayer log"
             style={styles.item}
@@ -85,7 +84,7 @@ export default function PrayerTimesList({
             {row}
           </Pressable>
         ) : (
-          <View key={p.label} style={styles.item}>
+          <View key={p.name} style={styles.item}>
             {row}
           </View>
         );

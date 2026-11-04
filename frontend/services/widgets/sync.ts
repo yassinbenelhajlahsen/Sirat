@@ -4,7 +4,7 @@
 import { themeSetting } from "@/services/syncedSettings";
 import type { NormalizedAyah } from "@/services/quranData";
 import { getEffectivePrayerSettings } from "@/services/prayerSettings";
-import { getPrayerTimesOn } from "@/services/prayerTimes";
+import { getPrayerTimesForDate } from "@/services/prayerTimes";
 import NextPrayer from "@/widgets/NextPrayerWidget";
 import PrayerTimes from "@/widgets/PrayerTimesWidget";
 import Verse from "@/widgets/VerseWidget";
@@ -28,9 +28,9 @@ async function syncPrayerWidgets(now: Date) {
   for (let i = 0; i < HORIZON_DAYS; i++) {
     const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
     try {
-      const times = await getPrayerTimesOn(date, settings);
-      days.push({ date, times });
-      if (times.length === 0) break;
+      const prayerDay = await getPrayerTimesForDate(settings, date);
+      days.push({ date, prayerDay });
+      if (prayerDay.slots.length === 0) break;
     } catch (error) {
       if (i === 0) throw error;
       break;

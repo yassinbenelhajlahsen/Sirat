@@ -1,16 +1,10 @@
 import {
-  dateKey,
   formatTo12Hour,
   mapTimingsToPrayerTimes,
   mergeCalendarDayIntoStore,
 } from "@/services/prayer-times/transformers";
 
 describe("prayer-times/transformers", () => {
-  it("formats a date key in local yyyy-mm-dd", () => {
-    const d = new Date(2026, 1, 3, 9, 15, 0);
-    expect(dateKey(d)).toBe("2026-02-03");
-  });
-
   it("formats 24h timings to 12h and strips suffix payload", () => {
     expect(formatTo12Hour("00:05")).toBe("12:05 AM");
     expect(formatTo12Hour("12:00")).toBe("12:00 PM");

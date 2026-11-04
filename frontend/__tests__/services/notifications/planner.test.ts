@@ -1,10 +1,10 @@
 import {
   planFingerprint,
   planNotifications,
-  yyyymmdd,
   type PlanDay,
   type PlanInput,
 } from "@/services/notifications/planner";
+import { buildPrayerDay, emptyPrayerDay } from "@/services/prayerDay";
 import { FRIDAY_MESSAGES } from "@/utils/notifications/fridayReminder";
 
 const allPrefs = (on: boolean) => ({
@@ -12,22 +12,19 @@ const allPrefs = (on: boolean) => ({
 });
 const NO_WINDOW = { Fajr: false, Dhuhr: false, Asr: false, Maghrib: false };
 const FULL_DAY = [
-  { label: "Fajr", time: "05:00 AM" },
-  { label: "Sunrise", time: "06:30 AM" },
-  { label: "Dhuhr", time: "01:00 PM" },
-  { label: "Asr", time: "05:30 PM" },
-  { label: "Maghrib", time: "08:30 PM" },
+  { label: "Fajr", time: "5:00 AM" },
+  { label: "Sunrise", time: "6:30 AM" },
+  { label: "Dhuhr", time: "1:00 PM" },
+  { label: "Asr", time: "5:30 PM" },
+  { label: "Maghrib", time: "8:30 PM" },
   { label: "Isha", time: "10:00 PM" },
 ];
 
 function days(start: Date, count: number, over: Partial<PlanDay> = {}): PlanDay[] {
-  return Array.from({ length: count }, (_, i) => ({
-    date: new Date(start.getFullYear(), start.getMonth(), start.getDate() + i),
-    times: FULL_DAY,
-    statuses: {},
-    fasting: false,
-    ...over,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    return { date, prayerDay: buildPrayerDay(date, FULL_DAY), statuses: {}, fasting: false, ...over };
+  });
 }
 
 function input(start: Date, count: number, over: Partial<PlanInput> = {}, dayOver: Partial<PlanDay> = {}): PlanInput {
@@ -47,15 +44,11 @@ function input(start: Date, count: number, over: Partial<PlanInput> = {}, dayOve
 const JAN1 = new Date(2026, 0, 1); // a Thursday
 
 describe("planNotifications", () => {
-  it("formats yyyymmdd deterministically", () => {
-    expect(yyyymmdd(new Date(2026, 1, 3, 10, 11, 12))).toBe("2026-02-03");
-  });
-
   it("plans a prayer alert with the city and day in its data", () => {
     const [n] = planNotifications(input(JAN1, 1, { prefs: { ...allPrefs(false), Fajr: true } }));
     expect(n.title).toBe("🌅 Fajr time");
-    expect(n.body).toBe("05:00 AM in Chicago");
-    expect(n.data).toEqual({ type: "prayer", label: "Fajr", timeLocal: "05:00 AM", city: "Chicago", dayKey: "2026-01-01" });
+    expect(n.body).toBe("5:00 AM in Chicago");
+    expect(n.data).toEqual({ type: "prayer", label: "Fajr", timeLocal: "5:00 AM", city: "Chicago", dayKey: "2026-01-01" });
   });
 
   it("leaves out times at or before now", () => {
@@ -82,21 +75,21 @@ describe("planNotifications", () => {
     it("fire the offset before the next prayer for an unlogged prayer", () => {
       const [n] = planNotifications(input(JAN1, 1, { windowPrefs: { ...NO_WINDOW, Dhuhr: true } }));
       expect(n.title).toBe("Dhuhr ending soon");
-      expect(n.body).toBe("Asr begins at 05:30 PM, in 15 min.");
+      expect(n.body).toBe("Asr begins at 5:30 PM, in 15 min.");
       expect(n.data.type).toBe("window_reminder");
       expect([n.fireDate.getHours(), n.fireDate.getMinutes()]).toEqual([17, 15]);
     });
 
     it("are skipped when the prayer is logged, but not when its mark was cleared", () => {
       const withWindow = { windowPrefs: { ...NO_WINDOW, Dhuhr: true } };
-      expect(planNotifications(input(JAN1, 1, withWindow, { statuses: { dhuhr: "missed" } }))).toEqual([]);
+      expect(planNotifications(input(JAN1, 1, withWindow, { statuses: { Dhuhr: "missed" } }))).toEqual([]);
       expect(planNotifications(input(JAN1, 1, withWindow, { statuses: {} }))).toHaveLength(1);
     });
 
     it("use Sunrise as Fajr's boundary with 'is at' phrasing", () => {
       const [n] = planNotifications(input(JAN1, 1, { windowPrefs: { ...NO_WINDOW, Fajr: true } }));
       expect(n.title).toBe("Fajr ending soon");
-      expect(n.body).toBe("Sunrise is at 06:30 AM, in 15 min.");
+      expect(n.body).toBe("Sunrise is at 6:30 AM, in 15 min.");
     });
 
     it("never exist for Isha", () => {
@@ -108,7 +101,7 @@ describe("planNotifications", () => {
   describe("friday reminder", () => {
     // Jan 2, 9 and 16 are Fridays.
     const friday = (over: Partial<PlanInput> = {}, count = 16, start = JAN1) =>
-      planNotifications(input(start, count, { fridayEnabled: true, now: new Date(2026, 0, 1).getTime(), ...over }, { times: [] }));
+      planNotifications(input(start, count, { fridayEnabled: true, now: new Date(2026, 0, 1).getTime(), ...over }, { prayerDay: emptyPrayerDay(start) }));
 
     it("plans one per Friday between 9:00 and 11:00 local, none on other days", () => {
       const plan = friday();
@@ -155,7 +148,7 @@ describe("planNotifications", () => {
         [7, "🌇 Maghrib time"],
         [8, "🌇 Maghrib/Iftar time"],
       ]);
-      expect(maghrib[1].body).toBe("08:30 PM in Chicago");
+      expect(maghrib[1].body).toBe("8:30 PM in Chicago");
       expect(maghrib[1].sound).toBe("adhan.caf");
       expect(maghrib[1].data).toEqual(expect.objectContaining({ type: "prayer", label: "Maghrib" }));
     });
@@ -208,17 +201,17 @@ describe("planFingerprint", () => {
     ["the sound", (i: PlanInput) => ({ ...i, prayerSound: "adhan.caf" })],
     ["the window offset", (i: PlanInput) => ({ ...i, windowOffset: 30 })],
     ["the city shown", (i: PlanInput) => ({ ...i, cityDisplay: "Cairo" })],
-    ["a prayer time", (i: PlanInput) => ({ ...i, days: i.days.map((d) => ({ ...d, times: d.times.map((t) => (t.label === "Fajr" ? { ...t, time: "05:05 AM" } : t)) })) })],
+    ["a prayer time", (i: PlanInput) => ({ ...i, days: i.days.map((d) => ({ ...d, prayerDay: buildPrayerDay(d.date, FULL_DAY.map((t) => (t.label === "Fajr" ? { ...t, time: "5:05 AM" } : t))) })) })],
     ["Ramadan wording", (i: PlanInput) => ({ ...i, days: i.days.map((d) => ({ ...d, fasting: true })) })],
     ["the Friday toggle", (i: PlanInput) => ({ ...i, fridayEnabled: false })],
-    ["logging a prayer that has a window reminder", (i: PlanInput) => ({ ...i, days: i.days.map((d, k) => (k === 0 ? { ...d, statuses: { dhuhr: "prayed" as const } } : d)) })],
+    ["logging a prayer that has a window reminder", (i: PlanInput) => ({ ...i, days: i.days.map((d, k) => (k === 0 ? { ...d, statuses: { Dhuhr: "prayed" as const } } : d)) })],
     ["the day", (i: PlanInput) => ({ ...i, days: i.days.map((d) => ({ ...d, date: new Date(d.date.getFullYear(), d.date.getMonth(), d.date.getDate() + 1) })) })],
   ])("changes when %s changes", (_name, change) => {
     expect(planFingerprint(change(base()))).not.toBe(planFingerprint(base()));
   });
 
   it("does not change when a mark that has no reminder is logged", () => {
-    const logged = { ...base(), days: base().days.map((d) => ({ ...d, statuses: { isha: "prayed" as const } })) };
+    const logged = { ...base(), days: base().days.map((d) => ({ ...d, statuses: { Isha: "prayed" as const } })) };
     expect(planFingerprint(logged)).toBe(planFingerprint(base()));
   });
 });

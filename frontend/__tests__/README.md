@@ -27,6 +27,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/notifications/cityResolver.test.ts` — city-display fallback chain (caller coords → live position → last-known → cached → "your area"; never raw coordinates)
 - `prayer times retrieval + caching testing`
   - `services/prayerTimes.test.ts`
+  - `services/prayerDay.test.ts` — prayer day: 12-hour parsing onto a date, dropped bad rows, next slot, window end, Maghrib, clock formatting
   - `services/prayer-times/*.test.ts`
 - `home prayer feature behavior testing`
   - `hooks/usePrayerTimes.test.ts`
@@ -160,7 +161,6 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useTrackerData.test.ts` — shared tracker hook: loads, follows changes, skips other days, unsubscribes
   - `services/tracking/facades.test.ts` — prayerTracker + habitTracker barrel re-exports
 - `prayer logging UI (Phase 2) testing`
-  - `utils/prayerLabel.test.ts` — maps dial prayer labels to PrayerName (Sunrise → null)
   - `hooks/usePrayerLog.test.ts` — usePrayerLog hook: load, set/clear, event filtering, unmount cleanup
   - `components/tracking/PrayerStatusDot.test.tsx` — prayer status glyph states (check / clock / cross, not colour-only)
   - `components/tracking/PrayerLogSheet.test.tsx` — prayer logging bottom sheet (Prayed/Late/Missed + Clear)

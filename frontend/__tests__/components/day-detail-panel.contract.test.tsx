@@ -43,13 +43,14 @@ jest.mock("@/hooks/useRamadanMode", () => ({
 }));
 
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
+import { buildPrayerDay } from "@/services/prayerDay";
 
 const baseProps = {
   date: new Date(2026, 2, 15),
   isToday: false,
   holiday: null as string | null,
   loading: false,
-  prayerTimes: [{ label: "Fajr", time: "5:31 AM" }] as any,
+  prayerDay: buildPrayerDay(new Date(2026, 2, 15), [{ label: "Fajr", time: "5:31 AM" }]),
   error: null,
   onRetry: jest.fn(),
   onOpenSettings: jest.fn(),
@@ -100,10 +101,10 @@ describe("DayDetailPanel", () => {
     const ramadanDay = {
       ...baseProps,
       date: new Date(2027, 1, 10), // Ramadan 3, 1448
-      prayerTimes: [
+      prayerDay: buildPrayerDay(new Date(2027, 1, 10), [
         { label: "Fajr", time: "5:31 AM" },
         { label: "Maghrib", time: "5:42 PM" },
-      ] as any,
+      ]),
     };
     afterEach(() => {
       mockRamadanMode = true;

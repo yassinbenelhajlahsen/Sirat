@@ -1,56 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { dateKeyFromDate } from "../services/holidayService";
-import { PrayerTime } from "../services/prayerTimes";
+import { nextSlot, type PrayerDay } from "../services/prayerDay";
+import { dateKeyFromDate } from "@/utils/dateKey";
 import getTimeUntil from "../utils/getTimeUntil";
 
-type NextPrayer = {
-  label: string;
-  time: string;
-  dateObj: Date;
-};
-
-function parseTimeToDate(timeStr: string, baseDate: Date): Date {
-  const [time, modifier] = timeStr.split(" ");
-  const [hoursStr, minutesStr] = time.split(":");
-  let hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
-  if (modifier === "PM" && hours !== 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
-  const dateObj = new Date(baseDate);
-  dateObj.setHours(hours, minutes, 0, 0);
-  return dateObj;
-}
-
-export function useNextPrayer(
-  selectedDate: Date | null,
-  prayerTimes: PrayerTime[],
-  prayerTimesDateKey: string | null,
-) {
+/** The next prayer of today's day and a live countdown to it. Null for any other day. */
+export function useNextPrayer(day: PrayerDay | null) {
   const [timeLeft, setTimeLeft] = useState("");
-  const today = new Date();
-  const isToday = selectedDate?.toDateString() === today.toDateString();
+  const todayKey = dateKeyFromDate(new Date());
 
-  const nextPrayer = useMemo<NextPrayer | null>(() => {
-    if (!selectedDate || !isToday || prayerTimes.length === 0) {
-      return null;
-    }
-
-    const selectedDateKey = dateKeyFromDate(selectedDate);
-    if (prayerTimesDateKey !== selectedDateKey) {
-      return null;
-    }
-
-    const now = new Date();
-    return (
-      prayerTimes
-        .map(({ label, time }) => ({
-          label,
-          time,
-          dateObj: parseTimeToDate(time, selectedDate),
-        }))
-        .find(({ dateObj }) => dateObj > now) ?? null
-    );
-  }, [isToday, prayerTimes, prayerTimesDateKey, selectedDate]);
+  const nextPrayer = useMemo(
+    () => (day && day.dateKey === todayKey ? nextSlot(day, new Date()) : null),
+    [day, todayKey],
+  );
 
   useEffect(() => {
     if (!nextPrayer) {
@@ -58,9 +19,9 @@ export function useNextPrayer(
       return;
     }
 
-    setTimeLeft(getTimeUntil(nextPrayer.dateObj));
+    setTimeLeft(getTimeUntil(nextPrayer.at));
     const interval = setInterval(() => {
-      setTimeLeft(getTimeUntil(nextPrayer.dateObj));
+      setTimeLeft(getTimeUntil(nextPrayer.at));
     }, 1000);
 
     return () => clearInterval(interval);

@@ -21,8 +21,8 @@ jest.mock("@/services/auth/authPrompts", () => ({
 }));
 jest.mock("@/hooks/useHomePrayerTimes", () => ({
   useHomePrayerTimes: () => ({
-    prayerTimes: [{ label: "Fajr", time: "5:12 AM" }],
-    nextPrayer: { label: "Isha", time: "8:01 PM" },
+    prayerDay: require("@/services/prayerDay").buildPrayerDay(new Date(), [{ label: "Fajr", time: "5:12 AM" }]),
+    nextPrayer: { name: "Isha", at: new Date(2026, 0, 1, 20, 1) },
     nextDayFajr: null, timeLeft: "1h", loading: false, refreshing: false,
     banner: "", locationLabel: "Tunis", refresh: jest.fn(),
   }),

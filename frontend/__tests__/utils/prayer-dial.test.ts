@@ -10,26 +10,26 @@ import {
   discLight,
   discStops,
   minutesOfDay,
-  parsePrayerTime,
   pointOnRing,
   ringColor,
   ringPresence,
   STARS,
   starVisibility,
 } from "@/utils/prayerDial";
+import { buildPrayerDay } from "@/services/prayerDay";
 
 const LAT = 33.5731;
 const LNG = -7.5898;
 const DAY = new Date(2026, 2, 4);
 
-const FULL = [
+const FULL = buildPrayerDay(DAY, [
   { label: "Fajr", time: "5:35 AM" },
   { label: "Sunrise", time: "6:57 AM" },
   { label: "Dhuhr", time: "1:00 PM" },
   { label: "Asr", time: "4:15 PM" },
   { label: "Maghrib", time: "6:33 PM" },
   { label: "Isha", time: "7:53 PM" },
-];
+]);
 
 describe("angleForMinutes", () => {
   it("puts noon at the top and midnight at the bottom", () => {
@@ -239,7 +239,7 @@ describe("STARS", () => {
 });
 
 describe("dialMarkers", () => {
-  const markers = dialMarkers(FULL, DAY);
+  const markers = dialMarkers(FULL);
 
   it("returns the six labels in dial order with Sunrise as a notch", () => {
     expect(markers.map((m) => m.label)).toEqual([
@@ -263,30 +263,12 @@ describe("dialMarkers", () => {
   });
 
   it("survives a missing prayer without producing NaN geometry", () => {
-    const partial = dialMarkers([{ label: "Fajr", time: "5:35 AM" }], DAY);
+    const partial = dialMarkers(buildPrayerDay(DAY, [{ label: "Fajr", time: "5:35 AM" }]));
     for (const m of partial) {
       expect(Number.isFinite(m.point.x)).toBe(true);
       expect(Number.isFinite(m.point.y)).toBe(true);
     }
     expect(partial.find((m) => m.label === "Isha")?.time).toBeNull();
-  });
-});
-
-describe("parsePrayerTime", () => {
-  it("reads 12-hour times onto the given day", () => {
-    const d = parsePrayerTime("1:05 PM", DAY)!;
-    expect(d.getHours()).toBe(13);
-    expect(d.getMinutes()).toBe(5);
-  });
-
-  it("handles both midnight and noon", () => {
-    expect(parsePrayerTime("12:00 AM", DAY)!.getHours()).toBe(0);
-    expect(parsePrayerTime("12:00 PM", DAY)!.getHours()).toBe(12);
-  });
-
-  it("returns null on junk", () => {
-    expect(parsePrayerTime("", DAY)).toBeNull();
-    expect(parsePrayerTime("not a time", DAY)).toBeNull();
   });
 });
 

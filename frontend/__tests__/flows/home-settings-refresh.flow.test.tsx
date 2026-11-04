@@ -5,6 +5,8 @@ import { AppState, DeviceEventEmitter } from "react-native";
 import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
 import { clearPrayerCache, getPrayerTimesToday } from "@/services/prayerTimes";
+import { buildPrayerDay } from "@/services/prayerDay";
+const dayOf = (rows: { label: string; time: string }[], date = new Date()) => buildPrayerDay(date, rows);
 
 jest.mock("@/services/prayerTimes", () => ({
   clearPrayerCache: jest.fn(async () => {}),
@@ -13,7 +15,7 @@ jest.mock("@/services/prayerTimes", () => ({
 
 jest.mock("@/hooks/useNextPrayer", () => ({
   useNextPrayer: jest.fn(() => ({
-    nextPrayer: { label: "Dhuhr", time: "12:00 PM" },
+    nextPrayer: { name: "Dhuhr", at: new Date(2026, 0, 1, 12) },
     timeLeft: "3h",
   })),
 }));
@@ -88,11 +90,11 @@ describe("flows/home-settings-refresh", () => {
   it("persists changed settings and refreshes Home prayer times", async () => {
     freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
 
-    mockGetPrayerTimesToday.mockResolvedValue([
+    mockGetPrayerTimesToday.mockResolvedValue(dayOf([
       { label: "Fajr", time: "5:00 AM" },
       { label: "Dhuhr", time: "12:00 PM" },
       { label: "Isha", time: "8:00 PM" },
-    ] as any);
+    ]));
 
     const { emitSpy } = wireDeviceEventEmitter();
     const setItemSpy = jest.spyOn(AsyncStorage, "setItem");
@@ -151,10 +153,10 @@ describe("flows/home-settings-refresh", () => {
       .mockImplementation((_eventName, _handler) => ({ remove: jest.fn() }) as any);
 
     mockGetPrayerTimesToday
-      .mockResolvedValueOnce([
+      .mockResolvedValueOnce(dayOf([
         { label: "Fajr", time: "5:00 AM" },
         { label: "Dhuhr", time: "12:00 PM" },
-      ] as any)
+      ]))
       .mockRejectedValueOnce(new Error("calendar upstream failed"));
 
     const { result } = renderHook(() => useHomePrayerTimes());
@@ -171,7 +173,7 @@ describe("flows/home-settings-refresh", () => {
     expect(mockGetPrayerTimesToday).toHaveBeenCalledTimes(2);
     expect(result.current.loading).toBe(false);
     expect(result.current.refreshing).toBe(false);
-    expect(result.current.prayerTimes).toEqual([]);
+    expect(result.current.prayerDay).toBeNull();
     expect(result.current.banner).toContain("We could not load prayer times");
     expect(consoleErrorSpy).toHaveBeenCalled();
   });

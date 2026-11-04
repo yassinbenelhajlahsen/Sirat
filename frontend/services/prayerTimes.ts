@@ -8,9 +8,9 @@ import {
 } from "./prayer-times/cacheStore";
 import { resolveCoordsAndCountry } from "./prayer-times/environment";
 import { fetchPrayerProxy } from "./prayer-times/apiClient";
+import { buildPrayerDay, type PrayerDay } from "./prayerDay";
+import { dateKeyFromDate } from "@/utils/dateKey";
 import {
-  dateKey,
-  formatTo12Hour,
   mapTimingsToPrayerTimes,
   mergeCalendarDayIntoStore,
 } from "./prayer-times/transformers";
@@ -26,13 +26,7 @@ import type {
   ResolvedEnv,
 } from "./prayer-times/types";
 
-export type {
-  PrayerSettings,
-  PrayerTime,
-  PrayerMethodParam,
-  ResolvedEnv,
-} from "./prayer-times/types";
-export { formatTo12Hour };
+export type { PrayerSettings } from "./prayer-times/types";
 
 async function fetchYearCalendarLegacy(
   year: number,
@@ -160,12 +154,9 @@ async function fetchYearCalendar(
   return cache;
 }
 
-export async function getPrayerTimesForDate(
-  settings: PrayerSettings,
-  date: Date,
-): Promise<PrayerTime[]> {
+async function rowsForDate(settings: PrayerSettings, date: Date): Promise<PrayerTime[]> {
   const year = date.getFullYear();
-  const isoKey = dateKey(date);
+  const isoKey = dateKeyFromDate(date);
 
   const env = await resolveCoordsAndCountry(settings);
   const { cacheKey } = buildPrayerCacheKey({
@@ -201,12 +192,11 @@ export async function getPrayerTimesForDate(
   return fresh.data[isoKey] || [];
 }
 
-export async function getPrayerTimesToday(
+async function rowsToday(
   settings: PrayerSettings,
+  today: Date,
   opts?: PrayerLocationOverride,
 ): Promise<PrayerTime[]> {
-  const today = new Date();
-
   if (opts?.coords || opts?.country) {
     const env = await resolveCoordsAndCountry(settings, {
       coords: opts.coords,
@@ -214,7 +204,7 @@ export async function getPrayerTimesToday(
     });
 
     const year = today.getFullYear();
-    const isoKey = dateKey(today);
+    const isoKey = dateKeyFromDate(today);
     const { cacheKey } = buildPrayerCacheKey({
       year,
       settings,
@@ -237,14 +227,22 @@ export async function getPrayerTimesToday(
     return fast;
   }
 
-  return getPrayerTimesForDate(settings, today);
+  return rowsForDate(settings, today);
 }
 
-export async function getPrayerTimesOn(
-  date: Date,
+export async function getPrayerTimesForDate(
   settings: PrayerSettings,
-): Promise<PrayerTime[]> {
-  return getPrayerTimesForDate(settings, date);
+  date: Date,
+): Promise<PrayerDay> {
+  return buildPrayerDay(date, await rowsForDate(settings, date));
+}
+
+export async function getPrayerTimesToday(
+  settings: PrayerSettings,
+  opts?: PrayerLocationOverride,
+): Promise<PrayerDay> {
+  const today = new Date();
+  return buildPrayerDay(today, await rowsToday(settings, today, opts));
 }
 
 export async function clearPrayerCache() {
