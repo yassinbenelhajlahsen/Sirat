@@ -8,6 +8,7 @@ import {
   NOTIF_PREFS_UPDATED_EVENT,
   PRAYERS,
   STORAGE_ENABLED,
+  STORAGE_FRIDAY,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
   STORAGE_WINDOW_MAP,
@@ -177,6 +178,10 @@ export async function readWindowOffset(): Promise<number> {
     : DEFAULT_WINDOW_OFFSET;
 }
 
+export async function readFridayEnabled(): Promise<boolean> {
+  return (await AsyncStorage.getItem(STORAGE_FRIDAY)) !== "0";
+}
+
 // Sync apply-side writers: persist a merged remote value in the same serialized
 // form the UI hook uses, then emit NOTIF_PREFS_UPDATED so the scheduler
 // reschedules. Each ignores malformed input (the read-side normalizers stay the
@@ -214,5 +219,11 @@ export async function writeWindowOffset(value: unknown): Promise<void> {
   const n = typeof value === "number" ? value : Number(value);
   if (!(WINDOW_OFFSET_OPTIONS as readonly number[]).includes(n)) return;
   await AsyncStorage.setItem(STORAGE_WINDOW_OFFSET, String(n));
+  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
+}
+
+export async function writeFridayEnabled(value: unknown): Promise<void> {
+  if (typeof value !== "boolean") return;
+  await AsyncStorage.setItem(STORAGE_FRIDAY, value ? "1" : "0");
   DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
 }

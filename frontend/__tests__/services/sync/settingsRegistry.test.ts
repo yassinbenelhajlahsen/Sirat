@@ -6,6 +6,7 @@ beforeEach(async () => { await AsyncStorage.clear(); });
 it("covers exactly the synced setting keys", () => {
   expect(SETTINGS_REGISTRY.map((e) => e.key).sort()).toEqual(
     [
+      "notifFriday",
       "notifPrefs",
       "notifSoundMode",
       "notifWindowMap",
@@ -29,6 +30,7 @@ it("each notif entry stamps off its own granular change event", () => {
   expect(eventByKey.notifSoundMode).toBe("NOTIF_SOUND_MODE_CHANGED");
   expect(eventByKey.notifWindowMap).toBe("NOTIF_WINDOW_MAP_CHANGED");
   expect(eventByKey.notifWindowOffset).toBe("NOTIF_WINDOW_OFFSET_CHANGED");
+  expect(eventByKey.notifFriday).toBe("NOTIF_FRIDAY_CHANGED");
 });
 
 it("theme entry round-trips value via read/applyValue", async () => {
@@ -51,6 +53,12 @@ it("notif entries round-trip values via read/applyValue", async () => {
 
   await byKey.notifWindowOffset.applyValue(30);
   expect(await byKey.notifWindowOffset.read()).toBe(30);
+
+  expect(await byKey.notifFriday.read()).toBe(true);
+  await byKey.notifFriday.applyValue(false);
+  expect(await byKey.notifFriday.read()).toBe(false);
+  await byKey.notifFriday.applyValue(true);
+  expect(await byKey.notifFriday.read()).toBe(true);
 });
 
 it("notif applyValue ignores malformed remote values", async () => {
@@ -61,6 +69,9 @@ it("notif applyValue ignores malformed remote values", async () => {
 
   await byKey.notifWindowOffset.applyValue(7);
   expect(await byKey.notifWindowOffset.read()).toBe(15);
+
+  await byKey.notifFriday.applyValue("nope");
+  expect(await byKey.notifFriday.read()).toBe(true);
 });
 
 it("quranReciter entry stamps off its own event and ignores unknown ids", async () => {

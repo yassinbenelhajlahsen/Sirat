@@ -19,6 +19,7 @@ import {
 } from "./notifications/scheduler";
 import {
   readDayFingerprint,
+  readFridayEnabled,
   readMasterEnabled,
   readPrefs,
   readPrayerSettings,
@@ -60,6 +61,7 @@ function buildScheduleFingerprint(params: {
   effective: Awaited<ReturnType<typeof deriveEffectiveSettings>>;
   windowPrefs: Awaited<ReturnType<typeof readWindowMap>>;
   windowOffset: Awaited<ReturnType<typeof readWindowOffset>>;
+  fridayEnabled: boolean;
 }): string {
   const {
     dayKey,
@@ -70,6 +72,7 @@ function buildScheduleFingerprint(params: {
     effective,
     windowPrefs,
     windowOffset,
+    fridayEnabled,
   } = params;
 
   const timesFingerprint = JSON.stringify(times.map((t) => [t.label, t.time]));
@@ -84,7 +87,7 @@ function buildScheduleFingerprint(params: {
       : null,
   });
 
-  return `v${SCHEDULE_CONTENT_VERSION}_day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}_${JSON.stringify(windowPrefs)}_${windowOffset}`;
+  return `v${SCHEDULE_CONTENT_VERSION}_day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}_${JSON.stringify(windowPrefs)}_${windowOffset}_${fridayEnabled ? 1 : 0}`;
 }
 
 export const NotificationService = {
@@ -132,6 +135,7 @@ export const NotificationService = {
       const soundMode = await readSoundMode();
       const windowPrefs = await readWindowMap();
       const windowOffset = await readWindowOffset();
+      const fridayEnabled = await readFridayEnabled();
 
       const today = yyyymmdd();
       const nextKey = buildScheduleFingerprint({
@@ -143,6 +147,7 @@ export const NotificationService = {
         effective,
         windowPrefs,
         windowOffset,
+        fridayEnabled,
       });
       const lastKey = await readDayFingerprint();
 
@@ -161,6 +166,7 @@ export const NotificationService = {
           soundMode,
           windowPrefs,
           windowOffset,
+          fridayEnabled,
         });
         await writeDayFingerprint(nextKey);
         return;
@@ -174,6 +180,7 @@ export const NotificationService = {
         soundMode,
         windowPrefs,
         windowOffset,
+        fridayEnabled,
       });
     } catch (e) {
       console.warn("rescheduleAll failed:", e);

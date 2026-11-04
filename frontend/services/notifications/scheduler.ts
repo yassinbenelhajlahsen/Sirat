@@ -104,6 +104,7 @@ export async function scheduleForHorizon(params: {
   soundMode: SoundMode;
   windowPrefs: WindowPrefMap;
   windowOffset: number;
+  fridayEnabled: boolean;
 }) {
   const {
     days,
@@ -113,6 +114,7 @@ export async function scheduleForHorizon(params: {
     soundMode,
     windowPrefs,
     windowOffset,
+    fridayEnabled,
   } = params;
   const now = Date.now();
 
@@ -155,6 +157,32 @@ export async function scheduleForHorizon(params: {
           },
         },
       });
+    }
+
+    // Friday reminder: 9:00 local, opens Surah Al-Kahf.
+    if (fridayEnabled && day.getDay() === 5) {
+      const fireDate = new Date(
+        day.getFullYear(),
+        day.getMonth(),
+        day.getDate(),
+        9,
+        0,
+        0,
+        0,
+      );
+      if (fireDate.getTime() > now) {
+        candidates.push({
+          fireDate,
+          seenKey: `friday_${fireDate.toISOString().slice(0, 16)}`,
+          content: {
+            title: "Jumu'ah Mubarak",
+            body: "A good day to read Surah Al-Kahf.",
+            sound: "default",
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            data: { type: "friday", url: "/Quran?surah=18&ayah=1" },
+          },
+        });
+      }
     }
 
     // Window reminders.

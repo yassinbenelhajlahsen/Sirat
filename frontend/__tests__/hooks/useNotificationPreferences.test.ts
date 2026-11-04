@@ -6,12 +6,14 @@ import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
 import {
   DEFAULT_PREFS,
   DEFAULT_WINDOW_PREFS,
+  NOTIF_FRIDAY_CHANGED_EVENT,
   NOTIF_MAP_CHANGED_EVENT,
   NOTIF_PREFS_UPDATED_EVENT,
   NOTIF_SOUND_MODE_CHANGED_EVENT,
   NOTIF_WINDOW_MAP_CHANGED_EVENT,
   NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
   STORAGE_ENABLED,
+  STORAGE_FRIDAY,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
   STORAGE_WINDOW_MAP,
@@ -209,6 +211,54 @@ describe("useNotificationPreferences", () => {
       expect.objectContaining({ windowOffset: 30 }),
     );
     expect(emitSpy).toHaveBeenCalledWith(NOTIF_WINDOW_OFFSET_CHANGED_EVENT);
+  });
+
+  it("defaults the Friday reminder to on, and restores a stored off", async () => {
+    const first = renderHook(() =>
+      useNotificationPreferences({ notifStatus: null }),
+    );
+    await waitFor(() => expect(first.result.current.loaded).toBe(true));
+    expect(first.result.current.fridayEnabled).toBe(true);
+    first.unmount();
+
+    await AsyncStorage.setItem(STORAGE_FRIDAY, "0");
+    const second = renderHook(() =>
+      useNotificationPreferences({ notifStatus: null }),
+    );
+    await waitFor(() => expect(second.result.current.loaded).toBe(true));
+    expect(second.result.current.fridayEnabled).toBe(false);
+  });
+
+  it("persists the Friday reminder and emits both events", async () => {
+    await AsyncStorage.setItem(STORAGE_ENABLED, "1");
+    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
+
+    const { result } = renderHook(() =>
+      useNotificationPreferences({ notifStatus: null }),
+    );
+    await waitFor(() => {
+      expect(result.current.loaded).toBe(true);
+      expect(result.current.enabled).toBe(true);
+    });
+    emitSpy.mockClear();
+
+    await act(async () => {
+      await result.current.setFridayEnabled(false);
+    });
+
+    expect(await AsyncStorage.getItem(STORAGE_FRIDAY)).toBe("0");
+    expect(result.current.fridayEnabled).toBe(false);
+    expect(emitSpy).toHaveBeenCalledWith(
+      NOTIF_PREFS_UPDATED_EVENT,
+      expect.objectContaining({ fridayEnabled: false }),
+    );
+    expect(emitSpy).toHaveBeenCalledWith(NOTIF_FRIDAY_CHANGED_EVENT);
+
+    emitSpy.mockClear();
+    await act(async () => {
+      await result.current.setFridayEnabled(false);
+    });
+    expect(emitSpy).not.toHaveBeenCalled();
   });
 
   it("applies notifStatus overrides and persists emitted state", async () => {

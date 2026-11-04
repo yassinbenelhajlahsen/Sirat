@@ -26,6 +26,7 @@ type NotificationServiceSetup = {
     readSoundMode: jest.Mock;
     readWindowMap: jest.Mock;
     readWindowOffset: jest.Mock;
+    readFridayEnabled: jest.Mock;
     writeDayFingerprint: jest.Mock;
   };
 };
@@ -71,6 +72,7 @@ async function loadNotificationService(overrides?:
       Maghrib: false,
     })),
     readWindowOffset: jest.fn(async () => 15),
+    readFridayEnabled: jest.fn(async () => true),
     writeDayFingerprint: jest.fn(async () => {}),
   };
 
@@ -113,6 +115,7 @@ async function loadNotificationService(overrides?:
     readSoundMode: mocks.readSoundMode,
     readWindowMap: mocks.readWindowMap,
     readWindowOffset: mocks.readWindowOffset,
+    readFridayEnabled: mocks.readFridayEnabled,
     writeDayFingerprint: mocks.writeDayFingerprint,
   }));
 
@@ -234,6 +237,7 @@ describe("NotificationService", () => {
       expect.objectContaining({
         windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
         windowOffset: 15,
+        fridayEnabled: true,
       }),
     );
   });

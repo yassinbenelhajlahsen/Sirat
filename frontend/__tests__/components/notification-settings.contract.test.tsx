@@ -12,6 +12,7 @@ const setPrayerPreference = jest.fn(async () => {});
 const updateSoundMode = jest.fn(async () => {});
 const setWindowPreference = jest.fn(async () => {});
 const setWindowOffset = jest.fn(async () => {});
+const setFridayEnabled = jest.fn(async () => {});
 const stopPreview = jest.fn(async () => {});
 const handlePreviewPress = jest.fn();
 const pulseHeader = jest.fn();
@@ -85,8 +86,10 @@ function configureHookMocks({
     updateSoundMode,
     windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
     windowOffset: 15,
+    fridayEnabled: true,
     setWindowPreference,
     setWindowOffset,
+    setFridayEnabled,
   });
 
   mockUseAdhanPreview.mockReturnValue({
@@ -232,5 +235,31 @@ describe("NotificationSettings contract", () => {
     fireEvent.press(getByLabelText("30 minutes before"));
 
     await waitFor(() => expect(setWindowOffset).toHaveBeenCalledWith(30));
+  });
+
+  it("renders the Friday reminder switch on and wires it", async () => {
+    const { getByText, getByLabelText } = render(
+      <NotificationSettings notifStatus="granted" />,
+    );
+
+    expect(getByText("FRIDAY REMINDER")).toBeTruthy();
+    const toggle = getByLabelText("Friday reminder");
+    expect(toggle.props.value).toBe(true);
+
+    fireEvent(toggle, "valueChange", false);
+
+    await waitFor(() => expect(setFridayEnabled).toHaveBeenCalledWith(false));
+  });
+
+  it("disables the Friday reminder switch when notifications are off", () => {
+    configureHookMocks({ enabled: false });
+    const { getByLabelText } = render(
+      <NotificationSettings notifStatus="denied" />,
+    );
+
+    expect(
+      getByLabelText("Friday reminder", { includeHiddenElements: true }).props
+        .disabled,
+    ).toBe(true);
   });
 });

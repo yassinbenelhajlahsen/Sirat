@@ -47,6 +47,7 @@ export const NOTIF_MAP_CHANGED_EVENT = "NOTIF_MAP_CHANGED";
 export const NOTIF_SOUND_MODE_CHANGED_EVENT = "NOTIF_SOUND_MODE_CHANGED";
 export const NOTIF_WINDOW_MAP_CHANGED_EVENT = "NOTIF_WINDOW_MAP_CHANGED";
 export const NOTIF_WINDOW_OFFSET_CHANGED_EVENT = "NOTIF_WINDOW_OFFSET_CHANGED";
+export const NOTIF_FRIDAY_CHANGED_EVENT = "NOTIF_FRIDAY_CHANGED";
 
 export const DEFAULT_PREFS = PRAYERS.reduce<Record<PrayerKey, boolean>>(
   (acc, key) => {
@@ -71,6 +72,8 @@ export const DEFAULT_WINDOW_OFFSET = 15;
 
 export const STORAGE_WINDOW_MAP = "notif_window_map_v1";
 export const STORAGE_WINDOW_OFFSET = "notif_window_offset_v1";
+// "1"/"0"; a missing value means on.
+export const STORAGE_FRIDAY = "notif_friday_v1";
 
 export type WindowPrefMap = Record<WindowPrayerKey, boolean>;
 

@@ -4,16 +4,19 @@ import type { SettingEntry } from "./types";
 import { APP_THEME_STORAGE_KEY, THEME_CHANGED_EVENT } from "@/constants/theme";
 import {
   writePrayerSettings,
+  readFridayEnabled,
   readPrefs,
   readSoundMode,
   readWindowMap,
   readWindowOffset,
+  writeFridayEnabled,
   writePrefs,
   writeSoundMode,
   writeWindowMap,
   writeWindowOffset,
 } from "@/services/notifications/storage";
 import {
+  NOTIF_FRIDAY_CHANGED_EVENT,
   NOTIF_MAP_CHANGED_EVENT,
   NOTIF_SOUND_MODE_CHANGED_EVENT,
   NOTIF_WINDOW_MAP_CHANGED_EVENT,
@@ -130,5 +133,11 @@ export const SETTINGS_REGISTRY: SettingEntry[] = [
     changeEvent: NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
     read: () => readWindowOffset(),
     applyValue: (v) => writeWindowOffset(v),
+  },
+  {
+    key: "notifFriday",
+    changeEvent: NOTIF_FRIDAY_CHANGED_EVENT,
+    read: () => readFridayEnabled(),
+    applyValue: (v) => writeFridayEnabled(v),
   },
 ];

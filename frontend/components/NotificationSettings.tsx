@@ -29,6 +29,8 @@ export { NOTIF_PREFS_UPDATED_EVENT } from "../utils/notifications/constants";
 const WINDOW_FOOTER =
   "A heads up before a prayer's time runs out. Sent only if you have not logged it yet.";
 
+const FRIDAY_FOOTER = "Every Friday at 9:00 AM, a reminder to read Surah Al-Kahf.";
+
 type Props = {
   // From Settings.tsx: "granted" | "denied" | null
   notifStatus?: string | null;
@@ -47,10 +49,12 @@ export default function NotificationSettings({ notifStatus }: Props) {
     soundMode,
     windowPrefs,
     windowOffset,
+    fridayEnabled,
     setPrayerPreference,
     updateSoundMode,
     setWindowPreference,
     setWindowOffset,
+    setFridayEnabled,
   } = useNotificationPreferences({ notifStatus });
 
   const { previewing, handlePreviewPress, stopPreview } = useAdhanPreview(enabled);
@@ -199,6 +203,16 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   )}
                 />
               ))}
+            </SettingsSection>
+
+            <SettingsSection label="Friday reminder" footer={FRIDAY_FOOTER}>
+              <SettingsRow
+                first
+                title="Friday reminder"
+                trailing={switchFor("Friday reminder", fridayEnabled, (next) => {
+                  void setFridayEnabled(next);
+                })}
+              />
             </SettingsSection>
 
             <SettingsSection label="Adhan sound" footer={selectedSoundOption.description}>

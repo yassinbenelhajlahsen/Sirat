@@ -6,6 +6,7 @@ import {
   DEFAULT_PREFS,
   DEFAULT_WINDOW_OFFSET,
   DEFAULT_WINDOW_PREFS,
+  NOTIF_FRIDAY_CHANGED_EVENT,
   NOTIF_MAP_CHANGED_EVENT,
   NOTIF_PREFS_UPDATED_EVENT,
   NOTIF_SOUND_MODE_CHANGED_EVENT,
@@ -15,6 +16,7 @@ import {
   SOUND_OPTIONS,
   SoundMode,
   STORAGE_ENABLED,
+  STORAGE_FRIDAY,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
   STORAGE_WINDOW_MAP,
@@ -76,6 +78,7 @@ function emitPreferences(payload: {
   soundMode: SoundMode;
   windowPrefs: WindowPrefMap;
   windowOffset: number;
+  fridayEnabled: boolean;
 }) {
   try {
     DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT, payload);
@@ -109,6 +112,9 @@ export function useNotificationPreferences({
   const windowPrefsRef = useRef<WindowPrefMap>({ ...DEFAULT_WINDOW_PREFS });
   const windowOffsetRef = useRef<number>(DEFAULT_WINDOW_OFFSET);
 
+  const [fridayEnabled, setFridayEnabledState] = useState(true);
+  const fridayEnabledRef = useRef(true);
+
   useEffect(() => {
     let active = true;
     (async () => {
@@ -119,6 +125,7 @@ export function useNotificationPreferences({
           STORAGE_SOUND_MODE,
           STORAGE_WINDOW_MAP,
           STORAGE_WINDOW_OFFSET,
+          STORAGE_FRIDAY,
         ]);
         if (!active) return;
 
@@ -156,6 +163,11 @@ export function useNotificationPreferences({
         const nextWindowOffset = parseWindowOffset(rawWindowOffset ?? null);
         windowOffsetRef.current = nextWindowOffset;
         setWindowOffsetState(nextWindowOffset);
+
+        const rawFriday = entries.find(([key]) => key === STORAGE_FRIDAY)?.[1];
+        const nextFriday = rawFriday !== "0";
+        fridayEnabledRef.current = nextFriday;
+        setFridayEnabledState(nextFriday);
       } catch {
         // ignore hydration errors
       } finally {
@@ -190,6 +202,10 @@ export function useNotificationPreferences({
   }, [windowOffset]);
 
   useEffect(() => {
+    fridayEnabledRef.current = fridayEnabled;
+  }, [fridayEnabled]);
+
+  useEffect(() => {
     if (!loaded) return;
     (async () => {
       try {
@@ -204,6 +220,7 @@ export function useNotificationPreferences({
       soundMode: soundModeRef.current,
       windowPrefs: windowPrefsRef.current,
       windowOffset: windowOffsetRef.current,
+      fridayEnabled: fridayEnabledRef.current,
     });
   }, [enabled, loaded]);
 
@@ -223,6 +240,7 @@ export function useNotificationPreferences({
         soundMode: soundModeRef.current,
         windowPrefs: windowPrefsRef.current,
         windowOffset: windowOffsetRef.current,
+        fridayEnabled: fridayEnabledRef.current,
       });
       DeviceEventEmitter.emit(NOTIF_MAP_CHANGED_EVENT);
     },
@@ -245,6 +263,7 @@ export function useNotificationPreferences({
         soundMode: nextMode,
         windowPrefs: windowPrefsRef.current,
         windowOffset: windowOffsetRef.current,
+        fridayEnabled: fridayEnabledRef.current,
       });
       DeviceEventEmitter.emit(NOTIF_SOUND_MODE_CHANGED_EVENT);
     },
@@ -267,6 +286,7 @@ export function useNotificationPreferences({
         soundMode: soundModeRef.current,
         windowPrefs: next,
         windowOffset: windowOffsetRef.current,
+        fridayEnabled: fridayEnabledRef.current,
       });
       DeviceEventEmitter.emit(NOTIF_WINDOW_MAP_CHANGED_EVENT);
     },
@@ -289,8 +309,32 @@ export function useNotificationPreferences({
         soundMode: soundModeRef.current,
         windowPrefs: windowPrefsRef.current,
         windowOffset: minutes,
+        fridayEnabled: fridayEnabledRef.current,
       });
       DeviceEventEmitter.emit(NOTIF_WINDOW_OFFSET_CHANGED_EVENT);
+    },
+    [enabled],
+  );
+
+  const setFridayEnabled = useCallback(
+    async (value: boolean) => {
+      if (value === fridayEnabledRef.current) return;
+      fridayEnabledRef.current = value;
+      setFridayEnabledState(value);
+      try {
+        await AsyncStorage.setItem(STORAGE_FRIDAY, value ? "1" : "0");
+      } catch {
+        // ignore persist errors
+      }
+      emitPreferences({
+        enabled,
+        prefs: prefsRef.current,
+        soundMode: soundModeRef.current,
+        windowPrefs: windowPrefsRef.current,
+        windowOffset: windowOffsetRef.current,
+        fridayEnabled: value,
+      });
+      DeviceEventEmitter.emit(NOTIF_FRIDAY_CHANGED_EVENT);
     },
     [enabled],
   );
@@ -302,9 +346,11 @@ export function useNotificationPreferences({
     soundMode,
     windowPrefs,
     windowOffset,
+    fridayEnabled,
     setPrayerPreference,
     updateSoundMode,
     setWindowPreference,
     setWindowOffset,
+    setFridayEnabled,
   };
 }

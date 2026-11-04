@@ -103,6 +103,7 @@ describe("notifications/scheduler", () => {
       soundMode: "default" as const,
       windowPrefs: NO_WINDOW,
       windowOffset: 15,
+      fridayEnabled: false,
     };
 
     await scheduleForHorizon(params);
@@ -127,6 +128,7 @@ describe("notifications/scheduler", () => {
       soundMode: "default",
       windowPrefs: NO_WINDOW,
       windowOffset: 15,
+      fridayEnabled: false,
     });
 
     expect(scheduleNotificationAsync).not.toHaveBeenCalled();
@@ -146,6 +148,7 @@ describe("notifications/scheduler", () => {
       soundMode: "default",
       windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
       windowOffset: 15,
+      fridayEnabled: false,
     });
 
     expect(scheduleNotificationAsync).toHaveBeenCalledTimes(1);
@@ -172,6 +175,7 @@ describe("notifications/scheduler", () => {
       soundMode: "adhan",
       windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
       windowOffset: 15,
+      fridayEnabled: false,
     });
 
     const sounds = Object.fromEntries(
@@ -199,6 +203,7 @@ describe("notifications/scheduler", () => {
       soundMode: "default",
       windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
       windowOffset: 15,
+      fridayEnabled: false,
     });
 
     expect(scheduleNotificationAsync).not.toHaveBeenCalled();
@@ -218,6 +223,7 @@ describe("notifications/scheduler", () => {
       soundMode: "default",
       windowPrefs: { Fajr: true, Dhuhr: false, Asr: false, Maghrib: false },
       windowOffset: 15,
+      fridayEnabled: false,
     });
 
     const arg = scheduleNotificationAsync.mock.calls[0][0];
@@ -239,6 +245,7 @@ describe("notifications/scheduler", () => {
       soundMode: "default",
       windowPrefs: { Fajr: false, Dhuhr: false, Asr: false, Maghrib: true },
       windowOffset: 15,
+      fridayEnabled: false,
     });
 
     // Maghrib reminder (before Isha) is allowed; assert no reminder titled "Isha ending soon".
@@ -264,6 +271,7 @@ describe("notifications/scheduler", () => {
       soundMode: "default",
       windowPrefs: NO_WINDOW,
       windowOffset: 15,
+      fridayEnabled: false,
     });
 
     expect(scheduleNotificationAsync).toHaveBeenCalledTimes(60);
@@ -277,5 +285,97 @@ describe("notifications/scheduler", () => {
     expect(firstDate.getTime()).toBeLessThan(lastDate.getTime());
     expect(firstDate.getHours()).toBe(5);
     resetTestTime();
+  });
+
+  describe("friday reminder", () => {
+    // 2026-01-01 is a Thursday, so Jan 2, 9 and 16 are Fridays.
+    const baseParams = {
+      prefs: makePrefs(false),
+      cityDisplay: "Chicago",
+      effective: { useLocation: true, method: 2, city: undefined },
+      soundMode: "default" as const,
+      windowPrefs: NO_WINDOW,
+      windowOffset: 15,
+      fridayEnabled: true,
+    };
+
+    const fridayCalls = () =>
+      (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls
+        .map(([arg]) => arg)
+        .filter((arg) => arg.content.data?.type === "friday");
+
+    beforeEach(() => {
+      mockGetPrayerTimesForDate.mockResolvedValue([] as any);
+    });
+
+    afterEach(() => resetTestTime());
+
+    it("schedules one 09:00 local candidate per Friday and none on other days", async () => {
+      freezeTestTime(new Date(2026, 0, 1, 0, 0, 0));
+
+      await scheduleForHorizon({ ...baseParams, days: 16 });
+
+      const calls = fridayCalls();
+      expect(calls).toHaveLength(3);
+      const dates = calls.map((c) => new Date(c.trigger.date));
+      expect(dates.map((d) => d.getDate())).toEqual([2, 9, 16]);
+      dates.forEach((d) => {
+        expect(d.getDay()).toBe(5);
+        expect(d.getHours()).toBe(9);
+        expect(d.getMinutes()).toBe(0);
+      });
+      expect(calls[0].content).toEqual(
+        expect.objectContaining({
+          title: "Jumu'ah Mubarak",
+          body: "A good day to read Surah Al-Kahf.",
+          sound: "default",
+          data: { type: "friday", url: "/Quran?surah=18&ayah=1" },
+        }),
+      );
+    });
+
+    it("skips a Friday whose 09:00 has already passed", async () => {
+      freezeTestTime(new Date(2026, 0, 2, 9, 30, 0));
+
+      await scheduleForHorizon({ ...baseParams, days: 1 });
+
+      expect(fridayCalls()).toHaveLength(0);
+    });
+
+    it("schedules today's reminder when it is still ahead", async () => {
+      freezeTestTime(new Date(2026, 0, 2, 8, 0, 0));
+
+      await scheduleForHorizon({ ...baseParams, days: 1 });
+
+      expect(fridayCalls()).toHaveLength(1);
+    });
+
+    it("schedules nothing when the toggle is off", async () => {
+      freezeTestTime(new Date(2026, 0, 1, 0, 0, 0));
+
+      await scheduleForHorizon({ ...baseParams, days: 16, fridayEnabled: false });
+
+      expect(fridayCalls()).toHaveLength(0);
+    });
+
+    it("does not duplicate across repeated passes", async () => {
+      freezeTestTime(new Date(2026, 0, 1, 0, 0, 0));
+
+      await scheduleForHorizon({ ...baseParams, days: 3 });
+      await scheduleForHorizon({ ...baseParams, days: 3 });
+
+      expect(fridayCalls()).toHaveLength(1);
+    });
+
+    it("shares the pending budget with prayer alerts", async () => {
+      const scheduleNotificationAsync = Notifications.scheduleNotificationAsync as jest.Mock;
+      freezeTestTime(new Date(2026, 0, 1, 0, 0, 0));
+      mockGetPrayerTimesForDate.mockResolvedValue(FULL_DAY as any);
+
+      await scheduleForHorizon({ ...baseParams, prefs: makePrefs(true), days: 15 });
+
+      expect(scheduleNotificationAsync).toHaveBeenCalledTimes(60);
+      expect(fridayCalls().length).toBeGreaterThan(0);
+    });
   });
 });

@@ -39,6 +39,7 @@ import { preloadPrayerLog } from "@/services/prayerTracker";
 import { preloadHabitLog } from "@/services/habitTracker";
 import { PortalProvider } from "@gorhom/portal";
 import { NotificationService } from "../services/notificationService";
+import { routeNotificationResponse } from "@/services/notifications/response";
 import ForceUpdateGate from "@/components/ForceUpdateGate";
 import SplashScreen from "@/components/SplashScreen";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
@@ -440,6 +441,16 @@ function RootLayoutContent() {
 
   const appReady = fontsLoaded && initialSynced && isHydrated;
   const splashReady = appReady && launchUpdateCheckDone;
+
+  // Wait for appReady so a cold-start tap can't navigate before the navigator exists.
+  useEffect(() => {
+    if (!appReady) return;
+    routeNotificationResponse(Notifications.getLastNotificationResponse());
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      routeNotificationResponse,
+    );
+    return () => sub.remove();
+  }, [appReady]);
 
   // Explicit so the Light theme paints dark status-bar text on its cream canvas.
   const statusBarStyle = theme.name === "light" ? "dark" : "light";

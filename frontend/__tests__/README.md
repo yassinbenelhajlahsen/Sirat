@@ -20,6 +20,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/notificationService.test.ts`
   - `services/notifications/*.test.ts`
   - `services/notifications/windowStorage.test.ts`
+  - `services/notifications/response.test.ts` — notification tap routing: `data.url` opens the route, other types do nothing, one response routes once
   - `services/notifications/cityResolver.test.ts` — city-display fallback chain (caller coords → live position → last-known → cached → "your area"; never raw coordinates)
 - `prayer times retrieval + caching testing`
   - `services/prayerTimes.test.ts`
