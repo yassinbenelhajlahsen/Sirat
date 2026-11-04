@@ -11,11 +11,13 @@ import SettingsRow from "@/components/settings/SettingsRow";
 import SettingsSection from "@/components/settings/SettingsSection";
 import { Subhead } from "@/components/ui/Text";
 import { useAdhanPreview } from "../hooks/useAdhanPreview";
+import { useRamadanMode } from "../hooks/useRamadanMode";
 import { useNotificationPanelAnimation } from "../hooks/useNotificationPanelAnimation";
 import { useNotificationPreferences } from "../hooks/useNotificationPreferences";
 import {
   PRAYERS,
   SOUND_OPTIONS,
+  SUHOOR_OFFSET_OPTIONS,
   WINDOW_OFFSET_OPTIONS,
   WINDOW_PRAYERS,
   type PrayerKey,
@@ -30,6 +32,9 @@ const WINDOW_FOOTER =
   "A heads up before a prayer's time runs out. Sent only if you have not logged it yet.";
 
 const FRIDAY_FOOTER = "A reminder to read Surah Al-Kahf, sent on Friday morning.";
+
+const SUHOOR_FOOTER =
+  "A reminder before Fajr on each day of Ramadan, so you can eat before the fast.";
 
 type Props = {
   // From Settings.tsx: "granted" | "denied" | null
@@ -55,7 +60,12 @@ export default function NotificationSettings({ notifStatus }: Props) {
     setWindowPreference,
     setWindowOffset,
     setFridayEnabled,
+    suhoorEnabled,
+    suhoorOffset,
+    setSuhoorEnabled,
+    setSuhoorOffset,
   } = useNotificationPreferences({ notifStatus });
+  const { ramadanMode } = useRamadanMode();
 
   const { previewing, handlePreviewPress, stopPreview } = useAdhanPreview(enabled);
 
@@ -125,6 +135,16 @@ export default function NotificationSettings({ notifStatus }: Props) {
         value: minutes,
         label: `${minutes} min`,
         accessibilityLabel: `${minutes} minutes before`,
+      })),
+    [],
+  );
+
+  const suhoorOffsetOptions = useMemo(
+    () =>
+      SUHOOR_OFFSET_OPTIONS.map((minutes) => ({
+        value: minutes,
+        label: `${minutes} min`,
+        accessibilityLabel: `${minutes} minutes before Fajr`,
       })),
     [],
   );
@@ -214,6 +234,26 @@ export default function NotificationSettings({ notifStatus }: Props) {
                 })}
               />
             </SettingsSection>
+            {ramadanMode ? (
+              <SettingsSection label="Suhoor" footer={SUHOOR_FOOTER}>
+                <SettingsRow
+                  first
+                  title="Suhoor reminder"
+                  trailing={switchFor("Suhoor reminder", suhoorEnabled, (next) => void setSuhoorEnabled(next))}
+                />
+                {suhoorEnabled ? (
+                  <View style={styles.segmentRow}>
+                    <Segmented
+                      options={suhoorOffsetOptions}
+                      value={suhoorOffset}
+                      onChange={(minutes) => void setSuhoorOffset(minutes)}
+                      disabled={!enabled}
+                      accessibilityLabel="Minutes before Fajr"
+                    />
+                  </View>
+                ) : null}
+              </SettingsSection>
+            ) : null}
 
             <SettingsSection label="Adhan sound" footer={selectedSoundOption.description}>
               {SOUND_OPTIONS.map((option, i) => {

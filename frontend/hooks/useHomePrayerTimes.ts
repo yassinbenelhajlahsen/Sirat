@@ -7,6 +7,7 @@ import { resolveCityDisplay } from "../services/notifications/cityResolver";
 import { STORAGE_CITY_DISPLAY_LOC } from "../services/notifications/constants";
 import { getPrayerTimesForDate, getPrayerTimesToday, PrayerSettings, PrayerTime } from "../services/prayerTimes";
 import CITIES, { City, cityKey } from "../utils/cities";
+import { isFastingDay } from "../utils/hijriDate";
 import { useNextPrayer } from "./useNextPrayer";
 
 const DEFAULT_METHOD = 2;
@@ -169,6 +170,8 @@ export function useHomePrayerTimes() {
     null,
   );
   const [nextDayFajr, setNextDayFajr] = useState<string | null>(null);
+  // Only loaded when tomorrow is a fasting day: the Ramadan card needs it after Maghrib.
+  const [tomorrowFajr, setTomorrowFajr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [banner, setBanner] = useState("");
@@ -191,6 +194,7 @@ export function useHomePrayerTimes() {
         setSelectedDate(null);
         setPrayerTimesDateKey(null);
         setNextDayFajr(null);
+        setTomorrowFajr(null);
       }
       setBanner("");
 
@@ -210,14 +214,24 @@ export function useHomePrayerTimes() {
         .map((pt) => parseTimeToDate(pt.time, resolvedDate))
         .some((dateObj) => dateObj > now);
 
-      if (!hasUpcoming) {
-        const tomorrow = new Date(resolvedDate);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowTimes = await getPrayerTimesForDate(effective, tomorrow);
-        const fajr = tomorrowTimes.find((p) => p.label === "Fajr");
-        setNextDayFajr(fajr?.time ?? null);
+      const tomorrow = new Date(resolvedDate);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowFasting = isFastingDay(tomorrow);
+
+      if (!hasUpcoming || tomorrowFasting) {
+        let fajr: string | null = null;
+        try {
+          const tomorrowTimes = await getPrayerTimesForDate(effective, tomorrow);
+          fajr = tomorrowTimes.find((p) => p.label === "Fajr")?.time ?? null;
+        } catch (err) {
+          // Only the dial's "next day" state treats this as fatal; the Ramadan card can do without.
+          if (!hasUpcoming) throw err;
+        }
+        setNextDayFajr(hasUpcoming ? null : fajr);
+        setTomorrowFajr(tomorrowFasting ? fajr : null);
       } else {
         setNextDayFajr(null);
+        setTomorrowFajr(null);
       }
     } catch (err) {
       console.error("Error fetching prayer times:", err);
@@ -261,6 +275,7 @@ export function useHomePrayerTimes() {
     prayerTimes,
     nextPrayer,
     nextDayFajr,
+    tomorrowFajr,
     timeLeft,
     loading,
     refreshing,

@@ -10,8 +10,14 @@ import {
   readWindowMap,
   readWindowOffset,
   writeFridayEnabled,
+  readRamadanMode,
+  readSuhoorEnabled,
+  readSuhoorOffset,
   writePrefs,
+  writeRamadanMode,
   writeSoundMode,
+  writeSuhoorEnabled,
+  writeSuhoorOffset,
   writeWindowMap,
   writeWindowOffset,
 } from "@/services/notifications/storage";
@@ -19,6 +25,9 @@ import {
   NOTIF_FRIDAY_CHANGED_EVENT,
   NOTIF_MAP_CHANGED_EVENT,
   NOTIF_SOUND_MODE_CHANGED_EVENT,
+  NOTIF_SUHOOR_CHANGED_EVENT,
+  NOTIF_SUHOOR_OFFSET_CHANGED_EVENT,
+  RAMADAN_MODE_CHANGED_EVENT,
   NOTIF_WINDOW_MAP_CHANGED_EVENT,
   NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
 } from "@/utils/notifications/constants";
@@ -153,5 +162,23 @@ export const SETTINGS_REGISTRY: SettingEntry[] = [
     changeEvent: NOTIF_FRIDAY_CHANGED_EVENT,
     read: () => readFridayEnabled(),
     applyValue: (v) => writeFridayEnabled(v),
+  },
+  {
+    key: "ramadanMode",
+    changeEvent: RAMADAN_MODE_CHANGED_EVENT,
+    read: () => readRamadanMode(),
+    applyValue: (v) => writeRamadanMode(v),
+  },
+  {
+    key: "notifSuhoor",
+    changeEvent: NOTIF_SUHOOR_CHANGED_EVENT,
+    read: () => readSuhoorEnabled(),
+    applyValue: (v) => writeSuhoorEnabled(v),
+  },
+  {
+    key: "notifSuhoorOffset",
+    changeEvent: NOTIF_SUHOOR_OFFSET_CHANGED_EVENT,
+    read: () => readSuhoorOffset(),
+    applyValue: (v) => writeSuhoorOffset(v),
   },
 ];

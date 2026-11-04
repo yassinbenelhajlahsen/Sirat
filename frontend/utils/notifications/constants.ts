@@ -48,6 +48,9 @@ export const NOTIF_SOUND_MODE_CHANGED_EVENT = "NOTIF_SOUND_MODE_CHANGED";
 export const NOTIF_WINDOW_MAP_CHANGED_EVENT = "NOTIF_WINDOW_MAP_CHANGED";
 export const NOTIF_WINDOW_OFFSET_CHANGED_EVENT = "NOTIF_WINDOW_OFFSET_CHANGED";
 export const NOTIF_FRIDAY_CHANGED_EVENT = "NOTIF_FRIDAY_CHANGED";
+export const NOTIF_SUHOOR_CHANGED_EVENT = "NOTIF_SUHOOR_CHANGED";
+export const NOTIF_SUHOOR_OFFSET_CHANGED_EVENT = "NOTIF_SUHOOR_OFFSET_CHANGED";
+export const RAMADAN_MODE_CHANGED_EVENT = "RAMADAN_MODE_CHANGED";
 
 export const DEFAULT_PREFS = PRAYERS.reduce<Record<PrayerKey, boolean>>(
   (acc, key) => {
@@ -84,3 +87,12 @@ export const DEFAULT_WINDOW_PREFS: WindowPrefMap = WINDOW_PRAYERS.reduce(
   },
   {} as WindowPrefMap,
 );
+
+export const SUHOOR_OFFSET_OPTIONS = [15, 30, 45, 60] as const;
+export const DEFAULT_SUHOOR_OFFSET = 30;
+// Off until the user asks: the reminder is new and wakes people up.
+export const DEFAULT_SUHOOR_ENABLED = false;
+
+export const STORAGE_SUHOOR = "notif_suhoor_v1";
+export const STORAGE_SUHOOR_OFFSET = "notif_suhoor_offset_v1";
+export const STORAGE_RAMADAN_MODE = "ramadan_mode_v1";

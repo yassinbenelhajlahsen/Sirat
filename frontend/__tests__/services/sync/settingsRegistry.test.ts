@@ -10,6 +10,8 @@ it("covers exactly the synced setting keys", () => {
       "notifFriday",
       "notifPrefs",
       "notifSoundMode",
+      "notifSuhoor",
+      "notifSuhoorOffset",
       "notifWindowMap",
       "notifWindowOffset",
       "prayerSettings",
@@ -17,6 +19,7 @@ it("covers exactly the synced setting keys", () => {
       "quranDisplayModes",
       "quranProgress",
       "quranReciter",
+      "ramadanMode",
       "ramadanTracker",
       "theme",
     ],
@@ -32,6 +35,29 @@ it("each notif entry stamps off its own granular change event", () => {
   expect(eventByKey.notifWindowMap).toBe("NOTIF_WINDOW_MAP_CHANGED");
   expect(eventByKey.notifWindowOffset).toBe("NOTIF_WINDOW_OFFSET_CHANGED");
   expect(eventByKey.notifFriday).toBe("NOTIF_FRIDAY_CHANGED");
+  expect(eventByKey.notifSuhoor).toBe("NOTIF_SUHOOR_CHANGED");
+  expect(eventByKey.notifSuhoorOffset).toBe("NOTIF_SUHOOR_OFFSET_CHANGED");
+  expect(eventByKey.ramadanMode).toBe("RAMADAN_MODE_CHANGED");
+});
+
+it("ramadan and suhoor entries default sensibly and round-trip values", async () => {
+  const byKey = Object.fromEntries(SETTINGS_REGISTRY.map((e) => [e.key, e]));
+
+  expect(await byKey.ramadanMode.read()).toBe(true);
+  expect(await byKey.notifSuhoor.read()).toBe(false);
+  expect(await byKey.notifSuhoorOffset.read()).toBe(30);
+
+  await byKey.ramadanMode.applyValue(false);
+  expect(await byKey.ramadanMode.read()).toBe(false);
+  await byKey.notifSuhoor.applyValue(true);
+  expect(await byKey.notifSuhoor.read()).toBe(true);
+  await byKey.notifSuhoorOffset.applyValue(45);
+  expect(await byKey.notifSuhoorOffset.read()).toBe(45);
+
+  await byKey.notifSuhoorOffset.applyValue(7);
+  expect(await byKey.notifSuhoorOffset.read()).toBe(45);
+  await byKey.ramadanMode.applyValue("yes");
+  expect(await byKey.ramadanMode.read()).toBe(false);
 });
 
 it("theme entry round-trips value via read/applyValue", async () => {

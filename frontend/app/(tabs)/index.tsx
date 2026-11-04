@@ -24,6 +24,8 @@ import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
 import DuaResultCard from "../../components/DuaResultCard";
 import PrayerDial from "@/components/PrayerDial";
+import RamadanCard from "@/components/home/RamadanCard";
+import { useRamadanMode } from "@/hooks/useRamadanMode";
 import PrayerLogSheet from "@/components/tracking/PrayerLogSheet";
 import PressableScale from "../../components/PressableScale";
 import { useDuaInteraction } from "../../hooks/useDuaInteraction";
@@ -43,9 +45,10 @@ export default function Home() {
 
   const router = useRouter();
   const {
-    prayerTimes, nextPrayer, nextDayFajr, timeLeft,
+    prayerTimes, nextPrayer, nextDayFajr, tomorrowFajr, timeLeft,
     loading, refreshing, banner, locationLabel, coords, refresh,
   } = useHomePrayerTimes();
+  const { ramadanMode } = useRamadanMode();
   const { selectedDua, duaLoading, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
 
@@ -188,6 +191,24 @@ export default function Home() {
           />
         </View>
 
+        <View style={styles.ramadanSlot}>
+          <RamadanCard
+            enabled={ramadanMode}
+            prayerTimes={prayerTimes}
+            tomorrowFajr={tomorrowFajr}
+            onLogMissedFast={() =>
+              router.push({
+                pathname: "/Calendar",
+                params: {
+                  date: encodeURIComponent(today.toISOString()),
+                  month: today.getMonth().toString(),
+                  year: today.getFullYear().toString(),
+                },
+              })
+            }
+          />
+        </View>
+
         <View style={styles.section}>
           <SectionHeader title="Tracker" />
           <PressableScale
@@ -249,6 +270,7 @@ const createStyles = (theme: AppTheme) => {
     headerHijri: { marginTop: spacing.xs },
     headerDate: { marginTop: 2 },
     dialSlot: { marginTop: spacing.xl },
+    ramadanSlot: { marginTop: spacing.lg },
     section: { marginTop: spacing.xxl },
     trackerRow: {
       flexDirection: "row",

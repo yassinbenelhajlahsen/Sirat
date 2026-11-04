@@ -27,6 +27,9 @@ type NotificationServiceSetup = {
     readWindowMap: jest.Mock;
     readWindowOffset: jest.Mock;
     readFridayEnabled: jest.Mock;
+    readRamadanMode: jest.Mock;
+    readSuhoorEnabled: jest.Mock;
+    readSuhoorOffset: jest.Mock;
     writeDayFingerprint: jest.Mock;
   };
 };
@@ -73,6 +76,9 @@ async function loadNotificationService(overrides?:
     })),
     readWindowOffset: jest.fn(async () => 15),
     readFridayEnabled: jest.fn(async () => true),
+    readRamadanMode: jest.fn(async () => true),
+    readSuhoorEnabled: jest.fn(async () => true),
+    readSuhoorOffset: jest.fn(async () => 30),
     writeDayFingerprint: jest.fn(async () => {}),
   };
 
@@ -116,6 +122,9 @@ async function loadNotificationService(overrides?:
     readWindowMap: mocks.readWindowMap,
     readWindowOffset: mocks.readWindowOffset,
     readFridayEnabled: mocks.readFridayEnabled,
+    readRamadanMode: mocks.readRamadanMode,
+    readSuhoorEnabled: mocks.readSuhoorEnabled,
+    readSuhoorOffset: mocks.readSuhoorOffset,
     writeDayFingerprint: mocks.writeDayFingerprint,
   }));
 
@@ -238,8 +247,26 @@ describe("NotificationService", () => {
         windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
         windowOffset: 15,
         fridayEnabled: true,
+        ramadanMode: true,
+        suhoorEnabled: true,
+        suhoorOffset: 30,
       }),
     );
+  });
+
+  it("rebuilds the schedule when only a Ramadan pref differs from the stored fingerprint", async () => {
+    const first = await loadNotificationService();
+    await first.NotificationService.rescheduleAll("init");
+    const fingerprint = first.mocks.writeDayFingerprint.mock.calls[0][0];
+
+    const second = await loadNotificationService({
+      readDayFingerprint: jest.fn(async () => fingerprint),
+      readSuhoorOffset: jest.fn(async () => 45),
+    });
+    await second.NotificationService.rescheduleAll("app-foreground");
+
+    expect(second.mocks.cancelPreviouslyScheduled).toHaveBeenCalledTimes(1);
+    expect(second.mocks.writeDayFingerprint).toHaveBeenCalledTimes(1);
   });
 
   it("initializes once and wires lifecycle callback", async () => {

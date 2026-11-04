@@ -22,6 +22,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/notifications/windowStorage.test.ts`
   - `utils/notifications/fridayReminder.test.ts` — Friday reminder picks: 10+ messages, 9:00 to 10:59 window, same result for a given Friday, varies across weeks
   - `services/notifications/response.test.ts` — notification tap routing: `data.url` opens the route, other types do nothing, one response routes once
+  - `services/notifications/ramadanStorage.test.ts` — Ramadan mode, suhoor toggle and offset (`ramadan_mode_v1`, `notif_suhoor_v1`, `notif_suhoor_offset_v1`): defaults, string forms, malformed input
   - `services/notifications/cityResolver.test.ts` — city-display fallback chain (caller coords → live position → last-known → cached → "your area"; never raw coordinates)
 - `prayer times retrieval + caching testing`
   - `services/prayerTimes.test.ts`
@@ -73,6 +74,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useCalendarData.test.ts`
   - `components/day-detail-panel.contract.test.tsx` (calendar inline-agenda day detail — today arc, other days as a time list, no logging on future days,/holiday/Ramadan/error states; holiday names render on their own row without a line clamp)
   - `components/calendar/MonthPickerSheet.test.tsx` (month/year picker bottom sheet — year pills, month grid, out-of-range disabling)
+  - `components/ramadan-card.contract.test.tsx` — Home Ramadan card: day, suhoor/iftar target and countdown, missed-fast action, hidden outside Ramadan or when off
 - `force update gate testing`
   - `services/appVersion.test.ts`
   - `services/apiClient.test.ts`
@@ -98,7 +100,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `visual refresh foundations (Plan 1) testing`
   - `utils/greeting.test.ts`
   - `utils/formatDate.test.ts` — ordinal day suffixes (1st/2nd/3rd/11th-13th) for the dial centre and calendar day title
-  - `utils/hijriDate.test.ts` — shared Hijri date: Umm al-Qura (matches the holiday feed), rolls to the next day at Maghrib
+  - `utils/hijriDate.test.ts` — shared Hijri date: Umm al-Qura (matches the holiday feed), rolls to the next day at Maghrib; `isFastingDay` / `ramadanDayAt` on the Ramadan 1448 boundaries
+  - `utils/ramadanCountdown.test.ts` — Home Ramadan card state: hidden/shown, suhoor vs iftar target, Maghrib rollover, last-day end
   - `constants/motion.test.ts`
   - `hooks/useHaptics.test.ts`
   - `components/glass-surface.contract.test.tsx` — glass vs fallback, and the borderless-over-glass default (hairline in the fallback, 1px when `bordered`)
