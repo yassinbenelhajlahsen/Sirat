@@ -77,4 +77,26 @@ describe("usePrayerDay marks and log sheet", () => {
     expect(result.current.hijri).toBe("Jumada I 24, 1448 AH");
     resetTestTime();
   });
+
+  it("does not show the previous day's times while a new day loads", async () => {
+    const nov4 = new Date(2026, 10, 4);
+    let release: (() => void) | undefined;
+    mockGetPrayerTimesForDate.mockImplementation(async (_s, d) => {
+      if (d.getDate() === 4) await new Promise<void>((r) => { release = r; });
+      return buildPrayerDay(d, [{ label: "Fajr", time: d.getDate() === 4 ? "5:26 AM" : "5:25 AM" }]);
+    });
+
+    const { result, rerender } = renderHook(({ day }: { day: Date }) => usePrayerDay(day), {
+      initialProps: { day: nov3 },
+    });
+    await waitFor(() => expect(result.current.prayerDay?.dateKey).toBe("2026-11-03"));
+
+    rerender({ day: nov4 });
+    await waitFor(() => expect(result.current.prayerDay).toBeNull());
+    expect(result.current.loading).toBe(true);
+
+    await act(async () => release?.());
+    await waitFor(() => expect(result.current.prayerDay?.dateKey).toBe("2026-11-04"));
+    expect(result.current.loading).toBe(false);
+  });
 });

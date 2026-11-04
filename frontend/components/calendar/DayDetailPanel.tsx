@@ -10,7 +10,7 @@ import { AppText, Body, Footnote, Headline, Title2 } from "@/components/ui/Text"
 import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { PrayerDayError } from "@/hooks/usePrayerDay";
-import { emptyPrayerDay, type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
+import { type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { useRamadanMode } from "@/hooks/useRamadanMode";
@@ -121,7 +121,7 @@ export default function DayDetailPanel({
         <View style={styles.prayers}>
           <SectionHeader title="Prayers" inset={0} />
           <PrayerTimesList
-            prayerDay={prayerDay ?? emptyPrayerDay(date)}
+            prayerDay={prayerDay}
             statuses={statuses}
             isToday={isToday}
             nextPrayer={nextPrayer}

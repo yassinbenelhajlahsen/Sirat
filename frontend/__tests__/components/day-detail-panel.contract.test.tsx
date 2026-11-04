@@ -74,6 +74,17 @@ describe("DayDetailPanel", () => {
     expect(getByText("5:31 AM")).toBeTruthy();
   });
 
+  it("keeps the prayer names on screen while a day loads, with placeholders for the times", () => {
+    const { getByText, queryByText } = render(
+      <DayDetailPanel {...baseProps} loading prayerDay={null} />,
+    );
+    // Mar 15 2026 is in Ramadan, so Fajr and Maghrib carry their suhoor/iftar names.
+    ["Fajr/Suhoor", "Sunrise", "Dhuhr", "Asr", "Maghrib/Iftar", "Isha"].forEach((name) =>
+      expect(getByText(name)).toBeTruthy(),
+    );
+    expect(queryByText("No prayer times available for this date.")).toBeNull();
+  });
+
   it("shows the Hijri date it is given on the supporting line", () => {
     const { getByText } = render(<DayDetailPanel {...baseProps} />);
     expect(getByText(/Jumada I 24, 1448 AH/)).toBeTruthy();

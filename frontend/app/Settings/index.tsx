@@ -202,16 +202,18 @@ export default function Settings() {
             first
             icon="notifications-outline"
             title="Notifications"
+            subtitle="Prayer alerts, reminders and sound"
             showChevron
             onPress={() => router.push("/Settings/notifications")}
           />
         </SettingsSection>
 
-        <SettingsSection footer="Suhoor and iftar times during Ramadan.">
+        <SettingsSection>
           <SettingsRow
             first
             icon="moon-outline"
             title="Ramadan mode"
+            subtitle="Suhoor and iftar times during Ramadan"
             trailing={
               <Switch
                 accessibilityLabel="Ramadan mode"

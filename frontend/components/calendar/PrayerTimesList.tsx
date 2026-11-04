@@ -2,14 +2,16 @@ import { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import PrayerStatusDot from "@/components/tracking/PrayerStatusDot";
+import SkeletonBar from "@/components/ui/SkeletonBar";
 import { Subhead } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { formatClock, type PrayerDay, type PrayerSlot } from "@/services/prayerDay";
+import { formatClock, slotAt, type PrayerDay, type PrayerSlot, type SlotName } from "@/services/prayerDay";
 import { isPrayerName, type PrayerName, type PrayerStatus } from "@/services/prayerTracker";
 
 type PrayerTimesListProps = {
-  prayerDay: PrayerDay;
+  /** Null while the day loads: the names stay, the times show as placeholders. */
+  prayerDay: PrayerDay | null;
   statuses: Partial<Record<PrayerName, PrayerStatus>>;
   /** Only today highlights the next prayer and holds back prayers still ahead. */
   isToday: boolean;
@@ -20,6 +22,8 @@ type PrayerTimesListProps = {
   /** Ramadan fasting day: Fajr and Maghrib read as suhoor and iftar, in gold. */
   ramadan?: boolean;
 };
+
+const ROWS: readonly SlotName[] = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 const RAMADAN_LABELS: Record<string, string> = { Fajr: "Fajr/Suhoor", Maghrib: "Maghrib/Iftar" };
 
@@ -43,27 +47,35 @@ export default function PrayerTimesList({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   // Today logs up to and including the next prayer; once all are done, every one.
-  const nextIdx = isToday && nextPrayer ? prayerDay.slots.findIndex((p) => p.name === nextPrayer.name) : -1;
+  const nextIdx = isToday && nextPrayer ? ROWS.indexOf(nextPrayer.name) : -1;
+  const loaded = !!prayerDay?.slots.length;
 
   return (
     <View style={styles.list}>
-      {prayerDay.slots.map((p, fi) => {
-        const name = isPrayerName(p.name) ? p.name : null;
+      {ROWS.map((rowName, fi) => {
+        const at = slotAt(prayerDay, rowName);
+        const name = isPrayerName(rowName) ? rowName : null;
         const status = name ? statuses[name] : undefined;
         const isNext = fi === nextIdx;
         const passed = isToday && nextIdx !== -1 && fi < nextIdx;
-        const loggable = canLog && name != null && (!isToday || nextIdx === -1 || fi <= nextIdx);
-        const ramadanLabel = ramadan ? RAMADAN_LABELS[p.name] : undefined;
+        const loggable = canLog && loaded && name != null && (!isToday || nextIdx === -1 || fi <= nextIdx);
+        const ramadanLabel = ramadan ? RAMADAN_LABELS[rowName] : undefined;
         const nameColor = isNext || ramadanLabel ? colors.accent : passed ? colors.textTertiary : colors.textSecondary;
         const timeColor = isNext || ramadanLabel ? colors.accent : passed ? colors.textTertiary : colors.white;
         const row = (
           <View style={[styles.row, fi > 0 && styles.separator]}>
             <Subhead color={nameColor} style={styles.name}>
-              {ramadanLabel ?? p.name}
+              {ramadanLabel ?? rowName}
             </Subhead>
-            <Subhead color={timeColor} style={styles.time}>
-              {formatClock(p.at)}
-            </Subhead>
+            {at ? (
+              <Subhead color={timeColor} style={styles.time}>
+                {formatClock(at)}
+              </Subhead>
+            ) : loaded ? (
+              <Subhead color={colors.textTertiary} style={styles.time}>—</Subhead>
+            ) : (
+              <SkeletonBar width={64} height={14} />
+            )}
             {canLog ? (
               <View style={styles.dot}>
                 {name ? <PrayerStatusDot status={status} loggable={loggable} /> : null}
@@ -73,10 +85,10 @@ export default function PrayerTimesList({
         );
         return loggable ? (
           <Pressable
-            key={p.name}
-            onPress={() => onPressPrayer(name, p.name)}
+            key={rowName}
+            onPress={() => onPressPrayer(name, rowName)}
             accessibilityRole="button"
-            accessibilityLabel={`Log ${p.name}`}
+            accessibilityLabel={`Log ${rowName}`}
             accessibilityValue={{ text: status ? STATUS_VALUE[status] : "Not logged" }}
             accessibilityHint="Opens the prayer log"
             style={styles.item}
@@ -84,7 +96,7 @@ export default function PrayerTimesList({
             {row}
           </Pressable>
         ) : (
-          <View key={p.name} style={styles.item}>
+          <View key={rowName} style={styles.item}>
             {row}
           </View>
         );

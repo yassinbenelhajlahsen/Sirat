@@ -167,7 +167,9 @@ export function usePrayerDay(source: Date | "today" | null) {
     reload();
   }, [reload]);
 
-  const { nextPrayer, timeLeft } = useNextPrayer(prayerDay);
+  // After switching days the previous day stays loaded until the new one arrives; never show it as the new day's.
+  const shown = live || prayerDay?.dateKey === dayKey ? prayerDay : null;
+  const { nextPrayer, timeLeft } = useNextPrayer(shown);
 
   const markKey = live ? dateKeyFromDate(new Date()) : (dayKey ?? "");
   const { statuses, setStatus, clearStatus } = usePrayerLog(markKey);
@@ -196,14 +198,14 @@ export function usePrayerDay(source: Date | "today" | null) {
   // Only today's date follows the clock (it turns at Maghrib); other days show their daytime date,
   // which is the one holidays are keyed to.
   const hijri = isToday
-    ? formatHijriDate(new Date(), maghribOf(prayerDay))
+    ? formatHijriDate(new Date(), maghribOf(shown))
     : date
       ? formatHijriDate(date)
       : "";
 
   return {
-    prayerDay,
-    loading,
+    prayerDay: shown,
+    loading: loading || (!live && !error && !shown),
     error,
     retry: manualRetry,
     nextPrayer,
