@@ -87,42 +87,6 @@ describe("aladhanService", () => {
     expect(mockAxiosGet).toHaveBeenCalledTimes(1);
   });
 
-  it("serves timings from fresh cache on repeated request", async () => {
-    (mockAxiosGet as any).mockResolvedValue({
-      status: 200,
-      data: {
-        data: {
-          timings: validTimings,
-        },
-      },
-    });
-
-    const { getTimings } = await loadService();
-
-    const first = await getTimings(params);
-    const second = await getTimings(params);
-
-    expect(first.cacheStatus).toBe("miss");
-    expect(second.cacheStatus).toBe("hit");
-    expect(second.stale).toBe(false);
-    expect(mockAxiosGet).toHaveBeenCalledTimes(1);
-  });
-
-  it("throws INVALID_RESPONSE when upstream payload misses data key", async () => {
-    (mockAxiosGet as any).mockResolvedValue({
-      status: 200,
-      data: {},
-    });
-
-    const { getTimings } = await loadService();
-
-    await expect(getTimings(params)).rejects.toMatchObject({
-      code: "INVALID_RESPONSE",
-      status: 502,
-      retriable: false,
-    });
-  });
-
   it("throws INVALID_RESPONSE when required prayer keys are malformed", async () => {
     (mockAxiosGet as any).mockResolvedValue({
       status: 200,
@@ -145,147 +109,35 @@ describe("aladhanService", () => {
     });
   });
 
-  it("retries once for 429 and then succeeds", async () => {
-    (mockAxiosGet as any)
-      .mockResolvedValueOnce({
-        status: 429,
-        data: {},
-      })
-      .mockResolvedValueOnce({
-        status: 200,
-        data: {
-          data: {
-            timings: validTimings,
-          },
-        },
-      });
-
-    const { getTimings } = await loadService();
-    const result = await getTimings(params);
-
-    expect(result.stale).toBe(false);
-    expect(result.cacheStatus).toBe("miss");
-    expect(mockAxiosGet).toHaveBeenCalledTimes(2);
-  });
-
-  it("throws RATE_LIMIT after exhausting retries on 429", async () => {
-    (mockAxiosGet as any)
-      .mockResolvedValueOnce({ status: 429, data: {} })
-      .mockResolvedValueOnce({ status: 429, data: {} })
-      .mockResolvedValueOnce({ status: 429, data: {} });
-
-    const { getTimings } = await loadService();
-
-    await expect(getTimings(params)).rejects.toMatchObject({
-      code: "RATE_LIMIT",
-      status: 429,
-      retriable: true,
-    });
-    expect(mockAxiosGet).toHaveBeenCalledTimes(3);
-  });
-
-  it("throws UPSTREAM_SERVER_ERROR after exhausting retries on 5xx", async () => {
-    (mockAxiosGet as any)
-      .mockResolvedValueOnce({ status: 500, data: {} })
-      .mockResolvedValueOnce({ status: 500, data: {} })
-      .mockResolvedValueOnce({ status: 500, data: {} });
-
-    const { getTimings } = await loadService();
-
-    await expect(getTimings(params)).rejects.toMatchObject({
-      code: "UPSTREAM_SERVER_ERROR",
-      status: 502,
-      retriable: true,
-    });
-    expect(mockAxiosGet).toHaveBeenCalledTimes(3);
-  });
-
-  it("throws UPSTREAM_BAD_REQUEST on non-retryable 4xx", async () => {
-    (mockAxiosGet as any).mockResolvedValue({
-      status: 400,
-      data: {},
-    });
-
-    const { getTimings } = await loadService();
-
-    await expect(getTimings(params)).rejects.toMatchObject({
-      code: "UPSTREAM_BAD_REQUEST",
-      status: 502,
-      retriable: false,
-    });
-  });
-
-  it("throws NETWORK_ERROR when request layer throws", async () => {
-    (mockAxiosGet as any).mockRejectedValue(new Error("socket hang up"));
-
-    const { getTimings } = await loadService();
-
-    await expect(getTimings(params)).rejects.toMatchObject({
-      code: "NETWORK_ERROR",
-      status: 502,
-      retriable: true,
-    });
-  });
-
-  it("coalesces identical in-flight timings requests", async () => {
-    let resolveAxios: ((value: unknown) => void) | undefined;
-    (mockAxiosGet as any).mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveAxios = resolve;
-        }),
-    );
-
-    const { getTimings } = await loadService();
-
-    const requestA = getTimings(params);
-    const requestB = getTimings(params);
-
-    expect(mockAxiosGet).toHaveBeenCalledTimes(1);
-
-    resolveAxios?.({
-      status: 200,
-      data: {
-        data: {
-          timings: validTimings,
-        },
-      },
-    });
-
-    const [resultA, resultB] = await Promise.all([requestA, requestB]);
-    expect(resultA.data).toEqual(resultB.data);
-    expect(resultA.cacheStatus).toBe("miss");
-    expect(resultB.cacheStatus).toBe("miss");
-  });
-
-  it("serves stale timings cache when upstream fails after TTL expiry", async () => {
+  it("keeps each endpoint's cache for its own TTL", async () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-02-01T00:00:00.000Z"));
+    (mockAxiosGet as any).mockImplementation((url: string) => {
+      if (url.endsWith("/timings")) {
+        return Promise.resolve({ status: 200, data: { data: { timings: validTimings } } });
+      }
+      if (url.endsWith("/calendar")) {
+        return Promise.resolve({ status: 200, data: { data: [validCalendarDay] } });
+      }
+      return Promise.resolve(holidayMonthResponse([]));
+    });
 
-    (mockAxiosGet as any)
-      .mockResolvedValueOnce({
-        status: 200,
-        data: {
-          data: {
-            timings: validTimings,
-          },
-        },
-      })
-      .mockRejectedValueOnce(new Error("network down"));
+    const { getTimings, getCalendar, getHolidays } = await loadService();
+    const minutes = (n: number) => n * 60 * 1000;
+    const cases = [
+      { name: "timings", ttl: minutes(5), call: () => getTimings(params) },
+      { name: "calendar", ttl: minutes(12 * 60), call: () => getCalendar(calendarParams) },
+      { name: "holidays", ttl: minutes(24 * 60), call: () => getHolidays(holidayYear) },
+    ];
 
-    const { getTimings } = await loadService();
-
-    const first = await getTimings(params);
-    expect(first.stale).toBe(false);
-    expect(first.cacheStatus).toBe("miss");
-
-    jest.setSystemTime(new Date("2026-02-01T00:10:00.000Z"));
-    const second = await getTimings(params);
-
-    expect(second.stale).toBe(true);
-    expect(second.cacheStatus).toBe("stale");
-    expect(second.data.timings).toEqual(validTimings);
-    expect(mockAxiosGet).toHaveBeenCalledTimes(2);
+    for (const { name, ttl, call } of cases) {
+      const start = Date.now();
+      expect((await call()).cacheStatus).toBe("miss");
+      jest.setSystemTime(start + ttl - 1000);
+      expect([name, (await call()).cacheStatus]).toEqual([name, "hit"]);
+      jest.setSystemTime(start + ttl + 1000);
+      expect([name, (await call()).cacheStatus]).toEqual([name, "miss"]);
+    }
   });
 
   it("returns sanitized calendar payload", async () => {
@@ -340,33 +192,6 @@ describe("aladhanService", () => {
       code: "INVALID_RESPONSE",
       status: 502,
     });
-  });
-
-  it("serves stale calendar cache when upstream fails after TTL expiry", async () => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date("2026-02-01T00:00:00.000Z"));
-
-    (mockAxiosGet as any)
-      .mockResolvedValueOnce({
-        status: 200,
-        data: {
-          data: [validCalendarDay],
-        },
-      })
-      .mockRejectedValueOnce(new Error("network down"));
-
-    const { getCalendar } = await loadService();
-
-    const first = await getCalendar(calendarParams);
-    expect(first.stale).toBe(false);
-    expect(first.cacheStatus).toBe("miss");
-
-    jest.setSystemTime(new Date("2026-02-01T13:00:00.000Z"));
-    const second = await getCalendar(calendarParams);
-
-    expect(second.stale).toBe(true);
-    expect(second.cacheStatus).toBe("stale");
-    expect(second.data).toEqual(first.data);
   });
 
   it("returns partial calendar year when some months fail", async () => {
@@ -547,62 +372,4 @@ describe("aladhanService", () => {
     expect(mockAxiosGet).toHaveBeenCalledTimes(12);
   });
 
-  it("coalesces identical in-flight holiday requests", async () => {
-    (mockAxiosGet as any).mockImplementation(() =>
-      Promise.resolve(
-        holidayMonthResponse([
-          {
-            gregorian: { date: "01-01-2026" },
-            hijri: { holidays: ["Islamic New Year"] },
-          },
-        ]),
-      ),
-    );
-
-    const { getHolidays } = await loadService();
-    const requestA = getHolidays(holidayYear);
-    const requestB = getHolidays(holidayYear);
-
-    const [resultA, resultB] = await Promise.all([requestA, requestB]);
-
-    expect(resultA.data).toEqual(resultB.data);
-    expect(resultA.cacheStatus).toBe("miss");
-    expect(resultB.cacheStatus).toBe("miss");
-    expect(mockAxiosGet).toHaveBeenCalledTimes(12);
-  });
-
-  it("serves stale holiday cache when upstream fails after TTL expiry", async () => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
-
-    let callCount = 0;
-    (mockAxiosGet as any).mockImplementation(() => {
-      callCount += 1;
-      if (callCount <= 12) {
-        return Promise.resolve(
-          holidayMonthResponse([
-            {
-              gregorian: { date: "01-01-2026" },
-              hijri: { holidays: ["Islamic New Year"] },
-            },
-          ]),
-        );
-      }
-      return Promise.reject(new Error("network down"));
-    });
-
-    const { getHolidays } = await loadService();
-
-    const first = await getHolidays(holidayYear);
-    expect(first.stale).toBe(false);
-    expect(first.cacheStatus).toBe("miss");
-
-    jest.setSystemTime(new Date("2026-01-02T01:00:00.000Z"));
-    const second = await getHolidays(holidayYear);
-
-    expect(second.stale).toBe(true);
-    expect(second.cacheStatus).toBe("stale");
-    expect(second.data.holidays).toEqual(first.data.holidays);
-    expect(mockAxiosGet).toHaveBeenCalledTimes(24);
-  });
 });

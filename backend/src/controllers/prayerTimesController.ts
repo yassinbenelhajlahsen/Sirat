@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
 import {
-  AladhanServiceError,
   getCalendar,
   getCalendarYear,
   getTimings,
 } from "../services/aladhanService.js";
+import {
+  createServiceErrorSender,
+  parseRequiredInteger,
+  sendValidationError,
+} from "./aladhanHelpers.js";
 import { resolveAutoMethod } from "../utils/prayerMethodResolver.js";
 
 const ALLOWED_METHODS = new Set([
@@ -49,24 +53,6 @@ function parseRequiredNumber(
   if (!Number.isFinite(parsed)) {
     return { error: `Invalid ${key}: expected a number` };
   }
-
-  return parsed;
-}
-
-function parseRequiredInteger(
-  req: Request,
-  key: string,
-): number | { error: string } {
-  const value = req.query[key];
-  if (value === undefined) {
-    return { error: `Missing required parameter: ${key}` };
-  }
-
-  const raw = String(value).trim();
-  if (!/^-?\d+$/.test(raw)) {
-    return { error: `Invalid ${key}: expected an integer` };
-  }
-  const parsed = Number.parseInt(raw, 10);
 
   return parsed;
 }
@@ -119,80 +105,11 @@ function parseMethod(req: Request): ParsedMethod | { error: string } {
   };
 }
 
-function logPrayerTimesError(
-  req: Request,
-  event: string,
-  data: Record<string, unknown>,
-) {
-  console.error(
-    JSON.stringify({
-      event,
-      service: "prayer-times",
-      timestamp: new Date().toISOString(),
-      method: req.method,
-      path: req.originalUrl,
-      ip: req.ip,
-      userAgent: req.get("user-agent") ?? "unknown",
-      ...data,
-    }),
-  );
-}
-
-function sendValidationError(_req: Request, res: Response, message: string) {
-  return res.status(400).json({
-    error: {
-      code: "VALIDATION_ERROR",
-      message,
-      retriable: false,
-    },
-  });
-}
-
-function sendServiceError(req: Request, res: Response, error: unknown) {
-  if (error instanceof AladhanServiceError) {
-    logPrayerTimesError(req, "prayer_times_service_error", {
-      code: error.code,
-      message: error.message,
-      status: error.status,
-      retriable: error.retriable,
-      query: req.query,
-    });
-
-    return res.status(error.status).json({
-      error: {
-        code: error.code,
-        message: error.message,
-        retriable: error.retriable,
-      },
-      stale: false,
-    });
-  }
-
-  const unknownError =
-    error instanceof Error
-      ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack ?? null,
-        }
-      : {
-          value: String(error),
-        };
-
-  logPrayerTimesError(req, "prayer_times_unexpected_error", {
-    error: unknownError,
-    query: req.query,
-  });
-
-  return res.status(500).json({
-    error: {
-      code: "INTERNAL_ERROR",
-      message: "Failed to fetch prayer times",
-      retriable: false,
-    },
-    stale: false,
-  });
-}
+const sendServiceError = createServiceErrorSender({
+  service: "prayer-times",
+  eventPrefix: "prayer_times",
+  failureMessage: "Failed to fetch prayer times",
+});
 
 export async function getTimingsHandler(req: Request, res: Response) {
   const latitude = parseRequiredNumber(req, "latitude");
@@ -200,20 +117,20 @@ export async function getTimingsHandler(req: Request, res: Response) {
   const parsedMethod = parseMethod(req);
 
   if (typeof latitude !== "number") {
-    return sendValidationError(req, res, latitude.error);
+    return sendValidationError(res, latitude.error);
   }
   if (typeof longitude !== "number") {
-    return sendValidationError(req, res, longitude.error);
+    return sendValidationError(res, longitude.error);
   }
   if (!("method" in parsedMethod)) {
-    return sendValidationError(req, res, parsedMethod.error);
+    return sendValidationError(res, parsedMethod.error);
   }
 
   if (latitude < -90 || latitude > 90) {
-    return sendValidationError(req, res, "latitude must be between -90 and 90");
+    return sendValidationError(res, "latitude must be between -90 and 90");
   }
   if (longitude < -180 || longitude > 180) {
-    return sendValidationError(req, res, "longitude must be between -180 and 180");
+    return sendValidationError(res, "longitude must be between -180 and 180");
   }
   try {
     const result = await getTimings({
@@ -243,32 +160,32 @@ export async function getCalendarHandler(req: Request, res: Response) {
   const year = parseRequiredInteger(req, "year");
 
   if (typeof latitude !== "number") {
-    return sendValidationError(req, res, latitude.error);
+    return sendValidationError(res, latitude.error);
   }
   if (typeof longitude !== "number") {
-    return sendValidationError(req, res, longitude.error);
+    return sendValidationError(res, longitude.error);
   }
   if (!("method" in parsedMethod)) {
-    return sendValidationError(req, res, parsedMethod.error);
+    return sendValidationError(res, parsedMethod.error);
   }
   if (typeof month !== "number") {
-    return sendValidationError(req, res, month.error);
+    return sendValidationError(res, month.error);
   }
   if (typeof year !== "number") {
-    return sendValidationError(req, res, year.error);
+    return sendValidationError(res, year.error);
   }
 
   if (latitude < -90 || latitude > 90) {
-    return sendValidationError(req, res, "latitude must be between -90 and 90");
+    return sendValidationError(res, "latitude must be between -90 and 90");
   }
   if (longitude < -180 || longitude > 180) {
-    return sendValidationError(req, res, "longitude must be between -180 and 180");
+    return sendValidationError(res, "longitude must be between -180 and 180");
   }
   if (month < 1 || month > 12) {
-    return sendValidationError(req, res, "month must be between 1 and 12");
+    return sendValidationError(res, "month must be between 1 and 12");
   }
   if (year < 1900 || year > 2100) {
-    return sendValidationError(req, res, "year must be between 1900 and 2100");
+    return sendValidationError(res, "year must be between 1900 and 2100");
   }
 
   try {
@@ -300,26 +217,26 @@ export async function getCalendarYearHandler(req: Request, res: Response) {
   const year = parseRequiredInteger(req, "year");
 
   if (typeof latitude !== "number") {
-    return sendValidationError(req, res, latitude.error);
+    return sendValidationError(res, latitude.error);
   }
   if (typeof longitude !== "number") {
-    return sendValidationError(req, res, longitude.error);
+    return sendValidationError(res, longitude.error);
   }
   if (!("method" in parsedMethod)) {
-    return sendValidationError(req, res, parsedMethod.error);
+    return sendValidationError(res, parsedMethod.error);
   }
   if (typeof year !== "number") {
-    return sendValidationError(req, res, year.error);
+    return sendValidationError(res, year.error);
   }
 
   if (latitude < -90 || latitude > 90) {
-    return sendValidationError(req, res, "latitude must be between -90 and 90");
+    return sendValidationError(res, "latitude must be between -90 and 90");
   }
   if (longitude < -180 || longitude > 180) {
-    return sendValidationError(req, res, "longitude must be between -180 and 180");
+    return sendValidationError(res, "longitude must be between -180 and 180");
   }
   if (year < 1900 || year > 2100) {
-    return sendValidationError(req, res, "year must be between 1900 and 2100");
+    return sendValidationError(res, "year must be between 1900 and 2100");
   }
 
   try {

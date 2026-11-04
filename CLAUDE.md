@@ -57,7 +57,7 @@ See `AGENTS.md` for full architecture details. Key points:
 **Backend patterns:**
 - Classic routes → controllers → services → utils layered architecture
 - Per-route rate limiting via `express-rate-limit`: dua 60/15min, mosque 100/15min, prayer-times 300/15min, holidays 180/15min
-- Aladhan proxy caching with TTLs (timings 5min, calendar 12hr, holidays 24hr), stale-on-error fallback, in-flight request deduplication, and retry with exponential backoff (3 attempts, 300ms base)
+- Aladhan proxy caching with TTLs (timings 5min, calendar 12hr, holidays 24hr), stale-on-error fallback, in-flight request deduplication, and retry with exponential backoff (3 attempts, 300ms base). All of it lives in `services/aladhanFetch.ts` (`createCachedGetter`, `requestAladhan`); `aladhanService.ts` only declares each getter's key, fetch and TTL. The prayer-times and holiday controllers share `controllers/aladhanHelpers.ts`
 - Prompt injection defense on the dua endpoint — new dua categories/tags must not trigger it
 - Production mode strips internal error messages from API responses (debug locally for full details)
 - JSON body limit: 16KB
