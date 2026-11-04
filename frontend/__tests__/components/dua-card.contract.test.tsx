@@ -39,15 +39,17 @@ describe("DuaCard contract", () => {
     expect(getByLabelText("Find dua")).toBeDisabled();
   });
 
-  it("shows validation alert when submit is triggered with an empty input", () => {
-    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(jest.fn());
-    const { getByLabelText } = render(
-      <DuaCard onSubmit={jest.fn(async () => {})} />
-    );
+  it("keeps Find dua disabled and ignores Return until there is non-blank text", () => {
+    const onSubmit = jest.fn(async () => {});
+    const { getByLabelText } = render(<DuaCard onSubmit={onSubmit} />);
 
+    fireEvent.changeText(getByLabelText("Dua request input"), "   ");
+    expect(getByLabelText("Find dua")).toBeDisabled();
     fireEvent(getByLabelText("Dua request input"), "submitEditing");
+    expect(onSubmit).not.toHaveBeenCalled();
 
-    expect(alertSpy).toHaveBeenCalledWith("Please describe what you need help with");
+    fireEvent.changeText(getByLabelText("Dua request input"), "Help me stay patient");
+    expect(getByLabelText("Find dua")).not.toBeDisabled();
   });
 
   it("wires onSubmit, clears input, and dismisses keyboard on successful submit", async () => {

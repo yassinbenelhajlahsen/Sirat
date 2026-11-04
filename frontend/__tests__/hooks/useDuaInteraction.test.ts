@@ -113,27 +113,6 @@ describe("hooks/useDuaInteraction", () => {
     });
   });
 
-  it("showDua records history and shows the dua", async () => {
-    const dua: Dua = {
-      id: 5,
-      category: "sleep",
-      arabic: "arabic",
-      english: "english",
-      transliteration: "translit",
-      reference: "ref",
-      source: "source",
-    };
-    mockSaveDuaToHistory.mockResolvedValue();
-
-    const { result } = renderHook(() => useDuaInteraction());
-    await act(async () => {
-      await result.current.showDua(dua);
-    });
-
-    expect(mockSaveDuaToHistory).toHaveBeenCalledWith(dua);
-    expect(result.current.selectedDua).toEqual(dua);
-  });
-
   it("asks for another dua within the shown dua's topic", async () => {
     const shown: Dua = {
       id: 7,
@@ -145,12 +124,13 @@ describe("hooks/useDuaInteraction", () => {
       source: "source",
     };
     const next: Dua = { ...shown, id: 8, category: "visiting_sick" };
+    mockRequestDua.mockResolvedValue(shown);
     mockSaveDuaToHistory.mockResolvedValue();
     mockGetAnotherDua.mockReturnValue(next);
 
     const { result } = renderHook(() => useDuaInteraction());
     await act(async () => {
-      await result.current.showDua(shown);
+      await result.current.submitDua("feeling ill");
     });
     await act(async () => {
       result.current.anotherDua();
@@ -163,10 +143,9 @@ describe("hooks/useDuaInteraction", () => {
     expect(result.current.selectedDua).toEqual(next);
   });
 
-  // Both dua cards are GlassSurface, and iOS Liquid Glass renders as nothing
-  // under an animated ancestor (group opacity or a transform) without ever
-  // recovering. The swap must therefore stay synchronous and undriven.
-  it("swaps and closes without driving any animation", async () => {
+  // Safe only because the cards are solid surfaces: Liquid Glass would render
+  // as nothing under this animated wrapper.
+  it("animates the swap when a dua appears and when it closes", async () => {
     const dua: Dua = {
       id: 42,
       category: "General",
@@ -176,24 +155,20 @@ describe("hooks/useDuaInteraction", () => {
       reference: "ref",
       source: "source",
     };
-
     mockRequestDua.mockResolvedValue(dua);
     mockSaveDuaToHistory.mockResolvedValue();
 
     const { result } = renderHook(() => useDuaInteraction());
-
     await act(async () => {
       await result.current.submitDua("need dua");
     });
-    expect(result.current.selectedDua).toEqual(dua);
+    expect(Animated.timing).toHaveBeenCalledTimes(1);
+    expect(Animated.spring).toHaveBeenCalledTimes(1);
 
     act(() => {
       result.current.closeDua();
     });
-
-    // Synchronous: no transition to wait on.
     expect(result.current.selectedDua).toBeNull();
-    expect(Animated.timing).not.toHaveBeenCalled();
-    expect(Animated.spring).not.toHaveBeenCalled();
+    expect(Animated.timing).toHaveBeenCalledTimes(2);
   });
 });

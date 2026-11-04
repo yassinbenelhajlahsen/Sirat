@@ -1,23 +1,44 @@
 import { getAnotherDua, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
 import { topicForCategory } from "@/services/duaTopics";
-import { useCallback, useState } from "react";
-import { Alert } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Alert, Animated, Easing } from "react-native";
 
-/**
- * The dua card swap is un-animated because the cards used to be Liquid Glass,
- * which renders nothing under an animated ancestor. Cards are solid surfaces
- * now, so that limit no longer applies.
- */
+// The swap animates the wrapper around the cards. That is safe only while the
+// cards stay solid: a Liquid Glass surface under an animated ancestor renders
+// as nothing (the reason this was removed in 650a561).
 export function useDuaInteraction() {
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
   const [duaLoading, setDuaLoading] = useState(false);
+  const duaSwapAnim = useRef(new Animated.Value(1)).current;
 
-  // Opens a known dua (library rows). History is written first so a Recent
-  // list on screen already includes it when the dua appears.
-  const showDua = useCallback(async (dua: Dua) => {
-    await saveDuaToHistory(dua);
-    setSelectedDua(dua);
-  }, []);
+  const runDuaTransition = useCallback(
+    (nextDua: Dua | null) => {
+      Animated.timing(duaSwapAnim, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }).start(() => {
+        setSelectedDua(nextDua);
+        duaSwapAnim.setValue(0);
+        Animated.spring(duaSwapAnim, {
+          toValue: 1,
+          speed: 15,
+          bounciness: 10,
+          useNativeDriver: true,
+        }).start();
+      });
+    },
+    [duaSwapAnim],
+  );
+
+  const showDua = useCallback(
+    async (dua: Dua) => {
+      await saveDuaToHistory(dua);
+      runDuaTransition(dua);
+    },
+    [runDuaTransition],
+  );
 
   const submitDua = useCallback(async (userRequest: string) => {
     try {
@@ -36,8 +57,8 @@ export function useDuaInteraction() {
   }, [showDua]);
 
   const closeDua = useCallback(() => {
-    setSelectedDua(null);
-  }, []);
+    runDuaTransition(null);
+  }, [runDuaTransition]);
 
   const anotherDua = useCallback(() => {
     if (!selectedDua) return;
@@ -50,8 +71,8 @@ export function useDuaInteraction() {
   return {
     selectedDua,
     duaLoading,
+    duaSwapAnim,
     submitDua,
-    showDua,
     closeDua,
     anotherDua,
   };

@@ -72,10 +72,13 @@ export default function PressableScale({
       ],
     };
     if (variant === "button") {
-      out.opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0.7] });
+      // Scale the caller's own opacity (a disabled Button's 0.45) so the press dip doesn't reset it to 1.
+      const own = StyleSheet.flatten(style)?.opacity;
+      const base = typeof own === "number" ? own : 1;
+      out.opacity = progress.interpolate({ inputRange: [0, 1], outputRange: [base, base * 0.7] });
     }
     return out;
-  }, [isRow, progress, scaleTo, variant]);
+  }, [isRow, progress, scaleTo, variant, style]);
 
   // Rows highlight instead of moving. The fill is an overlay rather than a
   // background on the pressable itself so a caller's own background survives.

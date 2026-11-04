@@ -212,8 +212,6 @@ function RootLayoutContent() {
   const { theme, isHydrated } = useTheme();
   const settingsHeader = useNativeHeaderOptions("Settings", { large: false, titleSize: 26 });
   const trackerHeader = useNativeHeaderOptions("Tracker", { large: false, titleSize: 26 });
-  const duasHeader = useNativeHeaderOptions("Duas");
-  const duaViewHeader = useNativeHeaderOptions("Dua", { large: false, titleSize: 26 });
   const backgroundColor = isHydrated
     ? theme.colors.primaryDark
     : LAUNCH_BACKGROUND_COLOR;
@@ -526,9 +524,10 @@ function RootLayoutContent() {
                     ],
                   }}
                 />
-                <Stack.Screen name="Duas" options={duasHeader} />
-                <Stack.Screen name="DuaTopic" options={duasHeader} />
-                <Stack.Screen name="DuaView" options={duaViewHeader} />
+                <Stack.Screen
+                  name="Duas"
+                  options={{ presentation: "modal", animation: "slide_from_bottom" }}
+                />
               </Stack>
             </NavThemeProvider>
             <QuranMiniPlayerPortal />

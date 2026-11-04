@@ -44,10 +44,7 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
   };
 
   const handleSubmit = () => {
-    if (!userInput.trim()) {
-      Alert.alert("Please describe what you need help with");
-      return;
-    }
+    if (disabled) return;
     submitRequest(userInput);
   };
 

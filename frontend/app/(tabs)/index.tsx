@@ -3,7 +3,7 @@ import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuthState } from "@/hooks/useAuthState";
 import SignInCard from "@/components/home/SignInCard";
 import { shouldShowHomeCard, markHomeCardShown, dismissHomeCard } from "@/services/auth/authPrompts";
@@ -49,7 +49,7 @@ export default function Home() {
     loading, refreshing, banner, locationLabel, coords, refresh,
   } = useHomePrayerTimes();
   const { ramadanMode } = useRamadanMode();
-  const { selectedDua, duaLoading, submitDua, closeDua, anotherDua } = useDuaInteraction();
+  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
 
   const handleSubmitDua = useCallback(async (userRequest: string) => {
@@ -228,21 +228,23 @@ export default function Home() {
 
         {/* Dua section (logic unchanged) */}
         <View style={styles.section} onLayout={onDuaSectionLayout}>
-          <SectionHeader title="Dua" />
-          {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
-          <PressableScale
-            variant="row"
-            radius={theme.radii.row}
-            onPress={() => router.push("/Duas")}
-            accessibilityRole="button"
-            accessibilityLabel="Browse duas"
-            style={styles.browseDuas}
+          <SectionHeader
+            title="Dua"
+            actionLabel="See all"
+            onActionPress={() => router.push("/Duas")}
+            actionAccessibilityLabel="Browse duas"
+          />
+          <Animated.View
+            style={{
+              opacity: duaSwapAnim,
+              transform: [
+                { translateY: duaSwapAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) },
+                { scale: duaSwapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
+              ],
+            }}
           >
-            <GlassSurface tier="row" radius={theme.radii.row} style={styles.trackerRow}>
-              <Body style={styles.trackerLabel}>Browse duas</Body>
-              <Subhead color={colors.textTertiary}>Topics &amp; saved</Subhead>
-            </GlassSurface>
-          </PressableScale>
+            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
+          </Animated.View>
         </View>
       </ScrollView>
       <PrayerLogSheet
@@ -280,7 +282,6 @@ const createStyles = (theme: AppTheme) => {
       paddingHorizontal: spacing.lg,
     },
     trackerLabel: { flex: 1 },
-    browseDuas: { marginTop: spacing.md },
     flame: { fontSize: 17 },
     signInCardSlot: { marginBottom: spacing.md },
   });

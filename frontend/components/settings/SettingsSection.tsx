@@ -8,7 +8,8 @@ import type { AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 type Props = {
-  label: string;
+  /** Omit for a headerless group. */
+  label?: string;
   children: ReactNode;
   /** Explanatory text under the card, iOS grouped-list style. */
   footer?: string;
@@ -21,7 +22,7 @@ export default function SettingsSection({ label, children, footer, style }: Prop
 
   return (
     <View style={[styles.wrap, style]}>
-      <SectionHeader title={label} />
+      {label ? <SectionHeader title={label} /> : null}
       <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
         {children}
       </GlassSurface>
