@@ -36,7 +36,9 @@ export default function Segmented<T extends string | number>({
       accessibilityLabel={accessibilityLabel}
       testID={testID}
     >
-      <Host style={styles.host}>
+      {/* Laid out below the fold, the host sat inside the home-indicator inset and SwiftUI
+          shifted the picker up; scrolling never re-applied the inset until a re-render. */}
+      <Host style={styles.host} ignoreSafeArea="all">
         <Picker selection={value} onSelectionChange={onChange} modifiers={SEGMENTED}>
           {options.map((option) => (
             <Text
@@ -56,8 +58,7 @@ export default function Segmented<T extends string | number>({
 }
 
 const styles = StyleSheet.create({
-  // Fixed at the system control height. `matchContents` resolved a frame late,
-  // so the picker first drew top-aligned in an oversized host, then jumped.
+  // Fixed at the system control height.
   host: { width: "100%", height: 32 },
   disabled: { opacity: 0.45 },
 });
