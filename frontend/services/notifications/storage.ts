@@ -1,35 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
 
 import type { PrayerSettings } from "../prayerTimes";
-import {
-  DEFAULT_WINDOW_OFFSET,
-  DEFAULT_WINDOW_PREFS,
-  NOTIF_PREFS_UPDATED_EVENT,
-  PRAYERS,
-  STORAGE_ENABLED,
-  STORAGE_FRIDAY,
-  STORAGE_MAP,
-  STORAGE_RAMADAN_MODE,
-  STORAGE_SOUND_MODE,
-  STORAGE_WINDOW_MAP,
-  STORAGE_WINDOW_OFFSET,
-  WINDOW_OFFSET_OPTIONS,
-  WINDOW_PRAYERS,
-  type WindowPrefMap,
-} from "../../utils/notifications/constants";
+import { STORAGE_ENABLED } from "../../utils/notifications/constants";
 import {
   STORAGE_DAYKEY,
   STORAGE_SCHEDULE_IDS,
   STORAGE_SEEN_KEYS,
 } from "./constants";
-import {
-  DEFAULT_PREFS,
-  type CityLike,
-  type PrefMap,
-  type RawPrayerSettings,
-  type SoundMode,
-} from "./types";
+import type { CityLike, RawPrayerSettings } from "./types";
 
 export function normalizeCity(raw: unknown): CityLike | null {
   if (!raw) return null;
@@ -63,22 +41,9 @@ export function normalizeCity(raw: unknown): CityLike | null {
   };
 }
 
-export async function readSoundMode(): Promise<SoundMode> {
-  const raw = await AsyncStorage.getItem(STORAGE_SOUND_MODE);
-  if (raw === "adhan") {
-    return raw;
-  }
-  return "default";
-}
-
 export async function readMasterEnabled(): Promise<boolean> {
   const raw = await AsyncStorage.getItem(STORAGE_ENABLED);
   return raw === "1";
-}
-
-export async function readPrefs(): Promise<PrefMap> {
-  const raw = await AsyncStorage.getItem(STORAGE_MAP);
-  return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
 }
 
 export async function readPrayerSettings(): Promise<RawPrayerSettings> {
@@ -134,11 +99,6 @@ export async function clearScheduleStorage() {
   await AsyncStorage.multiRemove([STORAGE_SCHEDULE_IDS, STORAGE_SEEN_KEYS]);
 }
 
-export async function writePrayerSettings(value: unknown): Promise<void> {
-  await AsyncStorage.setItem("prayerSettings", JSON.stringify(value));
-  DeviceEventEmitter.emit("settingsChanged", value);
-}
-
 export function buildEffectiveSettings(
   s: RawPrayerSettings,
   canUse: boolean,
@@ -154,88 +114,4 @@ export function buildEffectiveSettings(
   }
 
   return { useLocation: true, method: s.method, city: manualCity as any };
-}
-
-export async function readWindowMap(): Promise<WindowPrefMap> {
-  const raw = await AsyncStorage.getItem(STORAGE_WINDOW_MAP);
-  if (!raw) return { ...DEFAULT_WINDOW_PREFS };
-  try {
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const next: WindowPrefMap = { ...DEFAULT_WINDOW_PREFS };
-    for (const key of WINDOW_PRAYERS) {
-      if (typeof parsed[key] === "boolean") next[key] = parsed[key] as boolean;
-    }
-    return next;
-  } catch {
-    return { ...DEFAULT_WINDOW_PREFS };
-  }
-}
-
-export async function readWindowOffset(): Promise<number> {
-  const raw = await AsyncStorage.getItem(STORAGE_WINDOW_OFFSET);
-  const value = raw ? parseInt(raw, 10) : NaN;
-  return (WINDOW_OFFSET_OPTIONS as readonly number[]).includes(value)
-    ? value
-    : DEFAULT_WINDOW_OFFSET;
-}
-
-export async function readFridayEnabled(): Promise<boolean> {
-  return (await AsyncStorage.getItem(STORAGE_FRIDAY)) !== "0";
-}
-
-// Sync apply-side writers: persist a merged remote value in the same serialized
-// form the UI hook uses, then emit NOTIF_PREFS_UPDATED so the scheduler
-// reschedules. Each ignores malformed input (the read-side normalizers stay the
-// single source of truth for shape). Values are validated before persisting so
-// a corrupt remote payload can't poison local storage.
-export async function writePrefs(value: unknown): Promise<void> {
-  if (!value || typeof value !== "object") return;
-  const source = value as Record<string, unknown>;
-  const next: PrefMap = { ...DEFAULT_PREFS };
-  for (const key of PRAYERS) {
-    if (typeof source[key] === "boolean") next[key] = source[key] as boolean;
-  }
-  await AsyncStorage.setItem(STORAGE_MAP, JSON.stringify(next));
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
-}
-
-export async function writeSoundMode(value: unknown): Promise<void> {
-  if (value !== "default" && value !== "adhan") return;
-  await AsyncStorage.setItem(STORAGE_SOUND_MODE, value);
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
-}
-
-export async function writeWindowMap(value: unknown): Promise<void> {
-  if (!value || typeof value !== "object") return;
-  const source = value as Record<string, unknown>;
-  const next: WindowPrefMap = { ...DEFAULT_WINDOW_PREFS };
-  for (const key of WINDOW_PRAYERS) {
-    if (typeof source[key] === "boolean") next[key] = source[key] as boolean;
-  }
-  await AsyncStorage.setItem(STORAGE_WINDOW_MAP, JSON.stringify(next));
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
-}
-
-export async function writeWindowOffset(value: unknown): Promise<void> {
-  const n = typeof value === "number" ? value : Number(value);
-  if (!(WINDOW_OFFSET_OPTIONS as readonly number[]).includes(n)) return;
-  await AsyncStorage.setItem(STORAGE_WINDOW_OFFSET, String(n));
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
-}
-
-export async function writeFridayEnabled(value: unknown): Promise<void> {
-  if (typeof value !== "boolean") return;
-  await AsyncStorage.setItem(STORAGE_FRIDAY, value ? "1" : "0");
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
-}
-
-// Ramadan mode is on unless explicitly turned off.
-export async function readRamadanMode(): Promise<boolean> {
-  return (await AsyncStorage.getItem(STORAGE_RAMADAN_MODE)) !== "0";
-}
-
-export async function writeRamadanMode(value: unknown): Promise<void> {
-  if (typeof value !== "boolean") return;
-  await AsyncStorage.setItem(STORAGE_RAMADAN_MODE, value ? "1" : "0");
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
 }

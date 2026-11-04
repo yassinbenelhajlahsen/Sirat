@@ -19,10 +19,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `notification scheduling lifecycle testing`
   - `services/notificationService.test.ts`
   - `services/notifications/*.test.ts`
-  - `services/notifications/windowStorage.test.ts`
   - `utils/notifications/fridayReminder.test.ts` — Friday reminder picks: 10+ messages, 9:00 to 10:59 window, same result for a given Friday, varies across weeks
   - `services/notifications/response.test.ts` — notification tap routing: `data.url` opens the route, other types do nothing, one response routes once
-  - `services/notifications/ramadanStorage.test.ts` — Ramadan mode (`ramadan_mode_v1`): default on, string form, malformed input
   - `services/notifications/cityResolver.test.ts` — city-display fallback chain (caller coords → live position → last-known → cached → "your area"; never raw coordinates)
 - `prayer times retrieval + caching testing`
   - `services/prayerTimes.test.ts`
@@ -40,11 +38,10 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/quranBookmarks.test.ts`
   - `services/quranProgress.test.ts`
   - `services/quranDisplayModes.test.ts`
-  - `hooks/useQuranDisplayModes.test.ts`
+  - `hooks/useQuranDisplayModes.test.ts` — display modes hook: loads, falls back on invalid storage, follows remote changes
   - `services/quranTextScale.test.ts` — reader text size (`quran_text_scale_v1`): defaults, snapping, persistence, update event
   - `hooks/useQuranTextScale.test.ts`
   - `services/quranAudio.test.ts` — reciter list, QuranicAudio URL builder (zero padding, every id), unknown-id fallback
-  - `services/quranReciter.test.ts` — reciter choice (`quran_reciter_v1`): default fallback, persistence, update event
   - `components/quran-ayah-card.contract.test.tsx` — tap reveals Bookmark/Copy actions, long-press copy shortcut, text scaling
   - `components/surah-banner.contract.test.tsx`
   - `components/surah-tab.contract.test.tsx` (navigator Surah tab — search-forward default: Continue reading + Popular, "All Sūrahs" reveal, search mode)
@@ -95,7 +92,6 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `flows/home-settings-refresh.flow.test.tsx`
   - `flows/dua-request-history.flow.test.tsx`
   - `hooks/useDuaInteraction.test.ts` — includes the dua swap animation (safe only while the dua cards are solid, not Liquid Glass)
-  - `flows/quran-display-mode.flow.test.tsx`
   - `flows/calendar-missed-fast.flow.test.tsx`
   - `flows/nearby-mosques-refresh.flow.test.tsx`
 - `visual refresh foundations (Plan 1) testing`
@@ -146,7 +142,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/widgets/timeline.test.ts` — prayer timeline entries: next prayer per boundary, tomorrow's list after Isha, Hijri date turns once at Maghrib (no double rollover after Isha), stale when stored days run out
   - `services/widgets/verseFit.test.ts` — verse layout tiers; every verse in the Quran fits at or above the minimum size
   - `services/widgets/sync.test.ts` — themed timeline push, 7-day horizon, offline keeps old data, verse pinning and push
-  - `hooks/useWidgetSync.test.ts` — syncs on mount, foreground, settings and theme changes
+  - `hooks/useWidgetSync.test.ts` — syncs on mount, foreground, prayer settings and theme changes
   - `components/quran-copy-sheet.contract.test.tsx` — "Add as widget" action in the copy sheet
   - `components/quran-data-gate.test.tsx` — the reader waits for the Quran data before rendering (widget tap on a cold start)
 - `tracking data layer (Plan 1) testing`
@@ -197,17 +193,16 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/tracking/merge.mergeSettings.test.ts` — shared `mergeSettings` LWW merge cases (drift-guard vector used by both frontend and backend)
   - `services/sync/replaceSetters.test.ts` — `replacePrayerLog` / `replaceHabitLog` / `replaceHabits` internal setters
   - `services/sync/settingsMeta.test.ts` — `sync:settings_meta_v1` stamp sidecar read/write and bump-on-event behavior
-  - `services/sync/settingsRegistry.test.ts` — `settingsRegistry.ts` entry shapes: storageKey, read(), applyValue(), changeEvents (incl. the four synced notif prefs and their granular per-key change events)
+  - `services/syncedSettings/syncedSettings.test.ts` — synced setting module: the 14 declared keys, `set` (persist + stamp + notify) vs `applyRemote` (persist + notify, never stamps), per-setting codecs and defaults, malformed remote values
   - `services/sync/settingsAdapter.test.ts` — settings domain adapter `read()` / `applyMerged()` round-trip
   - `services/sync/trackerAdapters.test.ts` — prayer-log, habits, habit-log adapter `read()` / `applyMerged()` round-trips
   - `services/sync/syncEngine.test.ts` — single-flight guard, debounce, online/offline guard, sign-in trigger, foreground trigger
   - `hooks/useSyncEngine.test.ts` — `useSyncEngine` hook: mounts engine on sign-in, tears down on sign-out
   - `hooks/useSyncStatus.test.ts` — `useSyncStatus` hook: reads `sync:last_synced_v1`, updates on sync events
-  - `services/quranBookmarks.test.ts` — quran bookmarks service (change events emitted for sync stamping)
-  - `services/quranProgress.test.ts` — quran reading-progress service (change events for sync stamping)
-  - `services/ramadanTracker.test.ts` — ramadan tracker service change events for sync stamping
-  - `services/notifications/writePrayerSettings.test.ts` — prayer settings write path change events for sync stamping
-  - `context/themeSync.test.ts` — theme context change event emitted on theme write (sync stamping trigger)
+  - `services/quranBookmarks.test.ts` — quran bookmarks service (upsert/delete go through the synced setting)
+  - `services/quranProgress.test.ts` — quran reading-progress service (floors and validates before saving to the synced setting)
+  - `services/ramadanTracker.test.ts` — ramadan tracker service (mark/clear go through the synced setting)
+  - `context/themeSync.test.tsx` — theme context follows a theme applied from another device
 
 ## Run Tests
 

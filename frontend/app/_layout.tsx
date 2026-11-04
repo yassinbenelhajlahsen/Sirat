@@ -21,6 +21,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { prayerSettingsSetting } from "@/services/syncedSettings";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 
@@ -69,7 +70,6 @@ const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "
 export const PRAYER_SETTINGS_KEY = "prayerSettings";
 export const NOTIF_ENABLED_KEY = "notif_enabled_v1";
 export const NOTIF_OS_STATUS_KEY = "notif_os_status_v1";
-export const SETTINGS_CHANGED_EVENT = "settingsChanged";
 export const NOTIF_PREFS_UPDATED_EVENT = "NOTIF_PREFS_UPDATED";
 
 async function preloadImages() {
@@ -111,12 +111,7 @@ export async function syncLocationPermissionToSettings() {
   }>(existingRaw, {});
   const next = { ...existing, useLocation: granted };
 
-  await AsyncStorage.setItem(PRAYER_SETTINGS_KEY, JSON.stringify(next));
-
-  // 5) Broadcast so listeners refresh immediately
-  try {
-    DeviceEventEmitter.emit(SETTINGS_CHANGED_EVENT, next);
-  } catch {}
+  await prayerSettingsSetting.set(next);
 }
 
 export async function syncNotificationPermissionToToggle() {

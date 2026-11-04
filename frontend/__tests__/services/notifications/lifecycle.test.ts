@@ -7,6 +7,7 @@ type LifecycleSetup = {
   addListenerMock: jest.Mock;
   addAppStateListenerMock: jest.Mock;
   msUntilNextLocalMidnightPlusMock: jest.Mock;
+  settings: typeof import("@/services/syncedSettings");
 };
 
 function loadLifecycle(): LifecycleSetup {
@@ -58,6 +59,7 @@ function loadLifecycle(): LifecycleSetup {
     addListenerMock,
     addAppStateListenerMock,
     msUntilNextLocalMidnightPlusMock,
+    settings: require("@/services/syncedSettings") as typeof import("@/services/syncedSettings"),
   };
 }
 
@@ -76,19 +78,23 @@ describe("notifications/lifecycle", () => {
 
     setup.initNotificationLifecycle(onReschedule);
 
-    expect(setup.addListenerMock).toHaveBeenCalledTimes(3);
+    expect(setup.addListenerMock).toHaveBeenCalledTimes(2);
     expect(setup.addAppStateListenerMock).toHaveBeenCalledTimes(1);
 
     setup.eventCallbacks.NOTIF_PREFS_UPDATED();
-    setup.eventCallbacks.settingsChanged();
     setup.appStateRef.cb?.("active");
+    await setup.settings.prayerSettingsSetting.set({ method: 2 });
 
     expect(onReschedule).toHaveBeenCalledWith("notif-prefs-changed");
     expect(onReschedule).toHaveBeenCalledWith("settings-changed");
     expect(onReschedule).toHaveBeenCalledWith("app-foreground");
 
+    onReschedule.mockClear();
+    await setup.settings.notifFridaySetting.applyRemote(false);
+    expect(onReschedule).toHaveBeenCalledWith("notif-prefs-changed");
+
     setup.initNotificationLifecycle(onReschedule);
-    expect(setup.addListenerMock).toHaveBeenCalledTimes(3);
+    expect(setup.addListenerMock).toHaveBeenCalledTimes(2);
     expect(setup.addAppStateListenerMock).toHaveBeenCalledTimes(1);
   });
 

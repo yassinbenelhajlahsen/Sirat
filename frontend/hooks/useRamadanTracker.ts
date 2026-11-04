@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSyncedSetting } from "@/hooks/useSyncedSetting";
 import { getHolidaysForYear } from "../services/holidayService";
+import { ramadanTrackerSetting } from "@/services/syncedSettings";
 import {
   clearMissedFast,
   computeRamadanEnd,
+  dateKey,
   findRamadanStart,
   isInRamadanWindow,
   markFastAsMissed,
-  wasFastMissed,
 } from "../services/ramadanTracker";
 
 type RamadanParam = string | string[] | undefined;
@@ -27,7 +29,7 @@ export function useRamadanTracker(
   ramadanStartParam: RamadanParam,
   ramadanEndParam: RamadanParam,
 ) {
-  const [isFastMissed, setIsFastMissed] = useState(false);
+  const { value: missedFastsMap } = useSyncedSetting(ramadanTrackerSetting);
   const [isRamadan, setIsRamadan] = useState(false);
   const [loadingRamadan, setLoadingRamadan] = useState(false);
 
@@ -45,8 +47,6 @@ export function useRamadanTracker(
       setLoadingRamadan(true);
 
       try {
-        const missed = await wasFastMissed(selectedDate);
-
         let ramadanStart = safeDate(startParam);
         let ramadanEnd = safeDate(endParam);
 
@@ -62,20 +62,13 @@ export function useRamadanTracker(
             ramadanStart,
             ramadanEnd,
           );
-          if (mounted) {
-            setIsRamadan(inWindow);
-            setIsFastMissed(missed);
-          }
+          if (mounted) setIsRamadan(inWindow);
         } else if (mounted) {
           setIsRamadan(false);
-          setIsFastMissed(false);
         }
       } catch (e) {
         console.warn("Failed to load Ramadan status:", e);
-        if (mounted) {
-          setIsRamadan(false);
-          setIsFastMissed(false);
-        }
+        if (mounted) setIsRamadan(false);
       } finally {
         if (mounted) setLoadingRamadan(false);
       }
@@ -86,16 +79,14 @@ export function useRamadanTracker(
     };
   }, [endParam, selectedDate, startParam]);
 
+  const isFastMissed =
+    isRamadan && !!selectedDate && missedFastsMap[dateKey(selectedDate)] === true;
+
   const toggleMissedFast = useCallback(async () => {
     if (!selectedDate) return;
     try {
-      if (isFastMissed) {
-        await clearMissedFast(selectedDate);
-        setIsFastMissed(false);
-      } else {
-        await markFastAsMissed(selectedDate);
-        setIsFastMissed(true);
-      }
+      if (isFastMissed) await clearMissedFast(selectedDate);
+      else await markFastAsMissed(selectedDate);
     } catch (e) {
       console.error("Failed to update missed fast status:", e);
     }

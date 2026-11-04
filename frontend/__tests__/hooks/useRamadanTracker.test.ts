@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
 import { useRamadanTracker } from "@/hooks/useRamadanTracker";
@@ -9,20 +10,20 @@ jest.mock("@/services/holidayService", () => ({
 jest.mock("@/services/ramadanTracker", () => ({
   clearMissedFast: jest.fn(),
   computeRamadanEnd: jest.fn(),
+  dateKey: jest.requireActual("@/services/ramadanTracker").dateKey,
   findRamadanStart: jest.fn(),
   isInRamadanWindow: jest.fn(),
   markFastAsMissed: jest.fn(),
-  wasFastMissed: jest.fn(),
 }));
 
 import { getHolidaysForYear } from "@/services/holidayService";
+import { ramadanTrackerSetting } from "@/services/syncedSettings";
 import {
   clearMissedFast,
   computeRamadanEnd,
   findRamadanStart,
   isInRamadanWindow,
   markFastAsMissed,
-  wasFastMissed,
 } from "@/services/ramadanTracker";
 
 const mockGetHolidaysForYear = getHolidaysForYear as jest.MockedFunction<
@@ -35,11 +36,11 @@ const mockIsInRamadanWindow = isInRamadanWindow as jest.MockedFunction<
   typeof isInRamadanWindow
 >;
 const mockMarkFastAsMissed = markFastAsMissed as jest.MockedFunction<typeof markFastAsMissed>;
-const mockWasFastMissed = wasFastMissed as jest.MockedFunction<typeof wasFastMissed>;
 
 describe("hooks/useRamadanTracker", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+    await AsyncStorage.clear();
   });
 
   it("loads ramadan range from holidays when params are missing and toggles missed fast", async () => {
@@ -47,7 +48,13 @@ describe("hooks/useRamadanTracker", () => {
     const start = new Date(2026, 1, 20);
     const end = new Date(2026, 2, 21);
 
-    mockWasFastMissed.mockResolvedValue(false);
+    // The mocked service writes through the real setting, as the real one does.
+    mockMarkFastAsMissed.mockImplementation(async () => {
+      await ramadanTrackerSetting.set({ "2026-02-28": true });
+    });
+    mockClearMissedFast.mockImplementation(async () => {
+      await ramadanTrackerSetting.set({});
+    });
     mockGetHolidaysForYear.mockResolvedValue([{ date: "2026-02-20", name: "1st day of Ramadan" }]);
     mockFindRamadanStart.mockReturnValue(start);
     mockComputeRamadanEnd.mockReturnValue(end);

@@ -14,14 +14,3 @@ export type DomainAdapter<T> = {
   read(): Promise<T>;
   applyMerged(serverDoc: T): Promise<void>;
 };
-
-/** One synced setting: how to read/write its value and what event signals a change. */
-export type SettingEntry = {
-  /** Stable key inside the settings envelope. Never rename without a migration. */
-  key: string;
-  /** DeviceEventEmitter event fired when this setting changes (user or programmatic). */
-  changeEvent: string;
-  read(): Promise<unknown>;
-  /** Persist the value AND emit `changeEvent` so consumers refresh. */
-  applyValue(value: unknown): Promise<void>;
-};

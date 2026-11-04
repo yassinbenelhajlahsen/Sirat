@@ -1,8 +1,9 @@
 import { renderHook } from "@testing-library/react-native";
-import { AppState, DeviceEventEmitter } from "react-native";
+import { act } from "@testing-library/react-native";
+import { AppState } from "react-native";
 
-import { THEME_CHANGED_EVENT } from "@/constants/theme";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
+import { prayerSettingsSetting, themeSetting } from "@/services/syncedSettings";
 
 const mockSyncWidgets = jest.fn(async () => {});
 jest.mock("@/services/widgets/sync", () => ({
@@ -15,10 +16,13 @@ describe("useWidgetSync", () => {
     expect(mockSyncWidgets).toHaveBeenCalledTimes(1);
   });
 
-  it.each(["settingsChanged", THEME_CHANGED_EVENT])("syncs again on %s", (event) => {
+  it.each([
+    ["prayer settings", () => prayerSettingsSetting.set({ method: 2 })],
+    ["the theme", () => themeSetting.set("dark")],
+  ])("syncs again when %s change", async (_name, change) => {
     renderHook(() => useWidgetSync());
     mockSyncWidgets.mockClear();
-    DeviceEventEmitter.emit(event);
+    await act(async () => { await change(); });
     expect(mockSyncWidgets).toHaveBeenCalledTimes(1);
   });
 
@@ -37,11 +41,11 @@ describe("useWidgetSync", () => {
     expect(mockSyncWidgets).toHaveBeenCalledTimes(1);
   });
 
-  it("stops listening when unmounted", () => {
+  it("stops listening when unmounted", async () => {
     const { unmount } = renderHook(() => useWidgetSync());
     unmount();
     mockSyncWidgets.mockClear();
-    DeviceEventEmitter.emit("settingsChanged");
+    await prayerSettingsSetting.set({ method: 3 });
     expect(mockSyncWidgets).not.toHaveBeenCalled();
   });
 });

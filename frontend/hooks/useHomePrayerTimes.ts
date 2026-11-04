@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, DeviceEventEmitter } from "react-native";
+import { AppState } from "react-native";
+import { prayerSettingsSetting } from "@/services/syncedSettings";
 import { dateKeyFromDate } from "../services/holidayService";
 import { resolveCityDisplay } from "../services/notifications/cityResolver";
 import { STORAGE_CITY_DISPLAY_LOC } from "../services/notifications/constants";
@@ -52,15 +53,9 @@ async function writeSettings(settings: PrayerSettings) {
     city: settings.city,
   };
 
-  await AsyncStorage.setItem("prayerSettings", JSON.stringify(save));
+  await prayerSettingsSetting.set(save);
   if (!settings.useLocation && settings.city) {
     await AsyncStorage.setItem("selectedCity", cityKey(settings.city));
-  }
-
-  try {
-    DeviceEventEmitter?.emit?.("settingsChanged", save);
-  } catch {
-    // ignore emit errors
   }
 }
 
@@ -260,11 +255,9 @@ export function useHomePrayerTimes() {
   }, [loadData]);
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener("settingsChanged", async () => {
-      await loadData();
+    return prayerSettingsSetting.subscribe(() => {
+      void loadData();
     });
-
-    return () => sub.remove();
   }, [loadData]);
 
   useEffect(() => {

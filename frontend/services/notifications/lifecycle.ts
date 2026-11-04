@@ -2,7 +2,16 @@ import { AppState, DeviceEventEmitter } from "react-native";
 
 import { NOTIF_PREFS_UPDATED_EVENT } from "../../utils/notifications/constants";
 import { PRAYER_LOG_UPDATED_EVENT } from "@/services/tracking/prayerLog";
-import { MIDNIGHT_REFRESH_MINUTES, SETTINGS_CHANGED_EVENT } from "./constants";
+import {
+  notifFridaySetting,
+  notifPrefsSetting,
+  notifSoundModeSetting,
+  notifWindowMapSetting,
+  notifWindowOffsetSetting,
+  prayerSettingsSetting,
+  ramadanModeSetting,
+} from "@/services/syncedSettings";
+import { MIDNIGHT_REFRESH_MINUTES } from "./constants";
 import { msUntilNextLocalMidnightPlus } from "./scheduler";
 import type { RescheduleReason } from "./types";
 
@@ -30,9 +39,17 @@ export function initNotificationLifecycle(
       onReschedule("notif-prefs-changed");
     });
 
-    DeviceEventEmitter.addListener(SETTINGS_CHANGED_EVENT, () => {
-      onReschedule("settings-changed");
-    });
+    prayerSettingsSetting.subscribe(() => onReschedule("settings-changed"));
+    for (const setting of [
+      notifPrefsSetting,
+      notifSoundModeSetting,
+      notifWindowMapSetting,
+      notifWindowOffsetSetting,
+      notifFridaySetting,
+      ramadanModeSetting,
+    ]) {
+      setting.subscribe(() => onReschedule("notif-prefs-changed"));
+    }
 
     DeviceEventEmitter.addListener(PRAYER_LOG_UPDATED_EVENT, () => {
       onReschedule("prayer-log-changed");

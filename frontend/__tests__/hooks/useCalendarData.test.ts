@@ -1,12 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { renderHook, waitFor } from "@testing-library/react-native";
 
 import { useCalendarData } from "@/hooks/useCalendarData";
-
-const mockUseFocusEffect = jest.fn((cb: () => void) => cb());
-
-jest.mock("expo-router/react-navigation", () => ({
-  useFocusEffect: (cb: () => void) => mockUseFocusEffect(cb),
-}));
 
 jest.mock("@/services/holidayService", () => ({
   getHolidayMapForYear: jest.fn(),
@@ -16,7 +11,6 @@ jest.mock("@/services/holidayService", () => ({
 jest.mock("@/services/ramadanTracker", () => ({
   computeRamadanEnd: jest.fn(),
   findRamadanStart: jest.fn(),
-  getMissedFastDays: jest.fn(),
   getRamadanPeriodSummary: jest.fn(),
   isInRamadanWindow: jest.fn(),
 }));
@@ -25,7 +19,6 @@ import { getHolidayMapForYear, getHolidaysForYear } from "@/services/holidayServ
 import {
   computeRamadanEnd,
   findRamadanStart,
-  getMissedFastDays,
   getRamadanPeriodSummary,
   isInRamadanWindow,
 } from "@/services/ramadanTracker";
@@ -38,7 +31,6 @@ const mockGetHolidaysForYear = getHolidaysForYear as jest.MockedFunction<
 >;
 const mockComputeRamadanEnd = computeRamadanEnd as jest.MockedFunction<typeof computeRamadanEnd>;
 const mockFindRamadanStart = findRamadanStart as jest.MockedFunction<typeof findRamadanStart>;
-const mockGetMissedFastDays = getMissedFastDays as jest.MockedFunction<typeof getMissedFastDays>;
 const mockGetRamadanPeriodSummary = getRamadanPeriodSummary as jest.MockedFunction<
   typeof getRamadanPeriodSummary
 >;
@@ -47,8 +39,9 @@ const mockIsInRamadanWindow = isInRamadanWindow as jest.MockedFunction<
 >;
 
 describe("hooks/useCalendarData", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+    await AsyncStorage.clear();
   });
 
   it("loads holiday map, Ramadan window state, and summary labels from service layer", async () => {
@@ -62,7 +55,7 @@ describe("hooks/useCalendarData", () => {
 
     mockGetHolidayMapForYear.mockResolvedValue({ "2026-02-20": "1st day of Ramadan" });
     mockGetHolidaysForYear.mockResolvedValue([{ date: "2026-02-20", name: "1st day of Ramadan" }]);
-    mockGetMissedFastDays.mockResolvedValue(missedMap);
+    await AsyncStorage.setItem("ramadan_tracker_v1", JSON.stringify(missedMap));
     mockFindRamadanStart.mockReturnValue(start);
     mockComputeRamadanEnd.mockReturnValue(end);
     mockIsInRamadanWindow.mockReturnValue(true);
@@ -85,8 +78,5 @@ describe("hooks/useCalendarData", () => {
       expect(result.current.missedDaysLabel).toBe("Feb 24, Mar 1");
       expect(result.current.showRamadanSummary).toBe(true);
     });
-
-    expect(mockUseFocusEffect).toHaveBeenCalled();
-    expect(mockGetMissedFastDays.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 });

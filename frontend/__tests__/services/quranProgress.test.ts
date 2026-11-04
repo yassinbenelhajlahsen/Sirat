@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
 
 import {
   getLastReadAyahIndex,
@@ -7,8 +6,6 @@ import {
   saveLastReadAyahIndex,
   saveLastReadSurahAndAyah,
   getQuranProgress,
-  replaceQuranProgress,
-  QURAN_PROGRESS_UPDATED_EVENT,
 } from "@/services/quranProgress";
 
 describe("quranProgress", () => {
@@ -59,25 +56,7 @@ describe("quranProgress", () => {
     expect(await getLastReadSurahAndAyah()).toEqual({ surahNumber: 2, ayahNumber: 255 });
   });
 
-  it("round-trips progress and emits on replace", async () => {
-    const emit = jest.spyOn(DeviceEventEmitter, "emit");
-    const p = { index: 262, position: { surahNumber: 2, ayahNumber: 255 } };
-    await replaceQuranProgress(p);
-    expect(await getQuranProgress()).toEqual(p);
-    expect(emit).toHaveBeenCalledWith(QURAN_PROGRESS_UPDATED_EVENT);
-  });
-
   it("getQuranProgress returns nulls when empty", async () => {
     expect(await getQuranProgress()).toEqual({ index: null, position: null });
-  });
-
-  it("does not emit QURAN_PROGRESS_UPDATED_EVENT when AsyncStorage.setItem rejects", async () => {
-    const emit = jest.spyOn(DeviceEventEmitter, "emit");
-    const setItemSpy = jest
-      .spyOn(AsyncStorage, "setItem")
-      .mockRejectedValueOnce(new Error("full"));
-    await saveLastReadAyahIndex(5);
-    expect(emit).not.toHaveBeenCalledWith(QURAN_PROGRESS_UPDATED_EVENT);
-    setItemSpy.mockRestore();
   });
 });

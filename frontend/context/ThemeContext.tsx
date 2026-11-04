@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   type PropsWithChildren,
   createContext,
@@ -8,15 +7,14 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Appearance, DeviceEventEmitter } from "react-native";
+import { Appearance } from "react-native";
+
+import { themeSetting } from "@/services/syncedSettings";
 
 import {
-  APP_THEME_STORAGE_KEY,
-  THEME_CHANGED_EVENT,
   AppTheme,
   ThemeName,
   defaultTheme,
-  isThemeName,
   themeMap,
 } from "@/constants/theme";
 
@@ -30,18 +28,20 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: PropsWithChildren) {
-  const [themeName, setThemeName] = useState<ThemeName>("default");
+  const [themeName, setThemeName] = useState<ThemeName>(() => themeSetting.peek());
   const [isHydrated, setIsHydrated] = useState(false);
 
+  // Follows local picks and themes synced in from another device.
   useEffect(() => {
     let isMounted = true;
+    const unsubscribe = themeSetting.subscribe((next) => {
+      if (isMounted) setThemeName(next);
+    });
 
     (async () => {
       try {
-        const storedTheme = await AsyncStorage.getItem(APP_THEME_STORAGE_KEY);
-        if (isMounted && isThemeName(storedTheme)) {
-          setThemeName(storedTheme);
-        }
+        const stored = await themeSetting.get();
+        if (isMounted) setThemeName(stored);
       } catch (error) {
         console.error("Failed to hydrate app theme preference", error);
       } finally {
@@ -53,6 +53,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
 
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -65,19 +66,10 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   const setTheme = useCallback(async (nextTheme: ThemeName) => {
     setThemeName(nextTheme);
     try {
-      await AsyncStorage.setItem(APP_THEME_STORAGE_KEY, nextTheme);
-      DeviceEventEmitter.emit(THEME_CHANGED_EVENT);
+      await themeSetting.set(nextTheme);
     } catch (error) {
       console.error("Failed to persist app theme preference", error);
     }
-  }, []);
-
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener(THEME_CHANGED_EVENT, async () => {
-      const stored = await AsyncStorage.getItem(APP_THEME_STORAGE_KEY);
-      if (isThemeName(stored)) setThemeName(stored);
-    });
-    return () => sub.remove();
   }, []);
 
   const theme = useMemo(() => themeMap[themeName] ?? defaultTheme, [themeName]);

@@ -1,11 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
 import { Holiday } from "./holidayService";
-
-// Storage key (versioned)
-const RAMADAN_TRACKER_KEY = "ramadan_tracker_v1";
-
-export const RAMADAN_TRACKER_UPDATED_EVENT = "RAMADAN_TRACKER_UPDATED";
+import { ramadanTrackerSetting } from "@/services/syncedSettings";
 
 // Buffer days before/after Ramadan for universal compatibility
 const RAMADAN_BUFFER_DAYS = 3;
@@ -14,7 +8,7 @@ const RAMADAN_BUFFER_DAYS = 3;
  * Convert Date to local date key "YYYY-MM-DD"
  * Matches holidayService.ts dateKeyFromDate pattern
  */
-function dateKey(date: Date): string {
+export function dateKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -25,15 +19,7 @@ function dateKey(date: Date): string {
  * Get all missed fast days from storage
  * @returns Record mapping "YYYY-MM-DD" to true (day was missed)
  */
-export async function getMissedFastDays(): Promise<Record<string, boolean>> {
-  try {
-    const raw = await AsyncStorage.getItem(RAMADAN_TRACKER_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) {
-    console.warn("Failed to load Ramadan tracker data:", e);
-    return {};
-  }
-}
+export const getMissedFastDays = () => ramadanTrackerSetting.get();
 
 /**
  * Check if a specific date was marked as a missed fast
@@ -49,15 +35,8 @@ export async function wasFastMissed(date: Date): Promise<boolean> {
  * @param date - Date to mark as missed
  */
 export async function markFastAsMissed(date: Date): Promise<void> {
-  try {
-    const map = await getMissedFastDays();
-    map[dateKey(date)] = true;
-    await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
-    DeviceEventEmitter.emit(RAMADAN_TRACKER_UPDATED_EVENT);
-  } catch (e) {
-    console.error("Failed to mark missed fast:", e);
-    throw e;
-  }
+  const map = await getMissedFastDays();
+  await ramadanTrackerSetting.set({ ...map, [dateKey(date)]: true });
 }
 
 /**
@@ -65,21 +44,8 @@ export async function markFastAsMissed(date: Date): Promise<void> {
  * @param date - Date to clear
  */
 export async function clearMissedFast(date: Date): Promise<void> {
-  try {
-    const map = await getMissedFastDays();
-    const key = dateKey(date);
-    delete map[key];
-    await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
-    DeviceEventEmitter.emit(RAMADAN_TRACKER_UPDATED_EVENT);
-  } catch (e) {
-    console.error("Failed to clear missed fast:", e);
-    throw e;
-  }
-}
-
-export async function replaceMissedFastDays(map: Record<string, boolean>): Promise<void> {
-  await AsyncStorage.setItem(RAMADAN_TRACKER_KEY, JSON.stringify(map));
-  DeviceEventEmitter.emit(RAMADAN_TRACKER_UPDATED_EVENT);
+  const { [dateKey(date)]: _removed, ...rest } = await getMissedFastDays();
+  await ramadanTrackerSetting.set(rest);
 }
 
 /**

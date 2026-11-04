@@ -1,8 +1,7 @@
 // NEEDS NATIVE BUILD: importing the widgets loads the ExpoWidgets native module,
 // which only exists in binaries built from app.config.js version 1.2.0 or later.
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { APP_THEME_STORAGE_KEY } from "@/constants/theme";
+import { themeSetting } from "@/services/syncedSettings";
 import type { NormalizedAyah } from "@/services/quranData";
 import { canUseOSLocation, deriveEffectiveSettings } from "@/services/notifications/cityResolver";
 import { readPrayerSettings } from "@/services/notifications/storage";
@@ -19,7 +18,7 @@ import { widgetTheme } from "./widgetTheme";
 // Cautious: iOS timeline entry limits are unverified. Raise once a device build shows more is safe.
 const HORIZON_DAYS = 7;
 
-const readTheme = async () => widgetTheme(await AsyncStorage.getItem(APP_THEME_STORAGE_KEY));
+const readTheme = async () => widgetTheme(await themeSetting.get());
 
 async function syncPrayerWidgets(now: Date) {
   const settings = deriveEffectiveSettings(await readPrayerSettings(), await canUseOSLocation());

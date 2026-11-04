@@ -50,9 +50,9 @@ jest.mock("expo-location", () => ({
 }));
 
 import * as Location from "expo-location";
+import { prayerSettingsSetting } from "@/services/syncedSettings";
 import {
   PRAYER_SETTINGS_KEY,
-  SETTINGS_CHANGED_EVENT,
   syncLocationPermissionToSettings,
 } from "@/app/_layout";
 
@@ -64,7 +64,7 @@ describe("useSettingsPermissions Phase 4", () => {
     await AsyncStorage.clear();
   });
 
-  it("maps granted OS location permission to prayerSettings.useLocation=true and emits settingsChanged", async () => {
+  it("maps granted OS location permission to prayerSettings.useLocation=true and notifies subscribers", async () => {
     await AsyncStorage.setItem(
       PRAYER_SETTINGS_KEY,
       JSON.stringify({ method: 2, city: { name: "Chicago" }, useLocation: false }),
@@ -73,7 +73,8 @@ describe("useSettingsPermissions Phase 4", () => {
     mockLocation.getForegroundPermissionsAsync.mockResolvedValueOnce({ status: "granted" } as any);
     mockLocation.hasServicesEnabledAsync.mockResolvedValueOnce(true as any);
 
-    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
+    const changed = jest.fn();
+    prayerSettingsSetting.subscribe(changed);
 
     await syncLocationPermissionToSettings();
 
@@ -81,10 +82,7 @@ describe("useSettingsPermissions Phase 4", () => {
     expect(stored.useLocation).toBe(true);
     expect(stored.method).toBe(2);
     expect(stored.city).toEqual({ name: "Chicago" });
-    expect(emitSpy).toHaveBeenCalledWith(
-      SETTINGS_CHANGED_EVENT,
-      expect.objectContaining({ useLocation: true }),
-    );
+    expect(changed).toHaveBeenCalledWith(expect.objectContaining({ useLocation: true }), "local");
   });
 
   it("requests location permission when status is undecided and stores false when denied", async () => {
@@ -92,16 +90,14 @@ describe("useSettingsPermissions Phase 4", () => {
     mockLocation.requestForegroundPermissionsAsync.mockResolvedValueOnce({ status: "denied" } as any);
     mockLocation.hasServicesEnabledAsync.mockResolvedValueOnce(true as any);
 
-    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
+    const changed = jest.fn();
+    prayerSettingsSetting.subscribe(changed);
 
     await syncLocationPermissionToSettings();
 
     const stored = JSON.parse((await AsyncStorage.getItem(PRAYER_SETTINGS_KEY)) || "{}");
     expect(mockLocation.requestForegroundPermissionsAsync).toHaveBeenCalledTimes(1);
     expect(stored.useLocation).toBe(false);
-    expect(emitSpy).toHaveBeenCalledWith(
-      SETTINGS_CHANGED_EVENT,
-      expect.objectContaining({ useLocation: false }),
-    );
+    expect(changed).toHaveBeenCalledWith(expect.objectContaining({ useLocation: false }), "local");
   });
 });

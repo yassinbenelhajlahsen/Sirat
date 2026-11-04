@@ -3,17 +3,16 @@ import { DeviceEventEmitter } from "react-native";
 
 const mockSyncNow = jest.fn();
 const mockIsApplying = jest.fn(() => false);
-const mockBump = jest.fn();
 const mockAuthState = { isLoaded: true, isSignedIn: false, userId: null as string | null, email: null as string | null, firstName: null as string | null };
 
 jest.mock("@/services/sync/syncEngine", () => ({
   syncNow: (...a: unknown[]) => mockSyncNow(...a),
   isApplyingRemote: () => mockIsApplying(),
 }));
-jest.mock("@/services/sync/settingsMeta", () => ({ bumpStamp: (...a: unknown[]) => mockBump(...a) }));
 jest.mock("@/hooks/useAuthState", () => ({ useAuthState: () => mockAuthState }));
 
 import { useSyncEngine } from "@/hooks/useSyncEngine";
+import { notifFridaySetting } from "@/services/syncedSettings";
 import { PRAYER_LOG_UPDATED_EVENT } from "@/services/tracking/prayerLog";
 
 function Host() { useSyncEngine(); return null; }
@@ -21,7 +20,6 @@ function Host() { useSyncEngine(); return null; }
 beforeEach(() => {
   jest.useFakeTimers();
   mockSyncNow.mockReset();
-  mockBump.mockReset();
   mockIsApplying.mockReturnValue(false);
   mockAuthState.isLoaded = true;
   mockAuthState.isSignedIn = false;
@@ -61,5 +59,19 @@ it("ignores change events while applying remote (no feedback loop)", () => {
   act(() => { DeviceEventEmitter.emit(PRAYER_LOG_UPDATED_EVENT, { dateKey: "x" }); });
   act(() => { jest.advanceTimersByTime(4000); });
   expect(mockSyncNow).not.toHaveBeenCalled();
-  expect(mockBump).not.toHaveBeenCalled();
+});
+
+it("syncs after a local settings edit but not after a setting applied from another device", async () => {
+  mockAuthState.isSignedIn = true;
+  mockAuthState.userId = "u1";
+  render(<Host />);
+  mockSyncNow.mockClear();
+
+  await act(async () => { await notifFridaySetting.applyRemote(false); });
+  act(() => { jest.advanceTimersByTime(4000); });
+  expect(mockSyncNow).not.toHaveBeenCalled();
+
+  await act(async () => { await notifFridaySetting.set(true); });
+  act(() => { jest.advanceTimersByTime(4000); });
+  expect(mockSyncNow).toHaveBeenCalledTimes(1);
 });

@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { renderHook, waitFor, act } from "@testing-library/react-native";
-import { AppState, DeviceEventEmitter } from "react-native";
+import { AppState } from "react-native";
 
 import { useHomePrayerTimes } from "@/hooks/useHomePrayerTimes";
+import { prayerSettingsSetting } from "@/services/syncedSettings";
 
 jest.mock("expo-location", () => ({
   Accuracy: { Balanced: 3 },
@@ -67,7 +68,7 @@ describe("useHomePrayerTimes", () => {
     jest.restoreAllMocks();
   });
 
-  it("reloads on settingsChanged and app foreground events", async () => {
+  it("reloads when prayer settings change and on app foreground", async () => {
     freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
 
     mockGetPrayerTimesToday.mockResolvedValue([
@@ -76,15 +77,7 @@ describe("useHomePrayerTimes", () => {
       { label: "Isha", time: "8:00 PM" },
     ] as any);
 
-    let settingsChangedListener: (() => void | Promise<void>) | null = null;
     let appStateListener: ((state: string) => void | Promise<void>) | null = null;
-
-    jest.spyOn(DeviceEventEmitter, "addListener").mockImplementation(((event: string, cb: any) => {
-      if (event === "settingsChanged") {
-        settingsChangedListener = cb;
-      }
-      return { remove: jest.fn() } as any;
-    }) as any);
 
     jest.spyOn(AppState, "addEventListener").mockImplementation(((event: string, cb: any) => {
       if (event === "change") {
@@ -102,7 +95,7 @@ describe("useHomePrayerTimes", () => {
     expect(mockGetPrayerTimesToday).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      await settingsChangedListener?.();
+      await prayerSettingsSetting.set({ useLocation: false, method: 3 });
     });
 
     await waitFor(() => {

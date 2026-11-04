@@ -7,6 +7,8 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useQuranAudioController } from "@/context/QuranAudioProvider";
 import { useTheme } from "@/context/ThemeContext";
 import { useQuranDisplayModes } from "@/hooks/useQuranDisplayModes";
+import { useSyncedSetting } from "@/hooks/useSyncedSetting";
+import { quranBookmarksSetting } from "@/services/syncedSettings";
 import { useQuranTextScale } from "@/hooks/useQuranTextScale";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
@@ -14,7 +16,6 @@ import {
   QuranBookmark,
   deleteBookmark,
   getBookmarkKey,
-  getBookmarks,
   upsertBookmark,
 } from "@/services/quranBookmarks";
 import {
@@ -414,7 +415,7 @@ function QuranScreen() {
   const { textScale } = useQuranTextScale();
   const reduceMotion = useReducedMotion();
 
-  const [bookmarks, setBookmarks] = useState<QuranBookmark[]>([]);
+  const { value: bookmarks } = useSyncedSetting(quranBookmarksSetting);
   const [bookmarkModalContext, setBookmarkModalContext] = useState<{
     ayah: NormalizedAyah;
     ayahGlobalIndex: number;
@@ -449,19 +450,6 @@ function QuranScreen() {
     );
     return () => subscription.remove();
   }, [isPlaying]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const stored = await getBookmarks();
-      if (mounted) {
-        setBookmarks(stored);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -1288,14 +1276,13 @@ function QuranScreen() {
       }
       setBookmarkSaving(true);
       try {
-        const updated = await upsertBookmark({
+        await upsertBookmark({
           id: bookmarkModalContext.bookmark?.id,
           surahNumber: bookmarkModalContext.ayah.surahNumber,
           ayahNumber: bookmarkModalContext.ayah.ayahNumber,
           ayahGlobalIndex: bookmarkModalContext.ayahGlobalIndex,
           title,
         });
-        setBookmarks(updated);
         setBookmarkModalContext(null);
       } catch (error) {
         console.warn("Failed to save bookmark", error);
@@ -1327,8 +1314,7 @@ function QuranScreen() {
 
   const handleDeleteBookmark = useCallback(async (bookmark: QuranBookmark) => {
     try {
-      const updated = await deleteBookmark(bookmark.id);
-      setBookmarks(updated);
+      await deleteBookmark(bookmark.id);
       setBookmarkModalContext((context) => {
         if (context?.bookmark && context.bookmark.id === bookmark.id) {
           return null;

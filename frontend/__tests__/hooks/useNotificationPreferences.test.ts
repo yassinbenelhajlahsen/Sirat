@@ -3,15 +3,11 @@ import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { DeviceEventEmitter } from "react-native";
 
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
+import { getSettingsMeta } from "@/services/sync/settingsMeta";
 import {
   DEFAULT_PREFS,
   DEFAULT_WINDOW_PREFS,
-  NOTIF_FRIDAY_CHANGED_EVENT,
-  NOTIF_MAP_CHANGED_EVENT,
   NOTIF_PREFS_UPDATED_EVENT,
-  NOTIF_SOUND_MODE_CHANGED_EVENT,
-  NOTIF_WINDOW_MAP_CHANGED_EVENT,
-  NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
   STORAGE_ENABLED,
   STORAGE_FRIDAY,
   STORAGE_MAP,
@@ -67,7 +63,7 @@ describe("useNotificationPreferences", () => {
     });
   });
 
-  it("persists prayer preference updates and emits payload", async () => {
+  it("persists and stamps prayer preference updates", async () => {
     await AsyncStorage.setItem(STORAGE_ENABLED, "1");
 
     const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
@@ -93,16 +89,7 @@ describe("useNotificationPreferences", () => {
       expect.objectContaining({ Fajr: false }),
     );
 
-    expect(emitSpy).toHaveBeenCalledTimes(2);
-    expect(emitSpy).toHaveBeenCalledWith(
-      NOTIF_PREFS_UPDATED_EVENT,
-      expect.objectContaining({
-        enabled: true,
-        soundMode: "default",
-        prefs: expect.objectContaining({ Fajr: false }),
-      }),
-    );
-    expect(emitSpy).toHaveBeenCalledWith(NOTIF_MAP_CHANGED_EVENT);
+    expect((await getSettingsMeta()).notifPrefs).toBeGreaterThan(0);
   });
 
   it("updates sound mode and no-ops when selecting the same mode", async () => {
@@ -127,7 +114,7 @@ describe("useNotificationPreferences", () => {
 
     expect(result.current.soundMode).toBe("default");
     expect(await AsyncStorage.getItem(STORAGE_SOUND_MODE)).toBeNull();
-    expect(emitSpy).not.toHaveBeenCalled();
+    expect((await getSettingsMeta()).notifSoundMode).toBeUndefined();
 
     await act(async () => {
       await result.current.updateSoundMode("adhan");
@@ -135,15 +122,7 @@ describe("useNotificationPreferences", () => {
 
     expect(result.current.soundMode).toBe("adhan");
     expect(await AsyncStorage.getItem(STORAGE_SOUND_MODE)).toBe("adhan");
-    expect(emitSpy).toHaveBeenCalledTimes(2);
-    expect(emitSpy).toHaveBeenCalledWith(
-      NOTIF_PREFS_UPDATED_EVENT,
-      expect.objectContaining({
-        enabled: true,
-        soundMode: "adhan",
-      }),
-    );
-    expect(emitSpy).toHaveBeenCalledWith(NOTIF_SOUND_MODE_CHANGED_EVENT);
+    expect((await getSettingsMeta()).notifSoundMode).toBeGreaterThan(0);
   });
 
   it("hydrates window prefs and offset from storage", async () => {
@@ -168,7 +147,7 @@ describe("useNotificationPreferences", () => {
     expect(result.current.windowOffset).toBe(20);
   });
 
-  it("persists window preference updates and emits payload", async () => {
+  it("persists and stamps window preference updates", async () => {
     await AsyncStorage.setItem(STORAGE_ENABLED, "1");
     const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
 
@@ -190,13 +169,7 @@ describe("useNotificationPreferences", () => {
     expect(
       JSON.parse((await AsyncStorage.getItem(STORAGE_WINDOW_MAP)) || "{}"),
     ).toEqual(expect.objectContaining({ Asr: true }));
-    expect(emitSpy).toHaveBeenCalledWith(
-      NOTIF_PREFS_UPDATED_EVENT,
-      expect.objectContaining({
-        windowPrefs: expect.objectContaining({ Asr: true }),
-      }),
-    );
-    expect(emitSpy).toHaveBeenCalledWith(NOTIF_WINDOW_MAP_CHANGED_EVENT);
+    expect((await getSettingsMeta()).notifWindowMap).toBeGreaterThan(0);
 
     emitSpy.mockClear();
 
@@ -206,11 +179,7 @@ describe("useNotificationPreferences", () => {
 
     expect(await AsyncStorage.getItem(STORAGE_WINDOW_OFFSET)).toBe("30");
     expect(result.current.windowOffset).toBe(30);
-    expect(emitSpy).toHaveBeenCalledWith(
-      NOTIF_PREFS_UPDATED_EVENT,
-      expect.objectContaining({ windowOffset: 30 }),
-    );
-    expect(emitSpy).toHaveBeenCalledWith(NOTIF_WINDOW_OFFSET_CHANGED_EVENT);
+    expect((await getSettingsMeta()).notifWindowOffset).toBeGreaterThan(0);
   });
 
   it("defaults the Friday reminder to on, and restores a stored off", async () => {
@@ -229,7 +198,7 @@ describe("useNotificationPreferences", () => {
     expect(second.result.current.fridayEnabled).toBe(false);
   });
 
-  it("persists the Friday reminder and emits both events", async () => {
+  it("persists and stamps the Friday reminder", async () => {
     await AsyncStorage.setItem(STORAGE_ENABLED, "1");
     const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
 
@@ -248,17 +217,13 @@ describe("useNotificationPreferences", () => {
 
     expect(await AsyncStorage.getItem(STORAGE_FRIDAY)).toBe("0");
     expect(result.current.fridayEnabled).toBe(false);
-    expect(emitSpy).toHaveBeenCalledWith(
-      NOTIF_PREFS_UPDATED_EVENT,
-      expect.objectContaining({ fridayEnabled: false }),
-    );
-    expect(emitSpy).toHaveBeenCalledWith(NOTIF_FRIDAY_CHANGED_EVENT);
+    expect((await getSettingsMeta()).notifFriday).toBeGreaterThan(0);
+    const stampedAt = (await getSettingsMeta()).notifFriday;
 
-    emitSpy.mockClear();
     await act(async () => {
       await result.current.setFridayEnabled(false);
     });
-    expect(emitSpy).not.toHaveBeenCalled();
+    expect((await getSettingsMeta()).notifFriday).toBe(stampedAt);
   });
 
   it("applies notifStatus overrides and persists emitted state", async () => {

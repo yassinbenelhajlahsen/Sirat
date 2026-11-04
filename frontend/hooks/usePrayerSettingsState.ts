@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DeviceEventEmitter } from "react-native";
+import { prayerSettingsSetting } from "@/services/syncedSettings";
 import { clearPrayerCache } from "../services/prayerTimes";
 import CITIES, { City, cityKey } from "../utils/cities";
 
@@ -61,7 +61,7 @@ export function usePrayerSettingsState() {
       };
 
       try {
-        await AsyncStorage.setItem("prayerSettings", JSON.stringify(payload));
+        await prayerSettingsSetting.set(payload);
         if (!useLocation) {
           await AsyncStorage.setItem("selectedCity", cityKey(city));
         }
@@ -70,11 +70,6 @@ export function usePrayerSettingsState() {
       }
 
       void clearPrayerCache();
-      try {
-        DeviceEventEmitter?.emit?.("settingsChanged", payload);
-      } catch {
-        // ignore emit errors
-      }
     })();
   }, [city, method, settingsLoaded, useLocation]);
 

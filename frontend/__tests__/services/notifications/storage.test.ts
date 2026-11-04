@@ -5,18 +5,13 @@ import {
   normalizeCity,
   readMasterEnabled,
   readPrayerSettings,
-  readPrefs,
   readScheduledIds,
   readSeenKeys,
-  readSoundMode,
   writeScheduledIds,
   writeSeenKeys,
 } from "@/services/notifications/storage";
 import {
   STORAGE_ENABLED,
-  STORAGE_MAP,
-  STORAGE_SOUND_MODE,
-  type PrayerKey,
 } from "@/utils/notifications/constants";
 
 const SCHEDULE_KEY = "notif_schedule_ids_v1";
@@ -50,30 +45,12 @@ describe("notifications/storage", () => {
     expect(normalizeCity({ name: "City", lat: "x", lng: 10 })).toBeNull();
   });
 
-  it("reads enabled + sound mode with safe defaults", async () => {
+  it("reads the master toggle", async () => {
     await AsyncStorage.setItem(STORAGE_ENABLED, "1");
-    await AsyncStorage.setItem(STORAGE_SOUND_MODE, "adhan");
-
     await expect(readMasterEnabled()).resolves.toBe(true);
-    await expect(readSoundMode()).resolves.toBe("adhan");
 
     await AsyncStorage.setItem(STORAGE_ENABLED, "0");
-    await AsyncStorage.setItem(STORAGE_SOUND_MODE, "unknown");
-
     await expect(readMasterEnabled()).resolves.toBe(false);
-    await expect(readSoundMode()).resolves.toBe("default");
-  });
-
-  it("merges stored prefs with defaults", async () => {
-    await AsyncStorage.setItem(
-      STORAGE_MAP,
-      JSON.stringify({ Fajr: false, Isha: true } satisfies Partial<Record<PrayerKey, boolean>>),
-    );
-
-    const prefs = await readPrefs();
-    expect(prefs.Fajr).toBe(false);
-    expect(prefs.Isha).toBe(true);
-    expect(prefs.Dhuhr).toBe(true);
   });
 
   it("reads prayer settings with defaults when storage is empty", async () => {

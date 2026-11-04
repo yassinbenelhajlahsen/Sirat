@@ -83,7 +83,6 @@ export default function CalendarScreen() {
     firstMissedFastDate,
     missedDaysLabel,
     showRamadanSummary,
-    reloadMissedFasts,
   } = useCalendarData(viewYear, viewMonth);
 
   const {
@@ -210,13 +209,10 @@ export default function CalendarScreen() {
     }
   }, [firstMissedFastDate, haptics, setViewMonth, setViewYear, viewMonth, viewYear]);
 
-  // Mark/clear the selected day's fast, then refresh the month summary in place
-  // (the toggle no longer navigates, so nothing else would reload the summary).
   const onToggleMissed = useCallback(async () => {
     haptics("light");
     await toggleMissedFast();
-    reloadMissedFasts();
-  }, [haptics, reloadMissedFasts, toggleMissedFast]);
+  }, [haptics, toggleMissedFast]);
 
   const openSettings = useCallback(async () => {
     try {

@@ -112,14 +112,17 @@ async function loadNotificationService(overrides?:
   jest.doMock("@/services/notifications/storage", () => ({
     readDayFingerprint: mocks.readDayFingerprint,
     readMasterEnabled: mocks.readMasterEnabled,
-    readPrefs: mocks.readPrefs,
     readPrayerSettings: mocks.readPrayerSettings,
-    readSoundMode: mocks.readSoundMode,
-    readWindowMap: mocks.readWindowMap,
-    readWindowOffset: mocks.readWindowOffset,
-    readFridayEnabled: mocks.readFridayEnabled,
-    readRamadanMode: mocks.readRamadanMode,
     writeDayFingerprint: mocks.writeDayFingerprint,
+  }));
+
+  jest.doMock("@/services/syncedSettings", () => ({
+    notifPrefsSetting: { get: mocks.readPrefs },
+    notifSoundModeSetting: { get: mocks.readSoundMode },
+    notifWindowMapSetting: { get: mocks.readWindowMap },
+    notifWindowOffsetSetting: { get: mocks.readWindowOffset },
+    notifFridaySetting: { get: mocks.readFridayEnabled },
+    ramadanModeSetting: { get: mocks.readRamadanMode },
   }));
 
   const mod = require("@/services/notificationService");

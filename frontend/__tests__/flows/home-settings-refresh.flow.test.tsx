@@ -85,7 +85,7 @@ describe("flows/home-settings-refresh", () => {
     jest.restoreAllMocks();
   });
 
-  it("persists changed settings, emits settingsChanged, and refreshes Home prayer times", async () => {
+  it("persists changed settings and refreshes Home prayer times", async () => {
     freezeTestTime(new Date(2026, 1, 25, 9, 0, 0));
 
     mockGetPrayerTimesToday.mockResolvedValue([
@@ -125,10 +125,6 @@ describe("flows/home-settings-refresh", () => {
         expect.stringContaining('"method":5'),
       );
       expect(mockClearPrayerCache).toHaveBeenCalledTimes(1);
-      expect(emitSpy).toHaveBeenCalledWith(
-        "settingsChanged",
-        expect.objectContaining({ method: 5 }),
-      );
       expect(mockGetPrayerTimesToday).toHaveBeenCalledTimes(1);
     });
 

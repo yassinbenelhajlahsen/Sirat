@@ -1,5 +1,4 @@
 export const APP_THEME_STORAGE_KEY = "app_theme_v1";
-export const THEME_CHANGED_EVENT = "THEME_CHANGED";
 
 export type ThemeName = "default" | "dark" | "light";
 

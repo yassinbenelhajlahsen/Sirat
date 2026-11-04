@@ -1,10 +1,10 @@
-import { useFocusEffect } from "expo-router/react-navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSyncedSetting } from "@/hooks/useSyncedSetting";
+import { ramadanTrackerSetting } from "@/services/syncedSettings";
 import { getHolidayMapForYear, getHolidaysForYear } from "../services/holidayService";
 import {
   computeRamadanEnd,
   findRamadanStart,
-  getMissedFastDays,
   getRamadanPeriodSummary,
   isInRamadanWindow,
 } from "../services/ramadanTracker";
@@ -19,9 +19,7 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
   const [holidayMap, setHolidayMap] = useState<Record<string, string>>({});
   const [loadingHolidays, setLoadingHolidays] = useState(false);
 
-  const [missedFastsMap, setMissedFastsMap] = useState<Record<string, boolean>>(
-    {},
-  );
+  const { value: missedFastsMap } = useSyncedSetting(ramadanTrackerSetting);
   const [ramadanMonthActive, setRamadanMonthActive] = useState(false);
   const [ramadanStart, setRamadanStart] = useState<Date | null>(null);
   const [ramadanEnd, setRamadanEnd] = useState<Date | null>(null);
@@ -50,9 +48,6 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
     let mounted = true;
     (async () => {
       try {
-        const map = await getMissedFastDays();
-        if (mounted) setMissedFastsMap(map);
-
         const holidays = await getHolidaysForYear(viewYear);
         const startDate = findRamadanStart(holidays);
 
@@ -78,7 +73,6 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
       } catch (e) {
         console.warn("Failed to load Ramadan data:", e);
         if (mounted) {
-          setMissedFastsMap({});
           setRamadanMonthActive(false);
           setRamadanStart(null);
           setRamadanEnd(null);
@@ -90,21 +84,6 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
       mounted = false;
     };
   }, [viewMonth, viewYear]);
-
-  const reloadMissedFasts = useCallback(async () => {
-    try {
-      const map = await getMissedFastDays();
-      setMissedFastsMap(map);
-    } catch (e) {
-      console.warn("Failed to reload missed fasts:", e);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      reloadMissedFasts();
-    }, [reloadMissedFasts]),
-  );
 
   const ramadanSummary = useMemo(() => {
     if (!ramadanMonthActive || !ramadanStart || !ramadanEnd) return null;
@@ -155,6 +134,5 @@ export function useCalendarData(viewYear: number, viewMonth: number) {
     firstMissedFastDate,
     missedDaysLabel,
     showRamadanSummary,
-    reloadMissedFasts,
-  };
+    };
 }

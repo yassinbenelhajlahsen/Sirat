@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { AppState, DeviceEventEmitter } from "react-native";
+import { AppState } from "react-native";
 
-import { THEME_CHANGED_EVENT } from "@/constants/theme";
+import { prayerSettingsSetting, themeSetting } from "@/services/syncedSettings";
 import { syncWidgets } from "@/services/widgets/sync";
 
 /** Keeps the home screen and lock screen widgets in step with the app. */
@@ -13,12 +13,12 @@ export function useWidgetSync(): void {
       if (s === "active") run();
     });
     // City or method changes, and theme changes.
-    const settings = DeviceEventEmitter.addListener("settingsChanged", run);
-    const theme = DeviceEventEmitter.addListener(THEME_CHANGED_EVENT, run);
+    const unsubscribeSettings = prayerSettingsSetting.subscribe(run);
+    const unsubscribeTheme = themeSetting.subscribe(run);
     return () => {
       appState.remove();
-      settings.remove();
-      theme.remove();
+      unsubscribeSettings();
+      unsubscribeTheme();
     };
   }, []);
 }

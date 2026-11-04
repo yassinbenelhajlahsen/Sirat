@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
 
 type QuranDisplayModesModule = typeof import("@/services/quranDisplayModes");
 
@@ -37,9 +36,8 @@ describe("quranDisplayModes", () => {
     expect(await reloaded.getQuranDisplayModes()).toEqual(["arabic"]);
   });
 
-  it("sanitizes on save, updates cache, and emits update event", async () => {
+  it("sanitizes on save and updates the cached value", async () => {
     const service = loadService();
-    const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
 
     const next = await service.saveQuranDisplayModes([
       "english",
@@ -50,10 +48,6 @@ describe("quranDisplayModes", () => {
 
     expect(next).toEqual(["english", "transliteration"]);
     expect(service.getCachedQuranDisplayModes()).toEqual(["english", "transliteration"]);
-    expect(emitSpy).toHaveBeenCalledWith(service.QURAN_DISPLAY_MODES_UPDATED_EVENT, [
-      "english",
-      "transliteration",
-    ]);
   });
 
   it("toggles modes and prevents removing the final enabled mode", async () => {

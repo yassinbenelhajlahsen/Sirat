@@ -1,7 +1,5 @@
 import { Platform } from "react-native";
 
-export const SETTINGS_CHANGED_EVENT = "settingsChanged";
-
 export const STORAGE_SCHEDULE_IDS = "notif_schedule_ids_v1";
 export const STORAGE_DAYKEY = "notif_daykey_v1";
 export const STORAGE_SEEN_KEYS = "notif_seen_keys_v1";

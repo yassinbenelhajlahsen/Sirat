@@ -1,10 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
-
+import { duaSavedSetting } from "@/services/syncedSettings";
 import {
-  DUA_SAVED_UPDATED_EVENT,
   getSavedDuaIds,
-  replaceSavedDuaIds,
   toggleSavedDua,
 } from "@/services/duaSaved";
 
@@ -13,6 +10,13 @@ beforeEach(async () => {
 });
 
 describe("services/duaSaved", () => {
+  it("stamps and notifies on toggle", async () => {
+    const listener = jest.fn();
+    duaSavedSetting.subscribe(listener);
+    await toggleSavedDua(1);
+    expect(listener).toHaveBeenCalledWith([1], "local");
+  });
+
   it("starts empty", async () => {
     expect(await getSavedDuaIds()).toEqual([]);
   });
@@ -24,18 +28,6 @@ describe("services/duaSaved", () => {
 
     expect(await toggleSavedDua(9)).toBe(false);
     expect(await getSavedDuaIds()).toEqual([3]);
-  });
-
-  it("emits its own change event for toggles and sync writes", async () => {
-    const listener = jest.fn();
-    const sub = DeviceEventEmitter.addListener(DUA_SAVED_UPDATED_EVENT, listener);
-
-    await toggleSavedDua(1);
-    await replaceSavedDuaIds([5, 4]);
-
-    expect(listener).toHaveBeenCalledTimes(2);
-    expect(await getSavedDuaIds()).toEqual([5, 4]);
-    sub.remove();
   });
 
   it("ignores corrupt storage", async () => {

@@ -2,8 +2,7 @@ import { useEffect, useRef } from "react";
 import { AppState, DeviceEventEmitter, type EmitterSubscription } from "react-native";
 import { useAuthState } from "@/hooks/useAuthState";
 import { syncNow, isApplyingRemote } from "@/services/sync/syncEngine";
-import { SETTINGS_REGISTRY } from "@/services/sync/settingsRegistry";
-import { bumpStamp } from "@/services/sync/settingsMeta";
+import { subscribeToAllSettings } from "@/services/syncedSettings";
 import { PRAYER_LOG_UPDATED_EVENT } from "@/services/tracking/prayerLog";
 import { HABIT_LOG_UPDATED_EVENT } from "@/services/tracking/habitLog";
 import { HABITS_UPDATED_EVENT } from "@/services/tracking/habits";
@@ -32,7 +31,7 @@ export function useSyncEngine(): void {
     return () => sub.remove();
   }, []);
 
-  // Change events: stamp settings + debounced sync.
+  // Change events: debounced sync.
   useEffect(() => {
     const scheduleSync = () => {
       if (debounce.current) clearTimeout(debounce.current);
@@ -50,15 +49,13 @@ export function useSyncEngine(): void {
         scheduleSync();
       }));
     }
-    for (const entry of SETTINGS_REGISTRY) {
-      subs.push(DeviceEventEmitter.addListener(entry.changeEvent, () => {
-        if (isApplyingRemote()) return;
-        void bumpStamp(entry.key);
-        scheduleSync();
-      }));
-    }
+    // The setting module stamps its own edits; only local ones need a sync.
+    const unsubscribeSettings = subscribeToAllSettings((_key, source) => {
+      if (source === "local") scheduleSync();
+    });
 
     return () => {
+      unsubscribeSettings();
       subs.forEach((s) => s.remove());
       if (debounce.current) clearTimeout(debounce.current);
     };

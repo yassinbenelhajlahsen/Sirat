@@ -1,9 +1,8 @@
 import { render, act, waitFor } from "@testing-library/react-native";
 import { Text } from "react-native";
-import { DeviceEventEmitter } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
-import { APP_THEME_STORAGE_KEY, THEME_CHANGED_EVENT } from "@/constants/theme";
+import { themeSetting } from "@/services/syncedSettings";
 
 function Probe() {
   const { themeName } = useTheme();
@@ -12,13 +11,12 @@ function Probe() {
 
 beforeEach(async () => { await AsyncStorage.clear(); });
 
-it("reloads theme from storage when THEME_CHANGED fires (sync apply path)", async () => {
+it("follows a theme synced in from another device", async () => {
   const { getByTestId } = render(
     <ThemeProvider><Probe /></ThemeProvider>,
   );
   await act(async () => {
-    await AsyncStorage.setItem(APP_THEME_STORAGE_KEY, "dark");
-    DeviceEventEmitter.emit(THEME_CHANGED_EVENT);
+    await themeSetting.applyRemote("dark");
   });
   await waitFor(() => expect(getByTestId("t").props.children).toBe("dark"));
 });

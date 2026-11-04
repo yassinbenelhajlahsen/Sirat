@@ -95,10 +95,6 @@ describe("context/ThemeContext", () => {
       expect(result.current.theme).toEqual(defaultTheme);
     });
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      "Failed to hydrate app theme preference",
-      readError,
-    );
     errorSpy.mockRestore();
   });
 

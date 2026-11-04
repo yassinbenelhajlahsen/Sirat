@@ -1,9 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceEventEmitter } from "react-native";
-
-const BOOKMARKS_STORAGE_KEY = "quran:bookmarks";
-
-export const QURAN_BOOKMARKS_UPDATED_EVENT = "QURAN_BOOKMARKS_UPDATED";
+import { generateBookmarkId, quranBookmarksSetting } from "@/services/syncedSettings";
 
 export type QuranBookmark = {
   id: string;
@@ -23,93 +18,7 @@ export type UpsertBookmarkInput = {
   title: string;
 };
 
-type StoredBookmark = {
-  id?: unknown;
-  surahNumber?: unknown;
-  ayahNumber?: unknown;
-  ayahGlobalIndex?: unknown;
-  title?: unknown;
-  createdAt?: unknown;
-  updatedAt?: unknown;
-};
-
-function generateBookmarkId(): string {
-  const timePart = Date.now().toString(36);
-  const randomPart = Math.random().toString(36).slice(2, 8);
-  return `bm-${timePart}-${randomPart}`;
-}
-
-function sanitizeBookmark(entry: StoredBookmark): QuranBookmark | null {
-  const surahNumber = Number(entry.surahNumber);
-  const ayahNumber = Number(entry.ayahNumber);
-  const ayahGlobalIndex = Number(entry.ayahGlobalIndex);
-  const createdAt = Number(entry.createdAt ?? Date.now());
-  const updatedAt = Number(entry.updatedAt ?? createdAt);
-  const title =
-    typeof entry.title === "string" && entry.title.trim()
-      ? entry.title.trim()
-      : "";
-
-  if (
-    !Number.isFinite(surahNumber) ||
-    !Number.isFinite(ayahNumber) ||
-    !Number.isFinite(ayahGlobalIndex) ||
-    !Number.isFinite(createdAt) ||
-    !Number.isFinite(updatedAt) ||
-    !title
-  ) {
-    return null;
-  }
-
-  return {
-    id:
-      typeof entry.id === "string" && entry.id.trim()
-        ? entry.id.trim()
-        : generateBookmarkId(),
-    surahNumber,
-    ayahNumber,
-    ayahGlobalIndex,
-    title,
-    createdAt,
-    updatedAt,
-  };
-}
-
-async function persistBookmarks(bookmarks: QuranBookmark[]): Promise<void> {
-  try {
-    const serialized = JSON.stringify(bookmarks);
-    await AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, serialized);
-  } catch {
-    /**
-     * Persisting bookmarks failed; ignore for now while keeping state in memory.
-     */
-  }
-}
-
-function sortBookmarks(bookmarks: QuranBookmark[]): QuranBookmark[] {
-  return [...bookmarks].sort((a, b) => b.updatedAt - a.updatedAt);
-}
-
-export async function getBookmarks(): Promise<QuranBookmark[]> {
-  try {
-    const stored = await AsyncStorage.getItem(BOOKMARKS_STORAGE_KEY);
-    if (!stored) {
-      return [];
-    }
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    const sanitized = parsed
-      .map((entry) => sanitizeBookmark(entry as StoredBookmark))
-      .filter((bookmark): bookmark is QuranBookmark => Boolean(bookmark));
-
-    return sortBookmarks(sanitized);
-  } catch {
-    return [];
-  }
-}
+export const getBookmarks = () => quranBookmarksSetting.get();
 
 export async function upsertBookmark(
   payload: UpsertBookmarkInput
@@ -163,10 +72,7 @@ export async function upsertBookmark(
     nextBookmarks = [...existing, newBookmark];
   }
 
-  const sorted = sortBookmarks(nextBookmarks);
-  await persistBookmarks(sorted);
-  DeviceEventEmitter.emit(QURAN_BOOKMARKS_UPDATED_EVENT);
-  return sorted;
+  return quranBookmarksSetting.set(nextBookmarks);
 }
 
 export async function deleteBookmark(
@@ -182,9 +88,7 @@ export async function deleteBookmark(
     return existing;
   }
 
-  await persistBookmarks(next);
-  DeviceEventEmitter.emit(QURAN_BOOKMARKS_UPDATED_EVENT);
-  return next;
+  return quranBookmarksSetting.set(next);
 }
 
 export function getBookmarkKey(
@@ -192,10 +96,4 @@ export function getBookmarkKey(
   ayahNumber: number
 ): string {
   return `${surahNumber}:${ayahNumber}`;
-}
-
-export async function replaceBookmarks(list: QuranBookmark[]): Promise<QuranBookmark[]> {
-  await AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(list));
-  DeviceEventEmitter.emit(QURAN_BOOKMARKS_UPDATED_EVENT);
-  return list;
 }

@@ -20,16 +20,18 @@ import {
 import { isPretendingRamadan } from "@/utils/hijriDate";
 import {
   readDayFingerprint,
-  readFridayEnabled,
   readMasterEnabled,
-  readPrefs,
   readPrayerSettings,
-  readRamadanMode,
-  readSoundMode,
-  readWindowMap,
-  readWindowOffset,
   writeDayFingerprint,
 } from "./notifications/storage";
+import {
+  notifFridaySetting,
+  notifPrefsSetting,
+  notifSoundModeSetting,
+  notifWindowMapSetting,
+  notifWindowOffsetSetting,
+  ramadanModeSetting,
+} from "./syncedSettings";
 import type { RescheduleReason } from "./notifications/types";
 
 export { NOTIF_PREFS_UPDATED_EVENT } from "../utils/notifications/constants";
@@ -56,13 +58,13 @@ const SCHEDULE_CONTENT_VERSION = 3;
 
 function buildScheduleFingerprint(params: {
   dayKey: string;
-  prefs: Awaited<ReturnType<typeof readPrefs>>;
+  prefs: Awaited<ReturnType<typeof notifPrefsSetting.get>>;
   cityDisplay: string;
-  soundMode: Awaited<ReturnType<typeof readSoundMode>>;
+  soundMode: Awaited<ReturnType<typeof notifSoundModeSetting.get>>;
   times: Awaited<ReturnType<typeof getPrayerTimesToday>>;
   effective: Awaited<ReturnType<typeof deriveEffectiveSettings>>;
-  windowPrefs: Awaited<ReturnType<typeof readWindowMap>>;
-  windowOffset: Awaited<ReturnType<typeof readWindowOffset>>;
+  windowPrefs: Awaited<ReturnType<typeof notifWindowMapSetting.get>>;
+  windowOffset: Awaited<ReturnType<typeof notifWindowOffsetSetting.get>>;
   fridayEnabled: boolean;
   ramadanMode: boolean;
 }): string {
@@ -133,14 +135,14 @@ export const NotificationService = {
         return;
       }
 
-      const prefs = await readPrefs();
+      const prefs = await notifPrefsSetting.get();
       const { times: todayTimes, effective } = await fetchTodayTimesWithEffective();
       const cityDisplay = await resolveCityDisplay(effective);
-      const soundMode = await readSoundMode();
-      const windowPrefs = await readWindowMap();
-      const windowOffset = await readWindowOffset();
-      const fridayEnabled = await readFridayEnabled();
-      const ramadanMode = await readRamadanMode();
+      const soundMode = await notifSoundModeSetting.get();
+      const windowPrefs = await notifWindowMapSetting.get();
+      const windowOffset = await notifWindowOffsetSetting.get();
+      const fridayEnabled = await notifFridaySetting.get();
+      const ramadanMode = await ramadanModeSetting.get();
 
       const today = yyyymmdd();
       const nextKey = buildScheduleFingerprint({
