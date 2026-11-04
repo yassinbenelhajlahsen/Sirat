@@ -13,7 +13,8 @@ import type { PrayerTimesError } from "@/hooks/usePrayerTimes";
 import type { PrayerName, PrayerStatus } from "@/services/prayerTracker";
 import type { PrayerTime } from "@/services/prayerTimes";
 import { formatWeekdayMonthDay } from "@/utils/formatDate";
-import { formatHijriDate, maghribOn } from "@/utils/hijriDate";
+import { useRamadanMode } from "@/hooks/useRamadanMode";
+import { formatHijriDate, isFastingDay, maghribOn } from "@/utils/hijriDate";
 
 type DayDetailPanelProps = {
   date: Date;
@@ -48,7 +49,10 @@ export default function DayDetailPanel({
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { ramadanMode } = useRamadanMode();
   const dateLine = formatWeekdayMonthDay(date);
+
+  const ramadanDay = ramadanMode && isFastingDay(date);
 
   // Only today's panel tracks the clock; other days show their daytime date, which is the one holidays are keyed to.
   const hijri = isToday
@@ -126,6 +130,7 @@ export default function DayDetailPanel({
             nextPrayer={nextPrayer}
             canLog={date.getTime() <= Date.now()}
             onPressPrayer={onPressPrayer}
+            ramadan={ramadanDay}
           />
         </View>
       )}

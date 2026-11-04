@@ -4,16 +4,12 @@ import { DeviceEventEmitter } from "react-native";
 
 import {
   DEFAULT_PREFS,
-  DEFAULT_SUHOOR_ENABLED,
-  DEFAULT_SUHOOR_OFFSET,
   DEFAULT_WINDOW_OFFSET,
   DEFAULT_WINDOW_PREFS,
   NOTIF_FRIDAY_CHANGED_EVENT,
   NOTIF_MAP_CHANGED_EVENT,
   NOTIF_PREFS_UPDATED_EVENT,
   NOTIF_SOUND_MODE_CHANGED_EVENT,
-  NOTIF_SUHOOR_CHANGED_EVENT,
-  NOTIF_SUHOOR_OFFSET_CHANGED_EVENT,
   NOTIF_WINDOW_MAP_CHANGED_EVENT,
   NOTIF_WINDOW_OFFSET_CHANGED_EVENT,
   PrayerKey,
@@ -23,11 +19,8 @@ import {
   STORAGE_FRIDAY,
   STORAGE_MAP,
   STORAGE_SOUND_MODE,
-  STORAGE_SUHOOR,
-  STORAGE_SUHOOR_OFFSET,
   STORAGE_WINDOW_MAP,
   STORAGE_WINDOW_OFFSET,
-  SUHOOR_OFFSET_OPTIONS,
   WINDOW_OFFSET_OPTIONS,
   WINDOW_PRAYERS,
   WindowPrayerKey,
@@ -79,19 +72,6 @@ function parseWindowOffset(raw: string | null): number {
     : DEFAULT_WINDOW_OFFSET;
 }
 
-function parseSuhoorEnabled(raw: string | null): boolean {
-  if (raw === "1") return true;
-  if (raw === "0") return false;
-  return DEFAULT_SUHOOR_ENABLED;
-}
-
-function parseSuhoorOffset(raw: string | null): number {
-  const value = raw ? parseInt(raw, 10) : NaN;
-  return (SUHOOR_OFFSET_OPTIONS as readonly number[]).includes(value)
-    ? value
-    : DEFAULT_SUHOOR_OFFSET;
-}
-
 function emitPreferences(payload: {
   enabled: boolean;
   prefs: Record<PrayerKey, boolean>;
@@ -129,13 +109,6 @@ export function useNotificationPreferences({
     DEFAULT_WINDOW_OFFSET,
   );
 
-  const [suhoorEnabled, setSuhoorEnabledState] = useState<boolean>(
-    DEFAULT_SUHOOR_ENABLED,
-  );
-  const [suhoorOffset, setSuhoorOffsetState] = useState<number>(
-    DEFAULT_SUHOOR_OFFSET,
-  );
-
   const windowPrefsRef = useRef<WindowPrefMap>({ ...DEFAULT_WINDOW_PREFS });
   const windowOffsetRef = useRef<number>(DEFAULT_WINDOW_OFFSET);
 
@@ -153,8 +126,6 @@ export function useNotificationPreferences({
           STORAGE_WINDOW_MAP,
           STORAGE_WINDOW_OFFSET,
           STORAGE_FRIDAY,
-          STORAGE_SUHOOR,
-          STORAGE_SUHOOR_OFFSET,
         ]);
         if (!active) return;
 
@@ -197,16 +168,6 @@ export function useNotificationPreferences({
         const nextFriday = rawFriday !== "0";
         fridayEnabledRef.current = nextFriday;
         setFridayEnabledState(nextFriday);
-        setSuhoorEnabledState(
-          parseSuhoorEnabled(
-            entries.find(([key]) => key === STORAGE_SUHOOR)?.[1] ?? null,
-          ),
-        );
-        setSuhoorOffsetState(
-          parseSuhoorOffset(
-            entries.find(([key]) => key === STORAGE_SUHOOR_OFFSET)?.[1] ?? null,
-          ),
-        );
       } catch {
         // ignore hydration errors
       } finally {
@@ -378,50 +339,6 @@ export function useNotificationPreferences({
     [enabled],
   );
 
-  // Suhoor settings are read by the scheduler from storage, so the broadcast
-  // only has to wake it; the granular event is what the sync engine stamps.
-  const setSuhoorEnabled = useCallback(
-    async (value: boolean) => {
-      setSuhoorEnabledState(value);
-      try {
-        await AsyncStorage.setItem(STORAGE_SUHOOR, value ? "1" : "0");
-      } catch {
-        // ignore persist errors
-      }
-      emitPreferences({
-        enabled,
-        prefs: prefsRef.current,
-        soundMode: soundModeRef.current,
-        windowPrefs: windowPrefsRef.current,
-        windowOffset: windowOffsetRef.current,
-        fridayEnabled: fridayEnabledRef.current,
-      });
-      DeviceEventEmitter.emit(NOTIF_SUHOOR_CHANGED_EVENT);
-    },
-    [enabled],
-  );
-
-  const setSuhoorOffset = useCallback(
-    async (minutes: number) => {
-      setSuhoorOffsetState(minutes);
-      try {
-        await AsyncStorage.setItem(STORAGE_SUHOOR_OFFSET, String(minutes));
-      } catch {
-        // ignore persist errors
-      }
-      emitPreferences({
-        enabled,
-        prefs: prefsRef.current,
-        soundMode: soundModeRef.current,
-        windowPrefs: windowPrefsRef.current,
-        windowOffset: windowOffsetRef.current,
-        fridayEnabled: fridayEnabledRef.current,
-      });
-      DeviceEventEmitter.emit(NOTIF_SUHOOR_OFFSET_CHANGED_EVENT);
-    },
-    [enabled],
-  );
-
   return {
     loaded,
     enabled,
@@ -435,9 +352,5 @@ export function useNotificationPreferences({
     setWindowPreference,
     setWindowOffset,
     setFridayEnabled,
-    suhoorEnabled,
-    suhoorOffset,
-    setSuhoorEnabled,
-    setSuhoorOffset,
   };
 }

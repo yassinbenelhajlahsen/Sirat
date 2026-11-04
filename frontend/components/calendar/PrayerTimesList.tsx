@@ -18,7 +18,11 @@ type PrayerTimesListProps = {
   /** Past days and today can be logged; future days only list the times. */
   canLog: boolean;
   onPressPrayer: (name: PrayerName, label: string) => void;
+  /** Ramadan fasting day: Fajr and Maghrib read as suhoor and iftar, in gold. */
+  ramadan?: boolean;
 };
+
+const RAMADAN_LABELS: Record<string, string> = { Fajr: "Fajr/Suhoor", Maghrib: "Maghrib/Iftar" };
 
 const STATUS_VALUE: Record<PrayerStatus, string> = {
   prayed: "Marked prayed",
@@ -33,6 +37,7 @@ export default function PrayerTimesList({
   nextPrayer,
   canLog,
   onPressPrayer,
+  ramadan = false,
 }: PrayerTimesListProps) {
   const { theme } = useTheme();
   const { colors } = theme;
@@ -49,12 +54,13 @@ export default function PrayerTimesList({
         const isNext = fi === nextIdx;
         const passed = isToday && nextIdx !== -1 && fi < nextIdx;
         const loggable = canLog && name != null && (!isToday || nextIdx === -1 || fi <= nextIdx);
-        const nameColor = isNext ? colors.accent : passed ? colors.textTertiary : colors.textSecondary;
-        const timeColor = isNext ? colors.accent : passed ? colors.textTertiary : colors.white;
+        const ramadanLabel = ramadan ? RAMADAN_LABELS[p.label] : undefined;
+        const nameColor = isNext || ramadanLabel ? colors.accent : passed ? colors.textTertiary : colors.textSecondary;
+        const timeColor = isNext || ramadanLabel ? colors.accent : passed ? colors.textTertiary : colors.white;
         const row = (
           <View style={[styles.row, fi > 0 && styles.separator]}>
             <Subhead color={nameColor} style={styles.name}>
-              {p.label}
+              {ramadanLabel ?? p.label}
             </Subhead>
             <Subhead color={timeColor} style={styles.time}>
               {p.time}

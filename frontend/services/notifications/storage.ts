@@ -3,8 +3,6 @@ import { DeviceEventEmitter } from "react-native";
 
 import type { PrayerSettings } from "../prayerTimes";
 import {
-  DEFAULT_SUHOOR_ENABLED,
-  DEFAULT_SUHOOR_OFFSET,
   DEFAULT_WINDOW_OFFSET,
   DEFAULT_WINDOW_PREFS,
   NOTIF_PREFS_UPDATED_EVENT,
@@ -14,11 +12,8 @@ import {
   STORAGE_MAP,
   STORAGE_RAMADAN_MODE,
   STORAGE_SOUND_MODE,
-  STORAGE_SUHOOR,
-  STORAGE_SUHOOR_OFFSET,
   STORAGE_WINDOW_MAP,
   STORAGE_WINDOW_OFFSET,
-  SUHOOR_OFFSET_OPTIONS,
   WINDOW_OFFSET_OPTIONS,
   WINDOW_PRAYERS,
   type WindowPrefMap,
@@ -239,36 +234,8 @@ export async function readRamadanMode(): Promise<boolean> {
   return (await AsyncStorage.getItem(STORAGE_RAMADAN_MODE)) !== "0";
 }
 
-export async function readSuhoorEnabled(): Promise<boolean> {
-  const raw = await AsyncStorage.getItem(STORAGE_SUHOOR);
-  if (raw === "1") return true;
-  if (raw === "0") return false;
-  return DEFAULT_SUHOOR_ENABLED;
-}
-
-export async function readSuhoorOffset(): Promise<number> {
-  const raw = await AsyncStorage.getItem(STORAGE_SUHOOR_OFFSET);
-  const value = raw ? parseInt(raw, 10) : NaN;
-  return (SUHOOR_OFFSET_OPTIONS as readonly number[]).includes(value)
-    ? value
-    : DEFAULT_SUHOOR_OFFSET;
-}
-
 export async function writeRamadanMode(value: unknown): Promise<void> {
   if (typeof value !== "boolean") return;
   await AsyncStorage.setItem(STORAGE_RAMADAN_MODE, value ? "1" : "0");
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
-}
-
-export async function writeSuhoorEnabled(value: unknown): Promise<void> {
-  if (typeof value !== "boolean") return;
-  await AsyncStorage.setItem(STORAGE_SUHOOR, value ? "1" : "0");
-  DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
-}
-
-export async function writeSuhoorOffset(value: unknown): Promise<void> {
-  const n = typeof value === "number" ? value : Number(value);
-  if (!(SUHOOR_OFFSET_OPTIONS as readonly number[]).includes(n)) return;
-  await AsyncStorage.setItem(STORAGE_SUHOOR_OFFSET, String(n));
   DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
 }

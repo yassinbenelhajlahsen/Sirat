@@ -405,62 +405,6 @@ describe("notifications/scheduler", () => {
     };
     const scheduled = () =>
       (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls.map(([a]) => a);
-    const suhoor = () => scheduled().filter((a) => a.content.title === "Suhoor");
-
-    it("schedules suhoor at Fajr minus the offset on fasting days only, with the default sound", async () => {
-      freezeTestTime(new Date(2027, 1, 7, 3, 0, 0)); // Sha'ban 30
-      mockGetPrayerTimesForDate.mockResolvedValue(FULL_DAY as any);
-
-      await scheduleForHorizon({
-        ...baseParams,
-        days: 3, // Feb 7 (Sha'ban 30), Feb 8 and 9 (Ramadan 1 and 2)
-        ramadanMode: true,
-        suhoorEnabled: true,
-        suhoorOffset: 30,
-      });
-
-      const found = suhoor();
-      expect(found).toHaveLength(2);
-      const dates = found.map((a) => new Date(a.trigger.date));
-      expect(dates.map((d) => [d.getDate(), d.getHours(), d.getMinutes()])).toEqual([
-        [8, 4, 30],
-        [9, 4, 30],
-      ]);
-      expect(found[0].content.body).toBe("Fajr is at 05:00 AM, in 30 min.");
-      expect(found[0].content.sound).toBe("default");
-      expect(found[0].content.data).toEqual(expect.objectContaining({ type: "suhoor" }));
-      resetTestTime();
-    });
-
-    it("fires suhoor even when the Fajr at-prayer alert is off", async () => {
-      freezeTestTime(new Date(2027, 1, 8, 3, 0, 0));
-      mockGetPrayerTimesForDate.mockResolvedValue(FULL_DAY as any);
-
-      await scheduleForHorizon({
-        ...baseParams,
-        prefs: { ...makePrefs(true), Fajr: false },
-        days: 1,
-        ramadanMode: true,
-        suhoorEnabled: true,
-        suhoorOffset: 45,
-      });
-
-      expect(suhoor()).toHaveLength(1);
-      expect(scheduled().some((a) => a.content.title === "🌅 Fajr time")).toBe(false);
-      resetTestTime();
-    });
-
-    it("adds no suhoor unless both Ramadan mode and the toggle are on", async () => {
-      freezeTestTime(new Date(2027, 1, 8, 3, 0, 0));
-      mockGetPrayerTimesForDate.mockResolvedValue(FULL_DAY as any);
-
-      await scheduleForHorizon({ ...baseParams, days: 1, ramadanMode: true, suhoorEnabled: false });
-      await AsyncStorage.clear();
-      await scheduleForHorizon({ ...baseParams, days: 1, ramadanMode: false, suhoorEnabled: true });
-
-      expect(suhoor()).toHaveLength(0);
-      resetTestTime();
-    });
 
     it("retitles Maghrib to Maghrib/Iftar on fasting days only, keeping body, sound and data", async () => {
       freezeTestTime(new Date(2027, 1, 7, 3, 0, 0));
@@ -493,21 +437,19 @@ describe("notifications/scheduler", () => {
 
       const inRamadanOff = await titles(new Date(2027, 1, 8, 3, 0, 0), {
         ramadanMode: false,
-        suhoorEnabled: true,
       });
       const inRamadanLegacy = await titles(new Date(2027, 1, 8, 3, 0, 0), {});
       expect(inRamadanOff).toEqual(inRamadanLegacy);
 
       const outsideOn = await titles(new Date(2026, 5, 1, 3, 0, 0), {
         ramadanMode: true,
-        suhoorEnabled: true,
       });
       const outsideLegacy = await titles(new Date(2026, 5, 1, 3, 0, 0), {});
       expect(outsideOn).toEqual(outsideLegacy);
       resetTestTime();
     });
 
-    it("never exceeds the 60 budget with every reminder type on, keeping the soonest by fire time", async () => {
+    it("never exceeds the 60 budget during Ramadan with every reminder type on, keeping the soonest by fire time", async () => {
       freezeTestTime(new Date(2027, 1, 8, 0, 0, 0));
       mockGetPrayerTimesForDate.mockResolvedValue(FULL_DAY as any);
 
@@ -516,17 +458,14 @@ describe("notifications/scheduler", () => {
         days: 14,
         windowPrefs: { Fajr: true, Dhuhr: true, Asr: true, Maghrib: true },
         ramadanMode: true,
-        suhoorEnabled: true,
-        suhoorOffset: 30,
       });
 
       const calls = scheduled();
       expect(calls).toHaveLength(60);
       const times = calls.map((a) => new Date(a.trigger.date).getTime());
       expect(times).toEqual([...times].sort((a, b) => a - b));
-      // 14 days x (6 prayers + 4 windows + 1 suhoor) = 154 candidates: the 60 kept span only the first days.
+      // 14 days x (6 prayers + 4 windows) = 140 candidates: the 60 kept span only the first days.
       expect(new Date(times[59]).getDate()).toBeLessThan(8 + 7);
-      expect(calls.some((a) => a.content.title === "Suhoor")).toBe(true);
       resetTestTime();
     });
   });

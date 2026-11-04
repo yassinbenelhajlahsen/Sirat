@@ -17,6 +17,7 @@ import {
   scheduleForHorizon,
   yyyymmdd,
 } from "./notifications/scheduler";
+import { isPretendingRamadan } from "@/utils/hijriDate";
 import {
   readDayFingerprint,
   readFridayEnabled,
@@ -25,8 +26,6 @@ import {
   readPrayerSettings,
   readRamadanMode,
   readSoundMode,
-  readSuhoorEnabled,
-  readSuhoorOffset,
   readWindowMap,
   readWindowOffset,
   writeDayFingerprint,
@@ -66,8 +65,6 @@ function buildScheduleFingerprint(params: {
   windowOffset: Awaited<ReturnType<typeof readWindowOffset>>;
   fridayEnabled: boolean;
   ramadanMode: boolean;
-  suhoorEnabled: boolean;
-  suhoorOffset: number;
 }): string {
   const {
     dayKey,
@@ -80,8 +77,6 @@ function buildScheduleFingerprint(params: {
     windowOffset,
     fridayEnabled,
     ramadanMode,
-    suhoorEnabled,
-    suhoorOffset,
   } = params;
 
   const timesFingerprint = JSON.stringify(times.map((t) => [t.label, t.time]));
@@ -96,7 +91,7 @@ function buildScheduleFingerprint(params: {
       : null,
   });
 
-  return `v${SCHEDULE_CONTENT_VERSION}_day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}_${JSON.stringify(windowPrefs)}_${windowOffset}_${fridayEnabled ? 1 : 0}_${ramadanMode}_${suhoorEnabled}_${suhoorOffset}`;
+  return `v${SCHEDULE_CONTENT_VERSION}_day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}_${JSON.stringify(windowPrefs)}_${windowOffset}_${fridayEnabled ? 1 : 0}_${ramadanMode}${isPretendingRamadan() ? "_pretend" : ""}`;
 }
 
 export const NotificationService = {
@@ -146,8 +141,6 @@ export const NotificationService = {
       const windowOffset = await readWindowOffset();
       const fridayEnabled = await readFridayEnabled();
       const ramadanMode = await readRamadanMode();
-      const suhoorEnabled = await readSuhoorEnabled();
-      const suhoorOffset = await readSuhoorOffset();
 
       const today = yyyymmdd();
       const nextKey = buildScheduleFingerprint({
@@ -161,8 +154,6 @@ export const NotificationService = {
         windowOffset,
         fridayEnabled,
         ramadanMode,
-        suhoorEnabled,
-        suhoorOffset,
       });
       const lastKey = await readDayFingerprint();
 
@@ -183,8 +174,6 @@ export const NotificationService = {
           windowOffset,
           fridayEnabled,
           ramadanMode,
-          suhoorEnabled,
-          suhoorOffset,
         });
         await writeDayFingerprint(nextKey);
         return;
@@ -200,8 +189,6 @@ export const NotificationService = {
         windowOffset,
         fridayEnabled,
         ramadanMode,
-        suhoorEnabled,
-        suhoorOffset,
       });
     } catch (e) {
       console.warn("rescheduleAll failed:", e);

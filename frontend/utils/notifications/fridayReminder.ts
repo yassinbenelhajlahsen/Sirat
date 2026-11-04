@@ -3,16 +3,15 @@ export const FRIDAY_URL = "/Quran?surah=18&ayah=1";
 
 // Every message must point at Surah Al-Kahf, since the tap opens it.
 export const FRIDAY_MESSAGES = [
-  "A good day to read Surah Al-Kahf.",
-  "Jumu'ah is here. Surah Al-Kahf is ready whenever you are.",
-  "May your Friday be blessed. Surah Al-Kahf is a lovely way to begin it.",
-  "Take a quiet moment today for Surah Al-Kahf.",
-  "It is Friday. Why not read a little of Surah Al-Kahf?",
-  "Jumu'ah blessings. Open Surah Al-Kahf when you have a moment.",
-  "A light between two Fridays: Surah Al-Kahf.",
-  "Friday reminder: Surah Al-Kahf is one tap away.",
-  "Start your Jumu'ah with Surah Al-Kahf.",
-  "Whenever it suits your day, Surah Al-Kahf is waiting for you.",
+  "Have you read Surah Al-Kahf yet today?",
+  "It's Friday. Time for Surah Al-Kahf.",
+  "Read Surah Al-Kahf today, even if it's just a few pages.",
+  "Got a few minutes? Read Surah Al-Kahf.",
+  "Before Jumu'ah or after, make time for Surah Al-Kahf.",
+  "Try to read Surah Al-Kahf before Maghrib.",
+  "Tap to start Surah Al-Kahf.",
+  "Read Surah Al-Kahf this morning, or whenever you get a chance.",
+  "Friday's surah is Al-Kahf. Tap to read.",
 ];
 
 const WINDOW_START_HOUR = 9;

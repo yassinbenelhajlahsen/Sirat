@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { Alert, DeviceEventEmitter, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import Screen from "@/components/ui/Screen";
@@ -14,6 +14,8 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useRamadanMode } from "@/hooks/useRamadanMode";
+import { isPretendingRamadan, setPretendRamadan } from "@/utils/hijriDate";
+import { NOTIF_PREFS_UPDATED_EVENT } from "@/utils/notifications/constants";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useAccountActions } from "@/hooks/useAccountActions";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
@@ -63,6 +65,7 @@ export default function Settings() {
     useSettingsPermissions({ useLocation, setUseLocation });
 
   const { ramadanMode, setRamadanMode } = useRamadanMode();
+  const [pretendRamadan, setPretendRamadanState] = useState(isPretendingRamadan);
 
   const [methodModalVisible, setMethodModalVisible] = useState(false);
 
@@ -194,12 +197,14 @@ export default function Settings() {
           ) : null}
         </SettingsSection>
 
-        <SettingsSection label="Ramadan">
+        {/* Notifications owns its own grouped sections */}
+        <NotificationSettings notifStatus={notifStatus} />
+
+        <SettingsSection footer="Suhoor and iftar times during Ramadan.">
           <SettingsRow
             first
             icon="moon-outline"
             title="Ramadan mode"
-            subtitle="Suhoor and iftar times during Ramadan"
             trailing={
               <Switch
                 accessibilityLabel="Ramadan mode"
@@ -214,10 +219,30 @@ export default function Settings() {
           />
         </SettingsSection>
 
-        {/* Notifications owns its own grouped sections */}
-        <NotificationSettings notifStatus={notifStatus} />
-
         {/* About */}
+        {__DEV__ ? (
+          <SettingsSection label="Developer" footer="Treats every day as Ramadan to preview Ramadan mode. Resets when the app reloads.">
+            <SettingsRow
+              first
+              icon="construct-outline"
+              title="Pretend it's Ramadan"
+              trailing={
+                <Switch
+                  accessibilityLabel="Pretend it's Ramadan"
+                  value={pretendRamadan}
+                  onValueChange={(val) => {
+                    setPretendRamadan(val);
+                    setPretendRamadanState(val);
+                    // Rebuild notifications so the Maghrib/Iftar wording follows.
+                    DeviceEventEmitter.emit(NOTIF_PREFS_UPDATED_EVENT);
+                  }}
+                  trackColor={{ false: colors.grayDark, true: colors.accent }}
+                />
+              }
+            />
+          </SettingsSection>
+        ) : null}
+
         <SettingsSection label="About">
           <SettingsRow first icon="star-outline" title="Rate Sirat" showChevron onPress={rateApp} />
           <SettingsRow icon="share-social-outline" title="Share Sirat" showChevron onPress={shareApp} />

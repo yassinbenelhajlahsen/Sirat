@@ -22,7 +22,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/notifications/windowStorage.test.ts`
   - `utils/notifications/fridayReminder.test.ts` — Friday reminder picks: 10+ messages, 9:00 to 10:59 window, same result for a given Friday, varies across weeks
   - `services/notifications/response.test.ts` — notification tap routing: `data.url` opens the route, other types do nothing, one response routes once
-  - `services/notifications/ramadanStorage.test.ts` — Ramadan mode, suhoor toggle and offset (`ramadan_mode_v1`, `notif_suhoor_v1`, `notif_suhoor_offset_v1`): defaults, string forms, malformed input
+  - `services/notifications/ramadanStorage.test.ts` — Ramadan mode (`ramadan_mode_v1`): default on, string form, malformed input
   - `services/notifications/cityResolver.test.ts` — city-display fallback chain (caller coords → live position → last-known → cached → "your area"; never raw coordinates)
 - `prayer times retrieval + caching testing`
   - `services/prayerTimes.test.ts`
@@ -56,7 +56,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useDuaInteraction.test.ts`
   - `services/duaTopics.test.ts` — every category in duas.json maps to exactly one topic; "another dua" stays in the topic
   - `services/duaSaved.test.ts` — saved dua ids (newest first, own change event for sync stamping)
-  - `screens/Duas.test.tsx` — dua library: ask box, Saved/Recent (and empty states), topics, topic list
+  - `screens/Duas.test.tsx` — dua library sheet: Saved/Recent rows, topics, pushes inside the sheet; list page shows full duas, saving, Saved empty state
 - `location heavy features testing`
   - `hooks/useQibla.test.ts`
   - `components/compass-dial.contract.test.tsx` (CompassDial contract — bearing/distance readout, cardinals, aligned swap)
@@ -93,7 +93,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `end to end like user flows testing`
   - `flows/home-settings-refresh.flow.test.tsx`
   - `flows/dua-request-history.flow.test.tsx`
-  - `hooks/useDuaInteraction.test.ts` — includes the guard that the dua swap drives no animation (Liquid Glass renders as nothing under an animated ancestor)
+  - `hooks/useDuaInteraction.test.ts` — includes the dua swap animation (safe only while the dua cards are solid, not Liquid Glass)
   - `flows/quran-display-mode.flow.test.tsx`
   - `flows/calendar-missed-fast.flow.test.tsx`
   - `flows/nearby-mosques-refresh.flow.test.tsx`

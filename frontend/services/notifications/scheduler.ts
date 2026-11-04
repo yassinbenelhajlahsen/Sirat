@@ -27,7 +27,6 @@ import {
   fridayReminderFor,
 } from "@/utils/notifications/fridayReminder";
 import {
-  DEFAULT_SUHOOR_OFFSET,
   WINDOW_PRAYERS,
   type WindowPrayerKey,
   type WindowPrefMap,
@@ -57,10 +56,6 @@ function makeSeenKey(label: PrayerKey, fireDate: Date): string {
 function makeWindowSeenKey(label: PrayerKey, fireDate: Date): string {
   const key = fireDate.toISOString().slice(0, 16);
   return `window_${label}_${key}`;
-}
-
-function makeSuhoorSeenKey(fireDate: Date): string {
-  return `suhoor_${fireDate.toISOString().slice(0, 16)}`;
 }
 
 function addDays(d: Date, offset: number): Date {
@@ -117,8 +112,6 @@ export async function scheduleForHorizon(params: {
   windowOffset: number;
   fridayEnabled: boolean;
   ramadanMode?: boolean;
-  suhoorEnabled?: boolean;
-  suhoorOffset?: number;
 }) {
   const {
     days,
@@ -130,8 +123,6 @@ export async function scheduleForHorizon(params: {
     windowOffset,
     fridayEnabled,
     ramadanMode = false,
-    suhoorEnabled = false,
-    suhoorOffset = DEFAULT_SUHOOR_OFFSET,
   } = params;
   const now = Date.now();
 
@@ -192,33 +183,6 @@ export async function scheduleForHorizon(params: {
             sound: "default",
             priority: Notifications.AndroidNotificationPriority.HIGH,
             data: { type: "friday", url: FRIDAY_URL },
-          },
-        });
-      }
-    }
-
-    // Suhoor reminder: before Fajr, independent of the Fajr at-prayer alert.
-    const fajrTime = times.find((t) => t.label === "Fajr");
-    if (fasting && suhoorEnabled && fajrTime) {
-      const fireDate = new Date(
-        parse12hToDate(day, fajrTime.time).getTime() - suhoorOffset * 60_000,
-      );
-      if (fireDate.getTime() > now) {
-        candidates.push({
-          fireDate,
-          seenKey: makeSuhoorSeenKey(fireDate),
-          content: {
-            title: "Suhoor",
-            body: `Fajr is at ${fajrTime.time}, in ${suhoorOffset} min.`,
-            // The adhan is a call to prayer, so it never plays for the suhoor reminder.
-            sound: "default",
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-            data: {
-              type: "suhoor",
-              fajrTimeLocal: fajrTime.time,
-              offset: suhoorOffset,
-              dayKey,
-            },
           },
         });
       }

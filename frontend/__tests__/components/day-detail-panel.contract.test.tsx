@@ -37,6 +37,11 @@ jest.mock("@/components/PrayerDial", () => {
     React.createElement(Text, { testID: "prayer-dial" }, props.live ? "live" : "static");
 });
 
+let mockRamadanMode = true;
+jest.mock("@/hooks/useRamadanMode", () => ({
+  useRamadanMode: () => ({ ramadanMode: mockRamadanMode, setRamadanMode: jest.fn() }),
+}));
+
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 
 const baseProps = {
@@ -89,5 +94,38 @@ describe("DayDetailPanel", () => {
     );
     fireEvent.press(getByText("Try again"));
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  describe("Ramadan days", () => {
+    const ramadanDay = {
+      ...baseProps,
+      date: new Date(2027, 1, 10), // Ramadan 3, 1448
+      prayerTimes: [
+        { label: "Fajr", time: "5:31 AM" },
+        { label: "Maghrib", time: "5:42 PM" },
+      ] as any,
+    };
+    afterEach(() => {
+      mockRamadanMode = true;
+    });
+
+    it("renames Fajr and Maghrib to Fajr/Suhoor and Maghrib/Iftar", () => {
+      const { getByText, queryByText } = render(<DayDetailPanel {...ramadanDay} />);
+      expect(getByText("Fajr/Suhoor")).toBeTruthy();
+      expect(getByText("Maghrib/Iftar")).toBeTruthy();
+      expect(queryByText("Fajr")).toBeNull();
+    });
+
+    it("leaves them out when Ramadan mode is off or the day is outside Ramadan", () => {
+      mockRamadanMode = false;
+      const off = render(<DayDetailPanel {...ramadanDay} />);
+      expect(off.queryByText("Fajr/Suhoor")).toBeNull();
+      expect(off.getByText("Fajr")).toBeTruthy();
+      off.unmount();
+
+      mockRamadanMode = true;
+      const outside = render(<DayDetailPanel {...ramadanDay} date={new Date(2027, 2, 9)} />);
+      expect(outside.queryByText("Fajr/Suhoor")).toBeNull();
+    });
   });
 });

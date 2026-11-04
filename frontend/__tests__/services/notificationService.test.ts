@@ -28,8 +28,6 @@ type NotificationServiceSetup = {
     readWindowOffset: jest.Mock;
     readFridayEnabled: jest.Mock;
     readRamadanMode: jest.Mock;
-    readSuhoorEnabled: jest.Mock;
-    readSuhoorOffset: jest.Mock;
     writeDayFingerprint: jest.Mock;
   };
 };
@@ -77,8 +75,6 @@ async function loadNotificationService(overrides?:
     readWindowOffset: jest.fn(async () => 15),
     readFridayEnabled: jest.fn(async () => true),
     readRamadanMode: jest.fn(async () => true),
-    readSuhoorEnabled: jest.fn(async () => true),
-    readSuhoorOffset: jest.fn(async () => 30),
     writeDayFingerprint: jest.fn(async () => {}),
   };
 
@@ -123,8 +119,6 @@ async function loadNotificationService(overrides?:
     readWindowOffset: mocks.readWindowOffset,
     readFridayEnabled: mocks.readFridayEnabled,
     readRamadanMode: mocks.readRamadanMode,
-    readSuhoorEnabled: mocks.readSuhoorEnabled,
-    readSuhoorOffset: mocks.readSuhoorOffset,
     writeDayFingerprint: mocks.writeDayFingerprint,
   }));
 
@@ -248,20 +242,18 @@ describe("NotificationService", () => {
         windowOffset: 15,
         fridayEnabled: true,
         ramadanMode: true,
-        suhoorEnabled: true,
-        suhoorOffset: 30,
       }),
     );
   });
 
-  it("rebuilds the schedule when only a Ramadan pref differs from the stored fingerprint", async () => {
+  it("rebuilds the schedule when only Ramadan mode differs from the stored fingerprint", async () => {
     const first = await loadNotificationService();
     await first.NotificationService.rescheduleAll("init");
     const fingerprint = first.mocks.writeDayFingerprint.mock.calls[0][0];
 
     const second = await loadNotificationService({
       readDayFingerprint: jest.fn(async () => fingerprint),
-      readSuhoorOffset: jest.fn(async () => 45),
+      readRamadanMode: jest.fn(async () => false),
     });
     await second.NotificationService.rescheduleAll("app-foreground");
 

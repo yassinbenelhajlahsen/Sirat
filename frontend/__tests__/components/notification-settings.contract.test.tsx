@@ -6,9 +6,6 @@ import { type PrayerKey, PRAYERS, type SoundMode, WINDOW_PRAYERS, WINDOW_OFFSET_
 
 const mockUseNotificationPreferences = jest.fn();
 const mockUseAdhanPreview = jest.fn();
-const mockUseRamadanMode = jest.fn();
-const setSuhoorEnabled = jest.fn(async () => {});
-const setSuhoorOffset = jest.fn(async () => {});
 const mockUseNotificationPanelAnimation = jest.fn();
 
 const setPrayerPreference = jest.fn(async () => {});
@@ -39,10 +36,6 @@ jest.mock("@expo/vector-icons", () => {
 jest.mock("@/hooks/useNotificationPreferences", () => ({
   useNotificationPreferences: (...args: unknown[]) =>
     mockUseNotificationPreferences(...args),
-}));
-
-jest.mock("@/hooks/useRamadanMode", () => ({
-  useRamadanMode: () => mockUseRamadanMode(),
 }));
 
 jest.mock("@/hooks/useAdhanPreview", () => ({
@@ -83,8 +76,6 @@ function configureHookMocks({
   prefs = buildPrefs(),
   soundMode = "default" as SoundMode,
   previewing = null as SoundMode | null,
-  ramadanMode = true,
-  suhoorEnabled = false,
 } = {}) {
   mockUseNotificationPreferences.mockReturnValue({
     loaded,
@@ -99,12 +90,7 @@ function configureHookMocks({
     setWindowPreference,
     setWindowOffset,
     setFridayEnabled,
-    suhoorEnabled,
-    suhoorOffset: 30,
-    setSuhoorEnabled,
-    setSuhoorOffset,
   });
-  mockUseRamadanMode.mockReturnValue({ ramadanMode, setRamadanMode: jest.fn() });
 
   mockUseAdhanPreview.mockReturnValue({
     previewing,
@@ -251,12 +237,12 @@ describe("NotificationSettings contract", () => {
     await waitFor(() => expect(setWindowOffset).toHaveBeenCalledWith(30));
   });
 
-  it("renders the Friday reminder switch on and wires it", async () => {
-    const { getByText, getByLabelText } = render(
+  it("renders the Friday reminder as a row under the prayer alerts and wires it", async () => {
+    const { queryByText, getByLabelText } = render(
       <NotificationSettings notifStatus="granted" />,
     );
 
-    expect(getByText("FRIDAY REMINDER")).toBeTruthy();
+    expect(queryByText("FRIDAY REMINDER")).toBeNull();
     const toggle = getByLabelText("Friday reminder");
     expect(toggle.props.value).toBe(true);
 
@@ -277,27 +263,15 @@ describe("NotificationSettings contract", () => {
     ).toBe(true);
   });
 
-  it("shows the suhoor reminder only while Ramadan mode is on", () => {
-    const on = render(<NotificationSettings notifStatus="granted" />);
-    expect(on.getByLabelText("Suhoor reminder")).toBeTruthy();
-    on.unmount();
-
-    configureHookMocks({ ramadanMode: false });
-    const off = render(<NotificationSettings notifStatus="granted" />);
-    expect(off.queryByLabelText("Suhoor reminder")).toBeNull();
+  it("explains the Friday reminder in a footer without a section header", () => {
+    const { getByText } = render(<NotificationSettings notifStatus="granted" />);
+    expect(
+      getByText("A notification before Dhuhr every Friday to remind you to read Surah Al-Kahf."),
+    ).toBeTruthy();
   });
 
-  it("toggles the suhoor reminder and reveals the offset picker once it is on", () => {
-    const { getByLabelText, queryByLabelText, rerender } = render(
-      <NotificationSettings notifStatus="granted" />,
-    );
-    expect(queryByLabelText("Minutes before Fajr")).toBeNull();
-
-    fireEvent(getByLabelText("Suhoor reminder"), "valueChange", true);
-    expect(setSuhoorEnabled).toHaveBeenCalledWith(true);
-
-    configureHookMocks({ suhoorEnabled: true });
-    rerender(<NotificationSettings notifStatus="granted" />);
-    expect(getByLabelText("Minutes before Fajr")).toBeTruthy();
+  it("has no suhoor reminder", () => {
+    const { queryByLabelText } = render(<NotificationSettings notifStatus="granted" />);
+    expect(queryByLabelText("Suhoor reminder")).toBeNull();
   });
 });

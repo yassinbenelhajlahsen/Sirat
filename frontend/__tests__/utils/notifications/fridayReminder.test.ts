@@ -7,8 +7,8 @@ import {
 const fridays = Array.from({ length: 52 }, (_, i) => new Date(2026, 0, 2 + 7 * i));
 
 describe("utils/notifications/fridayReminder", () => {
-  it("has at least 10 distinct messages, all about Al-Kahf and free of em dashes", () => {
-    expect(new Set(FRIDAY_MESSAGES).size).toBeGreaterThanOrEqual(10);
+  it("has at least 9 distinct messages, all about Al-Kahf and free of em dashes", () => {
+    expect(new Set(FRIDAY_MESSAGES).size).toBeGreaterThanOrEqual(9);
     FRIDAY_MESSAGES.forEach((m) => {
       expect(m).toMatch(/Al-Kahf/);
       expect(m).not.toMatch(/—/);

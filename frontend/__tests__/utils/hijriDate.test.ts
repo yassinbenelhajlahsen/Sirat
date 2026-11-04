@@ -1,4 +1,4 @@
-import { formatHijriDate, isFastingDay, maghribOn, ramadanDayAt } from "@/utils/hijriDate";
+import { formatHijriDate, isFastingDay, maghribOn, ramadanDayAt, setPretendRamadan, isPretendingRamadan } from "@/utils/hijriDate";
 
 // Nov 3 2026 is 23 Jumada I 1448 in Umm al-Qura, the calendar the holiday feed uses.
 const nov3 = (h: number, m = 0) => new Date(2026, 10, 3, h, m);
@@ -63,5 +63,20 @@ describe("ramadanDayAt", () => {
   it("follows the Gregorian day when Maghrib is unknown", () => {
     expect(ramadanDayAt(feb(7, 20))).toBeNull();
     expect(ramadanDayAt(feb(8, 3))).toBe(1);
+  });
+});
+
+describe("dev pretend-Ramadan switch", () => {
+  afterEach(() => setPretendRamadan(false));
+
+  it("treats every day as a fasting day and keeps the Hijri day number", () => {
+    const shawwal = new Date(2027, 2, 9, 10);
+    expect(isFastingDay(shawwal)).toBe(false);
+    expect(ramadanDayAt(shawwal)).toBeNull();
+
+    setPretendRamadan(true);
+    expect(isPretendingRamadan()).toBe(true);
+    expect(isFastingDay(shawwal)).toBe(true);
+    expect(ramadanDayAt(shawwal)).toBe(1);
   });
 });

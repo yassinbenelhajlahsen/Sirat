@@ -17,6 +17,15 @@ const HIJRI_PARTS = new Intl.DateTimeFormat("en-TN-u-ca-islamic-umalqura", {
 
 const RAMADAN_MONTH = 9;
 
+// Dev-only preview: a Settings switch makes every day count as Ramadan. In memory, so a reload clears it.
+let pretendRamadan = false;
+export function setPretendRamadan(on: boolean): void {
+  pretendRamadan = __DEV__ && on;
+}
+export function isPretendingRamadan(): boolean {
+  return pretendRamadan;
+}
+
 function hijriDayAndMonth(day: Date): { day: number; month: number } {
   const parts = HIJRI_PARTS.formatToParts(day);
   const num = (type: string) => Number(parts.find((p) => p.type === type)?.value);
@@ -29,6 +38,7 @@ function hijriDayAndMonth(day: Date): { day: number; month: number } {
  * is not a fasting day itself; use `ramadanDayAt` for "is it Ramadan right now".
  */
 export function isFastingDay(date: Date): boolean {
+  if (pretendRamadan) return true;
   const noon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
   return hijriDayAndMonth(noon).month === RAMADAN_MONTH;
 }
@@ -41,6 +51,7 @@ export function ramadanDayAt(at: Date, maghrib: Date | null = null): number | nu
   const day = new Date(at);
   if (maghrib && at >= maghrib) day.setDate(day.getDate() + 1);
   const h = hijriDayAndMonth(day);
+  if (pretendRamadan) return h.day;
   return h.month === RAMADAN_MONTH ? h.day : null;
 }
 
