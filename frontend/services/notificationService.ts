@@ -47,6 +47,10 @@ async function fetchTodayTimesWithEffective(): Promise<TodaySnapshot> {
   return { times, effective };
 }
 
+// Bump when scheduled notification content changes (e.g. sounds) so devices
+// cancel and rebuild pending notifications made by an older build.
+const SCHEDULE_CONTENT_VERSION = 2;
+
 function buildScheduleFingerprint(params: {
   dayKey: string;
   prefs: Awaited<ReturnType<typeof readPrefs>>;
@@ -80,7 +84,7 @@ function buildScheduleFingerprint(params: {
       : null,
   });
 
-  return `day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}_${JSON.stringify(windowPrefs)}_${windowOffset}`;
+  return `v${SCHEDULE_CONTENT_VERSION}_day_${dayKey}_${JSON.stringify(prefs)}_${cityDisplay}_${timesFingerprint}_${effectiveFingerprint}_${soundMode}_${JSON.stringify(windowPrefs)}_${windowOffset}`;
 }
 
 export const NotificationService = {
