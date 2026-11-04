@@ -29,7 +29,7 @@ export { NOTIF_PREFS_UPDATED_EVENT } from "../utils/notifications/constants";
 const WINDOW_FOOTER =
   "A heads up before a prayer's time runs out. Sent only if you have not logged it yet.";
 
-const FRIDAY_FOOTER = "Every Friday at 9:00 AM, a reminder to read Surah Al-Kahf.";
+const FRIDAY_FOOTER = "A reminder to read Surah Al-Kahf, sent on Friday morning.";
 
 type Props = {
   // From Settings.tsx: "granted" | "denied" | null

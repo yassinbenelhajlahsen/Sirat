@@ -21,6 +21,11 @@ import {
   type SoundMode,
 } from "./types";
 import {
+  FRIDAY_TITLE,
+  FRIDAY_URL,
+  fridayReminderFor,
+} from "@/utils/notifications/fridayReminder";
+import {
   WINDOW_PRAYERS,
   type WindowPrayerKey,
   type WindowPrefMap,
@@ -159,27 +164,19 @@ export async function scheduleForHorizon(params: {
       });
     }
 
-    // Friday reminder: 9:00 local, opens Surah Al-Kahf.
+    // Friday reminder: a varied message at a varied time late morning, opens Surah Al-Kahf.
     if (fridayEnabled && day.getDay() === 5) {
-      const fireDate = new Date(
-        day.getFullYear(),
-        day.getMonth(),
-        day.getDate(),
-        9,
-        0,
-        0,
-        0,
-      );
+      const { fireDate, body } = fridayReminderFor(day);
       if (fireDate.getTime() > now) {
         candidates.push({
           fireDate,
           seenKey: `friday_${fireDate.toISOString().slice(0, 16)}`,
           content: {
-            title: "Jumu'ah Mubarak",
-            body: "A good day to read Surah Al-Kahf.",
+            title: FRIDAY_TITLE,
+            body,
             sound: "default",
             priority: Notifications.AndroidNotificationPriority.HIGH,
-            data: { type: "friday", url: "/Quran?surah=18&ayah=1" },
+            data: { type: "friday", url: FRIDAY_URL },
           },
         });
       }

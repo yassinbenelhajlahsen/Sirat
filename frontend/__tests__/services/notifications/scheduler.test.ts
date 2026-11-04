@@ -7,6 +7,7 @@ import {
   scheduleForHorizon,
   yyyymmdd,
 } from "@/services/notifications/scheduler";
+import { FRIDAY_MESSAGES } from "@/utils/notifications/fridayReminder";
 import {
   STORAGE_SCHEDULE_IDS,
   STORAGE_SEEN_KEYS,
@@ -310,7 +311,7 @@ describe("notifications/scheduler", () => {
 
     afterEach(() => resetTestTime());
 
-    it("schedules one 09:00 local candidate per Friday and none on other days", async () => {
+    it("schedules one candidate per Friday between 9:00 and 11:00 local, none on other days", async () => {
       freezeTestTime(new Date(2026, 0, 1, 0, 0, 0));
 
       await scheduleForHorizon({ ...baseParams, days: 16 });
@@ -321,21 +322,34 @@ describe("notifications/scheduler", () => {
       expect(dates.map((d) => d.getDate())).toEqual([2, 9, 16]);
       dates.forEach((d) => {
         expect(d.getDay()).toBe(5);
-        expect(d.getHours()).toBe(9);
-        expect(d.getMinutes()).toBe(0);
+        expect([9, 10]).toContain(d.getHours());
       });
       expect(calls[0].content).toEqual(
         expect.objectContaining({
           title: "Jumu'ah Mubarak",
-          body: "A good day to read Surah Al-Kahf.",
           sound: "default",
           data: { type: "friday", url: "/Quran?surah=18&ayah=1" },
         }),
       );
+      expect(FRIDAY_MESSAGES).toContain(calls[0].content.body);
     });
 
-    it("skips a Friday whose 09:00 has already passed", async () => {
-      freezeTestTime(new Date(2026, 0, 2, 9, 30, 0));
+    it("uses the same time and text for a given Friday on every pass", async () => {
+      freezeTestTime(new Date(2026, 0, 1, 0, 0, 0));
+      await scheduleForHorizon({ ...baseParams, days: 3 });
+      const first = fridayCalls()[0];
+
+      jest.clearAllMocks();
+      await AsyncStorage.clear();
+      await scheduleForHorizon({ ...baseParams, days: 3 });
+      const second = fridayCalls()[0];
+
+      expect(second.trigger.date).toEqual(first.trigger.date);
+      expect(second.content.body).toBe(first.content.body);
+    });
+
+    it("skips a Friday whose reminder time has already passed", async () => {
+      freezeTestTime(new Date(2026, 0, 2, 11, 30, 0));
 
       await scheduleForHorizon({ ...baseParams, days: 1 });
 
