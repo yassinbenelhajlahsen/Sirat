@@ -13,7 +13,7 @@ import DeveloperSection from "@/components/settings/DeveloperSection";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
-import { useRamadanMode } from "@/hooks/useRamadanMode";
+import { useIsRamadanSeason, useRamadanMode } from "@/hooks/useRamadanMode";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { useAccountActions } from "@/hooks/useAccountActions";
 import { usePrayerSettingsState } from "@/hooks/usePrayerSettingsState";
@@ -65,6 +65,7 @@ export default function Settings() {
   const locationOn = useLocation && locationAllowed !== false;
 
   const { ramadanMode, setRamadanMode } = useRamadanMode();
+  const ramadanSeason = useIsRamadanSeason();
 
   const [methodModalVisible, setMethodModalVisible] = useState(false);
 
@@ -207,25 +208,27 @@ export default function Settings() {
           />
         </SettingsSection>
 
-        <SettingsSection>
-          <SettingsRow
-            first
-            icon="moon-outline"
-            title="Ramadan mode"
-            subtitle="Suhoor and iftar times during Ramadan"
-            trailing={
-              <Switch
-                accessibilityLabel="Ramadan mode"
-                value={ramadanMode}
-                onValueChange={(val) => {
-                  haptics("light");
-                  void setRamadanMode(val);
-                }}
-                trackColor={{ false: colors.grayDark, true: colors.accent }}
-              />
-            }
-          />
-        </SettingsSection>
+        {ramadanSeason ? (
+          <SettingsSection>
+            <SettingsRow
+              first
+              icon="moon-outline"
+              title="Ramadan mode"
+              subtitle="Suhoor and iftar times during Ramadan"
+              trailing={
+                <Switch
+                  accessibilityLabel="Ramadan mode"
+                  value={ramadanMode}
+                  onValueChange={(val) => {
+                    haptics("light");
+                    void setRamadanMode(val);
+                  }}
+                  trackColor={{ false: colors.grayDark, true: colors.accent }}
+                />
+              }
+            />
+          </SettingsSection>
+        ) : null}
 
         {/* About */}
         {__DEV__ ? <DeveloperSection /> : null}
