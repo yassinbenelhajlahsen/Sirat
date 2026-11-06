@@ -8,9 +8,24 @@ const MAX_GAP = 60;
 const MIN_WORDS = 4;
 const MAX_CITATIONS = 6;
 
-/** Quoted spans of 4+ words that open within 60 characters after an attribution word. */
+// Answers are English, so 4+ Arabic words in a row are almost always quoted verse or hadith text.
+const ARABIC_WORD = "[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+";
+const ARABIC_RUN = new RegExp(`${ARABIC_WORD}(?:[^\\S\\n]+${ARABIC_WORD}){3,}`, "g");
+
+const merge = (spans: [number, number][]): [number, number][] =>
+  spans
+    .sort((a, b) => a[0] - b[0])
+    .reduce<[number, number][]>((out, span) => {
+      const last = out[out.length - 1];
+      if (last && span[0] <= last[1]) last[1] = Math.max(last[1], span[1]);
+      else out.push([...span]);
+      return out;
+    }, []);
+
+/** Quoted spans of 4+ words that open within 60 characters after an attribution word, plus Arabic runs of 4+ words. */
 function religiousQuoteSpans(text: string): [number, number][] {
   const spans: [number, number][] = [];
+  for (const m of text.matchAll(ARABIC_RUN)) spans.push([m.index!, m.index! + m[0].length]);
   for (const m of text.matchAll(QUOTED)) {
     const inner = m[1] ?? m[2] ?? m[3] ?? m[4] ?? "";
     if (inner.trim().split(/\s+/).length < MIN_WORDS) continue;
@@ -19,7 +34,7 @@ function religiousQuoteSpans(text: string): [number, number][] {
     const attributed = [...window.matchAll(ATTRIBUTION)].some((a) => window.length - (a.index! + a[0].length) <= MAX_GAP);
     if (attributed) spans.push([start, start + m[0].length]);
   }
-  return spans;
+  return merge(spans);
 }
 
 /** True when the model quoted what looks like a verse or hadith instead of citing it by ID. */

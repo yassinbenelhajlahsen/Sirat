@@ -2,10 +2,9 @@ import type { NextFunction, Request, Response } from "express";
 import { getAuth } from "@clerk/express";
 import { ENV } from "../config/env.js";
 import type { AuthedRequest } from "../middleware/requireAuth.js";
+import { answerMessage } from "../services/chat/answer.js";
 import { decideAllowance } from "../services/chat/deviceCheck.js";
-import { findReligiousQuote, renderCitations, scrubInternals, stripReligiousQuotes } from "../services/chat/guards.js";
 import { getIdentityHash } from "../services/chat/identity.js";
-import { generateAnswer, moderate } from "../services/chat/openai.js";
 import type { HistoryItem } from "../services/chat/prompt.js";
 import {
   MONTHLY_ALLOWANCE,
@@ -111,34 +110,23 @@ export async function postChat(req: Request, res: Response) {
     claimedBy = hash;
     const quota = { allowance: usage.allowance, remaining: usage.allowance - usage.used, resetsAt: reset };
 
-    const refund = async (kind: "crisis" | "blocked") => {
+    const outcome = await answerMessage({ message, history, summary, safetyId: hash });
+    if (outcome.kind !== "answer") {
+      // Crisis and blocked replies don't count toward the month.
       await refundMessage(hash, month);
       claimedBy = null;
-      console.log("chat_reply", kind);
-      return res.json({ kind, ...quota, remaining: quota.remaining + 1 });
-    };
-
-    if ((await moderate(message)).selfHarm) return await refund("crisis");
-
-    const ask = () => generateAnswer({ message, history, summary, safetyId: hash });
-    let { answer, retrievedIds } = await ask();
-    if (findReligiousQuote(answer.answer)) {
-      ({ answer, retrievedIds } = await ask());
-      answer.answer = stripReligiousQuotes(answer.answer);
+      console.log("chat_reply", outcome.kind);
+      return res.json({ kind: outcome.kind, ...quota, remaining: quota.remaining + 1 });
     }
-    const text = scrubInternals(answer.answer);
 
-    if ((await moderate(text)).severe) return await refund("blocked");
-
-    const citations = await renderCitations(answer.citations, retrievedIds);
     claimedBy = null;
-    console.log("chat_reply", "answer", { citations: citations.length, ruling: answer.isRuling });
+    console.log("chat_reply", "answer", { citations: outcome.citations.length, ruling: outcome.isRuling });
     return res.json({
       kind: "answer",
-      answer: text,
-      citations,
-      scholarLink: answer.isRuling ? ENV.CHAT_SCHOLAR_LINK : null,
-      summary: answer.summary,
+      answer: outcome.answer,
+      citations: outcome.citations,
+      scholarLink: outcome.scholarLink,
+      summary: outcome.summary,
       ...quota,
     });
   } catch (err) {

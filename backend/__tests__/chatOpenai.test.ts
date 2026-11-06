@@ -155,6 +155,34 @@ describe("OpenAI chat client", () => {
       expect((err as any).cause).toBeUndefined();
     });
 
+    it("logs why the model output was unusable, without any text", async () => {
+      (mockFetch as any).mockResolvedValueOnce(ok({
+        status: "incomplete",
+        incomplete_details: { reason: "max_output_tokens" },
+        output: [{ type: "message", content: [{ type: "output_text", text: "{\"answer\": \"USER-SECRET" }] }],
+        usage: { input_tokens: 1, output_tokens: 900 },
+      }));
+      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const { generateAnswer } = await load();
+
+      await expect(generateAnswer(INPUT)).rejects.toThrow("chat_model_failed");
+
+      expect(errorSpy).toHaveBeenCalledWith("chat_model_bad_output", "incomplete", "max_output_tokens");
+      expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("USER-SECRET");
+      errorSpy.mockRestore();
+    });
+
+    it("logs a timeout or network failure by error name", async () => {
+      (mockFetch as any).mockRejectedValueOnce(Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" }));
+      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const { generateAnswer } = await load();
+
+      await expect(generateAnswer(INPUT)).rejects.toThrow("chat_model_failed");
+
+      expect(errorSpy).toHaveBeenCalledWith("chat_openai_unreachable", "/responses", "TimeoutError");
+      errorSpy.mockRestore();
+    });
+
     it("throws chat_model_failed when the network fails", async () => {
       (mockFetch as any).mockRejectedValueOnce(new TypeError("fetch failed"));
       const { generateAnswer } = await load();

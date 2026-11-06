@@ -16,7 +16,8 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "import:quran": "tsx scripts/importQuran.ts",
-    "import:hadith": "tsx scripts/importHadeethEnc.ts"
+    "import:hadith": "tsx scripts/importHadeethEnc.ts",
+    "chat:eval": "tsx scripts/chatEval.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.30",

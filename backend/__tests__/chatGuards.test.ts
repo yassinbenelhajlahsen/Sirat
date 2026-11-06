@@ -50,6 +50,31 @@ describe("chat guards", () => {
       expect(findReligiousQuote('The Quran uses the word "taqwa" often')).toBe(false);
     });
 
+    it("treats a run of 4 or more Arabic words as quoted scripture and strips it", async () => {
+      const { findReligiousQuote, stripReligiousQuotes } = await load();
+      const text = "Ayat al-Kursi, in Arabic:\n\n\u0627\u0644\u0644\u0651\u064e\u0647\u064f \u0644\u064e\u0627 \u0625\u0650\u0644\u064e\u0670\u0647\u064e \u0625\u0650\u0644\u0651\u064e\u0627 \u0647\u064f\u0648\u064e \u0627\u0644\u0652\u062d\u064e\u064a\u0651\u064f \u06da\n\nIt is recited after prayers.";
+
+      expect(findReligiousQuote(text)).toBe(true);
+      const stripped = stripReligiousQuotes(text);
+      expect(stripped).not.toMatch(/[\u0600-\u06FF]{2,}/);
+      expect(stripped).toContain("(see the sources below)");
+      expect(stripped).toContain("It is recited after prayers.");
+    });
+
+    it("allows a short Arabic phrase and the salutation mark", async () => {
+      const { findReligiousQuote } = await load();
+
+      expect(findReligiousQuote("Say \u0625\u0646 \u0634\u0627\u0621 \u0627\u0644\u0644\u0647 when you plan something.")).toBe(false);
+      expect(findReligiousQuote("The Prophet \ufdfa taught kindness.")).toBe(false);
+    });
+
+    it("strips an Arabic quote inside an attributed English quote once", async () => {
+      const { stripReligiousQuotes } = await load();
+      const text = 'Allah says: "\u0625\u0650\u0646\u0651\u064e \u0645\u064e\u0639\u064e \u0627\u0644\u0652\u0639\u064f\u0633\u0652\u0631\u0650 \u064a\u064f\u0633\u0652\u0631\u064b\u0627" so be patient.';
+
+      expect(stripReligiousQuotes(text)).toBe("Allah says: (see the sources below) so be patient.");
+    });
+
     it("ignores a quote more than 60 characters after the attribution", async () => {
       const { findReligiousQuote } = await load();
       const gap = "x".repeat(70);

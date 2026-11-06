@@ -18,7 +18,12 @@ type OutputItem = {
   arguments?: string;
   content?: { type?: string; text?: string }[];
 };
-type ResponsesReply = { output?: OutputItem[]; usage?: { input_tokens?: number; output_tokens?: number } };
+type ResponsesReply = {
+  status?: string;
+  incomplete_details?: { reason?: string } | null;
+  output?: OutputItem[];
+  usage?: { input_tokens?: number; output_tokens?: number };
+};
 type ModerationReply = { results?: { categories?: Record<string, boolean> }[] };
 
 // Fixed message on purpose: nothing from the request or OpenAI's reply rides along to a log.
@@ -33,7 +38,8 @@ async function post<T>(path: string, body: object): Promise<T> {
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-  } catch {
+  } catch (err) {
+    console.error("chat_openai_unreachable", path, (err as Error)?.name);
     throw failed();
   }
   if (!res.ok) {
@@ -169,7 +175,14 @@ export async function generateAnswer(input: {
     const output = Array.isArray(data?.output) ? data.output : [];
     const calls = output.filter((o) => o?.type === "function_call");
 
-    if (!calls.length || !toolsAllowed) return { answer: parseAnswer(output), retrievedIds, usage };
+    if (!calls.length || !toolsAllowed) {
+      try {
+        return { answer: parseAnswer(output), retrievedIds, usage };
+      } catch (err) {
+        console.error("chat_model_bad_output", data?.status, data?.incomplete_details?.reason);
+        throw err;
+      }
+    }
 
     // Stateless requests must send back every output item, reasoning included.
     conversation.push(...output);
