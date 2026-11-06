@@ -19,7 +19,7 @@ router.use(clerkMiddleware());
 
 /**
  * POST /api/reports
- * Body: { kind: "dua", input, output: { duaId } }
+ * Body: { kind: "dua", input, output: { duaId } } or { kind: "chat", input, output: { answer, citationIds } }
  * Auth optional. Saved only, never emailed. Returns 201 { id }.
  */
 router.post("/", reportLimiter, postReport);

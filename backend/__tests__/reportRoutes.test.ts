@@ -57,7 +57,7 @@ describe("Report Routes Integration", () => {
   });
 
   it.each([
-    ["unknown kind", { kind: "chat", input: "hi", output: { duaId: 1 } }],
+    ["unknown kind", { kind: "nope", input: "hi", output: { duaId: 1 } }],
     ["prototype key as kind", { kind: "constructor", input: "hi", output: { duaId: 1 } }],
     ["missing input", { kind: "dua", output: { duaId: 1 } }],
     ["whitespace input", { kind: "dua", input: "  ", output: { duaId: 1 } }],
@@ -68,6 +68,38 @@ describe("Report Routes Integration", () => {
     ["fractional duaId", { kind: "dua", input: "hi", output: { duaId: 1.5 } }],
   ])("rejects %s with 400", async (_name, body) => {
     await post(body).expect(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("saves a chat report with only the answer and citation ids", async () => {
+    const output = { answer: "  Interest is not permitted.\n", citationIds: ["q:2:275", "h:2962"], citations: [{ text: "x" }], extra: 1 };
+
+    await post({ kind: "chat", input: " Is interest allowed? ", output }).expect(201);
+
+    expect(mockCreate).toHaveBeenCalledWith({
+      kind: "chat",
+      input: "Is interest allowed?",
+      output: { answer: "  Interest is not permitted.\n", citationIds: ["q:2:275", "h:2962"] },
+      userId: "user_abc",
+      appVersion: "1.4.0",
+    });
+  });
+
+  it("accepts a chat answer with no citations", async () => {
+    await post({ kind: "chat", input: "hi", output: { answer: "a", citationIds: [] } }).expect(201);
+  });
+
+  it.each([
+    ["a 4,001-char answer", { answer: "a".repeat(4001), citationIds: [] }],
+    ["an empty answer", { answer: "", citationIds: [] }],
+    ["a non-string answer", { answer: 5, citationIds: [] }],
+    ["a malformed citation id", { answer: "a", citationIds: ["x:1"] }],
+    ["a four-digit surah", { answer: "a", citationIds: ["q:1000:1"] }],
+    ["7 citation ids", { answer: "a", citationIds: ["h:1", "h:2", "h:3", "h:4", "h:5", "h:6", "h:7"] }],
+    ["a non-array citationIds", { answer: "a", citationIds: "q:2:275" }],
+    ["a non-string citation id", { answer: "a", citationIds: [275] }],
+  ])("rejects a chat report with %s", async (_name, output) => {
+    await post({ kind: "chat", input: "hi", output }).expect(400);
     expect(mockCreate).not.toHaveBeenCalled();
   });
 

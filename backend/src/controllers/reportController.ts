@@ -11,8 +11,19 @@ function isPlainObject(v: unknown): v is Output {
 }
 
 // One entry per reportable kind; each keeps only the fields it knows, so the client can't store arbitrary JSON.
+const MAX_CHAT_ANSWER = 4000;
+const MAX_CHAT_CITATIONS = 6;
+const CITATION_ID = /^(q:\d{1,3}:\d{1,3}|h:\d+)$/;
+
 const OUTPUT_SHAPES: Record<string, (output: Output) => Output | null> = {
   dua: ({ duaId }) => (Number.isInteger(duaId) && (duaId as number) > 0 ? { duaId } : null),
+  // The answer is stored exactly as shown, so a reviewer sees what the user saw.
+  chat: ({ answer, citationIds }) =>
+    typeof answer === "string" && answer.length >= 1 && answer.length <= MAX_CHAT_ANSWER &&
+    Array.isArray(citationIds) && citationIds.length <= MAX_CHAT_CITATIONS &&
+    citationIds.every((id) => typeof id === "string" && CITATION_ID.test(id))
+      ? { answer, citationIds }
+      : null,
 };
 
 function validate(body: unknown) {
