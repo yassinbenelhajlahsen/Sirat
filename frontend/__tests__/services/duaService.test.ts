@@ -39,7 +39,7 @@ describe("services/duaService", () => {
   it("returns a chosen crisis dua with the crisis notice", async () => {
     const selfHarm = requestDua("I want to kill myself");
     const abuse = requestDua("my husband hits me");
-    await jest.advanceTimersByTimeAsync(1200);
+    await jest.advanceTimersByTimeAsync(300);
 
     expect(await selfHarm).toMatchObject({ notice: "crisis", dua: { id: 39 } });
     expect(await abuse).toMatchObject({ notice: "crisis", dua: { id: 114 } });
@@ -83,7 +83,7 @@ describe("services/duaService", () => {
     await Promise.resolve();
     expect(settled).toBe(false);
 
-    await jest.advanceTimersByTimeAsync(1199);
+    await jest.advanceTimersByTimeAsync(299);
     expect(settled).toBe(false);
 
     await jest.advanceTimersByTimeAsync(1);

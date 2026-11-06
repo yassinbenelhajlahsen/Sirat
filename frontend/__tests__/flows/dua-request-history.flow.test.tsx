@@ -49,7 +49,7 @@ describe("flows/dua-request-history", () => {
     expect(result.current.selectedDua).toBeNull();
 
     await act(async () => {
-      await jest.advanceTimersByTimeAsync(1199);
+      await jest.advanceTimersByTimeAsync(299);
     });
     expect(result.current.duaLoading).toBe(true);
 
@@ -79,7 +79,7 @@ describe("flows/dua-request-history", () => {
       submitPromise = result.current.submitDua("I want to kill myself");
     });
     await act(async () => {
-      await jest.advanceTimersByTimeAsync(1200);
+      await jest.advanceTimersByTimeAsync(300);
       await submitPromise;
     });
 

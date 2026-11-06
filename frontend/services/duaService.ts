@@ -28,7 +28,7 @@ const LOCAL_DUAS = LOCAL_DUA_DATA.duas;
  * Local matching is instant (<1ms), but feels abrupt
  * Add a small delay to make it feel like "thinking"
  */
-const SIMULATED_DELAY_MS = 1200;
+const SIMULATED_DELAY_MS = 300;
 
 interface LocalDua extends Dua {
   tags: string[];
