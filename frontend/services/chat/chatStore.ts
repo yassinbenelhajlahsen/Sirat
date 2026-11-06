@@ -43,7 +43,15 @@ export async function saveChat(state: ChatState): Promise<void> {
   } catch {}
 }
 
+// Bumped by every clear, so a reply that lands after sign-out can tell its conversation is gone.
+let clearGeneration = 0;
+
+export function chatGeneration(): number {
+  return clearGeneration;
+}
+
 export async function clearChat(): Promise<void> {
+  clearGeneration += 1;
   try {
     await AsyncStorage.multiRemove([HISTORY_KEY, CONSENT_KEY]);
   } catch {}

@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
+  chatGeneration,
   clearChat,
   hasConsented,
   loadChat,
@@ -57,6 +58,14 @@ it("clearChat empties the history and the consent", async () => {
   await clearChat();
   await expect(loadChat()).resolves.toEqual({ messages: [], summary: null });
   await expect(hasConsented()).resolves.toBe(false);
+});
+
+it("chatGeneration moves on every clearChat and holds still otherwise", async () => {
+  const before = chatGeneration();
+  await saveChat({ messages: [userMessage(1)], summary: null });
+  expect(chatGeneration()).toBe(before);
+  await clearChat();
+  expect(chatGeneration()).toBe(before + 1);
 });
 
 it("remembers consent until it is cleared", async () => {

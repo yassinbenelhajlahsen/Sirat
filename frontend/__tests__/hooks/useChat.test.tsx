@@ -32,6 +32,7 @@ jest.mock("expo-router", () => {
 
 import { useChat } from "@/hooks/useChat";
 import { useChatStatus } from "@/hooks/useChatStatus";
+import { clearChat, loadChat } from "@/services/chat/chatStore";
 
 const RESETS_AT = "2026-12-01T00:00:00.000Z";
 const ANSWER = {
@@ -123,6 +124,9 @@ describe("hooks/useChat", () => {
     const [failed] = result.current.messages;
     expect(result.current.messages).toHaveLength(1);
     expect(failed.status).toBe("failed");
+    expect((await storedChat()).messages).toEqual([
+      expect.objectContaining({ id: failed.id, text: "Is fasting required?", status: "failed" }),
+    ]);
 
     await act(async () => {
       await result.current.retry(failed.id);
@@ -133,6 +137,72 @@ describe("hooks/useChat", () => {
     expect(result.current.messages[0].status).toBeUndefined();
     expect(result.current.messages[1].role).toBe("assistant");
     expect(mockSendChat.mock.calls[1][0].message).toBe("Is fasting required?");
+  });
+
+  it("clamps stored history to the server's limits, so one long answer cannot fail later requests", async () => {
+    await AsyncStorage.setItem(
+      "chat_history_v1",
+      JSON.stringify({
+        messages: [
+          { id: "q", role: "user", text: "q".repeat(1200), createdAt: 1 },
+          { id: "a", role: "assistant", text: "a".repeat(4500), createdAt: 2 },
+        ],
+        summary: null,
+      }),
+    );
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+
+    await act(async () => {
+      await result.current.send("next");
+    });
+
+    const { history } = mockSendChat.mock.calls[0][0];
+    expect(history[0].text).toHaveLength(1000);
+    expect(history[1].text).toHaveLength(4000);
+  });
+
+  it("a reply that lands after sign-out is not written back to storage", async () => {
+    let finish!: (value: unknown) => void;
+    mockSendChat.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    const { result } = await mountChat();
+
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.send("before sign-out");
+    });
+    await act(async () => {
+      await clearChat();
+    });
+    await act(async () => {
+      finish(ANSWER);
+      await pending;
+    });
+
+    expect(await AsyncStorage.getItem("chat_history_v1")).toBeNull();
+    await expect(loadChat()).resolves.toEqual({ messages: [], summary: null });
+  });
+
+  it("a send after sign-out starts a fresh conversation", async () => {
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+    await act(async () => {
+      await result.current.send("old question");
+    });
+    await act(async () => {
+      await clearChat();
+    });
+
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    await act(async () => {
+      await result.current.send("new question");
+    });
+
+    expect(mockSendChat.mock.calls[1][0]).toMatchObject({ history: [], summary: null });
+    expect((await storedChat()).messages.map((m: { text: string }) => m.text)).toEqual([
+      "new question",
+      "Pray on time.",
+    ]);
   });
 
   it("a failed send never puts the question text in diagnostics", async () => {
@@ -231,16 +301,28 @@ describe("hooks/useChat", () => {
     expect(mockReportChatAnswer).toHaveBeenCalledWith("How?", "Pray on time.", ["q:2:255", "h:7"]);
   });
 
-  it("seeds the allowance from the status on mount, and stays empty when the status fails", async () => {
+  it("seeds the allowance from the status on mount", async () => {
     const { result } = await mountChat();
     expect(result.current.allowance).toBe(30);
     expect(result.current.resetsAt).toBe(RESETS_AT);
+  });
 
-    mockGetChatStatus.mockRejectedValueOnce(new Error("Chat is unavailable"));
-    const failed = renderHook(() => useChat());
-    await act(async () => {});
-    expect(failed.result.current.allowance).toBeNull();
-    expect(failed.result.current.remaining).toBeNull();
+  it("a status request that fails late does not overwrite the allowance from a newer reply", async () => {
+    let failStatus!: (reason: unknown) => void;
+    mockGetChatStatus.mockReturnValueOnce(new Promise((_, reject) => { failStatus = reject; }));
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = renderHook(() => useChat());
+
+    await act(async () => {
+      await result.current.send("hello");
+    });
+    expect(result.current).toMatchObject({ allowance: 30, remaining: 29 });
+
+    await act(async () => {
+      failStatus(new Error("Chat is unavailable"));
+    });
+    expect(mockGetChatStatus).toHaveBeenCalledTimes(1);
+    expect(result.current).toMatchObject({ allowance: 30, remaining: 29 });
   });
 });
 
@@ -259,18 +341,26 @@ describe("hooks/useChatStatus", () => {
     expect(result.current.remaining).toBe(30);
   });
 
-  it("is not visible when the server has chat switched off", async () => {
-    mockGetChatStatus.mockResolvedValueOnce({ enabled: false, allowance: null, remaining: null, resetsAt: RESETS_AT });
+  it("is not visible once the server has chat switched off", async () => {
     const { result } = renderHook(() => useChatStatus());
-    await act(async () => {});
-    expect(result.current.visible).toBe(false);
+    await waitFor(() => expect(result.current).toEqual({ visible: true, remaining: 30 }));
+
+    mockGetChatStatus.mockResolvedValueOnce({ enabled: false, allowance: null, remaining: null, resetsAt: RESETS_AT });
+    await act(async () => {
+      mockFocusEffects[mockFocusEffects.length - 1]();
+    });
+    await waitFor(() => expect(result.current.visible).toBe(false));
   });
 
-  it("is not visible and has no remaining count when the status request fails", async () => {
-    mockGetChatStatus.mockRejectedValueOnce(new Error("Chat is unavailable"));
+  it("is not visible and has no remaining count once a refocus status request fails", async () => {
     const { result } = renderHook(() => useChatStatus());
-    await act(async () => {});
-    expect(result.current).toEqual({ visible: false, remaining: null });
+    await waitFor(() => expect(result.current).toEqual({ visible: true, remaining: 30 }));
+
+    mockGetChatStatus.mockRejectedValueOnce(new Error("Chat is unavailable"));
+    await act(async () => {
+      mockFocusEffects[mockFocusEffects.length - 1]();
+    });
+    await waitFor(() => expect(result.current).toEqual({ visible: false, remaining: null }));
   });
 
   it("refetches when the screen regains focus", async () => {

@@ -1,24 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getChatStatus, sendChat, type ChatReply, type ChatTurn } from "@/services/chat/chatApi";
-import { loadChat, saveChat, type ChatMessage, type ChatState } from "@/services/chat/chatStore";
+import { chatGeneration, loadChat, saveChat, type ChatMessage, type ChatState } from "@/services/chat/chatStore";
 import { getDeviceToken } from "@/services/chat/deviceCheck";
 import { reportChatAnswer } from "@/services/reports";
 
 const MAX_QUESTION = 1000;
+const MAX_ANSWER = 4000;
 const HISTORY_LIMIT = 20;
+
+type LiveState = ChatState & { generation: number };
 
 function newId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
 }
 
 // Only complete exchanges go back to the model: a failed question or a notice has no answer to pair with.
+// Clamped to the server's limits, since one over-long stored answer would make every later request fail with 400.
 function historyBefore(messages: ChatMessage[], index: number): ChatTurn[] {
   return messages
     .slice(0, index)
     .filter((m) => m.status !== "failed" && !m.notice)
     .slice(-HISTORY_LIMIT)
-    .map(({ role, text }) => ({ role, text }));
+    .map(({ role, text }) => ({ role, text: text.slice(0, role === "user" ? MAX_QUESTION : MAX_ANSWER) }));
 }
 
 function replyMessage(reply: ChatReply): ChatMessage {
@@ -30,7 +34,7 @@ function replyMessage(reply: ChatReply): ChatMessage {
 }
 
 export function useChat() {
-  const chatRef = useRef<ChatState>({ messages: [], summary: null });
+  const chatRef = useRef<LiveState>({ messages: [], summary: null, generation: chatGeneration() });
   const loaded = useRef<Promise<void>>(Promise.resolve());
   const busy = useRef(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -48,48 +52,68 @@ export function useChat() {
     [],
   );
 
+  // After a clear (sign-out) the in-memory copy predates it: drop it so nothing old is written back.
+  const liveState = useCallback(() => {
+    const generation = chatGeneration();
+    if (chatRef.current.generation !== generation) {
+      chatRef.current = { messages: [], summary: null, generation };
+      setMessages([]);
+    }
+    return chatRef.current;
+  }, []);
+
   const write = useCallback((next: ChatMessage[], summary = chatRef.current.summary) => {
-    chatRef.current = { messages: next, summary };
+    chatRef.current = { ...chatRef.current, messages: next, summary };
     setMessages(next);
-    void saveChat(chatRef.current);
+    void saveChat({ messages: next, summary });
   }, []);
 
   useEffect(() => {
+    const generation = chatGeneration();
     loaded.current = loadChat().then((state) => {
-      chatRef.current = state;
+      chatRef.current = { ...state, generation };
       setMessages(state.messages);
     });
     getChatStatus().then(applyAllowance, () => {});
   }, [applyAllowance]);
 
   const deliver = useCallback(
-    async (id: string, text: string, history: ChatTurn[]) => {
+    async (generation: number, id: string, text: string, history: ChatTurn[]) => {
+      let reply: ChatReply;
       try {
-        const reply = await sendChat({
+        reply = await sendChat({
           message: text,
           history,
           summary: chatRef.current.summary,
           deviceToken: await getDeviceToken(),
         });
-        applyAllowance(reply);
-        const next = [...chatRef.current.messages, replyMessage(reply)];
-        if (reply.kind === "answer") write(next, reply.summary);
-        else write(next);
       } catch {
-        write(chatRef.current.messages.map((m): ChatMessage => (m.id === id ? { ...m, status: "failed" } : m)));
+        if (chatGeneration() === generation) {
+          write(chatRef.current.messages.map((m): ChatMessage => (m.id === id ? { ...m, status: "failed" } : m)));
+        }
+        return;
       }
+      // A sign-out cleared the conversation while this was in flight: its reply belongs to nothing now.
+      if (chatGeneration() !== generation) return;
+      applyAllowance(reply);
+      const next = [...chatRef.current.messages, replyMessage(reply)];
+      if (reply.kind === "answer") write(next, reply.summary);
+      else write(next);
     },
     [applyAllowance, write],
   );
 
-  // Set busy synchronously so a second tap before the first await lands is refused.
-  const runExclusive = useCallback(async (task: () => Promise<void>) => {
+  // Set busy synchronously so a second tap before the first await lands is refused. The generation is read
+  // here, at the tap, so a sign-out that lands while the send waits for storage cancels it.
+  const runExclusive = useCallback(async (task: (generation: number) => Promise<void>) => {
     if (busy.current) return;
+    const generation = chatGeneration();
     busy.current = true;
     setSending(true);
     try {
       await loaded.current;
-      await task();
+      if (chatGeneration() !== generation) return;
+      await task(generation);
     } finally {
       busy.current = false;
       setSending(false);
@@ -100,44 +124,47 @@ export function useChat() {
     async (text: string) => {
       const question = text.trim().slice(0, MAX_QUESTION);
       if (!question) return;
-      await runExclusive(async () => {
-        const current = chatRef.current.messages;
+      await runExclusive(async (generation) => {
+        const { messages: current } = liveState();
         const message: ChatMessage = { id: newId(), role: "user", text: question, createdAt: Date.now() };
         const history = historyBefore(current, current.length);
         write([...current, message]);
-        await deliver(message.id, question, history);
+        await deliver(generation, message.id, question, history);
       });
     },
-    [deliver, runExclusive, write],
+    [deliver, liveState, runExclusive, write],
   );
 
   const retry = useCallback(
     async (id: string) => {
-      await runExclusive(async () => {
-        const current = chatRef.current.messages;
+      await runExclusive(async (generation) => {
+        const current = liveState().messages;
         const index = current.findIndex((m) => m.id === id && m.status === "failed");
         if (index < 0) return;
         const { status: _cleared, ...rest } = current[index];
         const history = historyBefore(current, index);
         write(current.map((m, i) => (i === index ? rest : m)));
-        await deliver(id, rest.text, history);
+        await deliver(generation, id, rest.text, history);
       });
     },
-    [deliver, runExclusive, write],
+    [deliver, liveState, runExclusive, write],
   );
 
-  const report = useCallback(async (id: string) => {
-    const current = chatRef.current.messages;
-    const index = current.findIndex((m) => m.id === id);
-    const answer = current[index];
-    if (!answer || answer.role !== "assistant" || answer.notice) return;
-    const question = current.slice(0, index).reverse().find((m) => m.role === "user");
-    if (!question) return;
-    const citationIds = (answer.citations ?? []).map((c) =>
-      c.kind === "quran" ? `q:${c.surah}:${c.ayah}` : `h:${c.id}`,
-    );
-    await reportChatAnswer(question.text.slice(0, MAX_QUESTION), answer.text, citationIds);
-  }, []);
+  const report = useCallback(
+    async (id: string) => {
+      const current = liveState().messages;
+      const index = current.findIndex((m) => m.id === id);
+      const answer = current[index];
+      if (!answer || answer.role !== "assistant" || answer.notice) return;
+      const question = current.slice(0, index).reverse().find((m) => m.role === "user");
+      if (!question) return;
+      const citationIds = (answer.citations ?? []).map((c) =>
+        c.kind === "quran" ? `q:${c.surah}:${c.ayah}` : `h:${c.id}`,
+      );
+      await reportChatAnswer(question.text.slice(0, MAX_QUESTION), answer.text, citationIds);
+    },
+    [liveState],
+  );
 
   return { messages, remaining, allowance, resetsAt, sending, send, retry, report };
 }
