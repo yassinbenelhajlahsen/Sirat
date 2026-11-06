@@ -43,6 +43,29 @@ describe("deviceCheck wrapper", () => {
     expect(nativeMock.generateToken).not.toHaveBeenCalled();
   });
 
+  it("gives up on a token that takes longer than five seconds, so the send goes without one", async () => {
+    jest.useFakeTimers();
+    try {
+      nativeMock.generateToken.mockReturnValue(new Promise(() => {}));
+      const pending = getDeviceToken();
+      jest.advanceTimersByTime(4999);
+      jest.advanceTimersByTime(1);
+      await expect(pending).resolves.toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("clears its timer once the token arrives", async () => {
+    jest.useFakeTimers();
+    try {
+      await expect(getDeviceToken()).resolves.toBe("dG9rZW4=");
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("resolves the token from the native module", async () => {
     expect(hasDeviceCheckModule()).toBe(true);
     await expect(getDeviceToken()).resolves.toBe("dG9rZW4=");

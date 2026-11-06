@@ -26,7 +26,7 @@ let mockChatStatus = { visible: true, remaining: 12 as number | null };
 jest.mock("@/hooks/useChatStatus", () => ({
   useChatStatus: () => mockChatStatus,
 }));
-// The real hook runs; only the data layer is stubbed.
+// usePrayerDay runs for real; only the prayer-times data services are stubbed.
 jest.mock("@/services/prayer-times/place", () => ({
   resolvePlace: async () => ({ coords: undefined, label: "Tunis" }),
 }));

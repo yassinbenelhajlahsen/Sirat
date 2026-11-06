@@ -151,11 +151,11 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/copy-toast.test.tsx` — toast sits near the bottom by default and at the top with `placement="top"` (feedback thank-you)
   - `components/settings/FeedbackSheet.test.tsx` — Send disabled while blank, email prefilled when signed in, bug-only disclosure line, send calls `onSent`, failure keeps the text and shows the error
 - `in-app chat testing`
-  - `services/chatDeviceCheck.test.ts` — DeviceCheck wrapper: no token when the native module is absent, unsupported, or generation rejects; token passed through
+  - `services/chatDeviceCheck.test.ts` — DeviceCheck wrapper: no token when the native module is absent, unsupported, or generation rejects or takes over five seconds; token passed through
   - `services/chatStore.test.ts` — device-local chat store: round-trip, 500-message cap, unreadable storage reads as empty, `clearChat` empties history and consent, storage errors swallowed silently
-  - `hooks/useChat.test.tsx` — send/retry/report: history capped at 20 and never includes failed messages, failed send marks the question and retry resends it in place, a failed send never puts question text in diagnostics, crisis/blocked/limit notices, one send at a time, 1000-char cap, report citation ids; `useChatStatus` visibility (module absent, switched off, error) and refetch on focus
+  - `hooks/useChat.test.tsx` — send/retry/report: history capped at 20 and never includes failed messages, failed send marks the question and retry resends it in place (its answer lands after it), a reopened chat waits for a reply in flight, a failed send never puts question text in diagnostics, crisis/blocked/limit notices, one send at a time, 1000-char cap, report citation ids (unknown kinds left out); `useChatStatus` visibility (module absent, switched off, error) and refetch on focus
   - `hooks/useAccountActions.test.tsx` — sign-out and account deletion clear the chat before the Clerk session ends
-  - `screens/Chat.test.tsx` — Ask modal: signed-out sign-in button, consent gate, answer with verbatim disclaimer and Quran citation (back then push to the verse), scholar link, crisis/blocked/limit notices, failed-message retry, 1000-char composer counter, messages-left header item, report toast and failure text
+  - `screens/Chat.test.tsx` — Ask modal: signed-out sign-in button, consent gate, answer with verbatim disclaimer and Quran citation (back then push to the verse), scholar link, crisis/blocked/limit notices, failed-message retry, 1000-char composer counter, messages-left header item, limit line above the composer, writing row while pending, report toast and failure text
 - `settings liquid-glass redesign testing`
   - `utils/appLinks.test.ts` — About-row link/share/version helpers
   - `services/ratingPrompt.test.ts` — Apple rating prompt on the 25th visit, once per app version
@@ -208,7 +208,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/Tracker.test.tsx` — Tracker screen contract: Overview section + Habits section, add-habit flow
   - `screens/home-tracker-affordance.test.tsx` — Home streak chip + "View tracker & habits" affordance
   - `screens/home-sign-in-card.test.tsx` — Home sign-in card clears on sign-in and stays quiet on sign-out
-  - `screens/home-ask-row.test.tsx` — Home "Ask" row: hidden when chat is not visible, "N left" when signed in, "Sign in to ask" when signed out, pushes `/Chat`, sits between Tracker and Dua
+  - `screens/home-ask-row.test.tsx` — Home "Ask" row: hidden when chat is not visible, "N left" when signed in, "Sign in to ask" when signed out, pushes `/Chat` when signed in and `/SignIn` (next Chat) when signed out, no sign-in text until auth loads, sits between Tracker and Dua
 - `weekday habits + Tracker check-off (Phase 3.1) testing`
   - `utils/habitFrequency.test.ts` — `frequencyLabel` (weekday list), `isHabitDueOnDate`, `WEEKDAY_SHORT`
   - `services/tracking/habits.migration.test.ts` — legacy `{weekly, timesPerWeek}` habits migrate to Daily on read
@@ -218,7 +218,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useAuthState.test.tsx` — Clerk session state subscription (isLoaded, isSignedIn, userId, email)
   - `hooks/useAccountActions.test.tsx` — sign-out and account-delete actions
   - `components/accountSection.test.tsx` — account UI section rendering and action callbacks
-  - `screens/signIn.test.tsx` — SignIn screen: renders both provider buttons, Google/Apple SSO flow invocation, session activation
+  - `screens/signIn.test.tsx` — SignIn screen: renders both provider buttons, Google/Apple SSO flow invocation, session activation, back once signed in, or replace with the chat when opened for it
   - `screens/settings.account.test.tsx` — Settings account section integration + sign-out/delete confirmation flows
 - `cloud sync engine (Phase 3) testing`
   - `services/sync/replaceSetters.test.ts` — `replacePrayerLog` / `replaceHabitLog` / `replaceHabits` internal setters
