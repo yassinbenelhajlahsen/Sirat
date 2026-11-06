@@ -17,6 +17,8 @@ type CopyToastProps = {
   message?: string;
   onHide: () => void;
   placement?: "top" | "bottom";
+  /** Extra space above a top toast, for screens with a transparent native header over the content. */
+  topOffset?: number;
 };
 
 export default function CopyToast({
@@ -24,6 +26,7 @@ export default function CopyToast({
   message = "Copied to clipboard",
   onHide,
   placement = "bottom",
+  topOffset = 0,
 }: CopyToastProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -67,7 +70,7 @@ export default function CopyToast({
   }
 
   return (
-    <Animated.View style={[styles.positioner, placement === "top" ? styles.top : styles.bottom, { opacity }]} pointerEvents="none">
+    <Animated.View style={[styles.positioner, placement === "top" ? { top: topOffset + theme.spacing.lg } : styles.bottom, { opacity }]} pointerEvents="none">
       <GlassSurface tier="chrome" radius={theme.radii.pill} curve="circular" style={styles.pill}>
         <View style={styles.inner}>
           <AppIcon name="checkmark-circle" size={16} color={theme.colors.accent} />
@@ -85,7 +88,6 @@ const createStyles = (theme: AppTheme) => {
       alignSelf: "center",
     },
     bottom: { bottom: 100 },
-    top: { top: theme.spacing.lg },
     pill: {},
     inner: {
       flexDirection: "row",

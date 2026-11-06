@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { useRouter } from "expo-router";
+import { HeaderHeightContext } from "expo-router/react-navigation";
 
 import Screen from "@/components/ui/Screen";
 import { Footnote, Subhead } from "@/components/ui/Text";
@@ -45,6 +46,7 @@ export default function Settings() {
   const router = useRouter();
   const haptics = useHaptics();
   const screenMargin = useScreenMargin();
+  const headerHeight = useContext(HeaderHeightContext) ?? 0;
 
   const { signOut, deleteAccount } = useAccountActions();
 
@@ -283,8 +285,9 @@ export default function Settings() {
       />
       <CopyToast
         visible={thanksVisible}
-        message="Thanks, we got it"
+        message="Sent. Thank you!"
         placement="top"
+        topOffset={headerHeight}
         onHide={() => setThanksVisible(false)}
       />
     </Screen>

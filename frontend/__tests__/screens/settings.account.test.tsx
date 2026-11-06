@@ -11,6 +11,21 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush, back: jest.fn() }),
 }));
 
+// --- feedback sheet: only its onSent callback matters here ---
+jest.mock("@/components/settings/FeedbackSheet", () => {
+  const { Pressable, Text } = require("react-native");
+  const ReactActual = require("react");
+  return {
+    __esModule: true,
+    default: ({ onSent }: { onSent: () => void }) =>
+      ReactActual.createElement(
+        Pressable,
+        { onPress: onSent, accessibilityLabel: "Mock report sent" },
+        ReactActual.createElement(Text, null, "sent"),
+      ),
+  };
+});
+
 // --- account hooks ---
 jest.mock("@/hooks/useAuthState", () => ({
   useAuthState: jest.fn(() => ({
@@ -142,7 +157,8 @@ jest.mock("@/components/PressableScale", () => {
   };
 });
 
-import { Alert } from "react-native";
+import { Alert, StyleSheet } from "react-native";
+import { HeaderHeightContext } from "expo-router/react-navigation";
 import { useAuthState } from "@/hooks/useAuthState";
 import Settings from "@/app/Settings";
 
@@ -181,6 +197,18 @@ describe("Settings account integration", () => {
   it("renders the signed-in email in Settings", () => {
     const { getByText } = render(<Settings />);
     expect(getByText("a@b.com")).toBeTruthy();
+  });
+
+  it("shows the thank-you toast below the native header", () => {
+    const { getByLabelText, getByText } = render(
+      <HeaderHeightContext.Provider value={100}>
+        <Settings />
+      </HeaderHeightContext.Provider>,
+    );
+    fireEvent.press(getByLabelText("Mock report sent"));
+    let node: any = getByText("Sent. Thank you!");
+    while (node && StyleSheet.flatten(node.props.style)?.position !== "absolute") node = node.parent;
+    expect(StyleSheet.flatten(node.props.style).top).toBeGreaterThanOrEqual(100);
   });
 
   it("sign out triggers the action", () => {
