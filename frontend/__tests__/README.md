@@ -155,6 +155,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/chatStore.test.ts` — device-local chat store: round-trip, 500-message cap, unreadable storage reads as empty, `clearChat` empties history and consent, storage errors swallowed silently
   - `hooks/useChat.test.tsx` — send/retry/report: history capped at 20 and never includes failed messages, failed send marks the question and retry resends it in place, a failed send never puts question text in diagnostics, crisis/blocked/limit notices, one send at a time, 1000-char cap, report citation ids; `useChatStatus` visibility (module absent, switched off, error) and refetch on focus
   - `hooks/useAccountActions.test.tsx` — sign-out and account deletion clear the chat before the Clerk session ends
+  - `screens/Chat.test.tsx` — Ask modal: signed-out sign-in button, consent gate, answer with verbatim disclaimer and Quran citation (back then push to the verse), scholar link, crisis/blocked/limit notices, failed-message retry, 1000-char composer counter, messages-left header item, report toast and failure text
 - `settings liquid-glass redesign testing`
   - `utils/appLinks.test.ts` — About-row link/share/version helpers
   - `services/ratingPrompt.test.ts` — Apple rating prompt on the 25th visit, once per app version

@@ -134,7 +134,7 @@ describe("root layout navigation contract", () => {
       new Set(screenRegistrations.map((registration) => registration.name)),
     );
 
-    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "Settings"]));
+    expect(routeNames).toEqual(expect.arrayContaining(["(tabs)", "Settings", "Chat"]));
     expect(routeNames).not.toContain("MosqueMap");
   });
 

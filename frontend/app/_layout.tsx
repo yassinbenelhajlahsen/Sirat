@@ -199,6 +199,7 @@ function RootLayoutContent() {
   }, [pathname]);
   const { theme, isHydrated } = useTheme();
   const trackerHeader = useNativeHeaderOptions("Tracker", { large: false, titleSize: 26 });
+  const chatHeader = useNativeHeaderOptions("Ask", { large: false, titleSize: 26 });
   const backgroundColor = isHydrated
     ? theme.colors.primaryDark
     : LAUNCH_BACKGROUND_COLOR;
@@ -489,6 +490,24 @@ function RootLayoutContent() {
                   name="Tracker"
                   options={{
                     ...trackerHeader,
+                    presentation: "modal",
+                    animation: "slide_from_bottom",
+                    unstable_headerRightItems: () => [
+                      {
+                        type: "button",
+                        label: "Close",
+                        icon: { type: "sfSymbol", name: "xmark" },
+                        variant: "prominent" as const,
+                        tintColor: glassTintFor(theme),
+                        onPress: () => router.back(),
+                      },
+                    ],
+                  }}
+                />
+                <Stack.Screen
+                  name="Chat"
+                  options={{
+                    ...chatHeader,
                     presentation: "modal",
                     animation: "slide_from_bottom",
                     unstable_headerRightItems: () => [
