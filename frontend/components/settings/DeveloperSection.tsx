@@ -97,7 +97,6 @@ export default function DeveloperSection() {
         <SettingsRow
           icon="chatbubble-ellipses-outline"
           title="Chat without sign-in or limit"
-          subtitle="Needs a local server with CHAT_DEV_BYPASS=1"
           trailing={
             <Switch
               accessibilityLabel="Chat without sign-in or limit"
