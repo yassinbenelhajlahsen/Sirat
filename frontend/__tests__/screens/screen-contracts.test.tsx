@@ -96,6 +96,7 @@ jest.mock("@/hooks/useSettingsPermissions", () => ({
   useSettingsPermissions: jest.fn(),
 }));
 
+jest.mock("@/hooks/useChatStatus", () => ({ useChatStatus: () => ({ visible: false, remaining: null }) }));
 jest.mock("@/hooks/useAuthState", () => ({
   useAuthState: jest.fn(() => ({
     isLoaded: true,

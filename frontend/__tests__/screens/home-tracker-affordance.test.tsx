@@ -10,6 +10,7 @@ jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
   return { ...actual, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
 });
+jest.mock("@/hooks/useChatStatus", () => ({ useChatStatus: () => ({ visible: false, remaining: null }) }));
 jest.mock("@/hooks/useAuthState", () => ({
   useAuthState: () => ({ isLoaded: true, isSignedIn: true, userId: "u1", email: null }),
 }));

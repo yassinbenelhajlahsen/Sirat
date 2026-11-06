@@ -208,6 +208,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/Tracker.test.tsx` — Tracker screen contract: Overview section + Habits section, add-habit flow
   - `screens/home-tracker-affordance.test.tsx` — Home streak chip + "View tracker & habits" affordance
   - `screens/home-sign-in-card.test.tsx` — Home sign-in card clears on sign-in and stays quiet on sign-out
+  - `screens/home-ask-row.test.tsx` — Home "Ask" row: hidden when chat is not visible, "N left" when signed in, "Sign in to ask" when signed out, pushes `/Chat`, sits between Tracker and Dua
 - `weekday habits + Tracker check-off (Phase 3.1) testing`
   - `utils/habitFrequency.test.ts` — `frequencyLabel` (weekday list), `isHabitDueOnDate`, `WEEKDAY_SHORT`
   - `services/tracking/habits.migration.test.ts` — legacy `{weekly, timesPerWeek}` habits migrate to Daily on read
