@@ -35,6 +35,9 @@ jest.mock("@/hooks/useChat", () => ({ useChat: () => mockUseChat() }));
 const mockAuth = jest.fn();
 jest.mock("@/hooks/useAuthState", () => ({ useAuthState: () => mockAuth() }));
 
+let mockDevChat = false;
+jest.mock("@/utils/devChat", () => ({ useChatDevBypass: () => mockDevChat }));
+
 jest.mock("@/services/chat/chatStore", () => ({
   hasConsented: jest.fn(async () => true),
   setConsented: jest.fn(async () => {}),
@@ -108,6 +111,7 @@ const monthDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { 
 
 beforeEach(() => {
   mockAuth.mockReturnValue(signedIn);
+  mockDevChat = false;
   mockUseChat.mockReturnValue(chatState());
   (hasConsented as jest.Mock).mockResolvedValue(true);
 });
@@ -120,6 +124,15 @@ describe("Chat screen", () => {
     fireEvent.press(await findByRole("button", { name: "Sign in" }));
 
     expect(mockPush).toHaveBeenCalledWith("/SignIn");
+  });
+
+  it("with the dev chat bypass on, a signed-out user gets the composer, not the sign-in prompt", async () => {
+    mockAuth.mockReturnValue({ ...signedIn, isSignedIn: false, userId: null });
+    mockDevChat = true;
+    const { findByLabelText, queryByText } = await renderChat();
+
+    expect(await findByLabelText("Your question")).toBeTruthy();
+    expect(queryByText("Sign in to ask")).toBeNull();
   });
 
   it("unconsented shows the consent screen, and Continue opens the composer", async () => {
@@ -293,7 +306,16 @@ describe("Chat screen", () => {
     );
     const { getAllByText } = await renderChat();
 
-    // In the list as the notice, and above the composer.
+    // Only the notice in the list: the line above the composer does not repeat it.
+    expect(getAllByText(`You've used this month's 15 messages. They reset on ${monthDay("2026-12-15T12:00:00.000Z")}.`)).toHaveLength(1);
+  });
+
+  it("the limit line stays above the composer when a question came after the limit notice", async () => {
+    mockUseChat.mockReturnValue(
+      chatState({ remaining: 0, messages: [answer("a1", "", { notice: "limit" }), user("q2", "Next?")] }),
+    );
+    const { getAllByText } = await renderChat();
+
     expect(getAllByText(`You've used this month's 15 messages. They reset on ${monthDay("2026-12-15T12:00:00.000Z")}.`)).toHaveLength(2);
   });
 
@@ -303,7 +325,7 @@ describe("Chat screen", () => {
     );
     const { getAllByText } = await renderChat();
 
-    expect(getAllByText("You've used this month's 15 messages. They reset at the start of next month.")).toHaveLength(2);
+    expect(getAllByText("You've used this month's 15 messages. They reset at the start of next month.")).toHaveLength(1);
   });
 
   it("a failed message's retry resends that message", async () => {

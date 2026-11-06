@@ -109,6 +109,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `visual refresh foundations (Plan 1) testing`
   - `utils/greeting.test.ts`
   - `utils/devClock.test.ts` — dev-only pretend time of day: real time by default, moves today's clock to the chosen hour and minute, clears back to real time
+  - `utils/devChat.test.ts` — dev-only chat bypass: off by default, stored as 1/0, loaded at startup, subscribers notified, never on outside dev builds
   - `utils/formatDate.test.ts` — ordinal day suffixes (1st/2nd/3rd/11th-13th) for the dial centre and calendar day title
   - `utils/hijriDate.test.ts` — shared Hijri date: Umm al-Qura (matches the holiday feed), rolls to the next day at Maghrib; `isFastingDay` / `ramadanDayAt` on the Ramadan 1448 boundaries
   - `utils/ramadanCountdown.test.ts` — Home Ramadan card state: hidden/shown, suhoor vs iftar target, Maghrib rollover, last-day end
@@ -151,6 +152,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/copy-toast.test.tsx` — toast sits near the bottom by default and at the top with `placement="top"` (feedback thank-you)
   - `components/settings/FeedbackSheet.test.tsx` — Send disabled while blank, email prefilled when signed in, bug-only disclosure line, send calls `onSent`, failure keeps the text and shows the error
 - `in-app chat testing`
+  - `services/chatApi.test.ts` — dev bypass header on chat status and send, only while the bypass is on
   - `services/chatDeviceCheck.test.ts` — DeviceCheck wrapper: no token when the native module is absent, unsupported, or generation rejects or takes over five seconds; token passed through
   - `services/chatStore.test.ts` — device-local chat store: round-trip, 500-message cap, unreadable storage reads as empty, `clearChat` empties history and consent, storage errors swallowed silently
   - `hooks/useChat.test.tsx` — send/retry/report: history capped at 20 and never includes failed messages, failed send marks the question and retry resends it in place (its answer lands after it), a reopened chat waits for a reply in flight, a failed send never puts question text in diagnostics, crisis/blocked/limit notices, one send at a time, 1000-char cap, report citation ids (unknown kinds left out); `useChatStatus` visibility (module absent, switched off, error) and refetch on focus

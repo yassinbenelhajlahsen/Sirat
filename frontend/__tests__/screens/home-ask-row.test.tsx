@@ -23,6 +23,8 @@ jest.mock("@/services/auth/authPrompts", () => ({
   markHomeCardShown: jest.fn().mockResolvedValue(undefined),
 }));
 let mockChatStatus = { visible: true, remaining: 12 as number | null };
+let mockDevChat = false;
+jest.mock("@/utils/devChat", () => ({ useChatDevBypass: () => mockDevChat }));
 jest.mock("@/hooks/useChatStatus", () => ({
   useChatStatus: () => mockChatStatus,
 }));
@@ -54,6 +56,7 @@ describe("Home Ask row", () => {
     mockSignedIn = true;
     mockLoaded = true;
     mockChatStatus = { visible: true, remaining: 12 };
+    mockDevChat = false;
   });
 
   it("is hidden along with its header when the chat is not visible", () => {
@@ -101,6 +104,17 @@ describe("Home Ask row", () => {
     const { getByLabelText } = render(wrap(<Home />));
     fireEvent.press(getByLabelText("Ask a question"));
     expect(mockPush).toHaveBeenCalledWith({ pathname: "/SignIn", params: { next: "Chat" } });
+  });
+
+  it("with the dev chat bypass on, treats a signed-out user as signed in for Ask", () => {
+    mockSignedIn = false;
+    mockDevChat = true;
+    mockChatStatus = { visible: true, remaining: 9999 };
+    const { getByText, queryByText, getByLabelText } = render(wrap(<Home />));
+    expect(getByText("9999 left")).toBeTruthy();
+    expect(queryByText("Sign in to ask")).toBeNull();
+    fireEvent.press(getByLabelText("Ask a question, 9999 messages left"));
+    expect(mockPush).toHaveBeenCalledWith("/Chat");
   });
 
   it("shows no sign-in text until auth has loaded", () => {

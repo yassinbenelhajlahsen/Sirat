@@ -16,6 +16,7 @@ import {
 } from "@/services/notifications/devTest";
 import { formatClock } from "@/services/prayerDay";
 import { appNow, isPretendingTime, setPretendTime } from "@/utils/devClock";
+import { setChatDevBypass, useChatDevBypass } from "@/utils/devChat";
 import { getAlwaysFirstSplash, setAlwaysFirstSplash } from "@/utils/devSplash";
 import { isPretendingRamadan, setPretendRamadan } from "@/utils/hijriDate";
 
@@ -29,6 +30,7 @@ export default function DeveloperSection() {
   const haptics = useHaptics();
 
   const [pretendRamadan, setPretendRamadanState] = useState(isPretendingRamadan);
+  const chatBypass = useChatDevBypass();
   const [alwaysFirstSplash, setAlwaysFirstSplashState] = useState(false);
   useEffect(() => {
     void getAlwaysFirstSplash().then(setAlwaysFirstSplashState);
@@ -88,6 +90,19 @@ export default function DeveloperSection() {
                 setPretendRamadan(val);
                 setPretendRamadanState(val);
               }}
+              trackColor={{ false: colors.grayDark, true: colors.accent }}
+            />
+          }
+        />
+        <SettingsRow
+          icon="chatbubble-ellipses-outline"
+          title="Chat without sign-in or limit"
+          subtitle="Needs a local server with CHAT_DEV_BYPASS=1"
+          trailing={
+            <Switch
+              accessibilityLabel="Chat without sign-in or limit"
+              value={chatBypass}
+              onValueChange={(val) => void setChatDevBypass(val)}
               trackColor={{ false: colors.grayDark, true: colors.accent }}
             />
           }

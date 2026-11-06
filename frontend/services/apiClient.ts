@@ -48,6 +48,7 @@ export async function apiFetch<T>(
     method?: string;
     body?: unknown;
     params?: Record<string, string | number>;
+    headers?: Record<string, string>;
   },
 ): Promise<T> {
   let url = `${API_BASE}${path}`;
@@ -67,6 +68,7 @@ export async function apiFetch<T>(
     headers: {
       "Content-Type": "application/json",
       ...getVersionHeaders(),
+      ...options?.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body:

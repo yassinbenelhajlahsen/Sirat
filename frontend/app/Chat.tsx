@@ -17,6 +17,7 @@ import { useAuthState } from "@/hooks/useAuthState";
 import { useChat } from "@/hooks/useChat";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { hasConsented, type ChatMessage } from "@/services/chat/chatStore";
+import { useChatDevBypass } from "@/utils/devChat";
 
 // The native header bar sits under the status bar; the toast clears both.
 const HEADER_BAR_HEIGHT = 44;
@@ -25,6 +26,8 @@ export default function Chat() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { isLoaded, isSignedIn } = useAuthState();
+  const devChat = useChatDevBypass();
+  const signedIn = isSignedIn || devChat;
   const [consented, setConsentedState] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -35,7 +38,7 @@ export default function Chat() {
     return <Screen safeArea={false}>{null}</Screen>;
   }
 
-  if (!isSignedIn) {
+  if (!signedIn) {
     return (
       <Screen safeArea={false}>
         <View style={styles.centered}>
@@ -127,7 +130,7 @@ function Conversation() {
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         />
-        {remaining === 0 && !sending ? (
+        {remaining === 0 && !sending && messages[messages.length - 1]?.notice !== "limit" ? (
           <Footnote color={colors.textSecondary} style={[styles.limit, { paddingHorizontal: screenMargin }]}>
             {limitMessage(allowance, resetsAt)}
           </Footnote>

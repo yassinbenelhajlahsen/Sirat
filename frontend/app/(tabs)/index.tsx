@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useChatStatus } from "@/hooks/useChatStatus";
+import { useChatDevBypass } from "@/utils/devChat";
 import SignInCard from "@/components/home/SignInCard";
 import { shouldShowHomeCard, markHomeCardShown, dismissHomeCard } from "@/services/auth/authPrompts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -67,8 +68,10 @@ export default function Home() {
 
   const { isLoaded, isSignedIn, firstName } = useAuthState();
   const chat = useChatStatus();
-  const askRemaining = isSignedIn ? chat.remaining : null;
-  const askRightText = !isLoaded ? null : !isSignedIn ? "Sign in to ask" : askRemaining !== null ? `${askRemaining} left` : null;
+  const devChat = useChatDevBypass();
+  const askSignedIn = isSignedIn || devChat;
+  const askRemaining = askSignedIn ? chat.remaining : null;
+  const askRightText = !isLoaded ? null : !askSignedIn ? "Sign in to ask" : askRemaining !== null ? `${askRemaining} left` : null;
   const [showCard, setShowCard] = useState(false);
   useEffect(() => {
     let mounted = true;
@@ -241,7 +244,7 @@ export default function Home() {
             <PressableScale
               variant="row"
               radius={theme.radii.row}
-              onPress={() => router.push(isSignedIn ? "/Chat" : { pathname: "/SignIn", params: { next: "Chat" } })}
+              onPress={() => router.push(askSignedIn ? "/Chat" : { pathname: "/SignIn", params: { next: "Chat" } })}
               accessibilityRole="button"
               accessibilityLabel={askRemaining !== null ? `Ask a question, ${askRemaining} messages left` : "Ask a question"}
             >

@@ -1,4 +1,5 @@
-import { apiFetch, apiPost } from "@/services/apiClient";
+import { apiFetch } from "@/services/apiClient";
+import { isChatDevBypass } from "@/utils/devChat";
 
 // Mirrors the server's chat contract (backend/src/services/chat). Keep in step with it.
 export type Citation =
@@ -52,10 +53,15 @@ export type ChatStatus = {
   resetsAt: string;
 };
 
+// Only a local server with CHAT_DEV_BYPASS=1 reads this; production builds never turn the bypass on.
+function devHeaders(): Record<string, string> | undefined {
+  return isChatDevBypass() ? { "x-sirat-chat-dev": "1" } : undefined;
+}
+
 export function getChatStatus(): Promise<ChatStatus> {
-  return apiFetch<ChatStatus>("/api/chat/status");
+  return apiFetch<ChatStatus>("/api/chat/status", { headers: devHeaders() });
 }
 
 export function sendChat(body: ChatRequest): Promise<ChatReply> {
-  return apiPost<ChatReply>("/api/chat", body);
+  return apiFetch<ChatReply>("/api/chat", { method: "POST", body, headers: devHeaders() });
 }

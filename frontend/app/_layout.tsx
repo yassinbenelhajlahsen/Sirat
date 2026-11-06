@@ -34,6 +34,7 @@ import { glassTintFor, type ThemeName } from "@/constants/theme";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { useNativeHeaderOptions } from "@/hooks/useNativeHeaderOptions";
 import { preloadQuranData } from "@/services/quranData";
+import { loadChatDevBypass } from "@/utils/devChat";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { preloadPrayerLog } from "@/services/prayerTracker";
 import { preloadHabitLog } from "@/services/habitTracker";
@@ -329,6 +330,11 @@ function RootLayoutContent() {
 
   useEffect(() => {
     NotificationService.init();
+  }, []);
+
+  // Chat requests read the dev bypass synchronously, so load the stored choice at launch.
+  useEffect(() => {
+    void loadChatDevBypass();
   }, []);
 
   // Keep native root/system background aligned with app color to avoid white frames
