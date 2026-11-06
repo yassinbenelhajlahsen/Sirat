@@ -24,7 +24,7 @@ type Props = {
   onReport: (id: string) => Promise<void>;
 };
 
-function limitMessage(allowance: number | null, resetsAt: string | null): string {
+export function limitMessage(allowance: number | null, resetsAt: string | null): string {
   const count = allowance === null ? "" : `${allowance} `;
   const when = resetsAt
     ? `on ${new Date(resetsAt).toLocaleDateString(undefined, { month: "long", day: "numeric" })}`

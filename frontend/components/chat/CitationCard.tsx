@@ -27,7 +27,8 @@ export default function CitationCard({ citation }: Props) {
         accessibilityLabel={`Open ${reference}`}
         onPress={() => {
           router.back();
-          router.push({ pathname: "/(tabs)/Quran", params: { surah, ayah } });
+          // A new stamp per tap, so the Quran tab scrolls again when the same verse is opened twice.
+          router.push({ pathname: "/(tabs)/Quran", params: { surah, ayah, at: String(Date.now()) } });
         }}
         style={styles.card}
       >

@@ -644,14 +644,15 @@ function QuranScreen() {
   );
 
   // Opened from the verse widget: sirat:///Quran?surah=94&ayah=5
-  const { surah: linkSurah, ayah: linkAyah } = useLocalSearchParams<{
+  const { surah: linkSurah, ayah: linkAyah, at: linkAt } = useLocalSearchParams<{
     surah?: string;
     ayah?: string;
+    at?: string;
   }>();
   const handledLinkRef = useRef<string | null>(null);
   useEffect(() => {
     if (!linkSurah || !listReady) return;
-    const key = `${linkSurah}:${linkAyah ?? 1}`;
+    const key = `${linkSurah}:${linkAyah ?? 1}:${linkAt ?? ""}`;
     if (handledLinkRef.current === key) return;
     // Waits past the last-read restore, which scrolls again ~120ms after load.
     const timer = setTimeout(() => {
@@ -665,7 +666,7 @@ function QuranScreen() {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [linkSurah, linkAyah, listReady, scrollToAyahIndex]);
+  }, [linkSurah, linkAyah, linkAt, listReady, scrollToAyahIndex]);
 
   const handleJump = useCallback(
     (target: JumpTarget) => {

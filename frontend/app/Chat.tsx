@@ -1,11 +1,11 @@
 // frontend/app/Chat.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { router, Stack, type NativeStackHeaderItem } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CopyToast from "@/components/CopyToast";
-import ChatBubble from "@/components/chat/ChatBubble";
+import ChatBubble, { limitMessage } from "@/components/chat/ChatBubble";
 import ChatComposer from "@/components/chat/ChatComposer";
 import ChatConsent from "@/components/chat/ChatConsent";
 import EmptyState from "@/components/ui/EmptyState";
@@ -121,11 +121,17 @@ function Conversation() {
               onReport={onReport}
             />
           )}
+          ListFooterComponent={sending ? <PendingReply /> : null}
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={[styles.list, { paddingHorizontal: screenMargin }]}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         />
+        {remaining === 0 && !sending ? (
+          <Footnote color={colors.textSecondary} style={[styles.limit, { paddingHorizontal: screenMargin }]}>
+            {limitMessage(allowance, resetsAt)}
+          </Footnote>
+        ) : null}
         <ChatComposer
           value={draft}
           onChangeText={setDraft}
@@ -145,9 +151,22 @@ function Conversation() {
   );
 }
 
+function PendingReply() {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  return (
+    <View style={styles.pending} accessible accessibilityLabel="Writing an answer">
+      <ActivityIndicator color={theme.colors.accent} />
+      <Footnote color={theme.colors.textSecondary}>Writing an answer...</Footnote>
+    </View>
+  );
+}
+
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     fill: { flex: 1 },
     centered: { flex: 1, justifyContent: "center" },
     list: { paddingVertical: theme.spacing.lg, gap: theme.spacing.lg },
+    pending: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: theme.spacing.sm },
+    limit: { paddingTop: theme.spacing.sm },
   });

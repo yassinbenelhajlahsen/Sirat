@@ -159,8 +159,52 @@ describe("Chat screen", () => {
     fireEvent.press(getByRole("button", { name: "Open Quran 2:255" }));
 
     expect(mockBack).toHaveBeenCalled();
-    expect(mockPush).toHaveBeenCalledWith({ pathname: "/(tabs)/Quran", params: { surah: 2, ayah: 255 } });
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/(tabs)/Quran",
+      params: { surah: 2, ayah: 255, at: expect.any(String) },
+    });
     expect(mockBack.mock.invocationCallOrder[0]).toBeLessThan(mockPush.mock.invocationCallOrder[0]);
+  });
+
+  it("each tap on the same Quran citation carries a new stamp, so a repeat tap scrolls again", async () => {
+    const now = jest.spyOn(Date, "now").mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+    mockUseChat.mockReturnValue(chatState({ messages: [answer("a1", "See the verse.", { citations: [QURAN] })] }));
+    const { getByRole } = await renderChat();
+
+    fireEvent.press(getByRole("button", { name: "Open Quran 2:255" }));
+    fireEvent.press(getByRole("button", { name: "Open Quran 2:255" }));
+
+    expect(mockPush.mock.calls.map(([target]) => target.params.at)).toEqual(["1000", "2000"]);
+    now.mockRestore();
+  });
+
+  it("shows the limit line above the composer once the allowance is used up", async () => {
+    mockUseChat.mockReturnValue(chatState({ remaining: 0, resetsAt: null }));
+    const { getByText } = await renderChat();
+
+    expect(getByText("You've used this month's 15 messages. They reset at the start of next month.")).toBeTruthy();
+  });
+
+  it("hides the limit line while a reply is pending", async () => {
+    mockUseChat.mockReturnValue(chatState({ remaining: 0, sending: true }));
+    const { queryByText } = await renderChat();
+
+    expect(queryByText(/You've used this month/)).toBeNull();
+  });
+
+  it("shows a writing row at the end of the chat while a reply is pending", async () => {
+    mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?")], sending: true }));
+    const { getByLabelText, getByText } = await renderChat();
+
+    expect(getByLabelText("Writing an answer")).toBeTruthy();
+    expect(getByText("Writing an answer...")).toBeTruthy();
+  });
+
+  it("has no writing row when no reply is pending", async () => {
+    mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?")] }));
+    const { queryByLabelText } = await renderChat();
+
+    expect(queryByLabelText("Writing an answer")).toBeNull();
   });
 
   it("a scholar link opens its URL", async () => {
@@ -247,18 +291,19 @@ describe("Chat screen", () => {
     mockUseChat.mockReturnValue(
       chatState({ remaining: 0, messages: [answer("a1", "", { notice: "limit" })] }),
     );
-    const { getByText } = await renderChat();
+    const { getAllByText } = await renderChat();
 
-    expect(getByText(`You've used this month's 15 messages. They reset on ${monthDay("2026-12-15T12:00:00.000Z")}.`)).toBeTruthy();
+    // In the list as the notice, and above the composer.
+    expect(getAllByText(`You've used this month's 15 messages. They reset on ${monthDay("2026-12-15T12:00:00.000Z")}.`)).toHaveLength(2);
   });
 
   it("the limit notice falls back to next month when the reset time is unknown", async () => {
     mockUseChat.mockReturnValue(
       chatState({ remaining: 0, resetsAt: null, messages: [answer("a1", "", { notice: "limit" })] }),
     );
-    const { getByText } = await renderChat();
+    const { getAllByText } = await renderChat();
 
-    expect(getByText("You've used this month's 15 messages. They reset at the start of next month.")).toBeTruthy();
+    expect(getAllByText("You've used this month's 15 messages. They reset at the start of next month.")).toHaveLength(2);
   });
 
   it("a failed message's retry resends that message", async () => {
