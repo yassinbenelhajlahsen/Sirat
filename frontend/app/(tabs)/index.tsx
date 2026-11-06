@@ -67,10 +67,8 @@ export default function Home() {
     if (isLoaded && !isSignedIn) {
       shouldShowHomeCard().then((show) => {
         if (!mounted) return;
-        if (show) {
-          setShowCard(true);
-          void markHomeCardShown();
-        }
+        setShowCard(show);
+        if (show) void markHomeCardShown();
       });
     }
     return () => { mounted = false; };
@@ -131,7 +129,7 @@ export default function Home() {
           </GlassSurface>
         )}
 
-        {showCard && (
+        {showCard && !isSignedIn && (
           <View style={styles.signInCardSlot}>
             <SignInCard
               onPress={() => router.push("/SignIn")}
