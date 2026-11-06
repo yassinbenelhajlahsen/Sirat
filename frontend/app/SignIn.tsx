@@ -13,7 +13,7 @@ import { Alert, Platform, StyleSheet, View } from "react-native";
 
 import Button from "@/components/ui/Button";
 import GoogleIcon from "@/components/ui/GoogleIcon";
-import { Footnote, Title1 } from "@/components/ui/Text";
+import { Caption, Footnote, Title1 } from "@/components/ui/Text";
 import { type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -70,7 +70,7 @@ export default function SignIn() {
       <Title1 style={styles.headline} maxFontSizeMultiplier={1.2} accessibilityRole="header">
         Sync your journey
       </Title1>
-      <Footnote color={colors.textSecondary}>
+      <Footnote color={colors.textSecondary} style={styles.subtitle}>
         Sign in to back up your tracker &amp; settings across devices.
       </Footnote>
 
@@ -100,6 +100,11 @@ export default function SignIn() {
           onPress={() => void signInWithGoogle()}
         />
       </View>
+
+      <Caption color={colors.textTertiary} style={styles.notice}>
+        Signing in adds you to our occasional emails. Unsubscribe from any email, or contact us at
+        support@sirat.dev.
+      </Caption>
     </View>
   );
 }
@@ -110,13 +115,14 @@ const createStyles = (theme: AppTheme) => {
     content: {
       paddingTop: spacing.xxxl,
       paddingHorizontal: spacing.xxl,
-      paddingBottom: spacing.xxl,
     },
-    headline: { marginBottom: spacing.md },
+    headline: { marginBottom: spacing.md, textAlign: "center" },
+    subtitle: { textAlign: "center" },
     stack: {
       marginTop: spacing.xxl,
       gap: spacing.md,
     },
+    notice: { marginTop: spacing.lg, textAlign: "center" },
     appleButton: {
       height: 52,
       width: "100%",
