@@ -5,7 +5,7 @@
 // binary whose `version` matches. Do NOT bump `version` for a JS-only release;
 // bump it (and rebuild) only when one of these lands:
 //
-// - Nothing queued.
+// - DeviceCheck token for the chat quota (modules/sirat-device-check, iOS)
 //
 // Search the codebase for "NEEDS NATIVE BUILD" to find every call site that
 // was written around the current native build.

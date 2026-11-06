@@ -146,6 +146,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/diagnostics.test.ts` — hidden bug-report log: 50-entry cap, message/stack truncation, last 10 screens, `console.error` and global-handler capture (original handlers still called), fatal errors persisted, stored entries restored on install, device context
   - `services/feedback.test.ts` — `submitFeedback`: diagnostics only for bugs, trimmed message, empty email omitted
   - `services/reports.test.ts` — `reportDuaMatch` posts only the trimmed request and dua id to `/api/reports`; `reportChatAnswer` posts the trimmed question with the answer and citation ids
+  - `services/chatDeviceCheck.test.ts` — DeviceCheck wrapper: no token when the native module is absent, unsupported, or generation rejects; token passed through
   - `hooks/useKeyboardAutoScroll.test.ts` — Home scrolls for the keyboard only while it is the focused screen (a keyboard opened in the Settings modal leaves Home still), and drops its padding if it lost focus mid-keyboard
   - `components/record-and-rethrow.test.tsx` — root error boundary records the render error, saves the log, then rethrows so the app still crashes and a bad OTA still rolls back
   - `components/copy-toast.test.tsx` — toast sits near the bottom by default and at the top with `placement="top"` (feedback thank-you)
