@@ -59,3 +59,41 @@ model ContentReport {
   @@index([userId])
   @@map("content_reports")
 }
+
+// Monthly chat count. Keyed to an HMAC of the Apple/Google ID, not the Clerk
+// user, so deleting and re-creating the account keeps this month's count.
+model ChatUsage {
+  identityHash String   @map("identity_hash")
+  month        String
+  allowance    Int
+  used         Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@id([identityHash, month])
+  @@map("chat_usage")
+}
+
+// Chat source tables, filled by scripts/importQuran.ts and scripts/importHadeethEnc.ts,
+// searched with raw full-text SQL in services/chat/sourceSearch.ts.
+model QuranAyah {
+  surah  Int
+  ayah   Int
+  textAr String @map("text_ar")
+  textEn String @map("text_en")
+
+  @@id([surah, ayah])
+  @@map("quran_ayahs")
+}
+
+model Hadith {
+  id          Int       @id
+  title       String
+  textEn      String    @map("text_en")
+  textAr      String?   @map("text_ar")
+  grade       String
+  attribution String
+  explanation String?
+  updatedAt   DateTime? @map("updated_at") @db.Timestamptz(6)
+
+  @@map("hadiths")
+}

@@ -3,7 +3,8 @@ export const ENV = {
   NODE_ENV: process.env.NODE_ENV || "development",
   TRUST_PROXY: process.env.TRUST_PROXY || "",
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
-  OPENAI_MODEL: process.env.OPENAI_MODEL || "gpt-6.1-terra",
+  OPENAI_MODEL: process.env.OPENAI_MODEL || "gpt-6-luna",
+  OPENAI_MODERATION_MODEL: process.env.OPENAI_MODERATION_MODEL || "omni-moderation-latest",
   GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || "",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:8081",
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
@@ -15,6 +16,16 @@ export const ENV = {
   RESEND_API_KEY: process.env.RESEND_API_KEY || "",
   RESEND_CONTACTS_API_KEY: process.env.RESEND_CONTACTS_API_KEY || "",
   RESEND_SEGMENT_ID: process.env.RESEND_SEGMENT_ID || "",
+  CHAT_ENABLED: process.env.CHAT_ENABLED === "1",
+  CHAT_IDENTITY_SECRET: process.env.CHAT_IDENTITY_SECRET || "",
+  CHAT_QURAN_QUOTES: (process.env.CHAT_QURAN_QUOTES === "reference" ? "reference" : "text") as "text" | "reference",
+  CHAT_SCHOLAR_LINK: process.env.CHAT_SCHOLAR_LINK || "https://seekersguidance.org/answers/",
+  DEVICECHECK_TEAM_ID: process.env.DEVICECHECK_TEAM_ID || "",
+  DEVICECHECK_KEY_ID: process.env.DEVICECHECK_KEY_ID || "",
+  // Railway stores the PEM on one line with literal \n escapes.
+  DEVICECHECK_PRIVATE_KEY: (process.env.DEVICECHECK_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+  DEVICECHECK_ENV: (process.env.DEVICECHECK_ENV === "development" ? "development" : "production") as "production" | "development",
+  DEVICECHECK_REQUIRED: process.env.DEVICECHECK_REQUIRED !== "0",
 } as const;
 
 if (!ENV.GOOGLE_MAPS_API_KEY) {
@@ -35,4 +46,21 @@ if (!ENV.RESEND_API_KEY) {
 
 if (!ENV.RESEND_CONTACTS_API_KEY || !ENV.RESEND_SEGMENT_ID) {
   console.warn("⚠️  RESEND_CONTACTS_API_KEY or RESEND_SEGMENT_ID is not set. New users will not join the mailing list.");
+}
+
+if (ENV.CHAT_ENABLED) {
+  const missing = [
+    ["OPENAI_API_KEY", ENV.OPENAI_API_KEY],
+    ["CHAT_IDENTITY_SECRET", ENV.CHAT_IDENTITY_SECRET],
+    ...(ENV.DEVICECHECK_REQUIRED
+      ? [
+          ["DEVICECHECK_TEAM_ID", ENV.DEVICECHECK_TEAM_ID],
+          ["DEVICECHECK_KEY_ID", ENV.DEVICECHECK_KEY_ID],
+          ["DEVICECHECK_PRIVATE_KEY", ENV.DEVICECHECK_PRIVATE_KEY],
+        ]
+      : []),
+  ].filter(([, value]) => !value).map(([name]) => name);
+  if (missing.length) {
+    console.warn(`⚠️  CHAT_ENABLED is on but ${missing.join(", ")} is not set. Chat will fail.`);
+  }
 }
