@@ -124,6 +124,7 @@ npm run test:watch
 npm run test:coverage
 npm run import:quran -- ../frontend/assets/data/quran   # chat Quran source
 npm run import:hadith                                    # chat hadith source (HadeethEnc); re-run monthly
+npm run import:duas                                      # chat dua source (../frontend/assets/data/duas.json); re-run when that file changes
 npm run chat:eval -- <questions.md> <out.md>             # pre-launch chat question run
 ```
 
@@ -164,5 +165,5 @@ Notes:
 - `src/services/aladhanService.ts` - Aladhan proxy, retry, validation, caching
 - `src/services/googleMapsService.ts` - Google Places proxy calls
 - `src/routes/chat.ts`, `src/controllers/chatController.ts` - chat routes, validation and quota flow
-- `src/services/chat/` - quota, identity hash, DeviceCheck, OpenAI client, source search, answer guards
+- `src/services/chat/` - quota, identity hash, DeviceCheck, OpenAI client, source search (Quran, hadith, duas), answer guards
 - `src/config/env.ts` - env parsing/defaults

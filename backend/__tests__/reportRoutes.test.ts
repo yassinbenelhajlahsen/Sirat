@@ -72,14 +72,14 @@ describe("Report Routes Integration", () => {
   });
 
   it("saves a chat report with only the answer and citation ids", async () => {
-    const output = { answer: "  Interest is not permitted.\n", citationIds: ["q:2:275", "h:2962"], citations: [{ text: "x" }], extra: 1 };
+    const output = { answer: "  Interest is not permitted.\n", citationIds: ["q:2:275", "h:2962", "d:12"], citations: [{ text: "x" }], extra: 1 };
 
     await post({ kind: "chat", input: " Is interest allowed? ", output }).expect(201);
 
     expect(mockCreate).toHaveBeenCalledWith({
       kind: "chat",
       input: "Is interest allowed?",
-      output: { answer: "  Interest is not permitted.\n", citationIds: ["q:2:275", "h:2962"] },
+      output: { answer: "  Interest is not permitted.\n", citationIds: ["q:2:275", "h:2962", "d:12"] },
       userId: "user_abc",
       appVersion: "1.4.0",
     });
@@ -96,6 +96,8 @@ describe("Report Routes Integration", () => {
     ["a malformed citation id", { answer: "a", citationIds: ["x:1"] }],
     ["a four-digit surah", { answer: "a", citationIds: ["q:1000:1"] }],
     ["7 citation ids", { answer: "a", citationIds: ["h:1", "h:2", "h:3", "h:4", "h:5", "h:6", "h:7"] }],
+    ["a dua id with no number", { answer: "a", citationIds: ["d:"] }],
+    ["a dua id with letters", { answer: "a", citationIds: ["d:12x"] }],
     ["a non-array citationIds", { answer: "a", citationIds: "q:2:275" }],
     ["a non-string citation id", { answer: "a", citationIds: [275] }],
   ])("rejects a chat report with %s", async (_name, output) => {

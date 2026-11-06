@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { mapHadeethEncItem, mapQuranFiles } from "../src/services/chat/sourceImport.js";
+import { mapDuasFile, mapHadeethEncItem, mapQuranFiles } from "../src/services/chat/sourceImport.js";
 
 describe("mapQuranFiles", () => {
   it("joins the Arabic and English verses by chapter and verse", () => {
@@ -63,5 +63,61 @@ describe("mapHadeethEncItem", () => {
       textAr: null,
       explanation: null,
     });
+  });
+});
+
+describe("mapDuasFile", () => {
+  const dua = {
+    id: 12,
+    category: "travel",
+    tags: ["journey", "safety"],
+    arabic: "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا",
+    english: "Glory to Him who has subjected this to us",
+    transliteration: "Subhanal-ladhi sakhkhara lana hadha",
+    reference: "Quran 43:13",
+    source: "Quran",
+  };
+
+  it("reads the app's { duas: [...] } file and keeps every field", () => {
+    expect(mapDuasFile({ duas: [dua] })).toEqual([dua]);
+  });
+
+  it("also reads a plain array or an object keyed by id", () => {
+    expect(mapDuasFile([dua])).toEqual([dua]);
+    expect(mapDuasFile({ duas: { "12": dua } })).toEqual([dua]);
+  });
+
+  it.each([
+    ["a quoted list", `["journey", "safety"]`],
+    ["a bracketed list with single quotes", "['journey', 'safety']"],
+    ["a comma list", "journey, safety"],
+  ])("parses tags given as %s", (_name, tags) => {
+    expect(mapDuasFile({ duas: [{ ...dua, tags }] })[0].tags).toEqual(["journey", "safety"]);
+  });
+
+  it("stores missing tags as an empty list", () => {
+    expect(mapDuasFile({ duas: [{ ...dua, tags: undefined }] })[0].tags).toEqual([]);
+  });
+
+  it("sorts by id", () => {
+    expect(mapDuasFile({ duas: [{ ...dua, id: 30 }, { ...dua, id: 4 }] }).map((d) => d.id)).toEqual([4, 30]);
+  });
+
+  it.each([
+    ["no id", { ...dua, id: undefined }],
+    ["a non-positive id", { ...dua, id: 0 }],
+    ["no Arabic", { ...dua, arabic: "" }],
+    ["no English", { ...dua, english: " " }],
+    ["no reference", { ...dua, reference: undefined }],
+  ])("throws on a dua with %s, so a bad file never half-imports", (_name, bad) => {
+    expect(() => mapDuasFile({ duas: [bad] })).toThrow();
+  });
+
+  it("throws on a duplicate id", () => {
+    expect(() => mapDuasFile({ duas: [dua, dua] })).toThrow(/12/);
+  });
+
+  it("throws when the file holds no duas", () => {
+    expect(() => mapDuasFile({})).toThrow();
   });
 });

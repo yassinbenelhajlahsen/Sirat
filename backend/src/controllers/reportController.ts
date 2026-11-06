@@ -13,7 +13,7 @@ function isPlainObject(v: unknown): v is Output {
 // One entry per reportable kind; each keeps only the fields it knows, so the client can't store arbitrary JSON.
 const MAX_CHAT_ANSWER = 4000;
 const MAX_CHAT_CITATIONS = 6;
-const CITATION_ID = /^(q:\d{1,3}:\d{1,3}|h:\d+)$/;
+const CITATION_ID = /^(q:\d{1,3}:\d{1,3}|h:\d+|d:\d+)$/;
 
 const OUTPUT_SHAPES: Record<string, (output: Output) => Output | null> = {
   dua: ({ duaId }) => (Number.isInteger(duaId) && (duaId as number) > 0 ? { duaId } : null),

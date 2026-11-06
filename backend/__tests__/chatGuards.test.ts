@@ -2,17 +2,20 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const mockGetQuranAyahs: jest.Mock = jest.fn();
 const mockGetHadiths: jest.Mock = jest.fn();
+const mockGetDuas: jest.Mock = jest.fn();
 
 describe("chat guards", () => {
   beforeEach(() => {
     jest.resetModules();
     mockGetQuranAyahs.mockReset();
     mockGetHadiths.mockReset();
+    mockGetDuas.mockReset();
     process.env.OPENAI_MODEL = "gpt-6-luna";
     delete process.env.CHAT_QURAN_QUOTES;
     jest.unstable_mockModule("../src/services/chat/sourceSearch.js", () => ({
       getQuranAyahs: (...a: unknown[]) => mockGetQuranAyahs(...a),
       getHadiths: (...a: unknown[]) => mockGetHadiths(...a),
+      getDuas: (...a: unknown[]) => mockGetDuas(...a),
     }));
   });
 
@@ -163,9 +166,55 @@ describe("chat guards", () => {
     it("skips the database when nothing valid is cited", async () => {
       const { renderCitations } = await load();
 
-      expect(await renderCitations(["q:9:9"], new Set())).toEqual([]);
+      expect(await renderCitations(["q:9:9", "d:12"], new Set())).toEqual([]);
       expect(mockGetQuranAyahs).not.toHaveBeenCalled();
       expect(mockGetHadiths).not.toHaveBeenCalled();
+      expect(mockGetDuas).not.toHaveBeenCalled();
+    });
+
+    describe("duas", () => {
+      const dua = {
+        id: 12, arabic: "سُبْحَانَ الَّذِي", transliteration: "Subhanal-ladhi",
+        english: "Glory to Him who has subjected this to us", reference: "Quran 43:13",
+      };
+
+      it("renders a retrieved d:12 from the stored fields only", async () => {
+        (mockGetQuranAyahs as any).mockResolvedValue([]);
+        (mockGetHadiths as any).mockResolvedValue([]);
+        (mockGetDuas as any).mockResolvedValue([{ ...dua, category: "travel", tags: ["x"], source: "Quran" }]);
+        const { renderCitations } = await load();
+
+        const out = await renderCitations(["d:12"], new Set(["d:12"]));
+
+        expect(out).toEqual([{ kind: "dua", ...dua }]);
+        expect(mockGetDuas).toHaveBeenCalledWith([12]);
+      });
+
+      it("drops an unretrieved or unknown d: ID and a malformed one", async () => {
+        (mockGetDuas as any).mockResolvedValue([dua]);
+        const { renderCitations } = await load();
+
+        // d:12 was never retrieved; d:99 was retrieved but is not in the table; d:x is malformed.
+        expect(await renderCitations(["d:12", "d:x"], new Set(["d:99", "d:x"]))).toEqual([]);
+        expect(await renderCitations(["d:99"], new Set(["d:99"]))).toEqual([]);
+        expect(mockGetDuas).toHaveBeenCalledTimes(1);
+        expect(mockGetDuas).toHaveBeenCalledWith([99]);
+      });
+
+      it("keeps the model's order across kinds and counts duas toward the 6 cap", async () => {
+        (mockGetQuranAyahs as any).mockResolvedValue([ayah]);
+        (mockGetHadiths as any).mockResolvedValue([]);
+        const duas = Array.from({ length: 6 }, (_, i) => ({ ...dua, id: i + 1 }));
+        (mockGetDuas as any).mockResolvedValue(duas);
+        const { renderCitations } = await load();
+        const ids = ["d:1", "q:2:275", ...duas.slice(1).map((d) => `d:${d.id}`)];
+
+        const out = await renderCitations(ids, new Set(ids));
+
+        expect(out).toHaveLength(6);
+        expect(out[0]).toMatchObject({ kind: "dua", id: 1 });
+        expect(out[1]).toMatchObject({ kind: "quran" });
+      });
     });
   });
 });

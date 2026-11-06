@@ -1,5 +1,5 @@
 import { ENV } from "../../config/env.js";
-import { getHadiths, getQuranAyahs } from "./sourceSearch.js";
+import { getDuas, getHadiths, getQuranAyahs } from "./sourceSearch.js";
 
 const ATTRIBUTION = /\b(?:Allah|God|Prophet|Messenger|Qur'an|Qur’an|Quran|Surah|verses?|ayahs?|ayat|hadith|narrated|reported)\b/gi;
 const HAS_ATTRIBUTION = new RegExp(ATTRIBUTION.source, "i");
@@ -69,15 +69,18 @@ export function scrubInternals(text: string): string {
 
 export type Citation =
   | { kind: "quran"; surah: number; ayah: number; arabic: string; english: string | null }
-  | { kind: "hadith"; id: number; title: string; text: string; arabic: string | null; grade: string; source: string; credit: string };
+  | { kind: "hadith"; id: number; title: string; text: string; arabic: string | null; grade: string; source: string; credit: string }
+  | { kind: "dua"; id: number; arabic: string; transliteration: string; english: string; reference: string };
 
-type Ref = { kind: "quran"; surah: number; ayah: number } | { kind: "hadith"; id: number };
+type Ref = { kind: "quran"; surah: number; ayah: number } | { kind: "hadith"; id: number } | { kind: "dua"; id: number };
 
 function parseId(id: string): Ref | null {
   const q = /^q:(\d{1,3}):(\d{1,3})$/.exec(id);
   if (q) return { kind: "quran", surah: Number(q[1]), ayah: Number(q[2]) };
   const h = /^h:(\d{1,9})$/.exec(id);
   if (h) return { kind: "hadith", id: Number(h[1]) };
+  const d = /^d:(\d{1,9})$/.exec(id);
+  if (d) return { kind: "dua", id: Number(d[1]) };
   return null;
 }
 
@@ -93,12 +96,16 @@ export async function renderCitations(ids: string[], retrieved: Set<string>): Pr
   const quranRefs = refs.flatMap((r) => (r.kind === "quran" ? [{ surah: r.surah, ayah: r.ayah }] : []));
   const hadithIds = refs.flatMap((r) => (r.kind === "hadith" ? [r.id] : []));
 
-  const [ayahs, hadiths] = await Promise.all([
+  const duaIds = refs.flatMap((r) => (r.kind === "dua" ? [r.id] : []));
+
+  const [ayahs, hadiths, duas] = await Promise.all([
     quranRefs.length ? getQuranAyahs(quranRefs) : [],
     hadithIds.length ? getHadiths(hadithIds) : [],
+    duaIds.length ? getDuas(duaIds) : [],
   ]);
   const ayahByKey = new Map(ayahs.map((a) => [`${a.surah}:${a.ayah}`, a]));
   const hadithById = new Map(hadiths.map((h) => [h.id, h]));
+  const duaById = new Map(duas.map((d) => [d.id, d]));
   const withEnglish = ENV.CHAT_QURAN_QUOTES === "text";
 
   const out: Citation[] = [];
@@ -106,6 +113,9 @@ export async function renderCitations(ids: string[], retrieved: Set<string>): Pr
     if (ref.kind === "quran") {
       const a = ayahByKey.get(`${ref.surah}:${ref.ayah}`);
       if (a) out.push({ kind: "quran", surah: a.surah, ayah: a.ayah, arabic: a.textAr, english: withEnglish ? a.textEn : null });
+    } else if (ref.kind === "dua") {
+      const d = duaById.get(ref.id);
+      if (d) out.push({ kind: "dua", id: d.id, arabic: d.arabic, transliteration: d.transliteration, english: d.english, reference: d.reference });
     } else {
       const h = hadithById.get(ref.id);
       // HadeethEnc exposes no translator name, so the credit is the site alone.

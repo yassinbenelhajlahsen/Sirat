@@ -1,6 +1,6 @@
 import { ENV } from "../../config/env.js";
 import { buildInput, SYSTEM_PROMPT, type HistoryItem } from "./prompt.js";
-import { searchHadith, searchQuran, type SourceHit } from "./sourceSearch.js";
+import { searchDuas, searchHadith, searchQuran, type SourceHit } from "./sourceSearch.js";
 
 const API = "https://api.openai.com/v1";
 const TIMEOUT_MS = 30_000;
@@ -80,11 +80,13 @@ const searchTool = (name: string, description: string) => ({
 const TOOLS = [
   searchTool("search_quran", "Search the English meaning of the Quran. Returns verses with IDs like q:2:275."),
   searchTool("search_hadith", "Search a collection of graded hadith in English. Returns hadith with IDs like h:2962."),
+  searchTool("search_duas", "Search a verified list of duas (supplications) by topic or situation, e.g. \"travel\" or \"anxiety\". Returns duas with IDs like d:12."),
 ];
 
 const SEARCHES: Record<string, (q: string) => Promise<SourceHit[]>> = {
   search_quran: searchQuran,
   search_hadith: searchHadith,
+  search_duas: searchDuas,
 };
 
 const ANSWER_FORMAT = {

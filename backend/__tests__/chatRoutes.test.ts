@@ -77,6 +77,7 @@ describe("Chat routes", () => {
     jest.unstable_mockModule("../src/services/chat/sourceSearch.js", () => ({
       getQuranAyahs: (...a: unknown[]) => mockGetQuranAyahs(...a),
       getHadiths: (...a: unknown[]) => mockGetHadiths(...a),
+      getDuas: () => [],
     }));
 
     errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});

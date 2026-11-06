@@ -99,3 +99,16 @@ model Hadith {
 
   @@map("hadiths")
 }
+
+model ChatDua {
+  id              Int      @id
+  category        String
+  tags            String[]
+  arabic          String
+  english         String
+  transliteration String
+  reference       String
+  source          String
+
+  @@map("duas")
+}

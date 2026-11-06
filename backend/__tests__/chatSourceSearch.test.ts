@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 const mockQueryRaw: jest.Mock = jest.fn();
 const mockAyahFindMany: jest.Mock = jest.fn();
 const mockHadithFindMany: jest.Mock = jest.fn();
+const mockDuaFindMany: jest.Mock = jest.fn();
 
 describe("source search", () => {
   beforeEach(() => {
@@ -10,11 +11,13 @@ describe("source search", () => {
     mockQueryRaw.mockReset();
     mockAyahFindMany.mockReset();
     mockHadithFindMany.mockReset();
+    mockDuaFindMany.mockReset();
     jest.unstable_mockModule("../src/db/prisma.js", () => ({
       prisma: {
         $queryRaw: (...a: unknown[]) => mockQueryRaw(...a),
         quranAyah: { findMany: (...a: unknown[]) => mockAyahFindMany(...a) },
         hadith: { findMany: (...a: unknown[]) => mockHadithFindMany(...a) },
+        chatDua: { findMany: (...a: unknown[]) => mockDuaFindMany(...a) },
       },
     }));
   });
@@ -99,5 +102,48 @@ describe("source search", () => {
     expect(await getHadiths([])).toEqual([]);
     expect(mockAyahFindMany).toHaveBeenCalledTimes(1);
     expect(mockHadithFindMany).not.toHaveBeenCalled();
+  });
+
+  it("returns dua hits as d:<id> with category and English, binding the query", async () => {
+    (mockQueryRaw as any).mockResolvedValue([{ id: 12, category: "travel", english: "Glory to Him who has subjected this to us" }]);
+    const { searchDuas } = await load();
+
+    const hits = await searchDuas(injection, 3);
+
+    const [strings, ...values] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    const sql = strings.join("");
+    expect(sql).not.toContain("DROP TABLE");
+    expect(sql).toMatch(/websearch_to_tsquery\('english'/);
+    expect(sql).toMatch(/FROM duas/);
+    expect(sql).toMatch(/english/);
+    expect(sql).toMatch(/category/);
+    expect(sql).toMatch(/tags/);
+    expect(values).toEqual(expect.arrayContaining([injection, 3]));
+    expect(hits).toEqual([{ id: "d:12", text: "travel: Glory to Him who has subjected this to us" }]);
+  });
+
+  it("retries a dua search with any-word matching, and skips a blank one", async () => {
+    (mockQueryRaw as any)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 2, category: "anxiety", english: "Allah is sufficient for me" }]);
+    const { searchDuas } = await load();
+
+    expect((await searchDuas("exam stress")).map((h) => h.id)).toEqual(["d:2"]);
+    const [, ...retryValues] = mockQueryRaw.mock.calls[1] as [TemplateStringsArray, ...unknown[]];
+    expect(retryValues).toContain("exam or stress");
+
+    mockQueryRaw.mockClear();
+    expect(await searchDuas("  ")).toEqual([]);
+    expect(mockQueryRaw).not.toHaveBeenCalled();
+  });
+
+  it("looks up duas by id, skipping the query when empty", async () => {
+    (mockDuaFindMany as any).mockResolvedValue([{ id: 12, arabic: "a", transliteration: "t", english: "e", reference: "Quran 43:13" }]);
+    const { getDuas } = await load();
+
+    expect(await getDuas([12])).toEqual([{ id: 12, arabic: "a", transliteration: "t", english: "e", reference: "Quran 43:13" }]);
+    expect(mockDuaFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: { in: [12] } } }));
+    expect(await getDuas([])).toEqual([]);
+    expect(mockDuaFindMany).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,4 +1,4 @@
-// Pure mappers for scripts/importQuran.ts and scripts/importHadeethEnc.ts.
+// Pure mappers for scripts/importQuran.ts, importHadeethEnc.ts and importDuas.ts.
 
 export type QuranRow = { surah: number; ayah: number; textAr: string; textEn: string };
 export type HadithRow = {
@@ -9,6 +9,17 @@ export type HadithRow = {
   grade: string;
   attribution: string;
   explanation: string | null;
+};
+
+export type DuaRow = {
+  id: number;
+  category: string;
+  tags: string[];
+  arabic: string;
+  english: string;
+  transliteration: string;
+  reference: string;
+  source: string;
 };
 
 type VerseFile = Record<string, { chapter: number; verse: number; text: string }[]>;
@@ -57,4 +68,41 @@ export function mapHadeethEncItem(item: unknown): HadithRow | null {
     attribution: str(r.attribution),
     explanation: str(r.explanation) || null,
   };
+}
+
+// The app's file holds real arrays, but a list-looking string ("['a', 'b']") is tolerated.
+const parseTags = (v: unknown): string[] => {
+  const items = Array.isArray(v) ? v : typeof v === "string" ? v.replace(/^\s*\[|\]\s*$/g, "").split(",") : [];
+  return items.map((t) => str(t).trim().replace(/^["']|["']$/g, "").trim()).filter(Boolean);
+};
+
+/**
+ * `frontend/assets/data/duas.json`: `{ duas: [...] }`, or a bare array or object of duas.
+ * Throws on any bad dua so a broken file never half-imports.
+ */
+export function mapDuasFile(file: unknown): DuaRow[] {
+  const root = (file as { duas?: unknown } | null)?.duas ?? file;
+  const items = root && typeof root === "object" ? Object.values(root) : [];
+  if (!items.length) throw new Error("No duas in file");
+  const seen = new Set<number>();
+  const rows = items.map((item) => {
+    const r = (item ?? {}) as Record<string, unknown>;
+    const id = Number(r.id);
+    const row = {
+      id,
+      category: str(r.category),
+      tags: parseTags(r.tags),
+      arabic: str(r.arabic),
+      english: str(r.english),
+      transliteration: str(r.transliteration),
+      reference: str(r.reference),
+      source: str(r.source),
+    };
+    if (!Number.isInteger(id) || id <= 0) throw new Error(`Dua has no valid id: ${JSON.stringify(r.id)}`);
+    if (!row.arabic.trim() || !row.english.trim() || !row.reference.trim()) throw new Error(`Dua ${id} is missing Arabic, English or reference`);
+    if (seen.has(id)) throw new Error(`Duplicate dua id ${id}`);
+    seen.add(id);
+    return row;
+  });
+  return rows.sort((a, b) => a.id - b.id);
 }

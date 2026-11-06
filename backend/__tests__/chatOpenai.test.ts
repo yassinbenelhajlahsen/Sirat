@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 const mockFetch: jest.Mock = jest.fn();
 const mockSearchQuran: jest.Mock = jest.fn();
 const mockSearchHadith: jest.Mock = jest.fn();
+const mockSearchDuas: jest.Mock = jest.fn();
 
 const ok = (body: unknown) => ({ status: 200, ok: true, json: async () => body });
 const fail = (status: number, body: unknown = { error: { message: "boom: USER-SECRET" } }) => ({ status, ok: false, json: async () => body });
@@ -30,14 +31,17 @@ describe("OpenAI chat client", () => {
     mockFetch.mockReset();
     mockSearchQuran.mockReset();
     mockSearchHadith.mockReset();
+    mockSearchDuas.mockReset();
     (globalThis as any).fetch = mockFetch;
     process.env.OPENAI_API_KEY = "sk-test";
     process.env.OPENAI_MODEL = "gpt-6-luna";
     (mockSearchQuran as any).mockResolvedValue([{ id: "q:2:275", text: "trade and interest" }]);
     (mockSearchHadith as any).mockResolvedValue([{ id: "h:5", text: "a hadith", grade: "Sahih" }]);
+    (mockSearchDuas as any).mockResolvedValue([{ id: "d:12", text: "travel: Glory to Him who has subjected this to us" }]);
     jest.unstable_mockModule("../src/services/chat/sourceSearch.js", () => ({
       searchQuran: (...a: unknown[]) => mockSearchQuran(...a),
       searchHadith: (...a: unknown[]) => mockSearchHadith(...a),
+      searchDuas: (...a: unknown[]) => mockSearchDuas(...a),
     }));
   });
 
@@ -70,6 +74,39 @@ describe("OpenAI chat client", () => {
       expect(second).toContainEqual({ type: "function_call_output", call_id: "c1", output: JSON.stringify([{ id: "q:2:275", text: "trade and interest" }]) });
     });
 
+    it("offers search_duas and lets the model call it, counting its hits as retrieved", async () => {
+      (mockFetch as any)
+        .mockResolvedValueOnce(response([fnCall("c1", "search_duas", "travel")]))
+        .mockResolvedValueOnce(response([final({ ...ANSWER, citations: ["d:12"] })]));
+      const { generateAnswer } = await load();
+
+      const { answer, retrievedIds } = await generateAnswer(INPUT);
+
+      expect(bodyOf(0).tools.map((t: { name: string }) => t.name)).toEqual(["search_quran", "search_hadith", "search_duas"]);
+      expect(mockSearchDuas).toHaveBeenCalledWith("travel");
+      expect([...retrievedIds]).toEqual(["d:12"]);
+      expect(answer.citations).toEqual(["d:12"]);
+      expect(bodyOf(1).input).toContainEqual({
+        type: "function_call_output", call_id: "c1",
+        output: JSON.stringify([{ id: "d:12", text: "travel: Glory to Him who has subjected this to us" }]),
+      });
+    });
+
+    it("shares the 3-search cap between all three tools", async () => {
+      (mockFetch as any)
+        .mockResolvedValueOnce(response([fnCall("c1", "search_duas", "a"), fnCall("c2", "search_quran", "b")]))
+        .mockResolvedValueOnce(response([fnCall("c3", "search_hadith", "c"), fnCall("c4", "search_duas", "d")]))
+        .mockResolvedValueOnce(response([final(ANSWER)]));
+      const { generateAnswer } = await load();
+
+      await generateAnswer(INPUT);
+
+      expect(mockSearchDuas).toHaveBeenCalledTimes(1);
+      expect(mockSearchQuran).toHaveBeenCalledTimes(1);
+      expect(mockSearchHadith).toHaveBeenCalledTimes(1);
+      expect(bodyOf(2).tools).toBeUndefined();
+    });
+
     it("stops after 3 searches and makes the last request without tools", async () => {
       (mockFetch as any)
         .mockResolvedValueOnce(response([fnCall("c1", "search_quran", "a"), fnCall("c2", "search_quran", "b")]))
@@ -81,8 +118,8 @@ describe("OpenAI chat client", () => {
 
       expect(mockSearchQuran.mock.calls.length + mockSearchHadith.mock.calls.length).toBe(3);
       expect(mockFetch).toHaveBeenCalledTimes(3);
-      expect(bodyOf(0).tools).toHaveLength(2);
-      expect(bodyOf(1).tools).toHaveLength(2);
+      expect(bodyOf(0).tools).toHaveLength(3);
+      expect(bodyOf(1).tools).toHaveLength(3);
       expect(bodyOf(2).tools).toBeUndefined();
       // Every call still gets an output, or the API rejects the next request.
       expect(bodyOf(2).input).toContainEqual(expect.objectContaining({ type: "function_call_output", call_id: "c4" }));

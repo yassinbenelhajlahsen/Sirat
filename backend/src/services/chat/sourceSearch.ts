@@ -1,6 +1,6 @@
 import { prisma } from "../../db/prisma.js";
 
-/** What the model sees from a search. IDs: `q:<surah>:<ayah>` and `h:<hadeethencId>`. */
+/** What the model sees from a search. IDs: `q:<surah>:<ayah>`, `h:<hadeethencId>` and `d:<duaId>`. */
 export type SourceHit = { id: string; text: string; grade?: string };
 
 const MAX_HIT_TEXT = 800;
@@ -37,6 +37,17 @@ export async function searchHadith(query: string, limit = 5): Promise<SourceHit[
   return rows.map((r) => ({ id: `h:${r.id}`, text: clip(`${r.title}: ${r.text_en}`), grade: r.grade }));
 }
 
+export async function searchDuas(query: string, limit = 5): Promise<SourceHit[]> {
+  if (!query.trim()) return [];
+  const rows = await withAnyWordFallback(query, (q) => prisma.$queryRaw<{ id: number; category: string; english: string }[]>`
+    SELECT id, category, english
+    FROM duas, websearch_to_tsquery('english', ${q}) q
+    WHERE to_tsvector('english', english || ' ' || category || ' ' || array_to_string(tags, ' ')) @@ q
+    ORDER BY ts_rank(to_tsvector('english', english || ' ' || category || ' ' || array_to_string(tags, ' ')), q) DESC
+    LIMIT ${limit}`);
+  return rows.map((r) => ({ id: `d:${r.id}`, text: clip(`${r.category}: ${r.english}`) }));
+}
+
 export async function getQuranAyahs(
   refs: { surah: number; ayah: number }[],
 ): Promise<{ surah: number; ayah: number; textAr: string; textEn: string }[]> {
@@ -54,5 +65,15 @@ export async function getHadiths(
   return prisma.hadith.findMany({
     where: { id: { in: ids } },
     select: { id: true, title: true, textEn: true, textAr: true, grade: true, attribution: true },
+  });
+}
+
+export async function getDuas(
+  ids: number[],
+): Promise<{ id: number; arabic: string; transliteration: string; english: string; reference: string }[]> {
+  if (!ids.length) return [];
+  return prisma.chatDua.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, arabic: true, transliteration: true, english: true, reference: true },
   });
 }

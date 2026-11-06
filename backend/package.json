@@ -17,6 +17,7 @@
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "import:quran": "tsx scripts/importQuran.ts",
     "import:hadith": "tsx scripts/importHadeethEnc.ts",
+    "import:duas": "tsx scripts/importDuas.ts",
     "chat:eval": "tsx scripts/chatEval.ts"
   },
   "dependencies": {
