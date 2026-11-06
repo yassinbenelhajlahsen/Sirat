@@ -33,11 +33,12 @@ function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
 
   const submitRequest = async (request: string) => {
     haptic("medium");
+    // Before the await: the request now resolves after the card is swapped out.
+    Keyboard.dismiss();
 
     try {
       await onSubmit(request);
       setUserInput("");
-      Keyboard.dismiss();
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to find a dua");
     }

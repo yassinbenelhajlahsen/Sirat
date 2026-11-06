@@ -1,6 +1,6 @@
 import { getAnotherDua, requestDua, saveDuaToHistory, type Dua, type DuaNotice } from "@/services/duaService";
 import { topicForCategory } from "@/services/duaTopics";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Animated, Easing } from "react-native";
 
 // The swap animates the wrapper around the cards. That is safe only while the
@@ -12,33 +12,44 @@ export function useDuaInteraction() {
   const [notice, setNotice] = useState<DuaNotice>(null);
   const [duaLoading, setDuaLoading] = useState(false);
   const duaSwapAnim = useRef(new Animated.Value(1)).current;
+  const [swapCount, setSwapCount] = useState(0);
 
+  // Fade in only after the new card has rendered. Starting the spring in the
+  // fade-out callback raced the re-render, so the old card flashed back first.
+  useEffect(() => {
+    if (swapCount === 0) return;
+    Animated.spring(duaSwapAnim, {
+      toValue: 1,
+      speed: 15,
+      bounciness: 10,
+      useNativeDriver: true,
+    }).start();
+  }, [swapCount, duaSwapAnim]);
+
+  // Resolves once the card is swapped, so the caller's loading state holds
+  // through the fade-out instead of changing the card while it fades.
   const runDuaTransition = useCallback(
-    (nextDua: Dua | null, nextNotice: DuaNotice) => {
-      Animated.timing(duaSwapAnim, {
-        toValue: 0,
-        duration: 170,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }).start(() => {
-        setSelectedDua(nextDua);
-        setNotice(nextNotice);
-        duaSwapAnim.setValue(0);
-        Animated.spring(duaSwapAnim, {
-          toValue: 1,
-          speed: 15,
-          bounciness: 10,
+    (nextDua: Dua | null, nextNotice: DuaNotice) =>
+      new Promise<void>((resolve) => {
+        Animated.timing(duaSwapAnim, {
+          toValue: 0,
+          duration: 170,
+          easing: Easing.in(Easing.cubic),
           useNativeDriver: true,
-        }).start();
-      });
-    },
+        }).start(() => {
+          setSelectedDua(nextDua);
+          setNotice(nextNotice);
+          setSwapCount((c) => c + 1);
+          resolve();
+        });
+      }),
     [duaSwapAnim],
   );
 
   const showDua = useCallback(
     async (dua: Dua, nextNotice: DuaNotice) => {
       await saveDuaToHistory(dua);
-      runDuaTransition(dua, nextNotice);
+      await runDuaTransition(dua, nextNotice);
     },
     [runDuaTransition],
   );

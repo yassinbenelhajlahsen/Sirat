@@ -68,6 +68,56 @@ describe("hooks/useDuaInteraction", () => {
     expect(Alert.alert).not.toHaveBeenCalled();
   });
 
+  it("fades the new card in only after it has rendered, with loading held until then", async () => {
+    const dua: Dua = {
+      id: 17,
+      category: "exam",
+      arabic: "arabic",
+      english: "english",
+      transliteration: "translit",
+      reference: "ref",
+      source: "source",
+    };
+    mockRequestDua.mockResolvedValue({ dua, notice: null });
+    mockSaveDuaToHistory.mockResolvedValue();
+
+    // renderHook updates result.current in its own effect, after the hook's; read the rendered value instead.
+    let rendered: Dua | null = null;
+    const { result } = renderHook(() => {
+      const state = useDuaInteraction();
+      rendered = state.selectedDua;
+      return state;
+    });
+    let endFadeOut: Animated.EndCallback | undefined;
+    const seenAtFadeIn: (Dua | null)[] = [];
+    (Animated.timing as jest.Mock).mockImplementation(() => ({
+      start: (cb?: Animated.EndCallback) => {
+        endFadeOut = cb;
+      },
+    }));
+    (Animated.spring as jest.Mock).mockImplementation(() => ({
+      start: () => seenAtFadeIn.push(rendered),
+    }));
+
+    let submit!: Promise<void>;
+    act(() => {
+      submit = result.current.submitDua("help me");
+    });
+    await waitFor(() => expect(endFadeOut).toBeDefined());
+
+    // Mid fade-out: the prompt card must not change under the animation.
+    expect(result.current.duaLoading).toBe(true);
+    expect(seenAtFadeIn).toEqual([]);
+
+    await act(async () => {
+      endFadeOut?.({ finished: true });
+      await submit;
+    });
+
+    expect(seenAtFadeIn).toEqual([dua]);
+    expect(result.current.duaLoading).toBe(false);
+  });
+
   it("shows alert on request error and clears loading", async () => {
     mockRequestDua.mockRejectedValue(new Error("Backend down"));
 
