@@ -54,10 +54,14 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `quran copy text formatting testing`
   - `services/quranCopyText.test.ts`
 - `dua flow testing`
-  - `services/duaMatcher.test.ts`
-  - `services/duaService.test.ts`
-  - `hooks/useDuaInteraction.test.ts`
-  - `services/duaTopics.test.ts` — every category in duas.json maps to exactly one topic; "another dua" stays in the topic
+  - `services/duaMatcher.test.ts` — offline weighted scorer: crisis check and idioms, conflicts, misspellings, romanized terms, Arabic script, every category but General reachable, tuning list passes, held-out list meets the targets (90% correct, 3% wrong topic)
+  - `fixtures/duaHeldOut.ts` — held-out requests with expected topics, written before the scorer and never tuned against: do not edit an entry to improve a result
+  - `fixtures/duaTuning.ts` — tuning requests the rules may be adjusted against
+  - `services/duaEval.helper.ts` — shared topic-level judging for the two lists (not a test)
+  - `services/duaService.test.ts` — includes the no-match and crisis notices, and that history never stores typed text or a notice
+  - `hooks/useDuaInteraction.test.ts` — the crisis notice survives Another and clears on close; no-match clears on Another; only the dua is saved
+  - `components/dua-result-card.contract.test.tsx` — crisis message (exact text, alert role), no-match line with Browse all duas, copy reports to the screen (the toast lives on Home)
+  - `services/duaTopics.test.ts` — every category in duas.json maps to exactly one topic; "another dua" stays in the topic, and in Sleep
   - `services/duaSaved.test.ts` — saved dua ids (newest first, own change event for sync stamping)
   - `screens/settings-notifications.test.tsx` — Settings > Notifications page passes the OS permission status (granted, or denied on read failure)
   - `screens/Duas.test.tsx` — dua library sheet: Saved/Recent rows, topics, pushes inside the sheet; list page shows full duas, saving, Saved empty state

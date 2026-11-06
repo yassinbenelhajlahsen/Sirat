@@ -19,19 +19,54 @@ describe("services/duaService", () => {
 
     await jest.advanceTimersByTimeAsync(1200);
 
-    const dua = await request;
+    const { dua, notice } = await request;
 
     expect(dua.category).toBe("exam");
+    expect(notice).toBeNull();
   });
 
-  it("returns the general dua when no regex matches", async () => {
+  it("returns the general dua with the no-match notice when nothing matches", async () => {
     const request = requestDua("totally unmatched request phrase");
 
     await jest.advanceTimersByTimeAsync(1200);
 
-    const dua = await request;
+    const { dua, notice } = await request;
 
     expect(dua.id).toBe(GENERAL_DUA_ID);
+    expect(notice).toBe("no-match");
+  });
+
+  it("returns a chosen crisis dua with the crisis notice", async () => {
+    const selfHarm = requestDua("I want to kill myself");
+    const abuse = requestDua("my husband hits me");
+    await jest.advanceTimersByTimeAsync(1200);
+
+    expect(await selfHarm).toMatchObject({ notice: "crisis", dua: { id: 39 } });
+    expect(await abuse).toMatchObject({ notice: "crisis", dua: { id: 114 } });
+  });
+
+  it("only returns sleep duas for a sleep request", async () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 20; i += 1) {
+      const request = requestDua("I can't sleep");
+      await jest.advanceTimersByTimeAsync(1200);
+      seen.add((await request).dua.category);
+    }
+    expect([...seen]).toEqual(["sleep"]);
+  });
+
+  it("never stores what was typed or whether a notice showed", async () => {
+    await AsyncStorage.clear();
+    const request = requestDua("I want to kill myself");
+    await jest.advanceTimersByTimeAsync(1200);
+    const { dua } = await request;
+    await saveDuaToHistory(dua);
+
+    const raw = (await AsyncStorage.getItem("dua_history_v1")) ?? "";
+    expect(raw).not.toMatch(/kill myself|crisis|notice|no-match/i);
+    expect(Object.keys(JSON.parse(raw)[0]).sort()).toEqual(
+      ["arabic", "category", "english", "id", "reference", "source", "transliteration"],
+    );
   });
 
   it("rejects an empty request", async () => {

@@ -1,7 +1,7 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
-import { Share } from "react-native";
+import { Share, StyleSheet } from "react-native";
 
-import DuaResultCard from "@/components/DuaResultCard";
+import DuaResultCard, { CRISIS_MESSAGE, NO_MATCH_MESSAGE } from "@/components/DuaResultCard";
 import type { Dua } from "@/services/duaService";
 
 jest.mock("@/context/ThemeContext", () => {
@@ -66,14 +66,71 @@ describe("DuaResultCard contract", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("shows a toast when copy is pressed", () => {
-    const { getByLabelText, getByText } = render(
-      <DuaResultCard dua={sampleDua} onClose={jest.fn()} />
+  it("tells the screen when copy is pressed instead of showing its own toast", () => {
+    const onCopied = jest.fn();
+    const { getByLabelText, queryByText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} onCopied={onCopied} />
     );
 
     fireEvent.press(getByLabelText("Copy dua"));
 
-    expect(getByText("Copied to clipboard")).toBeTruthy();
+    expect(onCopied).toHaveBeenCalledTimes(1);
+    expect(queryByText("Copied to clipboard")).toBeNull();
+  });
+
+  it("shows the exact support message above the dua for the crisis notice", () => {
+    const { getByText, getByRole } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} onAnother={jest.fn()} notice="crisis" />
+    );
+
+    expect(getByText(CRISIS_MESSAGE)).toBeTruthy();
+    expect(CRISIS_MESSAGE).toBe(
+      "You don't have to face this alone. If you might hurt yourself, or someone is hurting you, call your local emergency number or a crisis line now, and reach out to someone you trust.",
+    );
+    expect(getByRole("alert")).toBeTruthy();
+  });
+
+  it("shows the no-match line and a Browse all duas action", () => {
+    const onBrowse = jest.fn();
+    const { getByText, getByLabelText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} notice="no-match" onBrowse={onBrowse} />
+    );
+
+    expect(getByText("We couldn't find a close match, so here's a general dua.")).toBeTruthy();
+    fireEvent.press(getByLabelText("Browse all duas"));
+    expect(onBrowse).toHaveBeenCalledTimes(1);
+  });
+
+  it("centers the no-match line and the Browse all duas button", () => {
+    const { getByText, getByLabelText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} notice="no-match" onBrowse={jest.fn()} />
+    );
+
+    expect(StyleSheet.flatten(getByText(NO_MATCH_MESSAGE).props.style).textAlign).toBe("center");
+    let node: any = getByLabelText("Browse all duas");
+    while (node && StyleSheet.flatten(node.props.style)?.alignSelf !== "center") node = node.parent;
+    expect(node).toBeTruthy();
+  });
+
+  it("never shows the no-match line or Browse button next to the crisis message", () => {
+    const { getByText, queryByText, queryByLabelText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} onBrowse={jest.fn()} notice="crisis" />
+    );
+
+    expect(getByText(CRISIS_MESSAGE)).toBeTruthy();
+    expect(queryByText(NO_MATCH_MESSAGE)).toBeNull();
+    expect(queryByLabelText("Browse all duas")).toBeNull();
+  });
+
+  it("shows no notice for a normal match", () => {
+    const { queryByText, queryByRole, queryByLabelText } = render(
+      <DuaResultCard dua={sampleDua} onClose={jest.fn()} onBrowse={jest.fn()} notice={null} />
+    );
+
+    expect(queryByText(CRISIS_MESSAGE)).toBeNull();
+    expect(queryByText(NO_MATCH_MESSAGE)).toBeNull();
+    expect(queryByRole("alert")).toBeNull();
+    expect(queryByLabelText("Browse all duas")).toBeNull();
   });
 
   it("renders find-another only when onAnother is provided and wires it", () => {

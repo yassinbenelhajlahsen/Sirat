@@ -54,6 +54,19 @@ describe("getAnotherDua", () => {
     }
   });
 
+  it("keeps Another inside sleep, with at least four sleep duas to cycle", () => {
+    const topic = getTopic("sleep")!;
+    const members = getDuasForTopic(topic.id);
+    expect(members.length).toBeGreaterThanOrEqual(4);
+    expect(members.every((d) => d.category === "sleep")).toBe(true);
+
+    for (let i = 0; i < 25; i += 1) {
+      const next = getAnotherDua(topic, members[0].id)!;
+      expect(next.id).not.toBe(members[0].id);
+      expect(next.category).toBe("sleep");
+    }
+  });
+
   it("falls back to the wider pool when there is no topic", () => {
     const shown = duas[0].id;
     expect(getAnotherDua(undefined, shown)!.id).not.toBe(shown);

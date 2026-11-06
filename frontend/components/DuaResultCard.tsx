@@ -1,4 +1,3 @@
-import CopyToast from "@/components/CopyToast";
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
@@ -9,7 +8,7 @@ import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useSavedDuas } from "@/hooks/useSavedDuas";
-import type { Dua } from "@/services/duaService";
+import type { Dua, DuaNotice } from "@/services/duaService";
 import React from "react";
 import { Clipboard, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
@@ -17,11 +16,20 @@ interface DuaResultCardProps {
   dua: Dua;
   onClose: () => void;
   onAnother?: () => void;
+  /** Shown above the dua. Screen-only; the saved dua never carries it. */
+  notice?: DuaNotice;
+  onBrowse?: () => void;
+  /** The screen owns the "Copied" toast so it can sit below the status bar. */
+  onCopied?: () => void;
 }
+
+export const CRISIS_MESSAGE =
+  "You don't have to face this alone. If you might hurt yourself, or someone is hurting you, call your local emergency number or a crisis line now, and reach out to someone you trust.";
+export const NO_MATCH_MESSAGE = "We couldn't find a close match, so here's a general dua.";
 
 type Mode = "translation" | "transliteration";
 
-function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
+function DuaResultCard({ dua, onClose, onAnother, notice = null, onBrowse, onCopied }: DuaResultCardProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -30,10 +38,6 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
   const saved = isSaved(dua.id);
 
   const [mode, setMode] = React.useState<Mode>("translation");
-  const [toastVisible, setToastVisible] = React.useState(false);
-
-  // Stable so CopyToast's auto-dismiss timer isn't reset on every Home re-render.
-  const hideToast = React.useCallback(() => setToastVisible(false), []);
 
   // Category values are snake_case keys (e.g. "after_prayer", "drinking_water").
   // Render them as title-cased words so the underscore never reaches the UI.
@@ -58,7 +62,7 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
   const handleCopy = () => {
     Clipboard?.setString?.(fullText);
     haptic("light");
-    setToastVisible(true);
+    onCopied?.();
   };
 
   const handleToggleSave = () => {
@@ -75,6 +79,37 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
     <View style={styles.wrapper}>
       <GlassSurface tier="card" radius={theme.radii.card} style={styles.card}>
         <ScrollView showsVerticalScrollIndicator={false}>
+          {notice === "crisis" ? (
+            <View
+              style={styles.crisisBox}
+              accessible
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+              accessibilityLabel={CRISIS_MESSAGE}
+            >
+              <Subhead color={colors.white}>{CRISIS_MESSAGE}</Subhead>
+            </View>
+          ) : null}
+
+          {notice === "no-match" ? (
+            <View style={styles.noMatchBox}>
+              <Subhead color={colors.textSecondary} style={styles.noMatchText}>{NO_MATCH_MESSAGE}</Subhead>
+              {onBrowse ? (
+                <Button
+                  label="Browse all duas"
+                  icon="book-outline"
+                  variant="tonal"
+                  onPress={() => {
+                    haptic("light");
+                    onBrowse();
+                  }}
+                  accessibilityLabel="Browse all duas"
+                  style={styles.browseButton}
+                />
+              ) : null}
+            </View>
+          ) : null}
+
           <View style={styles.headerRow}>
             <Footnote color={colors.textTertiary}>{categoryLabel}</Footnote>
 
@@ -165,8 +200,6 @@ function DuaResultCard({ dua, onClose, onAnother }: DuaResultCardProps) {
           ) : null}
         </ScrollView>
       </GlassSurface>
-
-      <CopyToast visible={toastVisible} onHide={hideToast} />
     </View>
   );
 }
@@ -182,6 +215,25 @@ const createStyles = (theme: AppTheme) => {
       padding: spacing.lg,
       position: "relative",
       zIndex: 1,
+    },
+    crisisBox: {
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderRadius: theme.radii.row,
+      backgroundColor: withOpacity(colors.accent, 0.14),
+      borderWidth: 1,
+      borderColor: withOpacity(colors.accent, 0.4),
+    },
+    noMatchBox: {
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+      alignItems: "center",
+    },
+    noMatchText: {
+      textAlign: "center",
+    },
+    browseButton: {
+      alignSelf: "center",
     },
     headerRow: {
       flexDirection: "row",

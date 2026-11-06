@@ -1,7 +1,8 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Alert, Keyboard } from "react-native";
 
-import DuaCard from "@/components/DuaCard";
+import DuaCard, { QUICK_PROMPTS } from "@/components/DuaCard";
+import { matchDua } from "@/services/duaMatcher";
 
 jest.mock("@/context/ThemeContext", () => {
   const { defaultTheme } = jest.requireActual("@/constants/theme");
@@ -27,6 +28,18 @@ jest.mock("@/components/PressableScale", () => {
 });
 
 describe("DuaCard contract", () => {
+  it("offers Anxiety, Sleep and Forgiveness quick buttons, each reaching its own category", () => {
+    const { getByLabelText, queryByLabelText } = render(<DuaCard onSubmit={jest.fn()} />);
+
+    expect(QUICK_PROMPTS.map((p) => p.label)).toEqual(["Anxiety", "Sleep", "Forgiveness"]);
+    for (const prompt of QUICK_PROMPTS) {
+      expect(getByLabelText(`Ask for a ${prompt.label} dua`)).toBeTruthy();
+      const match = matchDua(prompt.text);
+      expect(match.kind === "match" && match.categories).toContain(prompt.category);
+    }
+    expect(queryByLabelText("Ask for a Gratitude dua")).toBeNull();
+  });
+
   it("renders core content and keeps submit disabled until input is meaningful", () => {
     const { getByLabelText, getByText } = render(
       <DuaCard onSubmit={jest.fn(async () => {})} />

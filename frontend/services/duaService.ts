@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { matchByRegex } from "./duaMatcher";
+import { matchDua } from "./duaMatcher";
 import { topicForCategory, type DuaTopic } from "./duaTopics";
 
 /**
  * Frontend Dua Service (fully offline)
- * - Regex matching runs locally
- * - No regex match returns the general dua
+ * - Keyword scoring runs locally
+ * - No match returns the general dua
  */
 
 export interface Dua {
@@ -46,13 +46,8 @@ function toDua(localDua: LocalDua): Dua {
   };
 }
 
-function getRandomDuaByCategory(category: string): Dua | null {
-  const matches = LOCAL_DUAS.filter((dua) => dua.category === category);
-  if (matches.length === 0) {
-    return null;
-  }
-  const randomIndex = Math.floor(Math.random() * matches.length);
-  return toDua(matches[randomIndex]);
+function pickRandom(pool: LocalDua[]): Dua | null {
+  return pool.length === 0 ? null : toDua(pool[Math.floor(Math.random() * pool.length)]);
 }
 
 export function getDuasForTopic(topicId: string): Dua[] {
@@ -98,24 +93,42 @@ async function applySimulatedLoading(startTime: number): Promise<void> {
   }
 }
 
+/** Shown with the dua. Never stored: history keeps only the dua. */
+export type DuaNotice = "crisis" | "no-match" | null;
+
+export interface DuaResult {
+  dua: Dua;
+  notice: DuaNotice;
+}
+
 /**
  * Request flow:
- * 1) Try local regex + local duas
- * 2) No match: return the local general dua
+ * 1) Crisis check, then local keyword scoring
+ * 2) No match: return the local general dua with the no-match notice
  */
-export async function requestDua(userRequest: string): Promise<Dua> {
+export async function requestDua(userRequest: string): Promise<DuaResult> {
   const startTime = Date.now();
   const trimmedRequest = userRequest.trim();
   if (!trimmedRequest) {
     throw new Error("Please enter what you need help with");
   }
 
-  const regexCategory = matchByRegex(trimmedRequest);
-  const dua =
-    (regexCategory && getRandomDuaByCategory(regexCategory)) ||
-    getGeneralFallbackDua();
+  const match = matchDua(trimmedRequest);
+  let result: DuaResult;
+  if (match.kind === "crisis") {
+    const dua = getDuaById(match.duaId) ?? getGeneralFallbackDua();
+    result = { dua, notice: "crisis" };
+  } else if (match.kind === "match") {
+    const pool = LOCAL_DUAS.filter((d) =>
+      match.duaIds ? match.duaIds.includes(d.id) : match.categories.includes(d.category),
+    );
+    const dua = pickRandom(pool);
+    result = dua ? { dua, notice: null } : { dua: getGeneralFallbackDua(), notice: "no-match" };
+  } else {
+    result = { dua: getGeneralFallbackDua(), notice: "no-match" };
+  }
   await applySimulatedLoading(startTime);
-  return dua;
+  return result;
 }
 
 /**

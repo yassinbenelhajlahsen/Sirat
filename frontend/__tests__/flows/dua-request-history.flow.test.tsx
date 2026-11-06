@@ -71,6 +71,25 @@ describe("flows/dua-request-history", () => {
     expect(history[0].category).toBe("exam");
   });
 
+  it("shows the crisis notice, not the no-match line, for a self-harm request, and stores no trace of it", async () => {
+    const { result } = renderHook(() => useDuaInteraction());
+
+    let submitPromise!: Promise<void>;
+    act(() => {
+      submitPromise = result.current.submitDua("I want to kill myself");
+    });
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(1200);
+      await submitPromise;
+    });
+
+    expect(result.current.notice).toBe("crisis");
+    expect(result.current.selectedDua?.id).toBe(39);
+
+    const rawHistory = (await AsyncStorage.getItem("dua_history_v1")) ?? "";
+    expect(rawHistory).not.toMatch(/kill|crisis|notice|no-match/i);
+  });
+
   it("transitions loading to error and does not persist history for an empty request", async () => {
     const { result } = renderHook(() => useDuaInteraction());
 

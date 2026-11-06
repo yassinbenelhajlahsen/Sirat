@@ -52,7 +52,7 @@ describe("hooks/useDuaInteraction", () => {
       source: "source",
     };
 
-    mockRequestDua.mockResolvedValue(dua);
+    mockRequestDua.mockResolvedValue({ dua, notice: null });
     mockSaveDuaToHistory.mockResolvedValue();
 
     const { result } = renderHook(() => useDuaInteraction());
@@ -93,7 +93,7 @@ describe("hooks/useDuaInteraction", () => {
       source: "source",
     };
 
-    mockRequestDua.mockResolvedValue(dua);
+    mockRequestDua.mockResolvedValue({ dua, notice: null });
     mockSaveDuaToHistory.mockResolvedValue();
 
     const { result } = renderHook(() => useDuaInteraction());
@@ -124,7 +124,7 @@ describe("hooks/useDuaInteraction", () => {
       source: "source",
     };
     const next: Dua = { ...shown, id: 8, category: "visiting_sick" };
-    mockRequestDua.mockResolvedValue(shown);
+    mockRequestDua.mockResolvedValue({ dua: shown, notice: null });
     mockSaveDuaToHistory.mockResolvedValue();
     mockGetAnotherDua.mockReturnValue(next);
 
@@ -143,6 +143,71 @@ describe("hooks/useDuaInteraction", () => {
     expect(result.current.selectedDua).toEqual(next);
   });
 
+  describe("notice", () => {
+    const dua: Dua = {
+      id: 39,
+      category: "difficulty",
+      arabic: "arabic",
+      english: "english",
+      transliteration: "translit",
+      reference: "ref",
+      source: "source",
+    };
+
+    it("keeps the crisis notice on Another and clears it on close", async () => {
+      mockRequestDua.mockResolvedValue({ dua, notice: "crisis" });
+      mockSaveDuaToHistory.mockResolvedValue();
+      mockGetAnotherDua.mockReturnValue({ ...dua, id: 8 });
+
+      const { result } = renderHook(() => useDuaInteraction());
+      await act(async () => {
+        await result.current.submitDua("anything");
+      });
+      expect(result.current.notice).toBe("crisis");
+
+      await act(async () => {
+        result.current.anotherDua();
+      });
+      expect(result.current.selectedDua?.id).toBe(8);
+      expect(result.current.notice).toBe("crisis");
+
+      act(() => {
+        result.current.closeDua();
+      });
+      expect(result.current.selectedDua).toBeNull();
+      expect(result.current.notice).toBeNull();
+    });
+
+    it("drops the no-match line once Another shows a different dua", async () => {
+      mockRequestDua.mockResolvedValue({ dua, notice: "no-match" });
+      mockSaveDuaToHistory.mockResolvedValue();
+      mockGetAnotherDua.mockReturnValue({ ...dua, id: 8 });
+
+      const { result } = renderHook(() => useDuaInteraction());
+      await act(async () => {
+        await result.current.submitDua("anything");
+      });
+      expect(result.current.notice).toBe("no-match");
+
+      await act(async () => {
+        result.current.anotherDua();
+      });
+      expect(result.current.notice).toBeNull();
+    });
+
+    it("saves only the dua, never the notice", async () => {
+      mockRequestDua.mockResolvedValue({ dua, notice: "crisis" });
+      mockSaveDuaToHistory.mockResolvedValue();
+
+      const { result } = renderHook(() => useDuaInteraction());
+      await act(async () => {
+        await result.current.submitDua("anything");
+      });
+      expect(mockSaveDuaToHistory).toHaveBeenCalledWith(dua);
+      expect(mockSaveDuaToHistory).toHaveBeenCalledTimes(1);
+    });
+  });
+
   // Safe only because the cards are solid surfaces: Liquid Glass would render
   // as nothing under this animated wrapper.
   it("animates the swap when a dua appears and when it closes", async () => {
@@ -155,7 +220,7 @@ describe("hooks/useDuaInteraction", () => {
       reference: "ref",
       source: "source",
     };
-    mockRequestDua.mockResolvedValue(dua);
+    mockRequestDua.mockResolvedValue({ dua, notice: null });
     mockSaveDuaToHistory.mockResolvedValue();
 
     const { result } = renderHook(() => useDuaInteraction());

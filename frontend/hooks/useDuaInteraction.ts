@@ -1,4 +1,4 @@
-import { getAnotherDua, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
+import { getAnotherDua, requestDua, saveDuaToHistory, type Dua, type DuaNotice } from "@/services/duaService";
 import { topicForCategory } from "@/services/duaTopics";
 import { useCallback, useRef, useState } from "react";
 import { Alert, Animated, Easing } from "react-native";
@@ -8,11 +8,13 @@ import { Alert, Animated, Easing } from "react-native";
 // as nothing (the reason this was removed in 650a561).
 export function useDuaInteraction() {
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
+  // Screen-only: never saved with the dua, never logged.
+  const [notice, setNotice] = useState<DuaNotice>(null);
   const [duaLoading, setDuaLoading] = useState(false);
   const duaSwapAnim = useRef(new Animated.Value(1)).current;
 
   const runDuaTransition = useCallback(
-    (nextDua: Dua | null) => {
+    (nextDua: Dua | null, nextNotice: DuaNotice) => {
       Animated.timing(duaSwapAnim, {
         toValue: 0,
         duration: 170,
@@ -20,6 +22,7 @@ export function useDuaInteraction() {
         useNativeDriver: true,
       }).start(() => {
         setSelectedDua(nextDua);
+        setNotice(nextNotice);
         duaSwapAnim.setValue(0);
         Animated.spring(duaSwapAnim, {
           toValue: 1,
@@ -33,9 +36,9 @@ export function useDuaInteraction() {
   );
 
   const showDua = useCallback(
-    async (dua: Dua) => {
+    async (dua: Dua, nextNotice: DuaNotice) => {
       await saveDuaToHistory(dua);
-      runDuaTransition(dua);
+      runDuaTransition(dua, nextNotice);
     },
     [runDuaTransition],
   );
@@ -43,8 +46,8 @@ export function useDuaInteraction() {
   const submitDua = useCallback(async (userRequest: string) => {
     try {
       setDuaLoading(true);
-      const dua = await requestDua(userRequest);
-      await showDua(dua);
+      const result = await requestDua(userRequest);
+      await showDua(result.dua, result.notice);
     } catch (err: unknown) {
       const message =
         err && typeof err === "object" && "message" in err
@@ -57,19 +60,21 @@ export function useDuaInteraction() {
   }, [showDua]);
 
   const closeDua = useCallback(() => {
-    runDuaTransition(null);
+    runDuaTransition(null, null);
   }, [runDuaTransition]);
 
   const anotherDua = useCallback(() => {
     if (!selectedDua) return;
     const next = getAnotherDua(topicForCategory(selectedDua.category), selectedDua.id);
     if (next) {
-      void showDua(next);
+      // The support message stays; "no close match" no longer describes the new dua.
+      void showDua(next, notice === "crisis" ? "crisis" : null);
     }
-  }, [selectedDua, showDua]);
+  }, [selectedDua, notice, showDua]);
 
   return {
     selectedDua,
+    notice,
     duaLoading,
     duaSwapAnim,
     submitDua,

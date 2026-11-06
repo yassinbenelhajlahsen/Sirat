@@ -21,6 +21,7 @@ import { formatWeekdayMonthDay } from "@/utils/formatDate";
 import { getGreeting } from "@/utils/greeting";
 import { handleTabBarScroll } from "@/utils/tabBarChrome";
 import DuaCard from "../../components/DuaCard";
+import CopyToast from "../../components/CopyToast";
 import DuaResultCard from "../../components/DuaResultCard";
 import PrayerDial from "@/components/PrayerDial";
 import RamadanCard from "@/components/home/RamadanCard";
@@ -48,7 +49,9 @@ export default function Home() {
     statuses, logSheet, openLogSheet,
   } = usePrayerDay("today");
   const { ramadanMode } = useRamadanMode();
-  const { selectedDua, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
+  const { selectedDua, notice, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
+  const [copyToastVisible, setCopyToastVisible] = useState(false);
+  const hideCopyToast = useCallback(() => setCopyToastVisible(false), []);
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
 
   const handleSubmitDua = useCallback(async (userRequest: string) => {
@@ -244,11 +247,12 @@ export default function Home() {
               ],
             }}
           >
-            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
+            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} notice={notice} onBrowse={() => router.push("/Duas")} onCopied={() => setCopyToastVisible(true)} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
           </Animated.View>
         </View>
       </ScrollView>
       <PrayerLogSheet {...logSheet} />
+      <CopyToast visible={copyToastVisible} onHide={hideCopyToast} placement="top" topOffset={insets.top} />
     </Screen>
   );
 }

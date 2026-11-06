@@ -25,7 +25,8 @@ export interface DuaTopic {
 
 export const DUA_TOPICS: DuaTopic[] = [
   // Daily life
-  { id: "morning-night", label: "Morning and night", group: "Daily life", categories: ["morning", "night", "sleep"] },
+  { id: "morning-night", label: "Morning and night", group: "Daily life", categories: ["morning", "night"] },
+  { id: "sleep", label: "Sleep", group: "Daily life", categories: ["sleep"] },
   { id: "food-drink", label: "Food and drink", group: "Daily life", categories: ["eating", "drinking_water", "breaking_fast"] },
   { id: "etiquette", label: "Everyday manners", group: "Daily life", categories: ["bathroom", "mirror", "new_clothes", "sneezing", "sitting", "meeting"] },
   { id: "work-provision", label: "Work and provision", group: "Daily life", categories: ["job", "job_interview", "business", "market", "provision", "debt"] },

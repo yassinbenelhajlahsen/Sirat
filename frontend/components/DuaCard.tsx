@@ -13,10 +13,10 @@ interface DuaCardProps {
   loading?: boolean;
 }
 
-const QUICK_PROMPTS = [
-  { label: "Anxiety", text: "I'm feeling anxious" },
-  { label: "Gratitude", text: "I want to express gratitude" },
-  { label: "Guidance", text: "I'm seeking guidance" },
+export const QUICK_PROMPTS = [
+  { label: "Anxiety", text: "I'm feeling anxious", category: "anxiety" },
+  { label: "Sleep", text: "I need help sleeping", category: "sleep" },
+  { label: "Forgiveness", text: "I want to ask for forgiveness", category: "forgiveness" },
 ];
 
 function DuaCard({ onSubmit, loading = false }: DuaCardProps) {
