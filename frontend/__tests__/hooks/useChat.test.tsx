@@ -171,6 +171,7 @@ describe("hooks/useChat", () => {
     act(() => {
       pending = result.current.send("before sign-out");
     });
+    await waitFor(() => expect(mockSendChat).toHaveBeenCalledTimes(1));
     await act(async () => {
       await clearChat();
     });
@@ -179,6 +180,7 @@ describe("hooks/useChat", () => {
       await pending;
     });
 
+    expect(mockSendChat).toHaveBeenCalledTimes(1);
     expect(await AsyncStorage.getItem("chat_history_v1")).toBeNull();
     await expect(loadChat()).resolves.toEqual({ messages: [], summary: null });
   });
