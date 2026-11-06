@@ -150,16 +150,17 @@ export function useChat() {
     [deliver, liveState, runExclusive, write],
   );
 
+  // Rejects rather than resolving, so the screen never reports a thank-you for a report that was not sent.
   const report = useCallback(
     async (id: string) => {
       const current = liveState().messages;
       const index = current.findIndex((m) => m.id === id);
       const answer = current[index];
-      if (!answer || answer.role !== "assistant" || answer.notice) return;
+      if (!answer || answer.role !== "assistant" || answer.notice) throw new Error("nothing to report");
       const question = current.slice(0, index).reverse().find((m) => m.role === "user");
-      if (!question) return;
+      if (!question) throw new Error("nothing to report");
       const citationIds = (answer.citations ?? []).map((c) =>
-        c.kind === "quran" ? `q:${c.surah}:${c.ayah}` : `h:${c.id}`,
+        c.kind === "quran" ? `q:${c.surah}:${c.ayah}` : c.kind === "hadith" ? `h:${c.id}` : `d:${c.id}`,
       );
       await reportChatAnswer(question.text.slice(0, MAX_QUESTION), answer.text, citationIds);
     },

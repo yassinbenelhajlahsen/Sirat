@@ -43,6 +43,24 @@ jest.mock("@/services/chat/chatStore", () => ({
 const DISCLAIMER = "This is an aid and answers may be wrong. Please consult a trusted scholar.";
 const BLOCKED = "I can't help with that one. Please ask a trusted scholar.";
 const QURAN = { kind: "quran" as const, surah: 2, ayah: 255, arabic: "ٱللَّهُ", english: "Allah" };
+const HADITH = {
+  kind: "hadith" as const,
+  id: 7,
+  title: "Intentions",
+  text: "Actions are judged by intentions.",
+  arabic: null,
+  grade: "sahih",
+  source: "Bukhari",
+  credit: "Umar ibn al-Khattab",
+};
+const DUA = {
+  kind: "dua" as const,
+  id: 12,
+  arabic: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً",
+  transliteration: "Rabbana atina fid-dunya hasanatan",
+  english: "Our Lord, give us good in this world",
+  reference: "Quran 2:201",
+};
 
 const send = jest.fn();
 const retry = jest.fn();
@@ -156,6 +174,59 @@ describe("Chat screen", () => {
 
     expect(openURL).toHaveBeenCalledWith("https://example.org/answers/1");
     openURL.mockRestore();
+  });
+
+  it("a scholar link that fails to open raises no unhandled rejection", async () => {
+    const unhandled = jest.fn();
+    process.on("unhandledRejection", unhandled);
+    const openURL = jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("No app can open this link"));
+    mockUseChat.mockReturnValue(
+      chatState({ messages: [answer("a1", "A ruling.", { scholarLink: "https://example.org/answers/1" })] }),
+    );
+    const { getByRole } = await renderChat();
+
+    fireEvent.press(getByRole("link", { name: "Read a scholar's answer" }));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    process.off("unhandledRejection", unhandled);
+    expect(openURL).toHaveBeenCalledWith("https://example.org/answers/1");
+    expect(unhandled).not.toHaveBeenCalled();
+    openURL.mockRestore();
+  });
+
+  it("a hadith citation shows its title, text, grade and source and credit", async () => {
+    mockUseChat.mockReturnValue(chatState({ messages: [answer("a1", "See the hadith.", { citations: [HADITH] })] }));
+    const { getByText } = await renderChat();
+
+    expect(getByText("Intentions")).toBeTruthy();
+    expect(getByText("Actions are judged by intentions.")).toBeTruthy();
+    expect(getByText("sahih")).toBeTruthy();
+    expect(getByText("Bukhari · Umar ibn al-Khattab")).toBeTruthy();
+  });
+
+  it("a dua citation shows its Arabic, transliteration, English and reference, and is not tappable", async () => {
+    mockUseChat.mockReturnValue(chatState({ messages: [answer("a1", "Ask for this.", { citations: [DUA] })] }));
+    const { getByText, queryByRole } = await renderChat();
+
+    expect(getByText(DUA.arabic)).toBeTruthy();
+    expect(getByText(DUA.transliteration)).toBeTruthy();
+    expect(getByText(DUA.english)).toBeTruthy();
+    expect(getByText("Quran 2:201")).toBeTruthy();
+
+    fireEvent.press(getByText(DUA.arabic));
+    expect(queryByRole("button", { name: /Quran 2:201/ })).toBeNull();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("a citation of an unknown kind renders nothing and the answer still shows", async () => {
+    const unknown = { kind: "fatwa", id: 1 } as never;
+    mockUseChat.mockReturnValue(chatState({ messages: [answer("a1", "Still here.", { citations: [unknown, DUA] })] }));
+    const { getByText } = await renderChat();
+
+    expect(getByText("Still here.")).toBeTruthy();
+    expect(getByText(DUA.english)).toBeTruthy();
   });
 
   it("the crisis notice shows the crisis message", async () => {

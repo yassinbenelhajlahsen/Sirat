@@ -97,14 +97,14 @@ export default function ChatBubble({ message, allowance, resetsAt, onRetry, onRe
       <Body color={colors.white}>{message.text}</Body>
       {(message.citations ?? []).map((citation) => (
         <CitationCard
-          key={citation.kind === "quran" ? `q${citation.surah}:${citation.ayah}` : `h${citation.id}`}
+          key={citation.kind === "quran" ? `q${citation.surah}:${citation.ayah}` : `${citation.kind}${citation.id}`}
           citation={citation}
         />
       ))}
       {message.scholarLink ? (
         <PressableScale
           variant="button"
-          onPress={() => void Linking.openURL(message.scholarLink!)}
+          onPress={() => void Linking.openURL(message.scholarLink!).catch(() => {})}
           accessibilityRole="link"
           accessibilityLabel="Read a scholar's answer"
         >

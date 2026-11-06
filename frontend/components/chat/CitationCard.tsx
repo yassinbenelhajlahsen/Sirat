@@ -53,6 +53,21 @@ export default function CitationCard({ citation }: Props) {
     );
   }
 
+  if (citation.kind === "dua") {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.arabic} maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE}>
+          {citation.arabic}
+        </Text>
+        <Body color={colors.textSecondary} style={styles.italic}>
+          {citation.transliteration}
+        </Body>
+        <Subhead color={colors.white}>{citation.english}</Subhead>
+        <Caption color={colors.textTertiary}>{citation.reference}</Caption>
+      </View>
+    );
+  }
+
   return null;
 }
 
@@ -73,4 +88,5 @@ const createStyles = (theme: AppTheme) =>
       writingDirection: "rtl",
     },
     bold: { fontWeight: "600" },
+    italic: { fontStyle: "italic" },
   });

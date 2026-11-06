@@ -12,6 +12,14 @@ export type Citation =
       grade: string;
       source: string;
       credit: string;
+    }
+  | {
+      kind: "dua";
+      id: number;
+      arabic: string;
+      transliteration: string;
+      english: string;
+      reference: string;
     };
 
 export type ChatTurn = { role: "user" | "assistant"; text: string };

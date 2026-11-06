@@ -289,6 +289,7 @@ describe("hooks/useChat", () => {
       citations: [
         { kind: "quran", surah: 2, ayah: 255, arabic: "", english: null },
         { kind: "hadith", id: 7, title: "t", text: "x", arabic: null, grade: "sahih", source: "Bukhari", credit: "c" },
+        { kind: "dua", id: 12, arabic: "", transliteration: "", english: "", reference: "" },
       ],
     });
     const { result } = await mountChat();
@@ -300,7 +301,25 @@ describe("hooks/useChat", () => {
       await result.current.report(result.current.messages[1].id);
     });
 
-    expect(mockReportChatAnswer).toHaveBeenCalledWith("How?", "Pray on time.", ["q:2:255", "h:7"]);
+    expect(mockReportChatAnswer).toHaveBeenCalledWith("How?", "Pray on time.", ["q:2:255", "h:7", "d:12"]);
+  });
+
+  it("report rejects when the answer's preceding question is missing", async () => {
+    await AsyncStorage.setItem(
+      "chat_history_v1",
+      JSON.stringify({ messages: [{ id: "a1", role: "assistant", text: "Orphan.", createdAt: 1 }], summary: null }),
+    );
+    const { result } = await mountChat();
+
+    await expect(result.current.report("a1")).rejects.toThrow("nothing to report");
+    expect(mockReportChatAnswer).not.toHaveBeenCalled();
+  });
+
+  it("report rejects when no message has the id", async () => {
+    const { result } = await mountChat();
+
+    await expect(result.current.report("missing")).rejects.toThrow("nothing to report");
+    expect(mockReportChatAnswer).not.toHaveBeenCalled();
   });
 
   it("seeds the allowance from the status on mount", async () => {
