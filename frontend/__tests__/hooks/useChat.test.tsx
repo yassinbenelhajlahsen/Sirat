@@ -1,0 +1,286 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
+
+const mockSendChat = jest.fn();
+const mockGetChatStatus = jest.fn();
+const mockGetDeviceToken = jest.fn();
+const mockHasDeviceCheckModule = jest.fn();
+const mockReportChatAnswer = jest.fn();
+const mockFocusEffects: Array<() => void> = [];
+
+jest.mock("@/services/chat/chatApi", () => ({
+  sendChat: (...args: unknown[]) => mockSendChat(...args),
+  getChatStatus: (...args: unknown[]) => mockGetChatStatus(...args),
+}));
+jest.mock("@/services/chat/deviceCheck", () => ({
+  getDeviceToken: (...args: unknown[]) => mockGetDeviceToken(...args),
+  hasDeviceCheckModule: (...args: unknown[]) => mockHasDeviceCheckModule(...args),
+}));
+jest.mock("@/services/auth/authToken", () => ({ getAuthToken: async () => null }));
+jest.mock("@/services/reports", () => ({
+  reportChatAnswer: (...args: unknown[]) => mockReportChatAnswer(...args),
+}));
+jest.mock("expo-router", () => {
+  const { useEffect } = require("react");
+  return {
+    useFocusEffect: (effect: () => void) => {
+      mockFocusEffects.push(effect);
+      useEffect(() => { effect(); }, []);
+    },
+  };
+});
+
+import { useChat } from "@/hooks/useChat";
+import { useChatStatus } from "@/hooks/useChatStatus";
+
+const RESETS_AT = "2026-12-01T00:00:00.000Z";
+const ANSWER = {
+  kind: "answer",
+  answer: "Pray on time.",
+  citations: [],
+  scholarLink: null,
+  summary: "new summary",
+  allowance: 30,
+  remaining: 29,
+  resetsAt: RESETS_AT,
+};
+
+beforeEach(async () => {
+  await AsyncStorage.clear();
+  mockFocusEffects.length = 0;
+  mockSendChat.mockReset();
+  mockGetChatStatus.mockReset().mockResolvedValue({ enabled: true, allowance: 30, remaining: 30, resetsAt: RESETS_AT });
+  mockGetDeviceToken.mockReset().mockResolvedValue("token");
+  mockHasDeviceCheckModule.mockReset().mockReturnValue(true);
+  mockReportChatAnswer.mockReset().mockResolvedValue(undefined);
+});
+
+async function storedChat() {
+  return JSON.parse((await AsyncStorage.getItem("chat_history_v1")) ?? "{}");
+}
+
+async function mountChat() {
+  const hook = renderHook(() => useChat());
+  await waitFor(() => expect(hook.result.current.remaining).toBe(30));
+  return hook;
+}
+
+describe("hooks/useChat", () => {
+  it("send appends the question and the answer, and stores the new summary", async () => {
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+
+    await act(async () => {
+      await result.current.send("  How do I pray?  ");
+    });
+
+    expect(result.current.messages.map((m) => [m.role, m.text])).toEqual([
+      ["user", "How do I pray?"],
+      ["assistant", "Pray on time."],
+    ]);
+    expect(result.current.remaining).toBe(29);
+    expect(mockSendChat).toHaveBeenCalledWith({
+      message: "How do I pray?",
+      history: [],
+      summary: null,
+      deviceToken: "token",
+    });
+    expect((await storedChat()).summary).toBe("new summary");
+  });
+
+  it("sends at most the last 20 messages as history, never a failed one", async () => {
+    const stored = Array.from({ length: 25 }, (_, i) => ({
+      id: `m${i}`,
+      role: i % 2 === 0 ? "user" : "assistant",
+      text: `m${i}`,
+      createdAt: i,
+    }));
+    stored.push({ id: "f", role: "user", text: "FAILED-TEXT", createdAt: 99, status: "failed" } as never);
+    await AsyncStorage.setItem("chat_history_v1", JSON.stringify({ messages: stored, summary: null }));
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+
+    await act(async () => {
+      await result.current.send("next");
+    });
+
+    const { history } = mockSendChat.mock.calls[0][0];
+    expect(history).toHaveLength(20);
+    expect(history[0]).toEqual({ role: "assistant", text: "m5" });
+    expect(history[19]).toEqual({ role: "user", text: "m24" });
+    expect(JSON.stringify(history)).not.toContain("FAILED-TEXT");
+  });
+
+  it("a rejected send marks the question failed, and retry resends it in place", async () => {
+    mockSendChat
+      .mockRejectedValueOnce(new Error("Chat failed, please try again"))
+      .mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+
+    await act(async () => {
+      await result.current.send("Is fasting required?");
+    });
+    const [failed] = result.current.messages;
+    expect(result.current.messages).toHaveLength(1);
+    expect(failed.status).toBe("failed");
+
+    await act(async () => {
+      await result.current.retry(failed.id);
+    });
+
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[0]).toMatchObject({ id: failed.id, text: "Is fasting required?" });
+    expect(result.current.messages[0].status).toBeUndefined();
+    expect(result.current.messages[1].role).toBe("assistant");
+    expect(mockSendChat.mock.calls[1][0].message).toBe("Is fasting required?");
+  });
+
+  it("a failed send never puts the question text in diagnostics", async () => {
+    const diagnostics = require("@/services/diagnostics") as typeof import("@/services/diagnostics");
+    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const actualSendChat = jest.requireActual("@/services/chat/chatApi").sendChat;
+    jest.spyOn(global, "fetch").mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      json: async () => ({ error: "Chat failed, please try again" }),
+    } as Response);
+    mockSendChat.mockImplementationOnce((body: unknown) => actualSendChat(body));
+    const { result } = await mountChat();
+
+    await act(async () => {
+      await result.current.send("SECRET-TEXT");
+    });
+
+    const report = await diagnostics.getDiagnosticsReport();
+    expect(result.current.messages[0].status).toBe("failed");
+    expect(report.entries.map((e) => e.message)).toEqual(["POST /api/chat: 502"]);
+    expect(JSON.stringify(report)).not.toContain("SECRET-TEXT");
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain("SECRET-TEXT");
+    expect(JSON.stringify(consoleWarn.mock.calls)).not.toContain("SECRET-TEXT");
+  });
+
+  it.each(["crisis", "blocked", "limit"] as const)(
+    "a %s reply adds a notice and keeps the question as sent",
+    async (kind) => {
+      mockSendChat.mockResolvedValueOnce({ kind, allowance: 30, remaining: 0, resetsAt: RESETS_AT });
+      const { result } = await mountChat();
+
+      await act(async () => {
+        await result.current.send("something");
+      });
+
+      expect(result.current.messages[0].status).toBeUndefined();
+      expect(result.current.messages[1]).toMatchObject({ role: "assistant", text: "", notice: kind });
+    },
+  );
+
+  it("does nothing for blank text or while a send is in progress", async () => {
+    let finish!: (value: unknown) => void;
+    mockSendChat.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    const { result } = await mountChat();
+
+    await act(async () => {
+      await result.current.send("   ");
+    });
+    expect(mockSendChat).not.toHaveBeenCalled();
+
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.send("first");
+    });
+    await act(async () => {
+      await result.current.send("second");
+    });
+    expect(mockSendChat).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      finish(ANSWER);
+      await first;
+    });
+  });
+
+  it("trims the question and caps it at 1000 characters", async () => {
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+
+    await act(async () => {
+      await result.current.send(` ${"x".repeat(1200)} `);
+    });
+
+    expect(mockSendChat.mock.calls[0][0].message).toHaveLength(1000);
+  });
+
+  it("report sends the preceding question, the answer and its citation ids", async () => {
+    mockSendChat.mockResolvedValueOnce({
+      ...ANSWER,
+      citations: [
+        { kind: "quran", surah: 2, ayah: 255, arabic: "", english: null },
+        { kind: "hadith", id: 7, title: "t", text: "x", arabic: null, grade: "sahih", source: "Bukhari", credit: "c" },
+      ],
+    });
+    const { result } = await mountChat();
+    await act(async () => {
+      await result.current.send("How?");
+    });
+
+    await act(async () => {
+      await result.current.report(result.current.messages[1].id);
+    });
+
+    expect(mockReportChatAnswer).toHaveBeenCalledWith("How?", "Pray on time.", ["q:2:255", "h:7"]);
+  });
+
+  it("seeds the allowance from the status on mount, and stays empty when the status fails", async () => {
+    const { result } = await mountChat();
+    expect(result.current.allowance).toBe(30);
+    expect(result.current.resetsAt).toBe(RESETS_AT);
+
+    mockGetChatStatus.mockRejectedValueOnce(new Error("Chat is unavailable"));
+    const failed = renderHook(() => useChat());
+    await act(async () => {});
+    expect(failed.result.current.allowance).toBeNull();
+    expect(failed.result.current.remaining).toBeNull();
+  });
+});
+
+describe("hooks/useChatStatus", () => {
+  it("is visible when chat is enabled and the DeviceCheck module is present", async () => {
+    const { result } = renderHook(() => useChatStatus());
+    await waitFor(() => expect(result.current).toEqual({ visible: true, remaining: 30 }));
+  });
+
+  it("is not visible when the DeviceCheck module is absent, even with chat enabled", async () => {
+    mockHasDeviceCheckModule.mockReturnValue(false);
+    const { result } = renderHook(() => useChatStatus());
+    await waitFor(() => expect(mockGetChatStatus).toHaveBeenCalled());
+    await act(async () => {});
+    expect(result.current.visible).toBe(false);
+    expect(result.current.remaining).toBe(30);
+  });
+
+  it("is not visible when the server has chat switched off", async () => {
+    mockGetChatStatus.mockResolvedValueOnce({ enabled: false, allowance: null, remaining: null, resetsAt: RESETS_AT });
+    const { result } = renderHook(() => useChatStatus());
+    await act(async () => {});
+    expect(result.current.visible).toBe(false);
+  });
+
+  it("is not visible and has no remaining count when the status request fails", async () => {
+    mockGetChatStatus.mockRejectedValueOnce(new Error("Chat is unavailable"));
+    const { result } = renderHook(() => useChatStatus());
+    await act(async () => {});
+    expect(result.current).toEqual({ visible: false, remaining: null });
+  });
+
+  it("refetches when the screen regains focus", async () => {
+    const { result } = renderHook(() => useChatStatus());
+    await waitFor(() => expect(result.current.remaining).toBe(30));
+
+    mockGetChatStatus.mockResolvedValueOnce({ enabled: true, allowance: 30, remaining: 12, resetsAt: RESETS_AT });
+    await act(async () => {
+      mockFocusEffects[mockFocusEffects.length - 1]();
+    });
+    await waitFor(() => expect(result.current.remaining).toBe(12));
+  });
+});

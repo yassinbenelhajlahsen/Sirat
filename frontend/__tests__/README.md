@@ -146,11 +146,15 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `services/diagnostics.test.ts` — hidden bug-report log: 50-entry cap, message/stack truncation, last 10 screens, `console.error` and global-handler capture (original handlers still called), fatal errors persisted, stored entries restored on install, device context
   - `services/feedback.test.ts` — `submitFeedback`: diagnostics only for bugs, trimmed message, empty email omitted
   - `services/reports.test.ts` — `reportDuaMatch` posts only the trimmed request and dua id to `/api/reports`; `reportChatAnswer` posts the trimmed question with the answer and citation ids
-  - `services/chatDeviceCheck.test.ts` — DeviceCheck wrapper: no token when the native module is absent, unsupported, or generation rejects; token passed through
   - `hooks/useKeyboardAutoScroll.test.ts` — Home scrolls for the keyboard only while it is the focused screen (a keyboard opened in the Settings modal leaves Home still), and drops its padding if it lost focus mid-keyboard
   - `components/record-and-rethrow.test.tsx` — root error boundary records the render error, saves the log, then rethrows so the app still crashes and a bad OTA still rolls back
   - `components/copy-toast.test.tsx` — toast sits near the bottom by default and at the top with `placement="top"` (feedback thank-you)
   - `components/settings/FeedbackSheet.test.tsx` — Send disabled while blank, email prefilled when signed in, bug-only disclosure line, send calls `onSent`, failure keeps the text and shows the error
+- `in-app chat testing`
+  - `services/chatDeviceCheck.test.ts` — DeviceCheck wrapper: no token when the native module is absent, unsupported, or generation rejects; token passed through
+  - `services/chatStore.test.ts` — device-local chat store: round-trip, 500-message cap, unreadable storage reads as empty, `clearChat` empties history and consent, storage errors swallowed silently
+  - `hooks/useChat.test.tsx` — send/retry/report: history capped at 20 and never includes failed messages, failed send marks the question and retry resends it in place, a failed send never puts question text in diagnostics, crisis/blocked/limit notices, one send at a time, 1000-char cap, report citation ids; `useChatStatus` visibility (module absent, switched off, error) and refetch on focus
+  - `hooks/useAccountActions.test.tsx` — sign-out and account deletion clear the chat before the Clerk session ends
 - `settings liquid-glass redesign testing`
   - `utils/appLinks.test.ts` — About-row link/share/version helpers
   - `services/ratingPrompt.test.ts` — Apple rating prompt on the 25th visit, once per app version
