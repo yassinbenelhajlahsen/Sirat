@@ -67,6 +67,8 @@ model ChatUsage {
   month        String
   allowance    Int
   used         Int      @default(0)
+  // Refunded failures this month, capped so a failing prompt can't buy free model runs.
+  refunds      Int      @default(0)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@id([identityHash, month])

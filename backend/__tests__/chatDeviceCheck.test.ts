@@ -91,7 +91,36 @@ describe("decideAllowance", () => {
 
     expect(await decideAllowance("tok", NOV)).toBe(15);
     expect(urlOf(1)).toBe("https://api.devicecheck.apple.com/v1/update_two_bits");
-    expect(bodyOf(1)).toMatchObject({ device_token: "tok", bit0: true, bit1: false });
+    expect(bodyOf(1)).toMatchObject({ device_token: "tok", bit0: true, bit1: true });
+  });
+
+  it.each([[false, true], [true, false]])("flips bit1 (%s to %s) when re-marking a device in a new month, so Apple records a change", async (before, after) => {
+    (mockFetch as any)
+      .mockResolvedValueOnce(json(200, { bit0: true, bit1: before, last_update_time: "2026-10" }))
+      .mockResolvedValueOnce(text(200, ""));
+    const { decideAllowance } = await load();
+
+    await decideAllowance("tok", NOV);
+
+    expect(bodyOf(1)).toMatchObject({ bit0: true, bit1: after });
+  });
+
+  it("decides one device at a time, so simultaneous first claims can't all read 'unset'", async () => {
+    let releaseFirst!: () => void;
+    (mockFetch as any)
+      .mockImplementationOnce(() => new Promise((resolve) => { releaseFirst = () => resolve(text(200, "Failed to find bit state")); }))
+      .mockResolvedValueOnce(text(200, ""))
+      .mockResolvedValueOnce(json(200, { bit0: true, bit1: false, last_update_time: "2026-11" }));
+    const { decideAllowance } = await load();
+
+    const first = decideAllowance("tok-a", NOV);
+    const second = decideAllowance("tok-b", NOV);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    releaseFirst();
+    expect(await first).toBe(15);
+    expect(await second).toBe(5);
   });
 
   it("treats Apple's non-JSON 'bit state not found' reply as unset", async () => {

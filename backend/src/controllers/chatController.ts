@@ -26,6 +26,10 @@ const MAX_ASSISTANT_TEXT = 4000;
 const MAX_SUMMARY = 1500;
 const MAX_DEVICE_TOKEN = 4096;
 
+// One deadline for the whole reply (two moderations, up to 4 model rounds, a quote retry),
+// kept under the phone's request timeout so a reply nobody sees is refunded, not kept.
+const REPLY_DEADLINE_MS = 45_000;
+
 const INVALID = { error: "Invalid chat request" };
 const FAILED = { error: "Chat failed, please try again" };
 
@@ -94,6 +98,11 @@ export async function postChat(req: Request, res: Response) {
   inFlight.add(userId);
 
   const { message, history, summary, deviceToken } = req.body as ChatRequest;
+  const hangUp = new AbortController();
+  res.on("close", () => {
+    if (!res.writableFinished) hangUp.abort();
+  });
+  const signal = AbortSignal.any([AbortSignal.timeout(REPLY_DEADLINE_MS), hangUp.signal]);
   const month = currentMonth();
   const reset = resetsAt();
   let claimedBy: string | null = null;
@@ -110,13 +119,13 @@ export async function postChat(req: Request, res: Response) {
     claimedBy = hash;
     const quota = { allowance: usage.allowance, remaining: usage.allowance - usage.used, resetsAt: reset };
 
-    const outcome = await answerMessage({ message, history, summary, safetyId: hash });
+    const outcome = await answerMessage({ message, history, summary, safetyId: hash, signal });
     if (outcome.kind !== "answer") {
-      // Crisis and blocked replies don't count toward the month.
-      await refundMessage(hash, month);
+      // Crisis and blocked replies don't count toward the month; only a crisis reply skipped the model.
+      const refunded = await refundMessage(hash, month, outcome.kind === "blocked");
       claimedBy = null;
       console.log("chat_reply", outcome.kind);
-      return res.json({ kind: outcome.kind, ...quota, remaining: quota.remaining + 1 });
+      return res.json({ kind: outcome.kind, ...quota, remaining: quota.remaining + (refunded ? 1 : 0) });
     }
 
     claimedBy = null;
@@ -132,7 +141,7 @@ export async function postChat(req: Request, res: Response) {
   } catch (err) {
     if (claimedBy) {
       // Users don't pay for our failures.
-      await refundMessage(claimedBy, month).catch((e) => console.error("chat_refund_failed", (e as Error)?.name));
+      await refundMessage(claimedBy, month, true).catch((e) => console.error("chat_refund_failed", (e as Error)?.name));
     }
     const e = err as Error;
     console.error("chat_failed", e?.name, e?.message === "chat_model_failed" ? "model" : "other");

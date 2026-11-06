@@ -41,6 +41,17 @@ function call(path: string, deviceToken: string, extra: object = {}) {
 export async function decideAllowance(deviceToken: string | null, now = new Date()): Promise<number> {
   if (!ENV.DEVICECHECK_REQUIRED) return MONTHLY_ALLOWANCE;
   if (!deviceToken) return REDUCED_ALLOWANCE;
+  // Read-then-write on Apple's bits isn't atomic, and tokens differ per request even on one
+  // device, so first claims run one at a time. They happen once per account per month.
+  // shortcut: in-process queue, move to a shared lock if the backend runs >1 instance
+  const run = queue.then(() => decide(deviceToken, now));
+  queue = run.catch(() => undefined);
+  return run;
+}
+
+let queue: Promise<unknown> = Promise.resolve();
+
+async function decide(deviceToken: string, now: Date): Promise<number> {
 
   let res: Response;
   try {
@@ -56,7 +67,7 @@ export async function decideAllowance(deviceToken: string | null, now = new Date
   }
 
   // Apple answers 200 with a plain-text body when no bits were ever set.
-  let bits: { bit0?: boolean; last_update_time?: string } = {};
+  let bits: { bit0?: boolean; bit1?: boolean; last_update_time?: string } = {};
   try {
     bits = JSON.parse(await res.text()) ?? {};
   } catch {
@@ -65,7 +76,9 @@ export async function decideAllowance(deviceToken: string | null, now = new Date
   if (bits.bit0 === true && bits.last_update_time === currentMonth(now)) return REDUCED_ALLOWANCE;
 
   try {
-    const update = await call("update_two_bits", deviceToken, { bit0: true, bit1: false });
+    // Re-marking a device in a new month flips bit1, so the write is a real change and
+    // Apple moves last_update_time to this month; bit1 has no other meaning.
+    const update = await call("update_two_bits", deviceToken, { bit0: true, bit1: bits.bit0 === true ? !bits.bit1 : false });
     if (update.status !== 200) console.error("chat_devicecheck_update_failed", update.status);
   } catch (err) {
     console.error("chat_devicecheck_update_failed", (err as Error)?.name);

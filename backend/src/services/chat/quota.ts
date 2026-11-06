@@ -59,9 +59,24 @@ export async function claimMessage(identityHash: string, month = currentMonth())
   return rows[0] ?? null;
 }
 
-/** Pass the month the claim was made in, so a refund near midnight UTC lands in the right row. */
-export async function refundMessage(identityHash: string, month = currentMonth()): Promise<void> {
-  await prisma.$executeRaw`
+// Each refunded failure still paid for a model run, so only this many a month are free.
+export const MAX_REFUNDS = 5;
+
+/**
+ * Gives a message back. Pass the month the claim was made in, so a refund near
+ * midnight UTC lands in the right row. Capped refunds stop after MAX_REFUNDS a
+ * month; uncapped ones are for replies that never reached the model (crisis).
+ * Returns whether the message was given back.
+ */
+export async function refundMessage(identityHash: string, month = currentMonth(), capped = true): Promise<boolean> {
+  if (capped) {
+    const changed = await prisma.$executeRaw`
+      UPDATE chat_usage SET used = GREATEST(used - 1, 0), refunds = refunds + 1
+      WHERE identity_hash = ${identityHash} AND month = ${month} AND refunds < ${MAX_REFUNDS}`;
+    return changed > 0;
+  }
+  const changed = await prisma.$executeRaw`
     UPDATE chat_usage SET used = GREATEST(used - 1, 0)
     WHERE identity_hash = ${identityHash} AND month = ${month}`;
+  return changed > 0;
 }

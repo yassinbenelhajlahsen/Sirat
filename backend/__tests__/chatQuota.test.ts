@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 // In-memory stand-in for chat_usage that honours the SQL the quota module sends.
-type Row = { identityHash: string; month: string; allowance: number; used: number };
+type Row = { identityHash: string; month: string; allowance: number; used: number; refunds?: number };
 let rows: Row[] = [];
 const find = (identityHash: string, month: string) =>
   rows.find((r) => r.identityHash === identityHash && r.month === month);
@@ -38,7 +38,14 @@ const fakePrisma = {
   },
   $executeRaw: async (strings: TemplateStringsArray, ...values: any[]) => {
     const sql = sqlOf(strings);
-    if (/GREATEST\(used - 1, 0\)/.test(sql)) {
+    if (/GREATEST\(used - 1, 0\), refunds = refunds \+ 1/.test(sql) && /refunds < /.test(sql)) {
+      const r = find(values[0], values[1]);
+      if (!r || (r.refunds ?? 0) >= values[2]) return 0;
+      r.used = Math.max(r.used - 1, 0);
+      r.refunds = (r.refunds ?? 0) + 1;
+      return 1;
+    }
+    if (/GREATEST\(used - 1, 0\)/.test(sql) && !/refunds/.test(sql)) {
       const r = find(values[0], values[1]);
       if (r) r.used = Math.max(r.used - 1, 0);
       return r ? 1 : 0;
@@ -122,6 +129,26 @@ describe("chat quota", () => {
     await refundMessage("h");
 
     expect(find("h", "2026-11")!.used).toBe(0);
+  });
+
+  it("stops refunding after 5 refunds in a month, so failures can't be farmed", async () => {
+    rows.push({ identityHash: "h", month: "2026-11", allowance: 15, used: 10, refunds: 0 });
+    const { refundMessage } = await load();
+
+    const results = [];
+    for (let i = 0; i < 7; i++) results.push(await refundMessage("h"));
+
+    expect(find("h", "2026-11")).toMatchObject({ used: 5, refunds: 5 });
+    expect(results).toEqual([true, true, true, true, true, false, false]);
+  });
+
+  it("always refunds an uncapped (crisis) refund", async () => {
+    rows.push({ identityHash: "h", month: "2026-11", allowance: 15, used: 3, refunds: 5 });
+    const { refundMessage } = await load();
+
+    await refundMessage("h", "2026-11", false);
+
+    expect(find("h", "2026-11")).toMatchObject({ used: 2, refunds: 5 });
   });
 
   it("purges rows from earlier months once, when the first allowance of the month is ensured", async () => {

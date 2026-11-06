@@ -43,7 +43,7 @@ describe("Chat routes", () => {
     (mockGetUsage as any).mockResolvedValue({ allowance: 15, used: 15 });
     (mockEnsureAllowance as any).mockResolvedValue(undefined);
     (mockClaimMessage as any).mockResolvedValue({ allowance: 15, used: 4 });
-    (mockRefundMessage as any).mockResolvedValue(undefined);
+    (mockRefundMessage as any).mockResolvedValue(true);
     (mockDecideAllowance as any).mockResolvedValue(15);
     (mockModerate as any).mockResolvedValue({ selfHarm: false, severe: false });
     (mockGenerateAnswer as any).mockResolvedValue({ answer: { ...ANSWER }, retrievedIds: new Set(["q:2:275"]), usage: { input: 1, output: 1 } });
@@ -242,7 +242,7 @@ describe("Chat routes", () => {
       const res = await request(app).post("/api/chat").send(body()).expect(200);
 
       expect(res.body).toEqual({ kind: "crisis", allowance: 15, remaining: 12, resetsAt: "2026-12-01T00:00:00.000Z" });
-      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11");
+      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", false);
       expect(mockGenerateAnswer).not.toHaveBeenCalled();
     });
 
@@ -254,8 +254,19 @@ describe("Chat routes", () => {
       const res = await request(app).post("/api/chat").send(body()).expect(200);
 
       expect(res.body).toEqual({ kind: "blocked", allowance: 15, remaining: 12, resetsAt: "2026-12-01T00:00:00.000Z" });
-      expect(mockRefundMessage).toHaveBeenCalledTimes(1);
-      expect(mockModerate).toHaveBeenLastCalledWith("Interest is not permitted.");
+      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", true);
+      expect(mockModerate).toHaveBeenLastCalledWith("Interest is not permitted.", expect.any(AbortSignal));
+    });
+
+    it("keeps the count when the month's free refunds are used up", async () => {
+      (mockRefundMessage as any).mockResolvedValue(false);
+      (mockModerate as any)
+        .mockResolvedValueOnce({ selfHarm: false, severe: false })
+        .mockResolvedValueOnce({ selfHarm: false, severe: true });
+
+      const res = await request(app).post("/api/chat").send(body()).expect(200);
+
+      expect(res.body).toMatchObject({ kind: "blocked", remaining: 11 });
     });
 
     it("retries a quoting answer once, then strips what is still quoted", async () => {
@@ -266,6 +277,16 @@ describe("Chat routes", () => {
 
       expect(mockGenerateAnswer).toHaveBeenCalledTimes(2);
       expect(res.body.answer).toBe("Allah says: (see the sources below) so avoid it.");
+    });
+
+    it("says the quotation was left out when no source survives", async () => {
+      const quoting = { ...ANSWER, citations: ["q:9:9"], answer: 'The Prophet said: "do not be angry, do not be angry" twice.' };
+      (mockGenerateAnswer as any).mockResolvedValue({ answer: { ...quoting }, retrievedIds: new Set(), usage: { input: 1, output: 1 } });
+
+      const res = await request(app).post("/api/chat").send(body()).expect(200);
+
+      expect(res.body.citations).toEqual([]);
+      expect(res.body.answer).toBe("The Prophet said: (quotation left out) twice.");
     });
 
     it("uses the retry when it stops quoting", async () => {
@@ -296,7 +317,7 @@ describe("Chat routes", () => {
 
       expect(res.status).toBe(502);
       expect(res.body).toEqual({ error: "Chat failed, please try again" });
-      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11");
+      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", true);
     });
 
     it("keeps the user's text out of logs and the response when anything fails", async () => {
@@ -311,6 +332,20 @@ describe("Chat routes", () => {
       expect(res.status).toBe(502);
       expect(JSON.stringify(res.body)).not.toContain("SECRET-TEXT");
       expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("SECRET-TEXT");
+    });
+
+    it("stops the model and refunds when the phone hangs up", async () => {
+      let seenSignal: AbortSignal | undefined;
+      (mockGenerateAnswer as any).mockImplementation((input: any) => new Promise((_resolve, reject) => {
+        seenSignal = input.signal;
+        input.signal.addEventListener("abort", () => reject(new Error("chat_model_failed")));
+      }));
+
+      await request(app).post("/api/chat").send(body()).timeout(100).catch(() => undefined);
+      for (let i = 0; i < 50 && !mockRefundMessage.mock.calls.length; i++) await new Promise((r) => setTimeout(r, 10));
+
+      expect(seenSignal?.aborted).toBe(true);
+      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", true);
     });
 
     it("does not refund when it fails before the claim", async () => {

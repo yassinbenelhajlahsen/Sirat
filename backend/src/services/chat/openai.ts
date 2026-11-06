@@ -29,14 +29,14 @@ type ModerationReply = { results?: { categories?: Record<string, boolean> }[] };
 // Fixed message on purpose: nothing from the request or OpenAI's reply rides along to a log.
 const failed = () => new Error("chat_model_failed");
 
-async function post<T>(path: string, body: object): Promise<T> {
+async function post<T>(path: string, body: object, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API}${path}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${ENV.OPENAI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: signal ? AbortSignal.any([AbortSignal.timeout(TIMEOUT_MS), signal]) : AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch (err) {
     console.error("chat_openai_unreachable", path, (err as Error)?.name);
@@ -53,8 +53,8 @@ async function post<T>(path: string, body: object): Promise<T> {
   }
 }
 
-export async function moderate(text: string): Promise<{ selfHarm: boolean; severe: boolean }> {
-  const data = await post<ModerationReply>("/moderations", { model: ENV.OPENAI_MODERATION_MODEL, input: text });
+export async function moderate(text: string, signal?: AbortSignal): Promise<{ selfHarm: boolean; severe: boolean }> {
+  const data = await post<ModerationReply>("/moderations", { model: ENV.OPENAI_MODERATION_MODEL, input: text }, signal);
   const categories = data?.results?.[0]?.categories;
   if (!categories || typeof categories !== "object") throw failed();
   const on = (key: string) => categories[key] === true;
@@ -151,6 +151,7 @@ export async function generateAnswer(input: {
   history: HistoryItem[];
   summary: string | null;
   safetyId: string;
+  signal?: AbortSignal;
 }): Promise<{ answer: ModelAnswer; retrievedIds: Set<string>; usage: TokenUsage }> {
   const conversation: unknown[] = buildInput(input);
   const retrievedIds = new Set<string>();
@@ -169,7 +170,7 @@ export async function generateAnswer(input: {
       max_output_tokens: MAX_OUTPUT_TOKENS,
       safety_identifier: input.safetyId,
       store: false,
-    });
+    }, input.signal);
     usage.input += data?.usage?.input_tokens ?? 0;
     usage.output += data?.usage?.output_tokens ?? 0;
     const output = Array.isArray(data?.output) ? data.output : [];

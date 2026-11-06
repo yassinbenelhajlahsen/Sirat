@@ -183,6 +183,19 @@ describe("OpenAI chat client", () => {
       errorSpy.mockRestore();
     });
 
+    it("passes the caller's abort signal to every request", async () => {
+      const controller = new AbortController();
+      controller.abort();
+      (mockFetch as any).mockImplementation(async (_url: string, init: any) => {
+        if (init.signal.aborted) throw Object.assign(new Error("aborted"), { name: "AbortError" });
+        return response([final(ANSWER)]);
+      });
+      const { generateAnswer, moderate } = await load();
+
+      await expect(generateAnswer({ ...INPUT, signal: controller.signal })).rejects.toThrow("chat_model_failed");
+      await expect(moderate("text", controller.signal)).rejects.toThrow("chat_model_failed");
+    });
+
     it("throws chat_model_failed when the network fails", async () => {
       (mockFetch as any).mockRejectedValueOnce(new TypeError("fetch failed"));
       const { generateAnswer } = await load();

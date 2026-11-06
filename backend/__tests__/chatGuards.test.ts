@@ -30,6 +30,26 @@ describe("chat guards", () => {
       expect(stripped).toContain("so be patient.");
     });
 
+    it.each([
+      'Prophet Muhammad said: "Whoever believes in the Last Day should speak good"',
+      'In Surah Al-Baqarah (2:275): "Those who consume interest cannot stand"',
+      '"Actions are judged by their intentions," the Prophet said.',
+      'The verse says: "Indeed, with hardship comes ease."',
+      'This ayah reads: "So remember Me and I will remember you"',
+    ])("detects the quote in %s", async (text) => {
+      const { findReligiousQuote } = await load();
+
+      expect(findReligiousQuote(text)).toBe(true);
+    });
+
+    it("says the text was left out when there are no sources to point to", async () => {
+      const { stripReligiousQuotes } = await load();
+
+      const out = stripReligiousQuotes('The Prophet said: "Do not be angry, do not be angry" to a man.', false);
+
+      expect(out).toBe("The Prophet said: (quotation left out) to a man.");
+    });
+
     it("ignores everyday quotes with no attribution", async () => {
       const { findReligiousQuote } = await load();
 

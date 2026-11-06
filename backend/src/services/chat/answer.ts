@@ -17,9 +17,10 @@ export async function answerMessage(input: {
   history: HistoryItem[];
   summary: string | null;
   safetyId: string;
+  signal?: AbortSignal;
 }): Promise<AnswerOutcome> {
   const usage: TokenUsage = { input: 0, output: 0 };
-  if ((await moderate(input.message)).selfHarm) return { kind: "crisis", usage };
+  if ((await moderate(input.message, input.signal)).selfHarm) return { kind: "crisis", usage };
 
   const ask = async () => {
     const result = await generateAnswer(input);
@@ -28,18 +29,17 @@ export async function answerMessage(input: {
     return result;
   };
   let { answer, retrievedIds } = await ask();
-  if (findReligiousQuote(answer.answer)) {
-    ({ answer, retrievedIds } = await ask());
-    answer.answer = stripReligiousQuotes(answer.answer);
-  }
-  const text = scrubInternals(answer.answer);
+  const quoted = findReligiousQuote(answer.answer);
+  if (quoted) ({ answer, retrievedIds } = await ask());
+  const citations = await renderCitations(answer.citations, retrievedIds);
+  const text = scrubInternals(quoted ? stripReligiousQuotes(answer.answer, citations.length > 0) : answer.answer);
 
-  if ((await moderate(text)).severe) return { kind: "blocked", usage };
+  if ((await moderate(text, input.signal)).severe) return { kind: "blocked", usage };
 
   return {
     kind: "answer",
     answer: text,
-    citations: await renderCitations(answer.citations, retrievedIds),
+    citations,
     scholarLink: answer.isRuling ? ENV.CHAT_SCHOLAR_LINK : null,
     summary: answer.summary,
     isRuling: answer.isRuling,

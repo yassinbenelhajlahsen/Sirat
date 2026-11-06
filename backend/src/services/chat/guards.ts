@@ -1,10 +1,12 @@
 import { ENV } from "../../config/env.js";
 import { getHadiths, getQuranAyahs } from "./sourceSearch.js";
 
-const ATTRIBUTION = /\b(?:Allah|God|the Prophet|Messenger|Qur'an|Qur’an|Quran|hadith|narrated|reported)\b/gi;
+const ATTRIBUTION = /\b(?:Allah|God|Prophet|Messenger|Qur'an|Qur’an|Quran|Surah|verses?|ayahs?|ayat|hadith|narrated|reported)\b/gi;
+const HAS_ATTRIBUTION = new RegExp(ATTRIBUTION.source, "i");
 // Straight single quotes only count away from letters, so apostrophes ("Allah's") don't open a quote.
 const QUOTED = /"([^"]+)"|“([^”]+)”|‘([^’]+)’|(?<!\w)'([^']+)'(?!\w)/g;
 const MAX_GAP = 60;
+const MAX_GAP_AFTER = 40; // "...", the Prophet said.
 const MIN_WORDS = 4;
 const MAX_CITATIONS = 6;
 
@@ -22,7 +24,11 @@ const merge = (spans: [number, number][]): [number, number][] =>
       return out;
     }, []);
 
-/** Quoted spans of 4+ words that open within 60 characters after an attribution word, plus Arabic runs of 4+ words. */
+/**
+ * Quoted spans of 4+ words with an attribution word up to 60 characters before
+ * or 40 after, plus Arabic runs of 4+ words. Deliberately broad: a stripped
+ * everyday quote costs less than a model-written verse shown as scripture.
+ */
 function religiousQuoteSpans(text: string): [number, number][] {
   const spans: [number, number][] = [];
   for (const m of text.matchAll(ARABIC_RUN)) spans.push([m.index!, m.index! + m[0].length]);
@@ -31,8 +37,10 @@ function religiousQuoteSpans(text: string): [number, number][] {
     if (inner.trim().split(/\s+/).length < MIN_WORDS) continue;
     const start = m.index!;
     const window = text.slice(Math.max(0, start - MAX_GAP - 20), start);
-    const attributed = [...window.matchAll(ATTRIBUTION)].some((a) => window.length - (a.index! + a[0].length) <= MAX_GAP);
-    if (attributed) spans.push([start, start + m[0].length]);
+    const end = start + m[0].length;
+    const before = [...window.matchAll(ATTRIBUTION)].some((a) => window.length - (a.index! + a[0].length) <= MAX_GAP);
+    const after = HAS_ATTRIBUTION.test(text.slice(end, end + MAX_GAP_AFTER));
+    if (before || after) spans.push([start, end]);
   }
   return merge(spans);
 }
@@ -42,10 +50,11 @@ export function findReligiousQuote(text: string): boolean {
   return religiousQuoteSpans(text).length > 0;
 }
 
-export function stripReligiousQuotes(text: string): string {
+export function stripReligiousQuotes(text: string, hasSources = true): string {
+  const placeholder = hasSources ? "(see the sources below)" : "(quotation left out)";
   let out = text;
   for (const [start, end] of religiousQuoteSpans(text).reverse()) {
-    out = `${out.slice(0, start)}(see the sources below)${out.slice(end)}`;
+    out = `${out.slice(0, start)}${placeholder}${out.slice(end)}`;
   }
   return out;
 }
