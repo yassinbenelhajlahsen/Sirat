@@ -102,7 +102,7 @@ export default function FeedbackSheet({ visible, onClose, onSent }: Props) {
         />
 
         {isBug ? (
-          <Caption color={colors.textTertiary}>Includes app version, device, basic settings and recent errors.</Caption>
+          <Caption color={colors.textTertiary}>Includes diagnostic info to help us fix the issue.</Caption>
         ) : null}
 
         {error ? (

@@ -15,7 +15,7 @@ jest.mock("@/hooks/useAuthState", () => ({
   useAuthState: () => ({ isLoaded: true, isSignedIn: mockEmail !== null, userId: null, email: mockEmail, firstName: null }),
 }));
 
-const DISCLOSURE = "Includes app version, device, basic settings and recent errors.";
+const DISCLOSURE = "Includes diagnostic info to help us fix the issue.";
 
 function renderSheet(props: Partial<{ onSent: jest.Mock; onClose: jest.Mock }> = {}) {
   const onSent = props.onSent ?? jest.fn();
