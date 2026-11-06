@@ -33,6 +33,9 @@ function replyMessage(reply: ChatReply): ChatMessage {
   return { ...base, role: "assistant", text: "", notice: reply.kind };
 }
 
+// Module-level so a chat screen remounted while a reply is in flight waits for it, instead of reading storage before it is saved.
+let pendingSend: Promise<void> | null = null;
+
 export function useChat() {
   const chatRef = useRef<LiveState>({ messages: [], summary: null, generation: chatGeneration() });
   const loaded = useRef<Promise<void>>(Promise.resolve());
@@ -42,6 +45,7 @@ export function useChat() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [resetsAt, setResetsAt] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   const applyAllowance = useCallback(
     (a: { allowance: number | null; remaining: number | null; resetsAt: string | null }) => {
@@ -70,10 +74,16 @@ export function useChat() {
 
   useEffect(() => {
     const generation = chatGeneration();
-    loaded.current = loadChat().then((state) => {
-      chatRef.current = { ...state, generation };
-      setMessages(state.messages);
-    });
+    const pending = pendingSend;
+    if (pending) setRestoring(true);
+    loaded.current = (pending ?? Promise.resolve())
+      .catch(() => {})
+      .then(loadChat)
+      .then((state) => {
+        chatRef.current = { ...state, generation };
+        setMessages(state.messages);
+        setRestoring(false);
+      });
     getChatStatus().then(applyAllowance, () => {});
   }, [applyAllowance]);
 
@@ -96,7 +106,10 @@ export function useChat() {
       // A sign-out cleared the conversation while this was in flight: its reply belongs to nothing now.
       if (chatGeneration() !== generation) return;
       applyAllowance(reply);
-      const next = [...chatRef.current.messages, replyMessage(reply)];
+      // A retried question is not the last one, so its reply goes straight after it.
+      const current = chatRef.current.messages;
+      const index = current.findIndex((m) => m.id === id);
+      const next = [...current.slice(0, index + 1), replyMessage(reply), ...current.slice(index + 1)];
       if (reply.kind === "answer") write(next, reply.summary);
       else write(next);
     },
@@ -110,11 +123,16 @@ export function useChat() {
     const generation = chatGeneration();
     busy.current = true;
     setSending(true);
-    try {
+    const run = (async () => {
       await loaded.current;
       if (chatGeneration() !== generation) return;
       await task(generation);
+    })();
+    pendingSend = run;
+    try {
+      await run;
     } finally {
+      pendingSend = null;
       busy.current = false;
       setSending(false);
     }
@@ -159,13 +177,16 @@ export function useChat() {
       if (!answer || answer.role !== "assistant" || answer.notice) throw new Error("nothing to report");
       const question = current.slice(0, index).reverse().find((m) => m.role === "user");
       if (!question) throw new Error("nothing to report");
-      const citationIds = (answer.citations ?? []).map((c) =>
-        c.kind === "quran" ? `q:${c.surah}:${c.ayah}` : c.kind === "hadith" ? `h:${c.id}` : `d:${c.id}`,
-      );
+      const citationIds = (answer.citations ?? []).flatMap((c): string[] => {
+        if (c.kind === "quran") return [`q:${c.surah}:${c.ayah}`];
+        if (c.kind === "hadith") return [`h:${c.id}`];
+        if (c.kind === "dua") return [`d:${c.id}`];
+        return [];
+      });
       await reportChatAnswer(question.text.slice(0, MAX_QUESTION), answer.text, citationIds);
     },
     [liveState],
   );
 
-  return { messages, remaining, allowance, resetsAt, sending, send, retry, report };
+  return { messages, remaining, allowance, resetsAt, sending: sending || restoring, send, retry, report };
 }

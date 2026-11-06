@@ -304,6 +304,83 @@ describe("hooks/useChat", () => {
     expect(mockReportChatAnswer).toHaveBeenCalledWith("How?", "Pray on time.", ["q:2:255", "h:7", "d:12"]);
   });
 
+  it("report leaves out citations of an unknown kind", async () => {
+    mockSendChat.mockResolvedValueOnce({
+      ...ANSWER,
+      citations: [
+        { kind: "fatwa", id: 1 } as never,
+        { kind: "quran", surah: 2, ayah: 255, arabic: "", english: null },
+      ],
+    });
+    const { result } = await mountChat();
+    await act(async () => {
+      await result.current.send("How?");
+    });
+
+    await act(async () => {
+      await result.current.report(result.current.messages[1].id);
+    });
+
+    expect(mockReportChatAnswer).toHaveBeenCalledWith("How?", "Pray on time.", ["q:2:255"]);
+  });
+
+  it("a retried question's answer lands right after it, and reports against it", async () => {
+    mockSendChat
+      .mockRejectedValueOnce(new Error("Chat failed, please try again"))
+      .mockResolvedValueOnce({ ...ANSWER, answer: "A2" })
+      .mockResolvedValueOnce({ ...ANSWER, answer: "A1" });
+    const { result } = await mountChat();
+    await act(async () => {
+      await result.current.send("Q1");
+    });
+    await act(async () => {
+      await result.current.send("Q2");
+    });
+
+    await act(async () => {
+      await result.current.retry(result.current.messages[0].id);
+    });
+
+    expect(result.current.messages.map((m) => [m.role, m.text])).toEqual([
+      ["user", "Q1"],
+      ["assistant", "A1"],
+      ["user", "Q2"],
+      ["assistant", "A2"],
+    ]);
+    await act(async () => {
+      await result.current.report(result.current.messages[1].id);
+    });
+    expect(mockReportChatAnswer).toHaveBeenCalledWith("Q1", "A1", []);
+  });
+
+  it("a reopened chat waits for a reply still in flight, shows it sending, and keeps it when it sends", async () => {
+    let finish!: (value: unknown) => void;
+    mockSendChat.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    const first = await mountChat();
+    let pending!: Promise<void>;
+    act(() => {
+      pending = first.result.current.send("Q1");
+    });
+    await waitFor(() => expect(mockSendChat).toHaveBeenCalledTimes(1));
+    first.unmount();
+
+    const second = renderHook(() => useChat());
+    await waitFor(() => expect(second.result.current.sending).toBe(true));
+
+    await act(async () => {
+      finish(ANSWER);
+      await pending;
+    });
+    await waitFor(() => expect(second.result.current.sending).toBe(false));
+    expect(second.result.current.messages.map((m) => m.text)).toEqual(["Q1", "Pray on time."]);
+
+    mockSendChat.mockResolvedValueOnce({ ...ANSWER, answer: "A2" });
+    await act(async () => {
+      await second.result.current.send("Q2");
+    });
+    expect((await storedChat()).messages.map((m: { text: string }) => m.text)).toEqual(["Q1", "Pray on time.", "Q2", "A2"]);
+  });
+
   it("report rejects when the answer's preceding question is missing", async () => {
     await AsyncStorage.setItem(
       "chat_history_v1",
