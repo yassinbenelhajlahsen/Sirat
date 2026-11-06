@@ -5,7 +5,7 @@ import Home from "@/app/(tabs)/index";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 const mockPush = jest.fn();
-jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
+jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }), useIsFocused: () => true }));
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
   return { ...actual, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };

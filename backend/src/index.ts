@@ -11,6 +11,7 @@ import mosqueRoutes from "./routes/mosque.js";
 import prayerTimesRoutes from "./routes/prayerTimes.js";
 import syncRoutes from "./routes/sync.js";
 import accountRoutes from "./routes/account.js";
+import feedbackRoutes from "./routes/feedback.js";
 
 const app = express();
 
@@ -27,10 +28,11 @@ const resolveTrustProxy = (): boolean | number | string => {
 app.set("trust proxy", resolveTrustProxy());
 
 // Middleware
-// /api/sync has its own 1MB parser on the router; skip the global 16KB parser for those paths.
+// /api/sync and /api/feedback have their own larger parsers; skip the global 16KB parser for them.
 const defaultJsonParser = express.json({ limit: "16kb" });
+const OWN_PARSER_PREFIXES = ["/api/sync", "/api/feedback"];
 app.use((req, res, next) => {
-  if (req.path === "/api/sync" || req.path.startsWith("/api/sync/")) return next();
+  if (OWN_PARSER_PREFIXES.some((p) => req.path === p || req.path.startsWith(`${p}/`))) return next();
   return defaultJsonParser(req, res, next);
 });
 app.use(
@@ -57,6 +59,7 @@ app.use("/api/prayer-times", prayerTimesRoutes);
 app.use("/api/holidays", holidayRoutes);
 app.use("/api/sync", syncRoutes);
 app.use("/api/account", accountRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // Root health check
 app.get("/", (req, res) => {
@@ -79,6 +82,7 @@ app.get("/", (req, res) => {
       "GET /api/app/version": "Proactive app version compatibility check",
       "GET /api/holidays/year": "Proxy holiday list for a Gregorian year",
       "GET /api/holidays/health": "Holiday service health check",
+      "POST /api/feedback": "Submit feedback or a bug report (auth optional)",
     },
   });
 });

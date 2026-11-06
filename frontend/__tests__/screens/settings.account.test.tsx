@@ -98,9 +98,7 @@ jest.mock("@/services/appIcon", () => ({
 jest.mock("@/utils/appLinks", () => ({
   getAppVersion: jest.fn(() => "1.0.0"),
   openPrivacy: jest.fn(),
-  openWebsite: jest.fn(),
   rateApp: jest.fn(),
-  sendFeedback: jest.fn(),
   shareApp: jest.fn(),
 }));
 

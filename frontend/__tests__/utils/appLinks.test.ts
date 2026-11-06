@@ -8,10 +8,8 @@ jest.mock("expo-constants", () => ({
 
 import {
   getAppVersion,
-  openWebsite,
   openPrivacy,
   shareApp,
-  sendFeedback,
   rateApp,
 } from "@/utils/appLinks";
 
@@ -20,12 +18,6 @@ describe("appLinks", () => {
 
   it("returns the app version from expo config", () => {
     expect(getAppVersion()).toBe("1.2.3");
-  });
-
-  it("opens the website", async () => {
-    const spy = jest.spyOn(Linking, "openURL").mockResolvedValue(true as never);
-    await openWebsite();
-    expect(spy).toHaveBeenCalledWith("https://sirat.dev");
   });
 
   it("opens the privacy policy", async () => {
@@ -47,15 +39,6 @@ describe("appLinks", () => {
     );
   });
 
-  it("opens a mailto for feedback", async () => {
-    const spy = jest.spyOn(Linking, "openURL").mockResolvedValue(true as never);
-    await sendFeedback();
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy.mock.calls[0][0]).toMatch(
-      /^mailto:yassinbenelhajlahsen@gmail\.com\?subject=/,
-    );
-  });
-
   it("opens the App Store review deep link", async () => {
     const spy = jest.spyOn(Linking, "openURL").mockResolvedValue(true as never);
     await rateApp();
@@ -66,6 +49,6 @@ describe("appLinks", () => {
 
   it("never throws when a link fails", async () => {
     jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("no handler"));
-    await expect(openWebsite()).resolves.toBeUndefined();
+    await expect(openPrivacy()).resolves.toBeUndefined();
   });
 });

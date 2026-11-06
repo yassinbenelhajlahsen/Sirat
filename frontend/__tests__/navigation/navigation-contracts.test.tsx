@@ -133,6 +133,7 @@ jest.mock("expo-router", () => {
       back: mockBack,
     }),
     useLocalSearchParams: () => mockLocalSearchParams,
+    usePathname: () => "/",
   };
 });
 

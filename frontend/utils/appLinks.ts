@@ -5,9 +5,7 @@ import { Linking, Share } from "react-native";
 const APP_STORE_ID = "6753838183";
 
 export const APP_LINKS = {
-  website: "https://sirat.dev",
   privacy: "https://sirat.dev/privacy",
-  feedbackEmail: "yassinbenelhajlahsen@gmail.com",
   appStoreUrl: `https://apps.apple.com/app/id${APP_STORE_ID}`,
   reviewUrl: `itms-apps://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`,
 } as const;
@@ -22,10 +20,6 @@ async function open(url: string): Promise<void> {
 
 export function getAppVersion(): string {
   return Constants.expoConfig?.version ?? "—";
-}
-
-export function openWebsite(): Promise<void> {
-  return open(APP_LINKS.website);
 }
 
 export function openPrivacy(): Promise<void> {
@@ -44,11 +38,8 @@ export async function shareApp(): Promise<void> {
   }
 }
 
-export function sendFeedback(): Promise<void> {
-  const subject = encodeURIComponent("Sirat Feedback");
-  return open(`mailto:${APP_LINKS.feedbackEmail}?subject=${subject}`);
-}
-
+// NEEDS NATIVE BUILD: Apple's in-app rating prompt (expo-store-review) is a native module.
+// Custom prompts are disallowed (App Store guideline 5.6.1), so this row stays the only way until then.
 export function rateApp(): Promise<void> {
   return open(APP_LINKS.reviewUrl);
 }

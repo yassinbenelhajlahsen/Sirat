@@ -1,3 +1,4 @@
+import { recordRequestFailure } from "@/services/diagnostics";
 import { DeviceEventEmitter } from "react-native";
 import { getVersionHeaders } from "./appVersion";
 import { getAuthToken } from "./auth/authToken";
@@ -28,6 +29,19 @@ export function handleForceUpdate(body: unknown): never {
   throw new AppUpdateRequiredError(payload.minVersion, payload.currentVersion);
 }
 
+/** `fetch` that logs failures for bug reports. `path` must leave out the query string: it can hold coordinates. */
+export async function loggedFetch(path: string, url: string, init?: RequestInit): Promise<Response> {
+  const method = init?.method ?? "GET";
+  try {
+    const res = await fetch(url, init);
+    if (!res.ok) recordRequestFailure(method, path, res.status);
+    return res;
+  } catch (err) {
+    recordRequestFailure(method, path, "offline");
+    throw err;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options?: {
@@ -48,7 +62,7 @@ export async function apiFetch<T>(
   }
 
   const token = await getAuthToken();
-  const res = await fetch(url, {
+  const res = await loggedFetch(path, url, {
     method: options?.method ?? "GET",
     headers: {
       "Content-Type": "application/json",

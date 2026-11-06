@@ -10,6 +10,8 @@ import SettingsRow from "@/components/settings/SettingsRow";
 import ThemePicker from "@/components/settings/ThemePicker";
 import PickerDialog from "@/components/settings/PickerDialog";
 import DeveloperSection from "@/components/settings/DeveloperSection";
+import FeedbackSheet from "@/components/settings/FeedbackSheet";
+import CopyToast from "@/components/CopyToast";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -22,9 +24,7 @@ import CALCULATION_METHODS from "@/utils/calculationMethods";
 import {
   getAppVersion,
   openPrivacy,
-  openWebsite,
   rateApp,
-  sendFeedback,
   shareApp,
 } from "@/utils/appLinks";
 import {
@@ -68,6 +68,8 @@ export default function Settings() {
   const ramadanSeason = useIsRamadanSeason();
 
   const [methodModalVisible, setMethodModalVisible] = useState(false);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [thanksVisible, setThanksVisible] = useState(false);
 
   // App-icon-per-theme: only offered when the live icon doesn't match the theme.
   const [iconSupported] = useState(alternateIconsSupported);
@@ -237,13 +239,11 @@ export default function Settings() {
           <SettingsRow first icon="star-outline" title="Rate Sirat" showChevron onPress={rateApp} />
           <SettingsRow icon="share-social-outline" title="Share Sirat" showChevron onPress={shareApp} />
           <SettingsRow icon="shield-checkmark-outline" title="Privacy policy" showChevron onPress={openPrivacy} />
-          <SettingsRow icon="mail-outline" title="Send feedback" showChevron onPress={sendFeedback} />
           <SettingsRow
-            icon="globe-outline"
-            title="Visit website"
-            value="sirat.dev"
+            icon="chatbubble-ellipses-outline"
+            title="Send feedback"
             showChevron
-            onPress={openWebsite}
+            onPress={() => setFeedbackVisible(true)}
           />
         </SettingsSection>
 
@@ -272,6 +272,20 @@ export default function Settings() {
         items={cityItems}
         onSelect={(value) => selectCityByKey(value)}
         onClose={() => setCityModalVisible(false)}
+      />
+      <FeedbackSheet
+        visible={feedbackVisible}
+        onClose={() => setFeedbackVisible(false)}
+        onSent={() => {
+          setFeedbackVisible(false);
+          setThanksVisible(true);
+        }}
+      />
+      <CopyToast
+        visible={thanksVisible}
+        message="Thanks, we got it"
+        placement="top"
+        onHide={() => setThanksVisible(false)}
       />
     </Screen>
   );

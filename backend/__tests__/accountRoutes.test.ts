@@ -6,6 +6,7 @@ import { errorHandler } from "../src/middleware/errorHandler.js";
 const mockGetAuth: jest.Mock = jest.fn();
 const mockDeleteUser: jest.Mock = jest.fn();
 const mockQuery: jest.Mock = jest.fn();
+const mockDeleteReports: jest.Mock = jest.fn();
 
 describe("Account Routes Integration", () => {
   let app: Express;
@@ -15,6 +16,8 @@ describe("Account Routes Integration", () => {
     mockGetAuth.mockReset();
     mockDeleteUser.mockReset();
     mockQuery.mockReset();
+    mockDeleteReports.mockReset();
+    (mockDeleteReports as any).mockResolvedValue({ count: 0 });
     (mockGetAuth as any).mockReturnValue({ isAuthenticated: true, userId: "user_abc" });
     (mockDeleteUser as any).mockResolvedValue({});
     (mockQuery as any).mockResolvedValue({ rows: [] });
@@ -26,6 +29,9 @@ describe("Account Routes Integration", () => {
     }));
     jest.unstable_mockModule("../src/db/pool.js", () => ({
       pool: { query: mockQuery },
+    }));
+    jest.unstable_mockModule("../src/db/prisma.js", () => ({
+      prisma: { feedbackReport: { deleteMany: mockDeleteReports } },
     }));
 
     const accountRoutes = (await import("../src/routes/account.js")).default;
@@ -42,6 +48,12 @@ describe("Account Routes Integration", () => {
     expect(res.body).toEqual({ deleted: true });
     expect(mockQuery).toHaveBeenCalledWith(`DELETE FROM users WHERE id = $1`, ["user_abc"]);
     expect(mockDeleteUser).toHaveBeenCalledWith("user_abc");
+  });
+
+  it("deletes the user's feedback reports", async () => {
+    await request(app).delete("/api/account").expect(200);
+
+    expect(mockDeleteReports).toHaveBeenCalledWith({ where: { userId: "user_abc" } });
   });
 
   it("tolerates a Clerk 404 (already deleted) and still returns 200", async () => {

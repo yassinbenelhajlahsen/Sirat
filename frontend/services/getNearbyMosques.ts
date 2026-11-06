@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { handleForceUpdate } from "@/services/apiClient";
+import { handleForceUpdate, loggedFetch } from "@/services/apiClient";
 import { getVersionHeaders } from "@/services/appVersion";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
@@ -30,7 +30,7 @@ export async function getNearbyMosques(
   }
 
   const url = `${API_BASE_URL}/api/mosque/nearby?latitude=${latitude}&longitude=${longitude}&radius=3000`;
-  const res = await fetch(url, { headers: getVersionHeaders() });
+  const res = await loggedFetch("/api/mosque/nearby", url, { headers: getVersionHeaders() });
   const json = await res.json().catch(() => null);
 
   if (res.status === 426) {

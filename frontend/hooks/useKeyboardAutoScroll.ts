@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Keyboard, KeyboardEvent, LayoutChangeEvent, Platform, ScrollView } from "react-native";
+import { useIsFocused } from "expo-router";
 
 export function useKeyboardAutoScroll() {
   const scrollViewRef = useRef<ScrollView>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const duaSectionLayout = useRef<{ y: number; height: number } | null>(null);
   const scrollViewHeight = useRef(0);
+  // Home stays mounted under modals (Settings), so keyboards opened there must not scroll it.
+  const isFocused = useIsFocused();
+  const isFocusedRef = useRef(isFocused);
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
 
   const onDuaSectionLayout = useCallback((event: LayoutChangeEvent) => {
     duaSectionLayout.current = {
@@ -20,6 +27,7 @@ export function useKeyboardAutoScroll() {
 
   useEffect(() => {
     const onShow = (e: KeyboardEvent) => {
+      if (!isFocusedRef.current) return;
       setKeyboardHeight(e.endCoordinates.height);
       requestAnimationFrame(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -27,6 +35,10 @@ export function useKeyboardAutoScroll() {
     };
 
     const onHide = () => {
+      if (!isFocusedRef.current) {
+        setKeyboardHeight(0);
+        return;
+      }
       const layout = duaSectionLayout.current;
       const viewportH = scrollViewHeight.current;
       if (layout && viewportH > 0) {

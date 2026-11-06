@@ -7,11 +7,22 @@ import {
   getHolidaysForYear,
 } from "@/services/holidayService";
 
+const mockRecordRequestFailure = jest.fn();
+jest.mock("@/services/diagnostics", () => ({
+  recordRequestFailure: (...args: unknown[]) => mockRecordRequestFailure(...args),
+}));
+
 describe("services/holidayService", () => {
   beforeEach(async () => {
     await AsyncStorage.clear();
     await clearHolidayCache();
     (global.fetch as jest.Mock).mockReset();
+  });
+
+  it("logs a failed request to the bug log", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 503, json: async () => null });
+    await getHolidaysForYear(2031).catch(() => {});
+    expect(mockRecordRequestFailure).toHaveBeenCalledWith("GET", "/api/holidays/year", 503);
   });
 
   it("sanitizes backend payload by dropping invalid rows, trimming names, de-duplicating dates, and sorting", async () => {

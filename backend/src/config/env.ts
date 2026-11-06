@@ -12,6 +12,7 @@ export const ENV = {
   SHADOW_DATABASE_URL: process.env.SHADOW_DATABASE_URL || "",
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || "",
   CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || "",
+  RESEND_API_KEY: process.env.RESEND_API_KEY || "",
 } as const;
 
 if (!ENV.GOOGLE_MAPS_API_KEY) {
@@ -30,4 +31,8 @@ if (!ENV.DATABASE_URL) {
 
 if (!ENV.CLERK_SECRET_KEY) {
   console.warn("⚠️  CLERK_SECRET_KEY is not set. Auth verification will fail.");
+}
+
+if (!ENV.RESEND_API_KEY) {
+  console.warn("⚠️  RESEND_API_KEY is not set. Feedback emails will not be sent.");
 }

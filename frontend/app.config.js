@@ -5,6 +5,8 @@
 // binary whose `version` matches. Do NOT bump `version` for a JS-only release;
 // bump it (and rebuild) only when one of these lands:
 //
+// - In-app rating prompt: install expo-store-review and call requestReview after
+//   a good moment (see rateApp in utils/appLinks.ts). Not from a button.
 //
 // Search the codebase for "NEEDS NATIVE BUILD" to find every call site that
 // was written around the current native build.

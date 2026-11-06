@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { handleForceUpdate } from "@/services/apiClient";
+import { handleForceUpdate, loggedFetch } from "@/services/apiClient";
 import { getVersionHeaders } from "@/services/appVersion";
 import { dateKeyFromDate } from "@/utils/dateKey";
 
@@ -129,7 +129,7 @@ function backendErrorMessage(status: number, body: BackendErrorShape | null): st
 async function fetchHolidaysFromBackend(year: number): Promise<Holiday[]> {
   const query = buildQueryString({ year });
   const url = `${HOLIDAY_API_BASE}/api/holidays/year?${query}`;
-  const res = await fetch(url, { headers: getVersionHeaders() });
+  const res = await loggedFetch("/api/holidays/year", url, { headers: getVersionHeaders() });
   const body = (await res.json().catch(() => null)) as
     | BackendProxyResponse<BackendHolidayPayload>
     | null;

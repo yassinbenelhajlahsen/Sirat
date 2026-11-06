@@ -62,7 +62,7 @@ export const IONICON_TO_SF: Partial<Record<AppIconName, SFSymbol>> = {
   "star-outline": "star",
   "mail-outline": "envelope",
   "shield-checkmark-outline": "checkmark.shield",
-  "globe-outline": "globe",
+  "chatbubble-ellipses-outline": "ellipsis.bubble",
   "phone-portrait-outline": "iphone",
   "business-outline": "building.2",
   notifications: "bell.fill",

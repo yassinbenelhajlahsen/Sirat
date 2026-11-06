@@ -81,7 +81,7 @@ jest.mock("expo-router", () => {
     },
   );
 
-  return { Stack };
+  return { Stack, usePathname: () => "/" };
 });
 
 import RootLayout from "@/app/_layout";

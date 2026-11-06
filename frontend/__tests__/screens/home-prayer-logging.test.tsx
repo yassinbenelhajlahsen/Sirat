@@ -5,6 +5,8 @@ import Home from "@/app/(tabs)/index";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { getDayStatuses } from "@/services/prayerTracker";
 
+jest.mock("expo-router", () => ({ ...jest.requireActual("expo-router"), useIsFocused: () => true }));
+
 jest.mock("@gorhom/portal", () => ({ Portal: ({ children }: any) => children }));
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");

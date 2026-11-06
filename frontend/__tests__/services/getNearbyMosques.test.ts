@@ -45,6 +45,29 @@ describe("services/getNearbyMosques", () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
+  describe("bug log", () => {
+    const recordRequestFailure = jest.fn();
+    beforeEach(() => {
+      recordRequestFailure.mockReset();
+      jest.doMock("@/services/diagnostics", () => ({ recordRequestFailure }));
+    });
+    afterEach(() => jest.dontMock("@/services/diagnostics"));
+
+    it("logs a failed request by path, never with coordinates", async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500, json: async () => null });
+      const { getNearbyMosques } = loadMosqueService();
+      await expect(getNearbyMosques(10.1, 20.2)).rejects.toThrow();
+      expect(recordRequestFailure).toHaveBeenCalledWith("GET", "/api/mosque/nearby", 500);
+    });
+
+    it("logs a network failure as offline", async () => {
+      (global.fetch as jest.Mock).mockRejectedValue(new TypeError("Network request failed"));
+      const { getNearbyMosques } = loadMosqueService();
+      await expect(getNearbyMosques(10.1, 20.2)).rejects.toThrow("Network request failed");
+      expect(recordRequestFailure).toHaveBeenCalledWith("GET", "/api/mosque/nearby", "offline");
+    });
+  });
+
   it("returns mosques from API using provided coords", async () => {
     const rows = [{ id: "m1", name: "Masjid", address: "A", lat: 1, lng: 2 }];
     (global.fetch as jest.Mock).mockResolvedValue({

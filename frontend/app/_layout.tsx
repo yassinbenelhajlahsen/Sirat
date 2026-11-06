@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Asset } from "expo-asset";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
-import { Stack, router } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import * as ExpoSplash from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
@@ -48,6 +48,10 @@ import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal"
 import { getVersionHeaders } from "@/services/appVersion";
 import { useSyncEngine } from "@/hooks/useSyncEngine";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
+import { installDiagnostics, recordScreen } from "@/services/diagnostics";
+
+// First, so errors during startup are captured for bug reports.
+installDiagnostics();
 
 // Keep the native launch screen up until we say to hide it
 ExpoSplash.preventAutoHideAsync().catch(() => {});
@@ -159,6 +163,8 @@ export async function runInitialAppSync(
 // Deep links to /SignIn or /Settings must still have the tabs underneath, or the sheet becomes the root screen.
 export const unstable_settings = { anchor: "(tabs)" };
 
+export { default as ErrorBoundary } from "@/components/RecordAndRethrow";
+
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
@@ -186,6 +192,10 @@ function AudioPlayingBridge({
 function RootLayoutContent() {
   useSyncEngine();
   useWidgetSync();
+  const pathname = usePathname();
+  useEffect(() => {
+    recordScreen(pathname);
+  }, [pathname]);
   const { theme, isHydrated } = useTheme();
   const trackerHeader = useNativeHeaderOptions("Tracker", { large: false, titleSize: 26 });
   const backgroundColor = isHydrated

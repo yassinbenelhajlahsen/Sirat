@@ -136,6 +136,13 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `tab bar scroll-collapse testing`
   - `utils/tab-bar-chrome.test.ts` — collapse decision, shared pill geometry (`tabBarClearanceForInset`), Reduce Motion gate
   - `hooks/useTabBarClearance.test.ts`
+- `in-app feedback testing`
+  - `services/diagnostics.test.ts` — hidden bug-report log: 50-entry cap, message/stack truncation, last 10 screens, `console.error` and global-handler capture (original handlers still called), fatal errors persisted, stored entries restored on install, device context
+  - `services/feedback.test.ts` — `submitFeedback`: diagnostics only for bugs, trimmed message, empty email omitted
+  - `hooks/useKeyboardAutoScroll.test.ts` — Home scrolls for the keyboard only while it is the focused screen (a keyboard opened in the Settings modal leaves Home still), and drops its padding if it lost focus mid-keyboard
+  - `components/record-and-rethrow.test.tsx` — root error boundary records the render error, saves the log, then rethrows so the app still crashes and a bad OTA still rolls back
+  - `components/copy-toast.test.tsx` — toast sits near the bottom by default and at the top with `placement="top"` (feedback thank-you)
+  - `components/settings/FeedbackSheet.test.tsx` — Send disabled while blank, email prefilled when signed in, bug-only disclosure line, send calls `onSent`, failure keeps the text and shows the error
 - `settings liquid-glass redesign testing`
   - `utils/appLinks.test.ts` — About-row link/share/version helpers
   - `components/settings-section.test.tsx` — SettingsSection group rendering

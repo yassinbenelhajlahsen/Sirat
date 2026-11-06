@@ -9,6 +9,11 @@ jest.mock("@/services/appVersion", () => ({
   }),
 }));
 
+const mockRecordFailure = jest.fn();
+jest.mock("@/services/diagnostics", () => ({
+  recordRequestFailure: (...args: unknown[]) => mockRecordFailure(...args),
+}));
+
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
@@ -23,6 +28,24 @@ function makeResponse(status: number, body: unknown) {
 describe("apiClient", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it("logs a failed request by method, path and status, without its params", async () => {
+    mockFetch.mockResolvedValue(makeResponse(503, { error: "down" }));
+    await expect(apiFetch("/api/prayer-times/timings", { params: { lat: 40.1, lng: -74.2 } })).rejects.toThrow();
+    expect(mockRecordFailure).toHaveBeenCalledWith("GET", "/api/prayer-times/timings", 503);
+  });
+
+  it("logs a network failure as offline and rethrows it", async () => {
+    mockFetch.mockRejectedValue(new TypeError("Network request failed"));
+    await expect(apiPost("/api/dua", { userRequest: "x" })).rejects.toThrow("Network request failed");
+    expect(mockRecordFailure).toHaveBeenCalledWith("POST", "/api/dua", "offline");
+  });
+
+  it("does not log successful requests", async () => {
+    mockFetch.mockResolvedValue(makeResponse(200, {}));
+    await apiFetch("/api/ok");
+    expect(mockRecordFailure).not.toHaveBeenCalled();
   });
 
   it("attaches version headers to every request", async () => {
