@@ -96,7 +96,7 @@ describe("DuaResultCard contract", () => {
       <DuaResultCard dua={sampleDua} onClose={jest.fn()} notice="no-match" onBrowse={onBrowse} />
     );
 
-    expect(getByText("We couldn't find a close match, so here's a general dua.")).toBeTruthy();
+    expect(getByText("We couldn't find a close match.")).toBeTruthy();
     fireEvent.press(getByLabelText("Browse all duas"));
     expect(onBrowse).toHaveBeenCalledTimes(1);
   });

@@ -1,11 +1,9 @@
 # Sirat Backend
 
-Express + TypeScript API used by Sirat for dua selection and proxy integrations.
+Express + TypeScript API used by Sirat for proxy integrations, sync and feedback.
 
 ## What It Does
 
-- Loads dua data from `backend/public/duas.json`
-- Serves `POST /api/dua` for older app builds only; it returns a general dua (new builds match duas on device)
 - Proxies prayer timings plus monthly/yearly calendars from Aladhan with validation, retry, and in-memory cache
 - Aggregates yearly holiday data from Aladhan behind a single backend endpoint
 - Proxies nearby mosque lookup through Google Places
@@ -15,43 +13,6 @@ Express + TypeScript API used by Sirat for dua selection and proxy integrations.
 ### `GET /`
 
 Basic service health metadata and endpoint list.
-
-### `POST /api/dua`
-
-Request body:
-
-```json
-{
-  "userRequest": "I feel anxious about exams"
-}
-```
-
-Success response:
-
-```json
-{
-  "dua": {
-    "id": 12,
-    "category": "anxiety",
-    "tags": ["anxiety", "worry"],
-    "arabic": "...",
-    "english": "...",
-    "transliteration": "...",
-    "reference": "...",
-    "source": "..."
-  }
-}
-```
-
-Validation notes:
-
-- `userRequest` is required
-- must be a string
-- minimum 3 characters
-
-### `GET /api/dua/health`
-
-Returns API status, loaded dua count, and timestamp.
 
 ### `GET /api/mosque/nearby`
 
@@ -169,15 +130,12 @@ Notes:
 ## Source Map
 
 - `src/index.ts` - app setup, CORS, routing, health/404/error middleware
-- `src/routes/dua.ts` - dua routes
 - `src/routes/mosque.ts` - mosque routes
 - `src/routes/prayerTimes.ts` - prayer-times routes
 - `src/routes/holiday.ts` - holiday routes
-- `src/controllers/duaController.ts` - request validation + flow control
 - `src/controllers/mosqueController.ts` - mosque request validation + flow control
 - `src/controllers/prayerTimesController.ts` - prayer-times parameter validation + flow control
 - `src/controllers/holidayController.ts` - holiday year validation + flow control
 - `src/services/aladhanService.ts` - Aladhan proxy, retry, validation, caching
 - `src/services/googleMapsService.ts` - Google Places proxy calls
-- `src/utils/duaDatabase.ts` - load/cache/query dua dataset
 - `src/config/env.ts` - env parsing/defaults

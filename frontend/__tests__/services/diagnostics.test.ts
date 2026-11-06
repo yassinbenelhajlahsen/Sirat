@@ -129,11 +129,11 @@ it("console.error never throws, whatever it is given", () => {
 it("records failed requests without their query string", async () => {
   const d = load();
   d.recordRequestFailure("GET", "/api/prayer-times/timings", 503);
-  d.recordRequestFailure("POST", "/api/dua", "offline");
+  d.recordRequestFailure("POST", "/api/feedback", "offline");
   const { entries } = await d.getDiagnosticsReport();
   expect(entries.map((e) => [e.kind, e.message])).toEqual([
     ["network", "GET /api/prayer-times/timings: 503"],
-    ["network", "POST /api/dua: offline"],
+    ["network", "POST /api/feedback: offline"],
   ]);
 });
 

@@ -38,8 +38,8 @@ describe("apiClient", () => {
 
   it("logs a network failure as offline and rethrows it", async () => {
     mockFetch.mockRejectedValue(new TypeError("Network request failed"));
-    await expect(apiPost("/api/dua", { userRequest: "x" })).rejects.toThrow("Network request failed");
-    expect(mockRecordFailure).toHaveBeenCalledWith("POST", "/api/dua", "offline");
+    await expect(apiPost("/api/feedback", { message: "x" })).rejects.toThrow("Network request failed");
+    expect(mockRecordFailure).toHaveBeenCalledWith("POST", "/api/feedback", "offline");
   });
 
   it("does not log successful requests", async () => {
@@ -85,7 +85,7 @@ describe("apiClient", () => {
     mockFetch.mockResolvedValue(makeResponse(426, payload));
     const emitSpy = jest.spyOn(DeviceEventEmitter, "emit");
 
-    await expect(apiFetch("/api/dua")).rejects.toThrow(AppUpdateRequiredError);
+    await expect(apiFetch("/api/mosque/nearby")).rejects.toThrow(AppUpdateRequiredError);
 
     expect(emitSpy).toHaveBeenCalledWith("FORCE_UPDATE_REQUIRED", {
       minVersion: "2.0.0",
@@ -98,25 +98,25 @@ describe("apiClient", () => {
       makeResponse(400, { error: "Request too short" }),
     );
 
-    await expect(apiFetch("/api/dua")).rejects.toThrow("Request too short");
+    await expect(apiFetch("/api/mosque/nearby")).rejects.toThrow("Request too short");
   });
 
   it("throws generic message when error body is not a string", async () => {
     mockFetch.mockResolvedValue(makeResponse(500, { error: { detail: "oops" } }));
 
-    await expect(apiFetch("/api/dua")).rejects.toThrow("API error (500)");
+    await expect(apiFetch("/api/mosque/nearby")).rejects.toThrow("API error (500)");
   });
 
   it("apiPost sends POST with JSON body", async () => {
-    mockFetch.mockResolvedValue(makeResponse(200, { dua: {} }));
+    mockFetch.mockResolvedValue(makeResponse(200, { ok: true }));
 
-    await apiPost("/api/dua", { userRequest: "help me" });
+    await apiPost("/api/feedback", { message: "help me" });
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ userRequest: "help me" }),
+        body: JSON.stringify({ message: "help me" }),
       }),
     );
   });

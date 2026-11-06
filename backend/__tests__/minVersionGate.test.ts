@@ -85,7 +85,6 @@ describe("minVersionGate middleware", () => {
       const mw = await loadMiddleware();
 
       for (const path of [
-        "/api/dua/health",
         "/api/mosque/health",
         "/api/prayer-times/health",
         "/api/holidays/health",
@@ -106,7 +105,7 @@ describe("minVersionGate middleware", () => {
       const { res } = buildRes();
 
       mw(
-        buildReq("/api/dua", { "x-sirat-app-version": "1.0.10" }) as Request,
+        buildReq("/api/mosque/nearby", { "x-sirat-app-version": "1.0.10" }) as Request,
         res as Response,
         nextMock as NextFunction,
       );
@@ -121,7 +120,7 @@ describe("minVersionGate middleware", () => {
       const { res } = buildRes();
 
       mw(
-        buildReq("/api/dua", { "x-sirat-app-version": "1.0.11" }) as Request,
+        buildReq("/api/mosque/nearby", { "x-sirat-app-version": "1.0.11" }) as Request,
         res as Response,
         nextMock as NextFunction,
       );
@@ -135,7 +134,7 @@ describe("minVersionGate middleware", () => {
       const { res, statusMock, jsonMock } = buildRes();
 
       mw(
-        buildReq("/api/dua", { "x-sirat-app-version": "1.0.9" }) as Request,
+        buildReq("/api/mosque/nearby", { "x-sirat-app-version": "1.0.9" }) as Request,
         res as Response,
         nextMock as NextFunction,
       );
@@ -155,7 +154,7 @@ describe("minVersionGate middleware", () => {
       const { res, statusMock, jsonMock } = buildRes();
 
       mw(
-        buildReq("/api/dua") as Request,
+        buildReq("/api/mosque/nearby") as Request,
         res as Response,
         nextMock as NextFunction,
       );
@@ -172,7 +171,7 @@ describe("minVersionGate middleware", () => {
       const { res, jsonMock } = buildRes();
 
       mw(
-        buildReq("/api/dua", { "x-sirat-app-version": "1.0.0" }) as Request,
+        buildReq("/api/mosque/nearby", { "x-sirat-app-version": "1.0.0" }) as Request,
         res as Response,
         nextMock as NextFunction,
       );

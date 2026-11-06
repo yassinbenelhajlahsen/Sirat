@@ -28,11 +28,11 @@ export const DUA_TOPICS: DuaTopic[] = [
   { id: "morning-night", label: "Morning and night", group: "Daily life", categories: ["morning", "night"] },
   { id: "sleep", label: "Sleep", group: "Daily life", categories: ["sleep"] },
   { id: "food-drink", label: "Food and drink", group: "Daily life", categories: ["eating", "drinking_water", "breaking_fast"] },
-  { id: "etiquette", label: "Everyday manners", group: "Daily life", categories: ["bathroom", "mirror", "new_clothes", "sneezing", "sitting", "meeting"] },
+  { id: "etiquette", label: "Everyday manners", group: "Daily life", categories: ["bathroom", "mirror", "new_clothes", "sneezing", "sitting", "meeting", "hosting"] },
   { id: "work-provision", label: "Work and provision", group: "Daily life", categories: ["job", "job_interview", "business", "market", "provision", "debt"] },
   { id: "knowledge-success", label: "Knowledge and success", group: "Daily life", categories: ["knowledge", "exam", "success"] },
-  { id: "decisions", label: "Decisions and guidance", group: "Daily life", categories: ["decision", "major_decision", "consultation", "guidance"] },
-  { id: "weather", label: "Rain and thunder", group: "Daily life", categories: ["rain", "thunder"] },
+  { id: "decisions", label: "Decisions and guidance", group: "Daily life", categories: ["decision", "major_decision", "consultation", "guidance", "new_beginning"] },
+  { id: "weather", label: "Rain, thunder and wind", group: "Daily life", categories: ["rain", "thunder", "wind"] },
 
   // Feelings
   { id: "anxiety-worry", label: "Anxiety and worry", group: "Feelings", categories: ["anxiety", "worry", "depression", "confusion"] },
@@ -44,9 +44,9 @@ export const DUA_TOPICS: DuaTopic[] = [
 
   // Hardship
   { id: "illness-healing", label: "Illness and healing", group: "Hardship", categories: ["illness", "healing", "medical", "visiting_sick"] },
-  { id: "grief-loss", label: "Grief and loss", group: "Hardship", categories: ["loss", "deceased", "calamity", "bad_news", "accident"] },
+  { id: "grief-loss", label: "Grief and loss", group: "Hardship", categories: ["loss", "deceased", "calamity", "bad_news", "accident", "visiting_graves"] },
   { id: "patience", label: "Patience and difficulty", group: "Hardship", categories: ["patience", "difficulty", "steadfastness"] },
-  { id: "injustice", label: "Injustice", group: "Hardship", categories: ["oppression", "injustice", "legal"] },
+  { id: "injustice", label: "Injustice", group: "Hardship", categories: ["oppression", "injustice", "legal", "betrayal"] },
 
   // Family
   { id: "marriage", label: "Marriage and divorce", group: "Family", categories: ["marriage", "divorce"] },
@@ -55,7 +55,7 @@ export const DUA_TOPICS: DuaTopic[] = [
 
   // Worship
   { id: "forgiveness", label: "Forgiveness and repentance", group: "Worship", categories: ["forgiveness", "repentance", "forgiveness_from_people"] },
-  { id: "prayer-mosque", label: "Prayer and the mosque", group: "Worship", categories: ["mosque", "adhan", "after_prayer", "witr"] },
+  { id: "prayer-mosque", label: "Prayer and the mosque", group: "Worship", categories: ["mosque", "adhan", "after_prayer", "witr", "in_prayer", "wudu"] },
   { id: "special-times", label: "Special times", group: "Worship", categories: ["laylatul qadr", "Friday"] },
   { id: "remembrance", label: "Remembrance and the Quran", group: "Worship", categories: ["quran", "remembrance", "paradise", "General"] },
   { id: "heart-character", label: "Heart and character", group: "Worship", categories: ["humility", "sincerity", "heart", "charity"] },

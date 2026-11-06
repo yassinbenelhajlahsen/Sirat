@@ -45,7 +45,7 @@ Create `frontend/.env`:
 EXPO_PUBLIC_API_URL=http://localhost:3001
 ```
 
-- `EXPO_PUBLIC_API_URL` points to the backend API (dua, mosque, prayer-times, and holidays endpoints).
+- `EXPO_PUBLIC_API_URL` points to the backend API (mosque, prayer-times, and holidays endpoints).
 
 ## Current Architecture
 
@@ -68,7 +68,6 @@ frontend/
 - Sirat backend (`/api/prayer-times/timings`, `/api/prayer-times/calendar`, `/api/prayer-times/calendar/year`): proxied Aladhan prayer data
 - Sirat backend (`/api/holidays/year`): proxied and aggregated Aladhan holiday data
 - Sirat backend (`/api/mosque/nearby`): proxied Google Places nearby mosques
-- Sirat backend (`/api/dua`): AI-assisted dua fallback
 - Quran text data: bundled local JSON assets
 - Quran audio: streamed per surah
 - Persistence: AsyncStorage (settings, theme, caches, bookmarks, history)

@@ -1,7 +1,7 @@
 ## Scope
 This repository is a monorepo with:
 - `frontend/`: Expo Router + React Native mobile app
-- `backend/`: Express + TypeScript API for dua matching and external API proxying
+- `backend/`: Express + TypeScript API for external API proxying, sync and feedback
 - `docs/`: static website/privacy pages
 - `plans/`: planning documents (not runtime code)
 
@@ -39,21 +39,14 @@ Run commands from the correct package directory:
 
 ### Backend
 - Entry: `backend/src/index.ts`
-- Routes: `backend/src/routes/dua.ts`, `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`, `backend/src/routes/app.ts` (version check)
-- Controller: `backend/src/controllers/duaController.ts`, `backend/src/controllers/mosqueController.ts`, `backend/src/controllers/prayerTimesController.ts`, `backend/src/controllers/holidayController.ts`
+- Routes: `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`, `backend/src/routes/app.ts` (version check)
+- Controller: `backend/src/controllers/mosqueController.ts`, `backend/src/controllers/prayerTimesController.ts`, `backend/src/controllers/holidayController.ts`
 - Google Maps integration: `backend/src/services/googleMapsService.ts`
 - Aladhan integration/proxy + cache/retry: `backend/src/services/aladhanService.ts`
-- Dua data source/caching: `backend/src/utils/duaDatabase.ts`
 - Prayer method resolution (integer → Aladhan method, `auto` → IP-based): `backend/src/utils/prayerMethodResolver.ts`
 - Semver comparison: `backend/src/utils/semver.ts`
 - Error middleware: `backend/src/middleware/errorHandler.ts`
 - Version gate middleware: `backend/src/middleware/minVersionGate.ts` (monitor/enforce mode, 426 response)
-- Canonical backend dua dataset: `backend/public/duas.json`
-
-Dua API flow (legacy route, kept only for older app builds; new builds match duas fully on device):
-1. Validate `userRequest` (string, trimmed length >= 3)
-2. Load duas from `public/duas.json`
-3. Return a random dua from the "General" category, or any random dua if that category is empty
 
 ### Frontend
 - Router entry/layout: `frontend/app/_layout.tsx`
@@ -67,7 +60,7 @@ Dua API flow (legacy route, kept only for older app builds; new builds match dua
 - App data assets in `frontend/assets/data/`
 
 Important frontend flows:
-- Dua: local regex match first (`frontend/services/duaMatcher.ts`), backend fallback via `frontend/services/duaService.ts`
+- Dua: matched fully on device from `frontend/assets/data/duas.json` (`frontend/services/duaMatcher.ts`, `frontend/services/duaService.ts`); the backend has no dua code or data
 - Prayer times: backend-proxied Aladhan via `frontend/services/prayerTimes.ts` (modular internals in `frontend/services/prayer-times/`) using `/api/prayer-times/timings` + `/api/prayer-times/calendar/year`, with monthly `/api/prayer-times/calendar` fallback
 - Notifications: rolling scheduling coordinated in `frontend/services/notificationService.ts` with modular helpers in `frontend/services/notifications/`
 - Themes: app-wide theme state in `frontend/context/ThemeContext.tsx` with settings picker in `frontend/app/(tabs)/Settings.tsx`
@@ -100,7 +93,7 @@ Important frontend flows:
 - `frontend/app.config.js` sets `newArchEnabled: true`, iOS bundle metadata, notifications plugin with `adhan.wav`
 
 ## Constraints and Gotchas
-- Backend `loadDuas()` resolves file via `process.cwd()/public/duas.json`; run backend from `backend/` or data load fails.
+- Run the backend from `backend/`: `dotenv/config` loads `.env` and the Prisma scripts find `prisma/schema.prisma` relative to the working directory.
 - Backend mosque `radius` is clamped to `100..5000` in `backend/src/controllers/mosqueController.ts` (default `3000`).
 - Theme selection is stored as string key `app_theme_v1` (`default` | `dark` | `light`).
 - Root app readiness depends on theme hydration in `frontend/app/_layout.tsx` to avoid first-frame flash.
@@ -132,7 +125,6 @@ Important frontend flows:
 - Preserve AsyncStorage keys/events unless migration is deliberate and updated everywhere.
 - Keep theme-aware UI changes on `useTheme()` + theme-driven style factories (`createStyles`) instead of static color constants.
 - When changing prayer/notification behavior, verify both `Settings` and `NotificationService` integration paths.
-- When changing dua schema/category behavior, keep frontend and backend dua data/logic aligned.
 - Frontend test coverage map and conventions live in `frontend/__tests__/README.md`; update it when adding/removing major frontend test suites.
 - All frontend API calls must go through `frontend/services/apiClient.ts` (`apiFetch`/`apiPost`) so version headers and 426 interception are applied consistently. Do not add raw `fetch`/`axios` calls in service files.
 - Force update: raise `MIN_SUPPORTED_APP_VERSION` only after the new native build is approved and live on the App Store. Every build below it is blocked with 426 at once; OTA-only changes never need it.

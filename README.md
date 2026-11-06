@@ -7,7 +7,7 @@ Sirat is a mobile-first Islamic companion app with an Expo frontend and a Node/E
 ```text
 /
 ├── frontend/   # Expo + React Native mobile app
-├── backend/    # Express API for dua matching + service proxy routes
+├── backend/    # Express API for service proxy routes, sync and feedback
 ├── docs/       # Public website + privacy policy
 ├── plans/      # Implementation/migration planning docs
 └── README.md
@@ -35,7 +35,7 @@ Sirat is a mobile-first Islamic companion app with an Expo frontend and a Node/E
 - Nearby mosque map/list using backend-proxied Google Places Nearby Search
 - Prayer notifications with per-prayer toggles and optional Adhan sound
 - Islamic calendar with backend holiday proxying and Ramadan missed-fast tracking
-- Dua matching on device with local regex logic; unmatched requests get a general dua
+- Dua matching fully on device, offline
 - App-wide appearance themes (Default, Dark, Light) with persisted user selection
 
 ## Quick Start

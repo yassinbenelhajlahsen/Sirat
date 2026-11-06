@@ -162,7 +162,7 @@ const RULES: Record<string, Rule> = {
   },
   parents: {
     strong: ["my parents", "mom and dad", "mum and dad", "mother and father", "mama and baba", "raised me", "raising me", "brought me up", "dua for my parents"],
-    weak: ["parents", "my mom", "my dad", "my mother", "my father", "for my mother", "for my father", "mama", "baba", "mum"],
+    weak: ["parents", "mom", "dad", "mother", "father", "mama", "baba", "mum"],
     conflict: ["passed away", "died", "death", "funeral", "diagnosed", "surgery", "sick"],
   },
   pregnancy: {
@@ -202,8 +202,8 @@ const RULES: Record<string, Rule> = {
     weak: ["bills", "rent", "owe money", "pay back", "repay", "repaying"],
   },
   provision: {
-    strong: ["rizq", "rizk", "provision", "sustenance", "financial hardship", "financial struggles", "money is tight", "money problems", "i am broke", "flat broke", "so broke", "poverty", "need money", "barakah in my income", "barakah in my wealth", "halal income", "halal rizq", "lawful income", "financially struggling", "struggling financially", "financially", "abundance", "wealth", "income", "salary"],
-    weak: ["money", "financial", "finances", "poor", "rich", "wealthy", "broke"],
+    strong: ["rizq", "rizk", "provision", "sustenance", "financial hardship", "financial struggles", "money is tight", "money problems", "i am broke", "flat broke", "so broke", "poverty", "need money", "barakah in my income", "barakah in my wealth", "halal income", "halal rizq", "lawful income", "financially struggling", "struggling financially", "financially", "abundance", "wealth", "income", "salary", "money", "rich", "wealthy", "cash", "richer", "fast car", "new car", "nice car", "dream car", "want a car", "buy a car"],
+    weak: ["financial", "finances", "poor"],
   },
   job: {
     strong: ["unemployed", "unemployment", "lost my job", "laid off", "layoff", "fired", "job search", "looking for a job", "looking for work", "need a job", "find a job", "finding a job", "get a job", "new job", "employment", "hiring", "job offer", "work opportunity", "resume"],
@@ -338,7 +338,7 @@ const RULES: Record<string, Rule> = {
   },
   forgiveness: {
     strong: ["forgive me", "forgiveness", "ask ~ forgiveness", "seek forgiveness", "istighfar", "astaghfirullah", "maghfirah", "ask for forgiveness", "forgive my sins", "my sins", "sins", "sinned", "sinful", "guilty", "guilt"],
-    weak: ["mistakes", "regret", "sin"],
+    weak: ["mistakes", "regret", "sin", "forgive"],
   },
   repentance: {
     strong: ["tawbah", "tawba", "taubah", "toba", "tauba", "repent", "repentance", "repenting", "committed zina", "committed a major sin", "major sin", "big sin", "fornication", "adultery", "did something haram", "committed a sin"],
@@ -425,7 +425,7 @@ const RULES: Record<string, Rule> = {
   },
   eating: {
     strong: ["before eating", "after eating", "finished eating", "about to eat", "before i eat", "before dinner", "before lunch", "before breakfast", "after dinner", "after lunch", "after breakfast", "start my meal", "eating dua", "dua for food", "dua before meal", "dua after meal", "after my meal", "before my meal", "before the meal", "when eating", "when i eat", "while eating"],
-    weak: ["food", "meal", "dinner", "lunch", "breakfast", "eating", "hungry"],
+    weak: ["food", "meal", "dinner", "lunch", "breakfast", "eating", "eat", "hungry"],
   },
   drinking_water: {
     strong: ["drinking water", "drink water", "drank water", "glass of water", "thirsty", "thirst", "after drinking"],
@@ -490,6 +490,38 @@ const RULES: Record<string, Rule> = {
   },
   thunder: {
     strong: ["thunder", "lightning", "thunderstorm"],
+  },
+  wind: {
+    strong: ["strong wind", "strong winds", "stormy wind", "windstorm", "wind storm", "gale", "hurricane", "tornado", "howling wind", "huge wind", "big wind", "very windy", "wind is shaking", "wind is blowing", "wind is howling"],
+    weak: ["wind", "winds", "windy"],
+  },
+  wudu: {
+    strong: ["wudu", "wudhu", "ablution", "ablutions", "after wudu", "just made wudu", "finished wudu", "performing wudu"],
+  },
+  in_prayer: {
+    strong: ["in sujood", "in sajda", "during sujood", "in ruku", "during ruku", "while bowing", "while prostrating", "prostration", "tashahhud", "tashahud", "opening dua", "opening supplication", "opening of the prayer", "opening of prayer", "start of the prayer", "istiftah", "dua during prayer", "dua in prayer", "what to say in prayer", "what to say during prayer", "what do i say in sujood", "what do i say in ruku"],
+    weak: ["sujood", "ruku", "rakah", "rakat"],
+    conflict: ["after prayer", "after salah", "finished praying", "after praying"],
+  },
+  visiting_graves: {
+    strong: ["graveyard", "cemetery", "visit the grave", "visiting the grave", "visit graves", "visiting graves", "visit his grave", "visit her grave", "at the grave", "baqi"],
+    weak: ["grave", "graves"],
+    conflict: ["grave mistake", "grave danger", "gravely"],
+  },
+  hosting: {
+    strong: ["my guests", "guests are leaving", "guest is leaving", "thank my host", "thank the host", "thanking my host", "thanking the host", "hosting", "invited me for dinner", "invited to dinner", "invited for dinner", "dinner invitation", "thank you for the meal", "thanks for the meal", "thank you for dinner", "having guests", "having people over", "my host"],
+    weak: ["guest", "guests", "host"],
+    conflict: ["before eating", "before i eat", "before the meal"],
+  },
+  betrayal: {
+    strong: ["cheated on me", "cheating on me", "betrayed", "betrayal", "betraying", "backstabbed", "stabbed me in the back", "unfaithful", "infidelity", "lied to me", "broke my trust", "broken trust", "trust broken", "deceived me", "double crossed"],
+    weak: ["cheated", "affair", "lying to me"],
+    conflict: ["exam", "test", "quiz", "homework", "game"],
+  },
+  new_beginning: {
+    strong: ["new beginning", "new beginnings", "new chapter", "starting something new", "start something new", "new project", "starting my homework", "starting homework", "about to start", "arriving in", "just arrived in", "arrived in a new", "entering a new", "new city", "new town", "first day"],
+    weak: ["starting", "beginning"],
+    conflict: ["job", "interview", "business", "house", "home", "apartment", "marriage", "wedding", "baby", "exam", "school year", "diet"],
   },
 };
 
@@ -590,6 +622,7 @@ const SLEEP_PICKS: { id: number; terms: Term[] }[] = [
   { id: 117, terms: toTerms(["middle of the night", "wake up at night", "waking up at night", "woke up at night", "woke up during the night", "wake up in the middle"]) },
   { id: 118, terms: toTerms(["cant sleep", "cant fall asleep", "insomnia", "sleepless", "restless", "tossing and turning", "tossing", "mind wont stop", "racing thoughts", "wide awake"]) },
   { id: 119, terms: toTerms(["lie down", "lying down", "going to bed", "go to bed", "before bed", "bedtime", "about to sleep", "going to sleep", "before i sleep", "before sleeping"]) },
+  ...[156, 157, 158].map((id) => ({ id, terms: toTerms(["three quls", "3 quls", "the quls", "the three quls", "surah ikhlas", "surah falaq", "surah nas", "muawwidhat", "mu awwidhat", "ikhlas falaq nas"]) })),
   { id: 120, terms: toTerms(["while i sleep", "protect me while", "ayat al kursi", "ayatul kursi", "kursi", "safe tonight", "protected through the night", "jinn"]) },
 ];
 
@@ -597,6 +630,21 @@ function pickSleepIds(tokens: string[]): number[] | undefined {
   const hits = SLEEP_PICKS.map((p) => ({ id: p.id, n: p.terms.filter((t) => termQuality(tokens, t) > 0).length }));
   const top = Math.max(...hits.map((h) => h.n));
   return top > 0 ? hits.filter((h) => h.n === top).map((h) => h.id) : undefined;
+}
+
+// A one or two word request such as "money" or "my mom" can only reach one weak term, which is
+// below MIN_SCORE. If the categories that score anything at all sit in one topic, that is
+// still an honest match; two topics stay "none".
+const SHORT_QUERY_TOKENS = 2;
+function short(tokens: string[]): DuaMatch {
+  if (tokens.length > SHORT_QUERY_TOKENS) return { kind: "none" };
+  const any = COMPILED.map((rule) => ({ category: rule.category, score: scoreRule(tokens, rule) }))
+    .filter((r) => r.score >= WEAK)
+    .sort((a, b) => b.score - a.score);
+  if (any.length === 0) return { kind: "none" };
+  const tied = any.filter((r) => any[0].score - r.score < 0.01);
+  const topics = new Set(tied.map((r) => topicForCategory(r.category)?.id ?? r.category));
+  return topics.size === 1 ? { kind: "match", categories: tied.map((r) => r.category) } : { kind: "none" };
 }
 
 // shortcut: negation ("not worried", "no longer afraid") is not handled and still scores as the feeling; upgrade to a short negation window before the term if wrong matches show up.
@@ -610,7 +658,7 @@ export function matchDua(input: string): DuaMatch {
   const scored = COMPILED.map((rule) => ({ category: rule.category, score: scoreRule(tokens, rule) }))
     .filter((r) => r.score >= MIN_SCORE)
     .sort((a, b) => b.score - a.score);
-  if (scored.length === 0) return { kind: "none" };
+  if (scored.length === 0) return short(tokens);
 
   const best = scored[0].score;
   const tied = scored.filter((r) => best - r.score < 0.01);

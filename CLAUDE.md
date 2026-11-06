@@ -56,7 +56,7 @@ See `AGENTS.md` for full architecture details. Key points:
 
 **Backend patterns:**
 - Classic routes → controllers → services → utils layered architecture
-- Per-route rate limiting via `express-rate-limit`: dua 60/15min, mosque 100/15min, prayer-times 300/15min, holidays 180/15min, feedback 10/hour
+- Per-route rate limiting via `express-rate-limit`: mosque 100/15min, prayer-times 300/15min, holidays 180/15min, feedback 10/hour
 - Aladhan proxy caching with TTLs (timings 5min, calendar 12hr, holidays 24hr), stale-on-error fallback, in-flight request deduplication, and retry with exponential backoff (3 attempts, 300ms base). All of it lives in `services/aladhanFetch.ts` (`createCachedGetter`, `requestAladhan`); `aladhanService.ts` only declares each getter's key, fetch and TTL. The prayer-times and holiday controllers share `controllers/aladhanHelpers.ts`
 - Production mode strips internal error messages from API responses (debug locally for full details)
 - JSON body limit: 16KB globally; `/api/sync` (1MB) and `/api/feedback` (256KB) have their own parsers and are skipped in `index.ts`
@@ -102,7 +102,7 @@ Versioned keys — do not rename without migrating all references.
 
 ## Critical Gotchas
 
-- Backend must be run from `backend/` directory — `loadDuas()` resolves via `process.cwd()/public/duas.json`
+- Backend must be run from `backend/` directory — `dotenv/config` loads `.env` and the Prisma scripts find `prisma/schema.prisma` relative to the working directory
 - Root layout (`app/_layout.tsx`) waits for theme hydration before rendering to prevent first-frame flash
 - `quranData` accessors throw if preload hasn't occurred (preload is triggered in root layout)
 - Frontend prayer method `-1` maps to `method=auto` in backend API

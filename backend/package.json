@@ -1,7 +1,7 @@
 {
   "name": "sirat-backend",
   "version": "1.0.0",
-  "description": "Backend for Sirat Islamic app - dua and prayer-times API",
+  "description": "Backend for Sirat Islamic app - prayer-times, mosque, holiday, sync and feedback API",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

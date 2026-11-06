@@ -25,7 +25,7 @@ interface DuaResultCardProps {
 
 export const CRISIS_MESSAGE =
   "You don't have to face this alone. If you might hurt yourself, or someone is hurting you, call your local emergency number or a crisis line now, and reach out to someone you trust.";
-export const NO_MATCH_MESSAGE = "We couldn't find a close match, so here's a general dua.";
+export const NO_MATCH_MESSAGE = "We couldn't find a close match.";
 
 type Mode = "translation" | "transliteration";
 

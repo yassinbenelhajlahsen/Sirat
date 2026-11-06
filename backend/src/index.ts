@@ -5,7 +5,6 @@ import { ENV } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { minVersionGate } from "./middleware/minVersionGate.js";
 import appRoutes from "./routes/app.js";
-import duaRoutes from "./routes/dua.js";
 import holidayRoutes from "./routes/holiday.js";
 import mosqueRoutes from "./routes/mosque.js";
 import prayerTimesRoutes from "./routes/prayerTimes.js";
@@ -53,7 +52,6 @@ app.use(minVersionGate);
 
 // Routes
 app.use("/api/app", appRoutes);
-app.use("/api/dua", duaRoutes);
 app.use("/api/mosque", mosqueRoutes);
 app.use("/api/prayer-times", prayerTimesRoutes);
 app.use("/api/holidays", holidayRoutes);
@@ -68,8 +66,6 @@ app.get("/", (req, res) => {
     version: "1.0.0",
     status: "running",
     endpoints: {
-      "POST /api/dua": "Match user request to a dua",
-      "GET /api/dua/health": "Health check",
       "GET /api/mosque/nearby": "Get nearby mosques by lat/lng",
       "GET /api/mosque/health": "Mosque service health check",
       "GET /api/prayer-times/timings":

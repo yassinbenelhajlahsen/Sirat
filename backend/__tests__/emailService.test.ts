@@ -70,7 +70,7 @@ describe("sendFeedbackEmail", () => {
       diagnostics: {
         context: { deviceModel: "iPhone 14 Pro", timeZone: "America/New_York", prayerMethod: 2 },
         entries: [
-          { at: Date.UTC(2026, 10, 6, 1, 0, 24), kind: "network", message: "GET /api/dua: 500" },
+          { at: Date.UTC(2026, 10, 6, 1, 0, 24), kind: "network", message: "GET /api/prayer-times/timings: 500" },
           { at: Date.UTC(2026, 10, 6, 1, 0, 30), kind: "fatal", message: "boom", stack: "at Home" },
         ],
       } as any,
@@ -78,7 +78,7 @@ describe("sendFeedbackEmail", () => {
     const { text } = sentBody();
     expect(text).toContain("timeZone: America/New_York");
     expect(text).toContain("prayerMethod: 2");
-    expect(text).toContain("2026-11-06T01:00:24.000Z [network] GET /api/dua: 500");
+    expect(text).toContain("2026-11-06T01:00:24.000Z [network] GET /api/prayer-times/timings: 500");
     expect(text).toContain("2026-11-06T01:00:30.000Z [fatal] boom\n    at Home");
     expect(text).not.toContain("1793");
   });

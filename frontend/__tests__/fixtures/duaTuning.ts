@@ -386,8 +386,8 @@ none|I'm bored
 none|just testing
 none|hello
 none|my baby is crying all night
-none|my husband cheated on me
-none|my friend betrayed me
+betrayal|my husband cheated on me
+betrayal|my friend betrayed me
 none|I feel jealous of my sister
 none|I forgot my wallet
 none|can you recommend a movie
@@ -475,6 +475,40 @@ parents|my parents are in my dua
 debt|I owe money and cannot afford rent
 none|my team lost
 none|we lost the game
+wind|a huge wind is shaking the house
+wind|strong winds outside tonight, I am scared
+wind|the wind is howling and the windows are rattling
+wudu|dua after wudu
+wudu|I just made wudu, what do I say
+wudu|finished my ablution
+in_prayer|what do I say in sujood
+in_prayer|what should I say during ruku
+in_prayer|dua for the opening of the prayer
+in_prayer|dua to say in the tashahhud
+visiting_graves|I am going to the graveyard to visit my grandfather
+visiting_graves|what do I say when visiting the cemetery
+visiting_graves|dua for visiting graves
+hosting|my guests are leaving, what do I say
+hosting|I want to thank my host for the dinner
+hosting|thank you for the meal, dua for the family who invited me
+betrayal|my husband cheated on me
+betrayal|my best friend betrayed me
+betrayal|she backstabbed me and I feel broken
+new_beginning|I am starting a new chapter in my life
+new_beginning|arriving in a new city tonight
+new_beginning|starting my homework
+new_beginning|about to start a new project
+provision|money
+provision|I want money
+provision|I want a fast car
+provision|I want to be rich
+provision|I need cash
+job|job
+parents|mom
+depression|sad
+eating|food
+drinking_water|water
+forgiveness|forgive
 `;
 
 export const TUNING: EvalCase[] = parseCases(RAW);

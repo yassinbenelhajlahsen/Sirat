@@ -5,7 +5,7 @@
 Sirat is a monorepo with:
 
 - `frontend/`: Expo Router + React Native app
-- `backend/`: Express + TypeScript API for dua matching and service proxy endpoints
+- `backend/`: Express + TypeScript API for service proxy endpoints, sync and feedback
 - `docs/`: public site and privacy policy
 
 The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, calendar/Ramadan tracking, notifications, and dua matching.
@@ -29,25 +29,20 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 ### Backend
 
 - `backend/src/index.ts`: app setup, CORS, routes, middleware
-- `backend/src/routes/dua.ts`: dua endpoints
 - `backend/src/routes/mosque.ts`: mosque endpoints (`/api/mosque/nearby`, `/api/mosque/health`) with rate limiting
 - `backend/src/routes/prayerTimes.ts`: prayer-time proxy endpoints (`/api/prayer-times/timings`, `/api/prayer-times/calendar`, `/api/prayer-times/calendar/year`, `/api/prayer-times/health`)
 - `backend/src/routes/holiday.ts`: holiday proxy endpoints (`/api/holidays/year`, `/api/holidays/health`)
-- `backend/src/controllers/duaController.ts`: request validation and selection flow
 - `backend/src/controllers/mosqueController.ts`: coordinate/radius validation and mosque response shaping
 - `backend/src/controllers/prayerTimesController.ts`: lat/lng/method validation (`method` supports integer or `auto`) and proxy responses
 - `backend/src/controllers/holidayController.ts`: year validation and holiday proxy responses
 - `backend/src/services/googleMapsService.ts`: Google Places Nearby Search integration
 - `backend/src/services/aladhanService.ts`: Aladhan proxy + retries + cache + stale fallback
-- `backend/src/utils/duaDatabase.ts`: dua data loading/cache
-- `backend/public/duas.json`: canonical dua dataset
 
 ## Important Runtime Flows
 
 ### Dua Selection
 
-- Frontend matches locally with regex from `frontend/services/duaMatcher.ts` and returns the general dua when nothing matches. It never calls the backend.
-- Backend `POST /api/dua` remains only for older app builds and returns a general dua.
+- Frontend matches duas fully on device from `frontend/assets/data/duas.json` (`frontend/services/duaMatcher.ts`). The backend has no dua endpoint or data.
 
 ### Mosque Discovery
 
