@@ -13,6 +13,8 @@ export const ENV = {
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || "",
   CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || "",
   RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+  RESEND_CONTACTS_API_KEY: process.env.RESEND_CONTACTS_API_KEY || "",
+  RESEND_SEGMENT_ID: process.env.RESEND_SEGMENT_ID || "",
 } as const;
 
 if (!ENV.GOOGLE_MAPS_API_KEY) {
@@ -35,4 +37,8 @@ if (!ENV.CLERK_SECRET_KEY) {
 
 if (!ENV.RESEND_API_KEY) {
   console.warn("⚠️  RESEND_API_KEY is not set. Feedback emails will not be sent.");
+}
+
+if (!ENV.RESEND_CONTACTS_API_KEY || !ENV.RESEND_SEGMENT_ID) {
+  console.warn("⚠️  RESEND_CONTACTS_API_KEY or RESEND_SEGMENT_ID is not set. New users will not join the mailing list.");
 }
