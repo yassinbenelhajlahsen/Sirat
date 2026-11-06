@@ -1,8 +1,8 @@
 // frontend/app/Chat.tsx
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { router, Stack, type NativeStackHeaderItem } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HeaderHeightContext } from "expo-router/react-navigation";
 
 import CopyToast from "@/components/CopyToast";
 import ChatBubble, { limitMessage } from "@/components/chat/ChatBubble";
@@ -18,9 +18,6 @@ import { useChat } from "@/hooks/useChat";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { hasConsented, type ChatMessage } from "@/services/chat/chatStore";
 import { useChatDevBypass } from "@/utils/devChat";
-
-// The native header bar sits under the status bar; the toast clears both.
-const HEADER_BAR_HEIGHT = 44;
 
 export default function Chat() {
   const { theme } = useTheme();
@@ -72,7 +69,7 @@ function Conversation() {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
+  const headerHeight = useContext(HeaderHeightContext) ?? 0;
   const screenMargin = useScreenMargin();
   const { messages, remaining, allowance, resetsAt, sending, send, retry, report } = useChat();
   const [draft, setDraft] = useState("");
@@ -125,8 +122,12 @@ function Conversation() {
             />
           )}
           ListFooterComponent={sending ? <PendingReply /> : null}
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.list, { paddingHorizontal: screenMargin }]}
+          // The list sits inside the keyboard wrapper, where iOS doesn't inset it under the transparent header.
+          contentInsetAdjustmentBehavior="never"
+          contentContainerStyle={[
+            styles.list,
+            { paddingHorizontal: screenMargin, paddingTop: headerHeight + theme.spacing.lg },
+          ]}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         />
@@ -148,7 +149,7 @@ function Conversation() {
         message={toast ?? undefined}
         onHide={hideToast}
         placement="top"
-        topOffset={insets.top + HEADER_BAR_HEIGHT}
+        topOffset={headerHeight}
       />
     </>
   );
@@ -169,7 +170,7 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     fill: { flex: 1 },
     centered: { flex: 1, justifyContent: "center" },
-    list: { paddingVertical: theme.spacing.lg, gap: theme.spacing.lg },
+    list: { paddingBottom: theme.spacing.lg, gap: theme.spacing.lg },
     pending: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: theme.spacing.sm },
     limit: { paddingTop: theme.spacing.sm },
   });

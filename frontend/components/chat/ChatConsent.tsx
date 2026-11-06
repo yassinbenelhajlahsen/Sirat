@@ -1,6 +1,8 @@
 // frontend/components/chat/ChatConsent.tsx
-import { useMemo } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { useContext, useMemo } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { HeaderHeightContext } from "expo-router/react-navigation";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CHAT_DISCLAIMER } from "@/components/chat/ChatBubble";
 import Button from "@/components/ui/Button";
@@ -17,6 +19,8 @@ export default function ChatConsent({ onContinue }: Props) {
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const screenMargin = useScreenMargin();
+  const headerHeight = useContext(HeaderHeightContext) ?? 0;
+  const insets = useSafeAreaInsets();
 
   const handleContinue = async () => {
     await setConsented();
@@ -25,8 +29,15 @@ export default function ChatConsent({ onContinue }: Props) {
 
   return (
     <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={[styles.content, { paddingHorizontal: screenMargin }]}
+      contentInsetAdjustmentBehavior="never"
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingHorizontal: screenMargin,
+          paddingTop: headerHeight + theme.spacing.lg,
+          paddingBottom: insets.bottom + theme.spacing.lg,
+        },
+      ]}
     >
       <Title2 accessibilityRole="header">Before you ask</Title2>
       <Body color={colors.textSecondary}>
@@ -38,17 +49,16 @@ export default function ChatConsent({ onContinue }: Props) {
       </Body>
       <Body color={colors.textSecondary}>Avoid sharing details you&apos;d rather keep private.</Body>
       <Subhead color={colors.textTertiary}>{CHAT_DISCLAIMER}</Subhead>
-      <Button label="Continue" size="lg" onPress={handleContinue} style={styles.button} />
+      <View style={styles.footer}>
+        <Button label="Continue" size="lg" onPress={handleContinue} />
+      </View>
     </ScrollView>
   );
 }
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    content: {
-      paddingTop: theme.spacing.xl,
-      paddingBottom: theme.spacing.xxl,
-      gap: theme.spacing.md,
-    },
-    button: { marginTop: theme.spacing.lg },
+    content: { flexGrow: 1, gap: theme.spacing.md },
+    // Pins Continue to the bottom; on small screens it follows the text instead.
+    footer: { marginTop: "auto", paddingTop: theme.spacing.lg },
   });
