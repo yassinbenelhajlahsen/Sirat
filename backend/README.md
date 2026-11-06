@@ -5,9 +5,7 @@ Express + TypeScript API used by Sirat for dua selection and proxy integrations.
 ## What It Does
 
 - Loads dua data from `backend/public/duas.json`
-- Accepts natural-language user requests
-- Uses OpenAI to select the best matching dua ID (metadata-only context)
-- Falls back to a random dua if AI is unavailable/fails
+- Serves `POST /api/dua` for older app builds only; it returns a general dua (new builds match duas on device)
 - Proxies prayer timings plus monthly/yearly calendars from Aladhan with validation, retry, and in-memory cache
 - Aggregates yearly holiday data from Aladhan behind a single backend endpoint
 - Proxies nearby mosque lookup through Google Places
@@ -41,8 +39,7 @@ Success response:
     "transliteration": "...",
     "reference": "...",
     "source": "..."
-  },
-  "matchSource": "ai"
+  }
 }
 ```
 
@@ -157,13 +154,13 @@ FRONTEND_URL=http://localhost:8081
 TRUST_PROXY=
 LOG_LEVEL=info
 OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4-turbo
+OPENAI_MODEL=gpt-6.1-terra
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 Notes:
 
-- `OPENAI_API_KEY` is optional for runtime continuity; without it, the API uses fallback matching.
+- `OPENAI_API_KEY` and `OPENAI_MODEL` are not used yet; they are reserved for a future chatbot.
 - `GOOGLE_MAPS_API_KEY` is required for `/api/mosque/nearby`.
 - `TRUST_PROXY` is optional; if omitted, proxy trust is inferred (`1` in production, `false` otherwise).
 - `LOG_LEVEL` currently defaults to `info`.
@@ -181,7 +178,6 @@ Notes:
 - `src/controllers/prayerTimesController.ts` - prayer-times parameter validation + flow control
 - `src/controllers/holidayController.ts` - holiday year validation + flow control
 - `src/services/aladhanService.ts` - Aladhan proxy, retry, validation, caching
-- `src/services/openaiService.ts` - OpenAI chat completion call
 - `src/services/googleMapsService.ts` - Google Places proxy calls
 - `src/utils/duaDatabase.ts` - load/cache/query dua dataset
 - `src/config/env.ts` - env parsing/defaults

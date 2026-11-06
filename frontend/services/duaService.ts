@@ -1,14 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Network from "expo-network";
-import { AppUpdateRequiredError, apiPost } from "./apiClient";
 import { matchByRegex } from "./duaMatcher";
 import { topicForCategory, type DuaTopic } from "./duaTopics";
 
 /**
- * Frontend Dua Service (offline-first)
- * - Regex matching runs locally (works offline)
- * - AI matching runs on backend (requires internet)
- * - If offline + no regex match, return a general dua
+ * Frontend Dua Service (fully offline)
+ * - Regex matching runs locally
+ * - No regex match returns the general dua
  */
 
 export interface Dua {
@@ -19,11 +16,6 @@ export interface Dua {
   transliteration: string;
   reference: string;
   source: string;
-}
-
-interface DuaResponse {
-  dua: Dua;
-  matchSource?: "ai" | "fallback";
 }
 
 const LOCAL_DUA_DATA = require("../assets/data/duas.json") as {
@@ -106,79 +98,24 @@ async function applySimulatedLoading(startTime: number): Promise<void> {
   }
 }
 
-async function hasInternetConnection(): Promise<boolean> {
-  try {
-    const state = await Network.getNetworkStateAsync();
-    return Boolean(state.isConnected && state.isInternetReachable !== false);
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Request flow:
  * 1) Try local regex + local duas
- * 2) If no local match and online, ask backend AI
- * 3) If no local match and offline, return local general dua
+ * 2) No match: return the local general dua
  */
 export async function requestDua(userRequest: string): Promise<Dua> {
   const startTime = Date.now();
-  try {
-    const trimmedRequest = userRequest.trim();
-    if (!trimmedRequest) {
-      throw new Error("Please enter what you need help with");
-    }
-
-    const regexCategory = matchByRegex(trimmedRequest);
-    if (regexCategory) {
-      const matchedDua = getRandomDuaByCategory(regexCategory);
-      if (matchedDua) {
-        await applySimulatedLoading(startTime);
-        return matchedDua;
-      }
-    }
-
-    const isOnline = await hasInternetConnection();
-    if (!isOnline) {
-      const fallbackDua = getGeneralFallbackDua();
-      await applySimulatedLoading(startTime);
-      return fallbackDua;
-    }
-
-    const response = await apiPost<DuaResponse>("/api/dua", {
-      userRequest: trimmedRequest,
-    });
-
-    const { dua } = response;
-
-    // Validate structure
-    if (
-      !dua.id ||
-      !dua.category ||
-      !dua.arabic ||
-      !dua.english ||
-      !dua.transliteration
-    ) {
-      throw new Error("Invalid dua structure received from backend");
-    }
-
-    return dua;
-  } catch (err: any) {
-    if (err instanceof AppUpdateRequiredError) throw err;
-
-    const isNetworkError =
-      (err instanceof TypeError &&
-        err.message.includes("Network request failed")) ||
-      err.message === "Network Error" ||
-      err.code === "ECONNREFUSED";
-    if (isNetworkError) {
-      const fallbackDua = getGeneralFallbackDua();
-      await applySimulatedLoading(startTime);
-      return fallbackDua;
-    }
-
-    throw new Error(err.message || "Failed to find a dua. Please try again.");
+  const trimmedRequest = userRequest.trim();
+  if (!trimmedRequest) {
+    throw new Error("Please enter what you need help with");
   }
+
+  const regexCategory = matchByRegex(trimmedRequest);
+  const dua =
+    (regexCategory && getRandomDuaByCategory(regexCategory)) ||
+    getGeneralFallbackDua();
+  await applySimulatedLoading(startTime);
+  return dua;
 }
 
 /**

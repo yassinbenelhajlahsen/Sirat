@@ -58,7 +58,6 @@ See `AGENTS.md` for full architecture details. Key points:
 - Classic routes → controllers → services → utils layered architecture
 - Per-route rate limiting via `express-rate-limit`: dua 60/15min, mosque 100/15min, prayer-times 300/15min, holidays 180/15min, feedback 10/hour
 - Aladhan proxy caching with TTLs (timings 5min, calendar 12hr, holidays 24hr), stale-on-error fallback, in-flight request deduplication, and retry with exponential backoff (3 attempts, 300ms base). All of it lives in `services/aladhanFetch.ts` (`createCachedGetter`, `requestAladhan`); `aladhanService.ts` only declares each getter's key, fetch and TTL. The prayer-times and holiday controllers share `controllers/aladhanHelpers.ts`
-- Prompt injection defense on the dua endpoint — new dua categories/tags must not trigger it
 - Production mode strips internal error messages from API responses (debug locally for full details)
 - JSON body limit: 16KB globally; `/api/sync` (1MB) and `/api/feedback` (256KB) have their own parsers and are skipped in `index.ts`
 - Feedback: `POST /api/feedback` saves to `feedback_reports` (Prisma), then emails `support@sirat.dev` through Resend (`services/emailService.ts`, plain `fetch`, 5s timeout, `RESEND_API_KEY`). The row is the source of truth: an email failure never fails the request. Auth is optional, and `diagnostics`, `device` and `platform` are stored for bugs only. Account deletion also deletes the user's reports. Save errors log the error name and code only, because Prisma messages can echo report text

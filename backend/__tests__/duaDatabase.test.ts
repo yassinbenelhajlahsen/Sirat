@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import {
-  formatDuaMetadataForContext,
   getDuasByCategory,
   getRandomDua,
   getRandomDuaByCategory,
@@ -47,35 +46,6 @@ describe("duaDatabase", () => {
 
   // Note: loadDuas tests are skipped because mocking fs/promises in ESM is complex
   // In practice, loadDuas is tested indirectly through integration tests
-
-  describe("formatDuaMetadataForContext", () => {
-    it("should format dua metadata correctly", () => {
-      const dua = mockDuas[0];
-      const result = formatDuaMetadataForContext(dua);
-
-      expect(result).toBe("[1] healing | health, illness, recovery");
-    });
-
-    it("should handle empty tags array", () => {
-      const dua: Dua = {
-        ...mockDuas[0],
-        tags: [],
-      };
-      const result = formatDuaMetadataForContext(dua);
-
-      expect(result).toBe("[1] healing | ");
-    });
-
-    it("should handle single tag", () => {
-      const dua: Dua = {
-        ...mockDuas[0],
-        tags: ["health"],
-      };
-      const result = formatDuaMetadataForContext(dua);
-
-      expect(result).toBe("[1] healing | health");
-    });
-  });
 
   describe("getRandomDua", () => {
     it("should return a random dua from the array", () => {

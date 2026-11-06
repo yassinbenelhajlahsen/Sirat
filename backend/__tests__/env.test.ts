@@ -34,7 +34,7 @@ describe("ENV configuration", () => {
     expect(ENV.PORT).toBe(3001);
     expect(ENV.NODE_ENV).toBe("development");
     expect(ENV.OPENAI_API_KEY).toBe("");
-    expect(ENV.OPENAI_MODEL).toBe("gpt-4-turbo");
+    expect(ENV.OPENAI_MODEL).toBe("gpt-6.1-terra");
     expect(ENV.GOOGLE_MAPS_API_KEY).toBe("");
     expect(ENV.FRONTEND_URL).toBe("http://localhost:8081");
     expect(ENV.LOG_LEVEL).toBe("info");

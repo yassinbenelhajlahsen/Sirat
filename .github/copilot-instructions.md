@@ -37,7 +37,6 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - `backend/src/controllers/mosqueController.ts`: coordinate/radius validation and mosque response shaping
 - `backend/src/controllers/prayerTimesController.ts`: lat/lng/method validation (`method` supports integer or `auto`) and proxy responses
 - `backend/src/controllers/holidayController.ts`: year validation and holiday proxy responses
-- `backend/src/services/openaiService.ts`: OpenAI API call
 - `backend/src/services/googleMapsService.ts`: Google Places Nearby Search integration
 - `backend/src/services/aladhanService.ts`: Aladhan proxy + retries + cache + stale fallback
 - `backend/src/utils/duaDatabase.ts`: dua data loading/cache
@@ -47,9 +46,8 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 
 ### Dua Selection
 
-- Frontend first attempts local regex matching from `frontend/services/duaMatcher.ts`.
-- If no local match and network is available, frontend calls backend `POST /api/dua`.
-- Backend tries OpenAI selection and falls back to random dua.
+- Frontend matches locally with regex from `frontend/services/duaMatcher.ts` and returns the general dua when nothing matches. It never calls the backend.
+- Backend `POST /api/dua` remains only for older app builds and returns a general dua.
 
 ### Mosque Discovery
 
@@ -120,7 +118,7 @@ The app includes prayer times, Qibla, Quran reading/audio, mosque discovery, cal
 - `TRUST_PROXY` (optional; resolved automatically if unset)
 - `LOG_LEVEL` (default `info`)
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` (default `gpt-4-turbo`)
+- `OPENAI_MODEL` (default `gpt-6.1-terra`)
 - `GOOGLE_MAPS_API_KEY`
 
 ## Development Commands

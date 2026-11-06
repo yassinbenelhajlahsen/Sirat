@@ -41,7 +41,6 @@ Run commands from the correct package directory:
 - Entry: `backend/src/index.ts`
 - Routes: `backend/src/routes/dua.ts`, `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`, `backend/src/routes/app.ts` (version check)
 - Controller: `backend/src/controllers/duaController.ts`, `backend/src/controllers/mosqueController.ts`, `backend/src/controllers/prayerTimesController.ts`, `backend/src/controllers/holidayController.ts`
-- OpenAI integration: `backend/src/services/openaiService.ts`
 - Google Maps integration: `backend/src/services/googleMapsService.ts`
 - Aladhan integration/proxy + cache/retry: `backend/src/services/aladhanService.ts`
 - Dua data source/caching: `backend/src/utils/duaDatabase.ts`
@@ -51,12 +50,10 @@ Run commands from the correct package directory:
 - Version gate middleware: `backend/src/middleware/minVersionGate.ts` (monitor/enforce mode, 426 response)
 - Canonical backend dua dataset: `backend/public/duas.json`
 
-Dua API flow:
+Dua API flow (legacy route, kept only for older app builds; new builds match duas fully on device):
 1. Validate `userRequest` (string, trimmed length >= 3)
 2. Load duas from `public/duas.json`
-3. Try OpenAI selection (`/v1/chat/completions`)
-4. Validate returned `duaId` exists
-5. Fallback to random dua on any AI failure
+3. Return a random dua from the "General" category, or any random dua if that category is empty
 
 ### Frontend
 - Router entry/layout: `frontend/app/_layout.tsx`
@@ -86,8 +83,8 @@ Important frontend flows:
 - `FRONTEND_URL` default: `http://localhost:8081`
 - `TRUST_PROXY` default: empty (backend resolves trust proxy from environment/runtime)
 - `LOG_LEVEL` default: `info`
-- `OPENAI_API_KEY` default: empty (AI disabled, fallback mode used)
-- `OPENAI_MODEL` default: `gpt-4-turbo`
+- `OPENAI_API_KEY` default: empty (reserved for a future chatbot, unused today)
+- `OPENAI_MODEL` default: `gpt-6.1-terra`
 - `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
 - `MIN_SUPPORTED_APP_VERSION` default: `1.0.0` (minimum client version allowed; the gate always enforces it)
 - Database migrations: Prisma Migrate. Schema in `backend/prisma/schema.prisma`;

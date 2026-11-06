@@ -35,7 +35,7 @@ Sirat is a mobile-first Islamic companion app with an Expo frontend and a Node/E
 - Nearby mosque map/list using backend-proxied Google Places Nearby Search
 - Prayer notifications with per-prayer toggles and optional Adhan sound
 - Islamic calendar with backend holiday proxying and Ramadan missed-fast tracking
-- Dua matching with local regex-first logic and backend AI fallback
+- Dua matching on device with local regex logic; unmatched requests get a general dua
 - App-wide appearance themes (Default, Dark, Light) with persisted user selection
 
 ## Quick Start
@@ -77,11 +77,11 @@ FRONTEND_URL=http://localhost:8081
 TRUST_PROXY=
 LOG_LEVEL=info
 OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4-turbo
+OPENAI_MODEL=gpt-6.1-terra
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
-- If `OPENAI_API_KEY` is missing, backend still works and falls back to random dua selection.
+- `OPENAI_API_KEY` and `OPENAI_MODEL` are not used yet; they are reserved for a future chatbot.
 - `GOOGLE_MAPS_API_KEY` is required for mosque lookup.
 - `TRUST_PROXY` is optional; if omitted, backend uses production-aware defaults.
 

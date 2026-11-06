@@ -1,6 +1,5 @@
 /**
  * Deterministic dua matching using regex patterns and keyword rules
- * AI is only used as a fallback when regex doesn't match
  */
 
 export interface MatchRule {
@@ -606,14 +605,4 @@ export function matchByRegex(input: string): string | null {
   }
 
   return null;
-}
-
-/**
- * Get match source for logging
- */
-export type MatchSource = "regex" | "ai" | "fallback";
-
-export interface MatchResult {
-  category: string | null;
-  source: MatchSource;
 }

@@ -1,6 +1,6 @@
 /**
  * Display topics for the dua library. The category strings in duas.json are
- * matched by duaMatcher and the backend AI prompt, so they are never renamed;
+ * matched by duaMatcher (and by older app builds through the backend), so they are never renamed;
  * this map only decides how they are grouped and labelled in the UI. Every
  * category belongs to exactly one topic (enforced by a test).
  */

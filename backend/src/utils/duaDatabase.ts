@@ -34,15 +34,7 @@ export async function loadDuas(): Promise<Dua[]> {
 }
 
 /**
- * Format dua metadata for OpenAI context
- * Only sends ID, category, and tags - never the full dua content
- */
-export function formatDuaMetadataForContext(dua: Dua): string {
-  return `[${dua.id}] ${dua.category} | ${dua.tags.join(", ")}`;
-}
-
-/**
- * Get a random dua (used as fallback if OpenAI fails)
+ * Get a random dua (fallback when the "general" category is empty)
  */
 export function getRandomDua(duas: Dua[]): Dua | null {
   if (duas.length === 0) return null;

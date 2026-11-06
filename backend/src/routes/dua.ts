@@ -16,9 +16,9 @@ const duaLimiter = rateLimit({
 
 /**
  * POST /api/dua
- * Match user request to a dua
+ * Legacy: returns a general dua for older app builds
  * Body: { userRequest: string }
- * Response: { dua: Dua, matchSource: "ai" | "fallback" }
+ * Response: { dua: Dua }
  */
 router.post("/", duaLimiter, matchDua);
 
