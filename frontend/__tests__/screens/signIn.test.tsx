@@ -22,7 +22,12 @@ jest.mock("@/hooks/useAuthState", () => ({
 jest.mock("@/context/ThemeContext", () => ({
   useTheme: jest.fn(),
 }));
-jest.mock("expo-router", () => ({ router: { back: () => mockBack(), replace: jest.fn() } }));
+const mockReplace = jest.fn();
+let mockParams: { next?: string } = {};
+jest.mock("expo-router", () => ({
+  router: { back: () => mockBack(), replace: (...args: unknown[]) => mockReplace(...args) },
+  useLocalSearchParams: () => mockParams,
+}));
 jest.mock("react-native-safe-area-context", () => ({
   SafeAreaView: ({ children }: any) => children,
   SafeAreaProvider: ({ children }: any) => children,
@@ -73,6 +78,8 @@ describe("SignIn screen", () => {
     mockSetActive.mockReset();
     mockBack.mockReset();
     mockStartApple.mockReset();
+    mockReplace.mockReset();
+    mockParams = {};
     mockUseTheme.mockReturnValue({ theme: defaultTheme });
     mockUseAuthState.mockReturnValue({ isLoaded: true, isSignedIn: false, userId: null, email: null, firstName: null });
   });
@@ -142,6 +149,21 @@ describe("SignIn screen", () => {
       expect(alertSpy).toHaveBeenCalledWith("Sign-in failed", "Something went wrong. Please try again."),
     );
     alertSpy.mockRestore();
+  });
+
+  it("goes back once signed in when it was not opened for the chat", () => {
+    mockUseAuthState.mockReturnValue({ isLoaded: true, isSignedIn: true, userId: "u1", email: null, firstName: null });
+    render(<SignIn />);
+    expect(mockBack).toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("replaces itself with the chat once signed in when it was opened for the chat", () => {
+    mockParams = { next: "Chat" };
+    mockUseAuthState.mockReturnValue({ isLoaded: true, isSignedIn: true, userId: "u1", email: null, firstName: null });
+    render(<SignIn />);
+    expect(mockReplace).toHaveBeenCalledWith("/Chat");
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   it("has no Not now button; the sheet is dismissed by swiping down", () => {

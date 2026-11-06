@@ -12,8 +12,9 @@ jest.mock("react-native-safe-area-context", () => {
 });
 
 let mockSignedIn = true;
+let mockLoaded = true;
 jest.mock("@/hooks/useAuthState", () => ({
-  useAuthState: () => ({ isLoaded: true, isSignedIn: mockSignedIn, userId: "u1", email: null }),
+  useAuthState: () => ({ isLoaded: mockLoaded, isSignedIn: mockSignedIn, userId: "u1", email: null }),
 }));
 jest.mock("@/services/auth/authPrompts", () => ({
   isHomeCardDismissed: () => Promise.resolve(true),
@@ -51,6 +52,7 @@ describe("Home Ask row", () => {
     jest.clearAllMocks();
     await AsyncStorage.clear();
     mockSignedIn = true;
+    mockLoaded = true;
     mockChatStatus = { visible: true, remaining: 12 };
   });
 
@@ -91,6 +93,23 @@ describe("Home Ask row", () => {
     const { getByLabelText } = render(wrap(<Home />));
     fireEvent.press(getByLabelText("Ask a question, 12 messages left"));
     expect(mockPush).toHaveBeenCalledWith("/Chat");
+  });
+
+  it("opens sign-in first, asking for the chat next, when signed out", () => {
+    mockSignedIn = false;
+    mockChatStatus = { visible: true, remaining: null };
+    const { getByLabelText } = render(wrap(<Home />));
+    fireEvent.press(getByLabelText("Ask a question"));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: "/SignIn", params: { next: "Chat" } });
+  });
+
+  it("shows no sign-in text until auth has loaded", () => {
+    mockLoaded = false;
+    mockSignedIn = false;
+    mockChatStatus = { visible: true, remaining: null };
+    const { getByText, queryByText } = render(wrap(<Home />));
+    expect(getByText("Ask a question")).toBeTruthy();
+    expect(queryByText("Sign in to ask")).toBeNull();
   });
 
   it("sits between the Tracker and Dua sections", () => {

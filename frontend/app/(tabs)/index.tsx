@@ -68,7 +68,7 @@ export default function Home() {
   const { isLoaded, isSignedIn, firstName } = useAuthState();
   const chat = useChatStatus();
   const askRemaining = isSignedIn ? chat.remaining : null;
-  const askRightText = !isSignedIn ? "Sign in to ask" : askRemaining !== null ? `${askRemaining} left` : null;
+  const askRightText = !isLoaded ? null : !isSignedIn ? "Sign in to ask" : askRemaining !== null ? `${askRemaining} left` : null;
   const [showCard, setShowCard] = useState(false);
   useEffect(() => {
     let mounted = true;
@@ -241,7 +241,7 @@ export default function Home() {
             <PressableScale
               variant="row"
               radius={theme.radii.row}
-              onPress={() => router.push("/Chat")}
+              onPress={() => router.push(isSignedIn ? "/Chat" : { pathname: "/SignIn", params: { next: "Chat" } })}
               accessibilityRole="button"
               accessibilityLabel={askRemaining !== null ? `Ask a question, ${askRemaining} messages left` : "Ask a question"}
             >
