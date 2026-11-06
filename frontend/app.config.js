@@ -7,6 +7,10 @@
 //
 // - In-app rating prompt: install expo-store-review and call requestReview after
 //   a good moment (see rateApp in utils/appLinks.ts). Not from a button.
+// - Drop unused native modules (none are imported or in `plugins`): expo-image,
+//   react-native-webview, expo-blur, expo-sensors, @react-native-picker/picker,
+//   expo-navigation-bar. Also delete the expo-blur mock in test/setup/jest.setup.ts.
+//   expo-image's bundled image decoders are most of the size win.
 //
 // Search the codebase for "NEEDS NATIVE BUILD" to find every call site that
 // was written around the current native build.
