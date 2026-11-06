@@ -27,7 +27,7 @@ export default function FeedbackSheet({ visible, onClose, onSent }: Props) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { email: accountEmail } = useAuthState();
+  const { email: accountEmail, isSignedIn } = useAuthState();
 
   const [type, setType] = useState<FeedbackType>("feedback");
   const [message, setMessage] = useState("");
@@ -60,7 +60,7 @@ export default function FeedbackSheet({ visible, onClose, onSent }: Props) {
     setSending(true);
     setError(null);
     try {
-      await submitFeedback({ type, message, email });
+      await submitFeedback({ type, message, email, signedIn: isSignedIn });
       onSent();
     } catch {
       setError("Couldn't send. Please try again.");

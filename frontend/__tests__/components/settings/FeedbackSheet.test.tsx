@@ -65,8 +65,17 @@ it("sends a bug report and calls onSent", async () => {
   fireEvent.press(getByRole("radio", { name: "Bug" }));
   fireEvent.changeText(getByPlaceholderText("What went wrong?"), "Crash on Quran");
   await act(async () => { fireEvent.press(getByLabelText("Send")); });
-  expect(mockSubmit).toHaveBeenCalledWith({ type: "bug", message: "Crash on Quran", email: "" });
+  expect(mockSubmit).toHaveBeenCalledWith({ type: "bug", message: "Crash on Quran", email: "", signedIn: false });
   expect(onSent).toHaveBeenCalled();
+});
+
+it("passes the sign-in state when signed in", async () => {
+  mockEmail = "me@example.com";
+  const { getByRole, getByPlaceholderText, getByLabelText } = renderSheet();
+  fireEvent.press(getByRole("radio", { name: "Bug" }));
+  fireEvent.changeText(getByPlaceholderText("What went wrong?"), "Crash");
+  await act(async () => { fireEvent.press(getByLabelText("Send")); });
+  expect(mockSubmit).toHaveBeenCalledWith(expect.objectContaining({ signedIn: true }));
 });
 
 it("asks for a valid email without sending", async () => {
