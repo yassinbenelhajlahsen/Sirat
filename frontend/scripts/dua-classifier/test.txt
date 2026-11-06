@@ -1,0 +1,496 @@
+debt,provision|the store took my car for missing payments and i still owe more than it's worth, i'm working doubles and it's still not enough
+bad_news|The school sent the letter, my son did not pass the exam and the family is very disappointed.
+illness,healing|I have been vomiting since last night and my stomach is weak, I cannot eat anything, please Allah help me
+medical|i have an operation on my eye coming up and i dont know what to expect
+knowledge|I am beginning to study the Arabic grammar at the evening class. Please open my heart and let me understand what I read.
+travel|pls make dua for my dad's flight to Cairo tonight, he hates flying
+betrayal|my roommate read my private messages and told everyone my secrets, i don't know who to trust now
+provision|between my mom's medicine and school fees i'm running out of options and every month i'm short, please just give us enough
+repentance|After decades of distance from my faith, I want to come back to Allah with a clean heart. Please help me.
+major_decision|Saya mau pindah ke luar negeri dan tinggalkan keluarga, keputusan besar sekali. Tolong Allah beri petunjuk.
+NewBorn|Kardesimin bebegi dogdu, Allah bebegi saglikli ve bereketli buyutsun, dua edin lutfen
+addiction|quit smoking dua
+vehicle|School runs, broken fridge, flat tyre, pls pray for a safe drive to mum's this afternoon, I'm so over today.
+accident|so i got knocked off my bike by a van this morning, leg is wrecked, i cant walk right, and the driver just drove off. i keep replaying it
+hosting|Ugh the house is chaos, mom's coming to stay a month and I'm stressed, but I want our guests to feel welcome. Any prayer for that?
+pregnancy|Long clinic day, pray Allah blesses me with a child too, cousin announced her third pregnancy and I'm happy but struggling.
+drinking_water|I drank a glass of water and felt thankful. Is there a short thing to say after drinking?
+guidance|I feel like I'm wandering with no direction. Please show me what I should be doing with my life.
+confusion|Honestly I'm so tired of my own excuses. Gym membership wasted, book half-read, business idea never started. Need some push.
+remembrance|I heard Muslims repeat little phrases all day to remember God. Which ones should I start with?
+depression|I cry a lot and I have no energy for anything. I feel like I am stuck in a dark place and cannot see the way out.
+gratitude|I wish to thank God for the health of my children and the peace in our home. My heart is full of gratitude this evening.
+gift,gratitude|Our neighbor kindly sent a basket of fruit and sweets for the children. I am very grateful for her thoughtfulness.
+moving_home,difficulty,leaving_home|pls dua for my mum, she has to leave the house she lived in for 30 years
+deceased|We are preparing to bury my mother-in-law tomorrow. Please, Allah, make her grave wide and forgive her.
+sneezing|I sneezed and my Muslim friend said something back to me. What did he say and what should I reply?
+sneezing|My husband just sneezed beside me. What is the proper response I should give him?
+visiting_graves|Tomorrow we go to the grave of my grandfather, we pray for him and clean the area
+worry,healing|Saya sedih sekali, my brother sakit parah di kampung, I worry every night. Tolong doakan dia.
+parents,family_conflict|pls dua for my folks, they been fighting alot and im the one stuck in the middle
+meeting,backbiting|Ugh the whole call turned into gossip about people who weren't there, and now I just want to close it properly with God.
+family|May Allah keep our family united and bless every member of it, especially the young ones who are growing so fast.
+betrayal|After everything I did for that man, he turned around and sold the shop out from under us. He broke my trust.
+remembrance|constant dhikr
+bad_news|I got the message that my exam result is failed, I study so hard and it is not enough, my heart is broken
+jealousy,fear|afraid of people's eyes
+business,provision|Bizim küçük işletme için müşteri bulmakta zorlanıyoruz, Allah bereketli kazanç versin, işimiz açılsın.
+NewBorn|Long day of meetings, lost my keys, pls make dua for a healthy start for the baby, she's finally home from the hospital.
+marriage|I would be grateful for your prayers that Allah grants my son a righteous spouse and a home filled with peace.
+knowledge|I just started a course on computer science and everything feels new to me. I want to really learn it. Please help.
+job|spent the whole morning in line at the employment office and the lady said come back next week. i really need to be hired soon
+hope,difficulty|Kids are fine, work's fine, I guess. But this year has been so heavy and I need something to look forward to again.
+after_prayer|After completing my salah I wish to recite the prayers that come after it. Please remind me of them.
+repentance,steadfastness|ngl i relapsed hard and i want to restart my deen fr. pls make it easy for me to come back
+sincerity|everyone at iftar was watching me pray and i felt proud. ugh. ask allah to clean my intentions for me.
+gratitude,good_news|Syukur sekali, anak saya lulus ujian dengan baik. Alhamdulillah, saya sangat bersyukur sama Allah.
+inheritance|i became muslim and now i have to split my late mums house with my brothers. i dont know the shares. pray Allah guides us
+night|Ugh, dinner burned, roommate left the stove on, and it's finally dark so I can stop pretending I'm ok. Need words to close the day with God.
+calamity,provision,business|my store got robbed and then flooded, i'm basically broke and starting over, i dont even know where to start
+heart|I wish to pray with true presence of heart and focus in my salah. Please share a supplication for khushu.
+steadfastness,temptation|I want to stay strong in my religion, the temptations are many in this city and I keep falling, please make me steady
+job_interview,job|director meeting friday
+mosque|kids screaming all day, but i finally got to the masjid for taraweeh. what's the dua when you walk in?
+anxiety|Je suis trop stressée aujourdhui, mon coeur bat vite. Please du'a for me, I cant breathe well.
+visiting_graves,loss|every time i visit my mom's grave i just stand there and cry. i want to say the right words to her and not fall apart
+charity|work stress all day and i forgot my zakat until tonight. got it done. which dua so allah accepts it?
+confusion,guidance|I don't know what to do with my life. I feel lost, like I can't make any decisions and everything is confusing.
+legal|six months with the lawyer, hearing pushed again, the other side keeps lying in filings and i'm running out of money. please help
+decision|which one is right
+legal|My husband is in jail for the case and I am waiting for the lawyer to call me, please make everything fair
+family_conflict|i reverted and now my mom and sister scream at me every sunday. i dont know arabic prayers, what can i ask allah for to calm things down
+entering_home|Eve dondum, Allah bu evimize bereket ve huzur versin, dua edin lutfen
+moving_home|We have finally moved into our new house, and I would be grateful for your prayers that Allah blesses it with peace.
+visiting_sick|Our imam is unwell and confined to his house. We will go to visit him after Asr.
+major_decision|relocate overseas maybe
+entering_home|i reverted and i live alone. how do i ask allah to bless my home when i come back every night
+quran|Allah keep my memory strong so that I can keep the Quran in my heart. Is there a prayer for this?
+breaking_fast|My Muslim friend invited me to break the fast with them tonight. What is the thing you say when you start eating?
+drinking_water|Ugh the office was a sweatbox all day and I've been running on coffee. Now I just want a big glass and to say something to God about it.
+new_beginning,moving_home|I just moved into my first apartment on my own and everything feels strange. I want to start this new life well.
+meeting|Our family gathering has finished. Is there a closing supplication we ought to say before we disperse?
+jealousy|Orang-orang iri sama saya karena rumah baru, takut kena mata jahat. Tolong doakan saya ya.
+visiting_sick|I am going to visit my teacher who is sick at home, I want Allah to give him health and reward me
+praise|they called me a role model
+forgiveness|Ya Rabb ampuni dosa saya, saya sudah banyak salah selama ini, hati saya tidak tenang.
+morning|new day starting now
+hosting|tamu mau datang rumah, minta berkah, doa untuk tuan rumah apa?
+peace|tired of this constant noise
+longing|I miss my mother's village very much. It has been twelve years since I last saw my brothers and sisters there.
+wind|The wind is blowing very strongly tonight and the roof sheets are rattling. Please protect our home and our neighbors.
+vehicle|Yeni arabama binecegim, Allah yolu acik etsin ve kazadan koruyun, dua edin lutfen
+adhan|ngl i never know what to say when the adhan goes off at school. help
+success|I finally finished my first novel and I want it to do well. Please help me be successful.
+new_clothes|baju baru beli, mau pakai, doa pakai baju baru apa ya?
+loneliness|Saya kesepian di kota ini, tidak ada teman. Tolong doakan saya supaya ada yang menemani.
+mosque|ngl i wanna be the guy who's always in the masjid. what do i say when i walk in
+mosque|I just started going to the mosque and I see people saying things when they walk in. Which words should I learn?
+eating|just had breakfast
+divorce|I am asking for your prayers as my son has decided to separate from his wife, and I pray Allah brings them peace and the best outcome.
+healing,illness|my dad was sick for months and the doctors keep saying wait and see. the house feels empty. i just need him to get better
+anxiety|chest tight every morning
+sitting|teman-teman saya ngajak yang nggak bener, minta doa supaya dijauhkan
+General|any dua at all
+remembrance|My husband passed the adhkar on to me; I'd like to remember Allah more often. Could you recommend a dua?
+backbiting|İnsanların arkasından konuşuyorum, gıybeti bırakmak istiyorum. Dilimi tutmak için dua var mı?
+provision|My savings are almost gone and I don't know how to make more money. I want to ask for help from God.
+Friday|jumuah dua
+legal|The court will decide custody of my grandchildren next week. I ask Allah to guide the judge and make it best for them.
+sleep,anxiety|saya susah tidur malam ini, banyak pikiran, ada doa supaya tenang?
+loneliness|I don't really have anyone in my corner. Every weekend I stay home by myself and I feel really lonely.
+protection|I have been troubled by strange thoughts and whispers in my mind during prayer. Kindly pray that Allah protects me from the devil.
+patience,anger|i have so many things piling up and i keep getting frustrated, i want to be the kind of person who stays calm
+hope|Aku sudah putus asa dengan keadaan ini, tidak ada harapan lagi. Tolong doakan aku ya supaya ada jalan.
+anger,patience|Saya cepat marah sekali, anak-anak takut sama saya. Tolong doakan supaya saya bisa sabar ya.
+family,family_conflict|Between work, school runs and the family WhatsApp drama I'm wrecked, pray Allah keeps our home together, jazakallah.
+rain|Yağmur çok şiddetli yağıyor, sel tehlikesi var. Allah'ım bu yağmuru rahmet eyle.
+vehicle,fear|pls pray i stay calm on the motorway, im so scared of lorries lol
+praise,humility|My son's coach says he has real talent for football. I'm glad, but I hope he stays humble and does not get big headed.
+wudu|toddler kept splashing me and i messed up my wudu. starting over. what do i say after wudu to end it?
+knowledge|spent three hours on one chapter and i still don't get it, my notes are a mess, i want to understand the topic properly
+praise,humility|Teman-teman saya puji hasil kerja saya, bos juga bilang saya bagus sekali. Tolong doakan saya tetap rendah hati.
+anxiety|Ugh whatever, the day was long, dishes piled up and the landlord is being weird. The worst part is my heart keeps racing for no reason.
+new_beginning|Yeni şehre taşındım, yarın yeni işe başlıyorum. Allah'ım bu yeni başlangıcı hayırlı kıl.
+anger|I keep getting really irritated with my kids and I yell. I want to be gentle but the rage comes up so fast.
+consultation|need another view on this
+loss,patience|After losing my mother I feel empty. Please grant me patience and a heart that can accept Your decree.
+pregnancy|i'm a revert and im pregnant for the first time. im scared. what do i ask Allah for to keep the baby safe?
+meeting|kumpulan selesai, banyak ghibah tadi, doa penutup majelis apa?
+leaving_home,protection|i reverted and every morning i leave my apartment. how do i ask allah to protect me while im out
+market|Going to the mall with my roommate today for some new clothes. I want the trip to go well.
+witr|I want to recite the qunoot during witr but I am unsure of the words. Could you send them?
+wind,protection|The wind is howling and our trees are bending. I'm scared something will fall on us. Please protect us.
+illness,healing|I have been ill with a bad cough and chest tightness and I cannot sleep. May Allah grant me ease.
+job,provision|Ya Allah, my son has been without any work for eight months now and our family is struggling. Please open a door for him.
+morning|Ugh the neighbours partied till 3, I got 2 hours sleep, and now my head hurts. Just want to wake up feeling blessed again, any words?
+success|My son has begun his new position and I pray he does well and rises in his work. Please grant him success.
+leaving_home,protection|Evden cikiyorum, Allah beni ve ailemi korusun, bu gun hayirli gecsin, dua edin
+forgiveness_from_people,family_conflict|make peace with brother
+leaving_home|As I step out of the house each morning, I ask Allah to protect me, my family and my home in my absence.
+enemy|Musuh-musuh saya mau menjatuhkan usaha saya, mereka fitnah terus. Tolong doakan saya diberi kekuatan.
+legal|The lawyer told us the trial will be in March. I am worried we cannot pay for it, please help us get through this.
+bad_news,job|the job i was sure about went to someone else, the manager said 'culture fit'. six months of work and now i start over
+children,family,steadfastness|pls make dua my kids grow up strong in deen and dont get lost in this dunya
+eating|Just ate and felt so grateful, I want to say thank you to God properly. What's the thing Muslims say after eating?
+jealousy,protection|Several people envy our family's blessings lately, and I worry about the evil eye on my children. Please pray for protection.
+laylatul qadr|last nights ramadan dua
+difficulty,anxiety|rent went up again, my car died on the highway, the job is toxic, and i have two exams next week. i'm barely holding it together
+inheritance,family_conflict|Babamin mirasi yuzunden kardeslerle kavga var, Allah adil bir paylasim nasip etsin, dua edin
+job|boss let me go
+laylatul qadr|I wish to seek the Night of Power this year, insha Allah. Could you remind me of its special prayer?
+wind,protection|Rüzgar çok şiddetli esiyor, çatı zarar görebilir. Allah'ım bizi fırtınadan koru.
+injustice|They removed my husband from his position with no reason and gave the post to someone less qualified. Allah is the best judge.
+in_prayer|Secdede hangi duayı okumalıyım? Rükûda ne okunur, bunu unutuyorum.
+praise,humility|My boss said I did an amazing job on the presentation and called me the best in the team. I don't want to get too proud.
+accident,fear|I have accident on the motorway, the car is damaged, I am injured on my shoulder, I am scared to drive now
+mirror|I'm getting ready and I see myself and I feel self-conscious. Is there a way to pray about looking at yourself?
+illness,healing|feeling really sick and weak, my body just doesnt work right, please help
+General|Could you send me one dua that I can recite daily for all my affairs?
+loss|my nan passed last year and i still think about the tea she made me every morning. i dont know what to do with that grief
+exam|My son sits for his final examinations on Monday. Please grant him calm, clear memory and a successful result.
+family_conflict,forgiveness_from_people,longing|Kids sick, bills late, pls pray for reconciliation with my sister, she still won't reply since the fight, and I miss her.
+drinking_water|saya haus banget, minum air dingin, doa minum apa?
+enemy|My ex's family is spreading nasty rumors about me to everyone, and I feel attacked from all sides. How can I ask God to deal with them?
+laylatul qadr|I'm new and Ramadan is almost over. Is there something specific to ask for on the odd nights?
+night,protection,sleep|keep me safe overnight
+oppression,injustice|my employer keeps lowering my pay after i converted and says it's my fault, i don't know who to talk to
+business|I am opening a small grocery shop in our neighborhood next month. Please let the business be blessed with good customers and honest profit.
+knowledge|Saya sedang belajar matematika, susah sekali mengerti rumusnya. Tolong Allah bukakan pemahaman saya.
+visiting_graves|my first time at a cemetery in islamic way, we're visiting my friend's grave, what do we do there
+morning|Good morning. I have just risen from my bed and I would like to begin the day with a proper prayer, please.
+depression,loss|Since my husband passed I have felt a deep emptiness that does not lift. I wake up and nothing seems to have color anymore.
+divorce|Bosanma surecindeyim, cocuklarim icin cok endiseliyim, Allah bize kolaylik versin, dua eder misiniz
+legal|i got arrested and the court date is in a few days, i dont even know how the system works here
+sitting|tired of my squad
+market|Saya mau pergi ke pasar pagi ini, beli sayur dan ikan. Semoga selamat dan dapat barang bagus.
+gift|so generous of my brother
+laylatul qadr|ngl i keep sleeping through the last 10 nights, how do i actually stay up for laylatul qadr
+decision|My husband and I are deciding between two houses. Please guide our hearts to the one that is best for our family.
+anger|Stuck in traffic for two hours, the car is making noises, the boss sent me a hostile email. I'm just angry all the time lately.
+anxiety|I am a new believer and my anxiety has come back badly. I feel like everything is pressing down on me and I do not know how to settle.
+temptation,chastity|ngl i keep wanting to do the haram thing w my crush, dua to stop me
+rain|The rain has been falling since morning. Please let this rain be a mercy and not a harm to our fields or homes.
+pregnancy|I pray that Allah grants my daughter a healthy pregnancy and a safe delivery when her time comes.
+sleep,fear|scared of the dark again
+loneliness|feel isolated at home
+debt|cant cover the installment
+medical,fear|hospital tomorrow for a colonoscopy, lowkey terrified rn
+marriage|pls make dua my future husband is patient with me and we laugh together, its been so long
+new_clothes,gift|Someone gave me a brand new jacket as a gift. Is there a Muslim way to thank God for clothes?
+family,longing|Ailem cok dagildi, herkes ayri yerde, Allah ailemizi bir araya getirsin, dua eder misin
+guidance|not sure where to head
+pregnancy,medical|pls pray for my wife, the baby is breech and the doctors are worried, we need Allah's help
+new_clothes|I have a new coat for the winter and I wish to thank God for it. What prayer is said when wearing new clothes?
+consultation|I want to talk to someone wise about my finances. I don't know who to trust. Please help me find good counsel.
+remembrance|bro i keep forgetting allah during the day, any dua to remember him more
+heart|bro my heart feels so hard lately, i cry at nothing and then feel nothing during quran. soften it for me allah
+NewBorn|i just learned my friend had a baby. i'm new to islam, what do i pray for the baby?
+family,peace|since i reverted my family treats me differently. i want them to be at peace, how do i pray for them
+consultation|Saya perlu nasihat dari orang yang berilmu tentang masalah keluarga, tolong Allah tuntun saya.
+backbiting|guard my tongue
+confusion|feel frozen, cant act
+loss|everyone says she's in a better place and i know, but i wasnt ready. the kids keep asking when mama is coming back
+rain|dry land needs this
+injustice|The teacher accuse me of cheating in the test, I did not cheat, nobody believe me and my grade is ruined
+betrayal,injustice|gave my coworker my notes for the project and she presented them to the boss as hers. then she smiled at me and said she was just helping
+provision|Uang saya habis buat bayar sekolah anak, tolong Allah beri rezeki yang halal dan cukup.
+wudu|after wudu im supposed to say something right? i forget what it is
+sneezing|Ugh the dust from the construction got everyone sneezing, my nephew sneezed right into my drink, and now I need to know what to say to him.
+hosting|stayed at their place
+longing|Rindu sekali sama ibu saya di kampung, sudah lama tidak pulang. Tolong doakan supaya bisa pulang.
+healing,illness|i want to be well again, the sickness has taken so much from me, please help me get my health back
+eating|The meal is served and it smells wonderful. Before we eat, could you suggest a short prayer of thanks?
+peace|Family meeting ran two hours, the coffee was cold, the kids screamed. Sometimes I just want some calm inside and it feels impossible.
+forgiveness_from_people|bro i said some really hurtful stuff to my best friend and now he's not talking to me. how do i make it right
+new_beginning|Today is my first day at a new job in a different state. I'm scared but excited. Please help me start well.
+heart|I pray but nothing moves inside me. What do I ask God for so my prayer means something?
+travel|Yarin Istanbul'a ucakla gidiyorum, Allah yolculugumu kolay ve guvenli kilsin, dua edin
+mirror|saya lihat muka di cermin, jerawat banyak, rasa tidak cantik, doa apa ya
+adhan|call to prayer words
+loss|I lost my wife in the accident, now I am alone with children, my heart is very heavy, please help me
+sneezing|saya bersin tadi, orang di sebelah bersin, jawabnya apa ya?
+hope|I'm trying to move on from my past but I feel like I'll never change. Can God give me hope that things can get better?
+visiting_sick|I am going to visit my friend in hospital today, I bring fruit and I will make dua for him to get well
+injustice,oppression|My landlord say I damage the apartment and take my whole deposit, but I did nothing, it is injustice
+gratitude,good_news|Long day of errands and paperwork, but the scholarship came through and I feel so grateful. Thank you Allah for opening this door.
+General|ngl idk what to ask for rn, just give me a solid dua
+humility|Saya terlalu sombong, merasa lebih baik dari orang lain. Doa apa untuk hilangkan takabbur?
+difficulty,patience|Our family is going through many trials right now. Give us patience and make our affairs easy.
+mirror|I looked at myself in the mirror this morning and I was not pleased with my appearance. Please help me with a prayer.
+protection|We have a big family event, I just hope nothing bad or evil gets into our house, you know how people are. Kindly guard us.
+injustice|i was denied the apartment because the agent said they didn't want 'your type' of people, i felt humiliated
+business|i quit my job to start this company and now investors are ghosting me. please let the company survive this quarter
+job_interview|Tomorrow morning I have an interview for a position at the hospital admin office, and I am very nervous. Please grant me calm and clear speech.
+enemy,protection|My neighbor has been spreading lies about my family and seeking to harm our standing in the community. Please pray for my protection from her.
+decision|Saya dapat dua tawaran kerja, satu di Jakarta satu di kampung. Bingung, tolong beri petunjuk.
+hope,new_beginning|need a fresh start
+hosting|Our neighbours have invited us for dinner. Which prayer do I offer for them as a guest?
+quran|between school and work i barely recite anything. i want the quran to be my companion again, any dua for that?
+worry,children|I am very worried about my son, he has not called in three weeks and I cannot stop imagining the worst. Please pray for his safety.
+children|i reverted and my kids live with their dad who doesnt pray. i want Allah to keep them safe and guide them. how do i ask?
+guidance|my dad is sick, my marriage is shaky, my kids are pulling away and i don't even know which thing to focus on, i need clear direction
+betrayal|My husband has another woman and he lie to me for two years, I found the messages, I cannot believe it
+seeing_disabled,depression|heartbroken seeing the sick
+vehicle,protection|I am getting into my car to drive to the hospital. Kindly pray that Allah protects me and everyone on the road.
+deceased|my dad passed and the imam said we should make dua for his soul, how do i do that
+children|Benim cocuklarimi her kotulukten koru ya Allah, onlari saglikli ve iyi insanlar eyle
+loneliness,loss|Since my husband passed, the house has been very quiet and I have no one to speak with during the long evenings.
+morning|I'm new to all this. When I open my eyes in the morning, what is the good thing to say to God?
+exam|My nursing licence exam is next Tuesday and I feel so unprepared. Please help me pass it.
+peace|Saya mau hati yang tenang, pikiran selalu ribut. Tolong doakan supaya saya bisa tenang dan damai.
+new_clothes|Dragging around in old sweats for months since everything went wrong, but today I bought a new outfit. Any words to say when I put it on?
+deceased|Please pray for my grandmother who has passed away, may Allah forgive her sins and make her grave wide
+difficulty|cant get ahead at all
+leaving_home,protection|Coffee cold, emails piling up, pray Allah keeps me steady and protects my home, heading out to another meeting.
+in_prayer|During sujood, my knees ache, but I want to make dua. Could you share a dua suitable for sujood?
+calamity,protection|earthquake hit at 4am and our building cracked. we ran out in pajamas and now we're in a shelter with the kids. please keep my husband safe
+fear,sleep|So after the robbery on our street I haven't been able to sleep. Locks checked five times, lights on, and I'm still terrified to be alone.
+depression|Hati saya kosong sejak dia pergi, tidak ada semangat lagi. Tolong doakan saya ya.
+NewBorn,healing|pls dua for my cousin's baby, shes early and in the nicu, ya Allah keep her safe
+betrayal,injustice|i trusted my old study group and they used my notes to get ahead, then blamed me for the bad grade. i keep replaying it
+children,sitting|Everything at work went wrong today, then I saw my son's grades drop, ya Allah protect him from bad influences, ameen.
+major_decision|I want to quit my stable job and go back to school for a totally different career. Can you help me make the right call?
+job,provision|Ya Rabb, I was dismissed from my post without cause and I have children to feed. Give me halal work.
+worry,loss,longing|missing my late father so much
+temptation|I want to say no when I'm tempted to do things that are wrong. Is there a prayer for strength?
+guidance|I feel that I have lost my way in these last years. Please guide my steps and show me the right path to walk.
+seeing_disabled|My neighbor's son has a disability and watching him struggle makes my heart hurt. How can I ask God for him?
+chastity|Our family wishes to remain chaste in our conduct. Which dua asks Allah for purity and protection?
+repentance|after everything with that girl and what we did, i stopped praying for months. i think i'm ready to come back to allah
+consultation|the imam was away, my mom doesn't answer her phone, and i'm stuck with a big family money question, if only i had a wise person to ask
+charity|Saya mau bersedekah hari ini, doa yang dibaca saat memberi apa? Semoga diterima.
+mirror|Ugh my sister posts filtered pics and now I pick apart my face every morning. Want God to settle my heart about how I look.
+paradise|I'm new and I think about what happens after death. Is there a prayer to ask God to let me go to heaven?
+deceased|the call came at 3am and my aunt was gone. now i'm sitting here and can't believe it. pray her grave is spacious and her sins forgiven
+bathroom|Before I enter the washroom I always wish to remember God. Could you tell me what to recite?
+job_interview|Mon entretien est demain matin pour un poste de comptable, je suis très stressé. Que Dieu m'aide.
+bad_news,debt|I was told my brother's business has failed and he is in great debt. I am very saddened by this.
+peace|I long for tranquility in my heart and in our home, for the noise of this world often troubles me. Please pray for us.
+jealousy,marriage|I think my sister is jealous of my wedding and says mean things about my husband. I want God to protect our marriage from that.
+protection|I think there's some spiritual attack on me, I feel heavy and sick since I moved into this flat. How do I ask God to keep me safe?
+seeing_disabled|Long commute, crowded train, and a woman in a wheelchair was pushed aside by the crowd. I felt so angry and sad, why do people do this.
+longing,family_conflict|I really miss my dad. We used to fish together every weekend and now we barely talk. I want us to be close again.
+breaking_fast|puasa sudah habis, mau buka puasa, doa berbuka apa?
+moving_home|Work was a disaster and my back hurts, pray Allah blesses our new house, ameen, we finally got the keys though.
+bathroom|Is there a prayer you say when you go to the bathroom? I'm learning and I don't want to do it wrong.
+humility|remove my pride
+after_prayer|after salah dua
+backbiting|bro i got caught gossiping about my friend today and im so embarrassed. how do i stop talking about people
+mirror|feel so plain lately
+after_prayer|Selesai solat, zikir apa yang perlu dibaca? Saya lupa jumlahnya.
+decision|between the two cars, the apartment and the other apartment, and my husband's preference, i just cannot pick, please show me what's good
+eating|Ugh my day was a mess, traffic, boss, everything. But mom cooked and I'm starving, so what's the right thing to say before I start eating?
+provision|fridge is empty again
+parents|i converted and my mum is really upset. i want to honor her even though we disagree. what do i ask Allah for?
+inheritance,legal|Forgot my keys, missed the bus, pls make dua the estate papers get signed smoothly, lawyer still hasn't sent them.
+market|been waiting all week for the sale at the big shop, finally going today, hope the crowd isn't insane and i find what i need
+enemy,protection|Mom's landlord is a nightmare, the neighbors are against her, and the new guy at her mosque keeps undermining her. She needs protection.
+wudu|Wudu karte waqt koi dua padhni hai? Hath dhote waqt kya kahen?
+travel|i got a flight to see my family back home, i'm a revert and dont know any arabic. how do i ask allah to keep us safe
+longing|The holidays came and went, the city lights were nice, but I felt so far from my hometown and the people I grew up with.
+witr|ngl i want to pray at night when everyone's asleep, how do i ask allah for help with it
+bathroom|just came out, done
+wind,protection|my shed flew across the yard and the fence is down and the wind isn't stopping, please just keep my family and our neighbors safe
+success|want to shine
+heart|Kalbim çok katılaştı, namazda huşu bulamıyorum. Kalbi yumuşatmak için dua var mı?
+accident|some guy ran a red light and t-boned me on the way home from my late shift. airbag went off, wrist is swollen, insurance is a nightmare
+difficulty,provision|I am in big problem with money and my health is going down too, I want Allah to open the door for me
+NewBorn|Please join us in praying for the newborn granddaughter, that Allah grants her good health and a long, blessed life.
+sincerity|i kept doing extra prayers when my friends were watching lol, want my intention pure
+marriage|New to Islam, my family is not supportive, I want to marry someone good who shares my faith. Please pray that Allah helps me.
+deceased|We laid my cousin to rest this afternoon. Please grant him mercy and the light of Your mercy in his grave.
+visiting_graves|my dad is buried overseas and i've never been to his grave. i dont know what the right thing to do there is
+parents|Long week at the hospital, pray Allah gives my parents long healthy lives, ameen, I keep thinking about them getting old.
+gratitude|My life has changed so much since I found this faith. I feel thankful every morning and I want to show God how much I appreciate it.
+seeing_disabled|Saya lihat anak kecil dengan kursi roda di pasar, dia sendirian. Kasihan sekali, tolong doakan dia.
+exam|Besok ujian akhir saya, saya belum belajar banyak. Tolong Allah mudahkan dan kasih saya kelulusan.
+night|When it gets dark outside I want to thank God for the day, is there a special thing to say at night?
+forgiveness_from_people|I spoke harshly to my daughter-in-law and I regret it. Please help me ask her forgiveness and make peace.
+breaking_fast|Ugh my boss kept me late again, I skipped lunch on purpose, and I'm starving. Need the right words for when I finally open my fast.
+wind|roof is rattling badly
+new_beginning,moving_home|Tomorrow our family begins a new chapter in the new city. Please let our home be blessed and our children settle well.
+oppression|The boss make us work without pay and say if we talk he will call the police on us, we are scared, Allah help
+calamity|Our village was destroyed by flood, many people died and we have nothing to eat, please help us Allah
+success,business|Saya ingin sukses dalam usaha dan karir saya, semoga Allah mudahkan semua langkah saya.
+praise,sincerity|The imam praised my recitation after prayer today and I was quite humbled by his kind words. I ask Allah to keep me sincere.
+oppression,injustice,enemy|people at school keep calling me a terrorist because of my name. i just want to be left alone and feel safe
+longing|want to reunite with family
+Friday|It is Friday, the blessed day. Please share a salawat upon the Prophet that I can recite throughout the day.
+vehicle|i reverted and now i have to take the bus to work. is there a prayer to say before getting on a bus?
+divorce,children|pls make dua my kids dont get hurt by all this, im falling apart lowkey
+adhan|I'm hard of hearing now but I still want to answer the adhan. Which supplication follows it?
+marriage|Saya mau nikah tahun ini, minta doa supaya Allah beri jodoh yang soleh dan baik hati
+forgiveness_from_people|I was rude to my coworker and now I want to apologize to him the right way.
+depression|cant find joy in anything
+forgiveness|forgive my sins
+illness,healing|I am sick with cold and my nose is blocked, I want Allah to make me well quickly inshallah
+charity|I just gave my first donation to a Muslim charity. Is there something to say so God accepts it?
+protection|house feels off lately
+Friday|What is the Friday prayer and is there something special to say on Fridays?
+General,morning|Just looking for a good dua to start my day, nothing in particular.
+injustice|new guy got the lead on my project, then my review said i'm 'not a team player'. i did most of the work and everyone knows it
+visiting_graves,deceased,paradise|I stand by my son's grave each evening and beg Allah to grant him a place in Paradise.
+family_conflict|I have not spoken to my brother in three years over an old disagreement. Please pray that Allah softens both our hearts.
+fear,protection|Takut sekali, saya dengar suara aneh di luar rumah malam ini. Tolong doakan saya ya Allah.
+enemy|bullies keep targeting me
+family_conflict|Saudara saya dan saya bertengkar lama sekali, saya mohon doa supaya Allah lembutkan hati kami
+temptation,protection|protect me from desire
+consultation|I am seeking counsel from wiser people before I take this step. Please grant me the sense to ask the right person and listen well.
+paradise|Jannat mein jaane ki dua batao, aur jahannam se bachne ki. Ammi ke liye bhi.
+sitting|Ugh my coworker keeps dragging me into his drama and I end up hating everyone. Tired of who I hang with. Anything to ask God for better people?
+thunder|Gök gürültüsü çok korkutucu, şimşek çakıyor. Allah'ım bizi koru, evimizi koru.
+calamity,patience|After the storm we lost all our belongings, even the photos. Give us patience and better provision.
+forgiveness|Dear Allah, I have been careless with my prayers and my tongue for many years. Kindly forgive me, I am sorry.
+market|I am going to the bazaar this morning for vegetables and fish. Please let me find fresh things at a fair price.
+General,morning|woke up late, coffee spilled, work's a mess. not asking for anything specific, just a good dua to carry me through today.
+worry,job|I lost my job last month and I am scared about how we will pay the bills. I feel so heavy inside and I don't know what to do with it.
+gift,gratitude|Long exhausting day but my colleague brought me my favorite coffee and didn't say anything. Small things like that mean so much.
+sleep|I have been unable to sleep for several nights and my mind keeps wandering. Could you give me a prayer for rest?
+job_interview|Next week I have an interview for a position at a clinic. I want to do well and not panic. Please help me.
+exam|kids were sick all week so i missed the review sessions, and now the entrance test is monday and i'm so behind
+divorce|i became muslim last year and my marriage is ending. i dont know any islamic words but i want Allah to help me through this
+illness,sleep|work was brutal, boss yelled at me, and now my throat is on fire and my whole body hurts. just want to sleep but cant
+steadfastness|i promise myself i'll wake up for fajr, sleep through it, feel guilty all day, then drop the quran too. i want to be steady for once
+pregnancy|Meri biwi ka haml bohot mushkil hai, Allah sehat wala haml aur salamat bachcha de, ameen
+marriage|Spent the whole shift on my feet, pls make dua I find a good husband, then mum texted me about another proposal she found.
+anger|My temper got the better of me with my daughter this evening and I said harsh words. I am sorry and I need help controlling my anger.
+gift,gratitude|A stranger paid for my groceries at the store yesterday and I didn't even know them. I was so touched I almost cried.
+major_decision|i keep thinking about quitting the career i trained for and starting over at 40, everyone says it's crazy but i'm so unhappy
+good_news,gratitude|finally passed my exams
+healing,illness|Ya Allah, please let my health return to me so I can serve my family and pray standing again.
+medical,anxiety|scan came back and they want more tests, then a referral, then another appointment in six weeks. i cant stop thinking about it
+hosting|I'm hosting my first dinner for friends and I want to bless the guests. Is there a prayer for that?
+new_beginning|landed in a new city
+calamity|The fire alarm woke us at 2am and by the time we got out the whole house was smoke. We lost all we had, Ya Allah.
+success|been grinding on my channel nobody watches, late nights, zero sleep, i want the videos to take off and make it worth it
+temptation,steadfastness|long night out with the guys, everyone drinking, and the pull was strong. i want to stay strong and not give in, what dua?
+gift|Pakcik saya hadiahkan saya kereta, saya sangat terhutang budi. Tolong doakan dia dengan kebaikan.
+parents|I pray you will remember my mother and father in your prayers, they are elderly now and I wish to care for them well.
+heart|khushu in salah
+witr|I want to do tahajjud every night but I am tired. Ya Allah give me strength, what dua to read?
+children,family|I pray that Allah protects my grandchildren from harm and keeps them within the faith throughout their lives.
+moving_home|Yeni eve tasindik, Allah bu evi bereketli ve huzurlu eylesin, dua edin lutfen
+visiting_sick,worry|i am going to see my brother at the hospital and i feel scared and sad
+wudu|I'm learning to do wudu before prayer. Is there anything I should say while doing it?
+good_news,job|Saya dapat kerja baru hari ini, bos bilang saya diterima. Alhamdulillah, tolong doakan saya lancar.
+thunder,protection|The thunder woke me up and I'm really frightened. Please keep me and my family safe in this storm.
+addiction|I used to gamble a lot and I want to quit. Is there a prayer to help me break the habit?
+in_prayer|bro in sujood my mind wanders so hard, what do i say down there
+sitting|I want to find Muslim friends who are good for my faith. Is there something to ask God for?
+loneliness|Went to the family gathering, sat at the corner, nobody asked me a thing. Then drove home alone and felt so invisible.
+backbiting|My friends love to gossip and I join in. Is there a prayer to help me keep my mouth shut about others?
+remembrance|Allah'ı daha çok anmak istiyorum, gafletten kurtulmak için hangi duayı okumalıyım?
+rain|stuck inside all weekend because of the downpour, cabin fever is real, but my grandpa's farm needed this and i'm so relieved
+hope,guidance|I have been losing hope that my son will return to his faith. Please pray that Allah opens his heart again.
+peace|Life feels so noisy and busy. I want to find a quiet place in my heart where I can just breathe and be still.
+charity|want my sadaqah to be accepted, what do i ask allah
+steadfastness,repentance|I have been returning to Allah slowly, please help me keep going and do not let me fall back into heedlessness.
+provision|We are struggling to make ends meet this month. Please send us provision from sources we cannot imagine.
+eating|yemek yedim, yemekten sonra okunan dua hangisi acaba?
+sitting,children|My son has begun keeping company with boys who are leading him astray. Please share a prayer for guiding him to good friends.
+guidance|Saya bingung arah hidup saya, tidak tahu harus ke mana. Tolong Allah tunjukkan jalan yang benar.
+family_conflict,forgiveness_from_people|pls pray i can forgive my brother for what he said at dads funeral, it still hurts a lot
+depression,loneliness|The commute, the emails, the bills, nobody texts me back. I've been feeling so low for weeks and I don't know who to tell.
+worry,depression|Honestly fed up with everything. Dad's diagnosis, the bills, the silence from my sister. The sadness just sits on my chest all day.
+anger|hate how angry i get
+debt|Saya punya hutang ke orang, sudah jatuh tempo dan belum bisa bayar. Tolong Allah mudahkan lunasi.
+steadfastness|I am afraid that my faith become weak, I want to stay steadfast in the religion until the end
+divorce,backbiting|Everyone at the masjid whispers since my husband and I split, pls pray Allah protects my heart, it's exhausting.
+medical,pregnancy|My wife is in hospital for the birth, she has complications and doctor is doing operation now
+family,children|pls dua that my kids and their future spouses stay good muslims and close to us
+in_prayer|opening dua salah
+visiting_sick|after a brutal shift i have to drive an hour to see my grandma in hospital. she's so weak, i just want to make her smile
+quran|starting to read quran every day, what should i ask allah for while i do it
+entering_home,peace|Dropped the bags, took off my shoes, pray for a home that feels safe, ameen, all I want is calm right now.
+fear|I'm so scared of spiders and snakes that I can't even go into my garden. It's getting in the way of my life.
+thunder|sky cracking loud tonight
+after_prayer|I pray five times now and I want to know what to say after I finish each salah.
+adhan|the call to prayer came on the radio today and it moved me. what is the response to it
+paradise|want a good ending in life, dua for that
+chastity,temptation|long day, lonely night, temptation to slip back into something haram with my ex. please help me stay pure, dua?
+temptation,chastity|I am old but the desires still trouble me. Which dua asks Allah to keep me away from what is forbidden?
+forgiveness_from_people,family_conflict|Kardeşimle aramız bozuldu, ona kötü sözler söyledim. Özür dilemek ve barışmak istiyorum.
+sincerity|My ibadah sometimes for show, people see me. Make my niyyat pure for Allah, dua please.
+bathroom|Ugh the kids yelled all morning and I finally locked myself in the loo for a minute. Need the right thing to say when I come back out.
+business|I'm about to sign the lease for my first shop. I'm nervous it won't make money. Please help me with this business.
+patience|I want to face these long days with sabr and grace. Please give me the endurance I need.
+fear|afraid of heights
+steadfastness,heart|i was so excited when i took shahada and now i feel dry, i want to get back that feeling
+exam|haven't studied at all lol
+oppression,legal|landlord keeps raising rent and threatens to call immigration if we don't pay. the city won't answer our calls. we feel trapped
+forgiveness,repentance|Before I became Muslim I lived a wild life. I feel dirty about it. What can I ask God to wipe away?
+breaking_fast|day of no food done
+patience,anger|DMV line took four hours, system went down, now i have to come back monday. i need the strength to keep my cool with everyone
+chastity|wanna keep my body and heart clean for allah, what should i ask
+jealousy|Our shop had the best month ever, and a rival store keeps making snide remarks about our luck. It's like they want it to fail.
+knowledge|learning from scratch now
+travel|I am about to set off on a long journey to visit my sister abroad. Kindly pray that Allah grants us safety on the road.
+paradise|long night at the hospital with my dad made me think about death and jannah. which dua should i ask?
+accident,healing|After my fall in the bathroom I cannot stand without help. Please grant me healing and ease.
+patience|My mind is always in hurry and I cannot wait for anything, please help me to be calm and patient
+accident,fear|i got in a crash on the motorway and my neck and back are hurting, i'm scared to drive again
+good_news,marriage|I got engaged last night! My partner is a kind Muslim man and we want to start our life right. How do I ask God for a good marriage?
+chastity|Mai shadi tak paak rehna chahta hoon, zina se bachne ki dua batao.
+sleep|Ugh the upstairs neighbour stomps all night and I'm running on fumes, so I just want to lie down and rest with God. Any words for that?
+healing|Ya Allah, please heal the wounds of my brother and let him stand up strong again.
+entering_home,loss|pls dua when i come back to the house after my dads burial, feels so empty
+addiction|Saya kecanduan judi online, mau berhenti. Doa untuk lepas dari kebiasaan ini?
+job|I just got turned down for the third position this month. I feel like nobody wants to hire me. Please help me find work.
+drinking_water,difficulty|dying out here
+sincerity|Ya Allah, let my actions be sincere. Keep me from showing off, I beg You.
+oppression|I was made to suffer by a man who used his power over me at work. I trust in Allah to bring justice.
+market|fruit stand then home
+new_clothes,leaving_home|shoes and shirt on
+mosque|Masjid jaa raha hoon, andar jaane ki koi dua hai? Batao please.
+drinking_water|I am very thirsty after my walk in the heat. Could you tell me what I should recite while drinking water?
+confusion|I have been putting off my duties for weeks and I feel no drive in me to start anything. Please pray that Allah gives me strength.
+seeing_disabled|I saw an elderly woman struggling with her heavy shopping in the rain today. My heart broke for her and I could not help her.
+addiction|My husband struggles with smoking for many years. Please ask Allah to help him to quit this habit.
+decision|I'm trying to choose between two universities. Both look good. I want to make the right choice. Please help me.
+laylatul qadr|ramadan has been hectic, work, kids, cooking iftar every day. the last 10 nights are here and i want laylatul qadr. what dua?
+patience|My patience is worn thin with all these worries about the children. Ya Allah, give me calm and endurance until the end of this trial.
+travel|Exhausted from a double shift, pls make dua for a safe return, tomorrow I'm finally going home after two years away.
+thunder,fear|drove home through the storm and the lightning was so close to the road, i'm shaking, i'm home now but my hands won't stop trembling
+meeting|Our study circle is wrapping up. Is there something Muslims say at the end of a gathering?
+humility|I have grown proud of my position and my success. Please help me remain humble before Allah.
+bathroom|saya mau ke toilet, ada doa masuk wc? lupa lagi
+moving_home|i reverted and im moving into my own place tmrw. how do i ask allah to bless the new house?
+meeting,leaving_home|time to leave now
+medical,patience|my doctor says the surgery date might move again and i honestly dont know how much more waiting i can do
+humility|I feel like I know better than others and I hate it. Is there a prayer for being humble before God?
+leaving_home,protection|pls make dua for everyone at home while im out, my little sis is alone with mum
+quran|I want to memorize Quran, but my memory is very weak. Please give dua for to remember words.
+repentance|Allah, I have sinned big sin, I want come back to you. Accept my tauba, I make promise no more.
+inheritance|pray the will gets carried out the way my late mum wanted, no one cheats
+good_news|Mom's been sick and work has been brutal, but my application for the grant was approved this morning. I want to share this good news.
+debt|I borrowed money from a friend and I can't pay him back. I feel really bad about it. Please help me pay it off.
+witr,job|lost my job this month and i'm scared. i want to stand in the night and ask allah for help. what's the dua for qiyam?
+parents|Annem cok yoruldu, benim icin cok fedakarlik yapti, Allah ondan razi olsun, dua edin lutfen
+Friday|Cuma günü Peygamber'e salavat getirmek istiyorum. Hangi salavatı okumalıyım?
+in_prayer|When I stand to start the prayer, what do I say to God first, before the recitation?
+difficulty|i feel stuck in so many things at once and i dont know how to get out, please ease it for me
+job_interview|long day driving the taxi, then dispatch called, I have a final interview at the airport office at ten and I can't sleep
+entering_home|As I come through the door, I ask Allah to fill this house with peace and blessings and keep us all safe.
+confusion|Saya malas sekali, selalu tunda-tunda kerjaan. Doakan saya supaya rajin ya.
+backbiting,forgiveness|I have spoken ill of my sister-in-law to others. I ask Allah to forgive me and protect my speech.
+business,new_beginning|new shop opening monday
+night|The sun has set and the evening is upon us. Please, what prayer should I recite to close the day?
+protection|Saya rasa ada gangguan jin di rumah, tiap malam anak saya menangis. Tolong doakan perlindungan dari syaitan.
+morning|saya bangun pagi, mau minta berkah untuk hari ini, ada doa tidak for morning?
+bad_news|my application for the scholarship was rejected, i really wanted that
+healing,illness|Please pray Allah heal my son, he has long sickness and we are waiting for the good health to come back
+inheritance|My late husband's estate is being divided and I am anxious. Please pray that Allah guides us to share it justly among the heirs.
+thunder,protection|The thunder woke the children tonight and they are frightened. Please calm them and protect our home from harm.
+gratitude|God has been so good
+anxiety|I have been feeling very anxious and restless these past weeks, and my heart races for no reason. Kindly remember me in your prayers.
+major_decision|We are thinking of moving the whole family abroad to join my brother. It is a very big step. Please guide us to what is best.
+breaking_fast|The sun has set and I have been fasting since dawn. Please share the prayer for breaking the fast.
+sleep|i had a bad dream and woke up scared, which words help me feel safe again
+good_news,success|Our daughter has been accepted to the university she dreamed of, and we are overjoyed. Kindly pray that she succeeds there.
+adhan|ugh commute was brutal, boss kept moving deadlines. then the adhan came on as i was walking out. whats the dua after adhan?
+loss,deceased|i lost my baby sister, i didnt even know how to act at the funeral, im so sad
+night|habeen ayaa soo galay, waxaa jira duco aan ku akhriyo fiidka?
+fear,travel|I have a great fear of the water since my childhood and I am travelling by boat next week. Please pray that I feel safe.
+rain|We haven't had any rain in months and our garden is dying. Please help us get some rain.
+debt|We borrowed money from the bank to fix the roof and now we cannot repay the monthly amount. Please ease this burden for us.
+sneezing,illness|cold and sniffly today

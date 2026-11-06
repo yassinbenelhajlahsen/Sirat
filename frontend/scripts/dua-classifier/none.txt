@@ -1,0 +1,643 @@
+none|hello
+none|hi there
+none|test
+none|testing 123
+none|asdfgh
+none|ok
+none|thanks
+none|lol
+none|how do i change the app theme
+none|is this app free
+none|what time is it in london
+none|best pizza near me
+none|how to fix my wifi
+none|my phone screen cracked
+none|what is the capital of france
+none|recipe for chocolate cake
+none|who won the football last night
+none|can you tell me a joke
+none|how many calories in a banana
+none|my laptop wont turn on
+none|where is the nearest gas station
+none|what movie should i watch tonight
+none|how do i reset my password
+none|convert 5 miles to km
+none|weather tomorrow
+none|is it going to be hot this week
+none|whats 12 times 8
+none|the app keeps crashing
+none|how do i delete my account
+none|how do i turn on notifications
+none|why is the font so small
+none|my cat knocked over a plant
+none|i like turtles
+none|blue
+none|banana
+none|qwerty
+none|aaaaaa
+none|good app
+none|nice
+none|this is cool
+none|who made this app
+none|how do i share this
+none|i lost my keys again
+none|my car needs an oil change
+none|what should i cook for dinner
+none|is pluto a planet
+none|how tall is the eiffel tower
+none|send me the link
+none|whats your name
+none|are you a robot
+none|random words here
+none|just checking
+none|nothing
+none|idk
+none|hmm
+none|test test test
+none|xyz
+none|my headphones broke
+none|what is the price of bitcoin
+none|translate hello to spanish
+none|my phone is missing
+none|cant find my keys
+none|my cat ran away
+none|where did i put my glasses
+none|lost my wallet somewhere in the house
+none|i cant find my charger
+none|my dog got out of the yard
+none|misplaced my passport copy
+none|where is my other sock
+none|my remote disappeared again
+none|bro i lost my airpods
+none|anyone seen my laptop bag
+none|mere keys kho gaye hain
+none|saya kehilangan dompet
+none|kucing saya hilang
+none|telefonum kayboldu
+none|j'ai perdu mes clés
+none|my earbuds r gone
+none|lost my umbrella on the train
+none|where did my pen go
+none|i left my jacket at the cafe
+none|cant find my car in the parking lot
+none|my parrot flew out the window
+none|i dont know where my headphones are
+none|the tv remote is lost
+none|hamster escaped its cage
+none|missing one shoe lol
+none|my bike is not where i left it
+none|dompet saya ketinggalan di kantor
+none|anahtarlarımı bulamıyorum
+none|mera phone nahi mil raha
+none|jai perdu mon portefeuille
+none|lost the usb stick with my slides
+none|cant find my id card
+none|my kid's toy is lost under the sofa
+none|i misplaced my reading glasses again
+none|pls help me find my ring i dropped it in the sink
+none|my cat has not come home since yesterday
+none|where is my notebook
+none|saya tak jumpa kunci kereta
+none|we lost the match
+none|he hit the ball
+none|arsenal lost again
+none|finished the whole season
+none|my team got knocked out
+none|messi scored a hattrick
+none|cant beat this level in the game
+none|what a goal
+none|lakers vs celtics tonight
+none|we won 3-1 yesterday
+none|my fifa rank dropped
+none|just finished the last episode
+none|the finale was crazy
+none|i got killed in valorant again
+none|our goalkeeper was terrible
+none|the referee was blind
+none|cricket match today pakistan vs india
+none|who won the game
+none|i keep losing at chess
+none|new season of squid game when
+none|my favorite band announced a tour
+none|beat the boss after 20 tries
+none|liverpool fans are so loud
+none|we got eliminated in the quarter finals
+none|piala dunia malam ini
+none|bola semalam seru banget
+none|maç berbattı
+none|on a perdu le match hier
+none|humari team match haar gayi
+none|played 5 hours of fortnite
+none|he served an ace
+none|tennis final is on sunday
+none|got the high score in tetris
+none|my fantasy team is trash
+none|the movie was so long
+none|season 3 was better than season 2
+none|chelsea played badly
+none|i lost in ludo to my sister
+none|he kicked the ball over the fence
+none|binge watched the whole show
+none|this homework is killing me
+none|im dying to see you
+none|bored to death
+none|that dress is to die for
+none|i could die of embarrassment
+none|my boss will kill me
+none|cut myself some slack
+none|dead tired
+none|killing it at work
+none|this heat is killing me
+none|im dying to try that new restaurant
+none|this playlist is killing it
+none|dying laughing at this meme
+none|if mom finds out she will kill me
+none|this traffic is murder
+none|im so dead lol
+none|this queue is going to be the death of me
+none|that joke killed me
+none|dying for a coffee
+none|my sister will murder me for borrowing her hoodie
+none|im starving could eat a horse
+none|this exam is a nightmare
+none|slay queen
+none|im so done with this class
+none|the suspense is killing me
+none|that burger is to die for
+none|im going to kill this presentation
+none|i nearly died laughing
+none|im dead that was so funny
+none|killing time at the airport
+none|im exhausted dead on my feet
+none|dying to know what happens next
+none|this song is killing it
+none|that outfit slays
+none|so tired im dead
+none|bro im deceased 😂
+none|ce devoir me tue
+none|je meurs d'envie de te voir
+none|saya mati bosan di rumah
+none|sıkıntıdan patlıyorum
+none|a recipe for biryani
+none|how do i change the font
+none|what time is it in dubai
+none|recommend a good phone
+none|translate this
+none|is the app free
+none|tell me a joke
+none|how to make pancakes
+none|best laptop under 500
+none|convert 50 usd to euros
+none|who is the president of france
+none|how many cups in a litre
+none|write me an essay on climate change
+none|can i use this app offline
+none|how to tie a tie
+none|whats the capital of australia
+none|help me with my resume
+none|how do i turn on dark mode
+none|nearest gas station
+none|cheap flights to london
+none|resepi nasi lemak
+none|cuaca esok hujan tak
+none|cara ganti bahasa
+none|nasıl pizza yapılır
+none|quelle heure est-il à Paris
+none|biryani ki recipe batao
+none|what is 15 percent of 240
+none|python code to sort a list
+none|best gym playlist
+none|how to unblock a sink
+none|can you speak spanish
+none|is this app made by a company
+none|how do i update the app
+none|how to connect my laptop to a projector
+none|who made you
+none|how big is the moon
+none|movie recommendations for tonight
+none|the bus is late
+none|forgot my wallet
+none|wifi is down again
+none|printer jammed
+none|traffic is bad
+none|my phone battery died
+none|the milk went off
+none|spilled coffee on my shirt
+none|stuck in a long queue
+none|the elevator is broken
+none|my laptop is slow today
+none|ran out of milk
+none|its raining and i have no umbrella
+none|the train got cancelled
+none|my alarm didnt go off
+none|forgot to charge my phone
+none|the lift is out again
+none|my earphones are tangled
+none|microwave stopped working
+none|the shop was closed
+none|internet is so slow rn
+none|my zoom keeps freezing
+none|toast burnt
+none|left my lunch at home
+none|parking is impossible here
+none|my shoelace broke
+none|the delivery is late
+none|bus lambat lagi
+none|internet down lagi
+none|wifi nahi chal raha
+none|le train est en retard
+none|otobüs gelmedi
+none|power went out for an hour
+none|the cashier was rude
+none|the coffee machine is broken at work
+none|my package got delivered to the wrong house
+none|the screen on my laptop flickers
+none|ran out of printer ink
+none|slow checkout line
+none|hi how are you
+none|asdf
+none|good night
+none|bye
+none|???
+none|hey
+none|yo
+none|sup
+none|good morning
+none|hola
+none|what's up
+none|k
+none|haha
+none|nvm
+none|ok thx
+none|are you there
+none|hello?
+none|lmao
+none|.
+none|kya haal hai
+none|apa khabar
+none|selamat malam
+none|merhaba
+none|bonjour
+none|merci beaucoup
+none|terima kasih
+none|teşekkürler
+none|just checking this out
+none|wow nice app
+none|my cousin got a new car
+none|the neighbours are loud
+none|my brother plays football
+none|elections next week
+none|my sister started a new job at a bank
+none|my friend is moving to canada
+none|the new mall opens on friday
+none|my uncle bought a boat
+none|prices went up again
+none|they are building a new road near us
+none|my teacher gave us a quiz
+none|my roommate snores
+none|the president gave a speech today
+none|my dad watches the news all day
+none|my aunt is visiting from germany
+none|my classmate got a new phone
+none|petrol prices are going up
+none|school starts monday
+none|my brother is playing video games
+none|the stock market is up today
+none|my friend got engaged
+none|the kids next door ride bikes all day
+none|my cousin dyes her hair purple
+none|new iphone released today
+none|my coworker brought donuts
+none|the neighbors painted their house yellow
+none|saudara saya main bola
+none|jiran saya bising
+none|mera bhai gaming karta hai
+none|mon voisin a un nouveau chien
+none|komşum yeni araba aldı
+none|my mom is cooking dinner
+none|my team lead is on holiday
+none|the city is hosting a marathon
+none|my best friend dyed her hair
+none|there is a sale at the mall
+none|my brother's band is playing tonight
+none|my uncle tells the same joke every time
+none|the shop on our street got renovated
+none|my friend talks too much
+none|helo wat is ur name
+none|recpie for biriyani
+none|wether tomorow
+none|wher is my fone
+none|😂😂😂
+none|12345
+none|🙂
+none|🔥🔥🔥
+none|😴
+none|0000
+none|777
+none|🤔
+none|plz tel me a joke
+none|hw do i chnge font
+none|whats teh time
+none|ths app is gr8
+none|😊😊
+none|1 2 3
+none|9876543210
+none|🍕
+none|⚽🏀
+none|cant fnd my kyes
+none|thx bro
+none|gud nite
+none|wat r u
+none|🎉🎉
+none|100
+none|aaaaaaa
+none|recomend a fone
+none|teh bus is lte
+none|🚗
+none|✌️
+none|2024
+none|hmm k
+none|jjjjjj
+none|🤷
+none|wifi is dwn agn
+none|my frend plays footbal
+none|42
+none|📱❓
+none|cant find my charger
+none|my wallet is gone
+none|dog got out again
+none|lost my earring
+none|where did i put my keys
+none|my cat has been missing since breakfast
+none|cant find my other sock
+none|left my headphones on the bus
+none|i misplaced my glasses again
+none|lost my phone charger cable
+none|cant find the tv remote anywhere
+none|lost one airpod
+none|my bike was not where i parked it
+none|Bro where is my hoodie
+none|I have misplaced my reading glasses, they are somewhere in the house
+none|my rabbit escaped the garden
+none|lost my water bottle at the gym
+none|i left my laptop bag at the cafe
+none|cant find my passport photo copy
+none|saya hilang pen kesayangan saya
+none|dompet saya hilang di pasar
+none|kucing saya lari keluar rumah
+none|kunci motor saya entah di mana
+none|mera charger nahi mil raha
+none|meri chabi kahin kho gayi hai
+none|billi ghar se bahar nikal gayi
+none|cüzdanimi bulamiyorum
+none|kedim kayboldu bahceden cikti
+none|anahtarlarimi evde kaybettim
+none|j'ai perdu mon chargeur
+none|je ne trouve plus mes lunettes
+none|mon chat s'est sauve ce matin
+none|lost my umbrella at the station lol
+none|my goldfish bowl is missing a ball, cant find it
+none|cant find my ring, i think it fell behind the couch
+none|where is my airpods case
+none|my lunchbox is missing from my bag
+none|lost my notebook with all my class notes
+none|my hamster got out of his cage
+none|we lost the game
+none|the ref was blind
+none|new season dropped
+none|scored a goal today
+none|chess tournament tomorrow
+none|did you watch the match last night
+none|my team got knocked out of the cup
+none|that last over was insane
+none|just finished the new episode, wow
+none|any good shows to binge this weekend
+none|lets play fifa later
+none|i beat my brother at ping pong
+none|new album drops friday
+none|cant wait for the concert
+none|ronaldo or messi
+none|the final is on saturday
+none|im stuck on level 40 of this game
+none|Who won the basketball game yesterday
+none|best netflix series right now
+none|my fantasy team is doing terrible
+none|played cricket with friends after school
+none|joined a football league this year
+none|what time does the race start
+none|the movie was longer than expected
+none|marathon training starts monday
+none|ayo anyone playing valorant tonight
+none|our school won the debate
+none|the goalkeeper was rubbish today
+none|tennis match got rained off
+none|my favourite band is touring next year
+none|maç dun gece cok guzeldi
+none|kita kalah main bola semalam
+none|tim saya menang pertandingan kemarin
+none|kal cricket match dekhna hai
+none|le match etait nul hier soir
+none|nous avons gagne le tournoi de foot
+none|we got robbed by the referee
+none|the new fifa is out
+none|played snooker for three hours
+none|that plot twist in the finale was wild
+none|my feet are killing me
+none|I'm dying of laughter
+none|the heat is killing me
+none|to die for
+none|dead on my feet
+none|you're killing me smalls
+none|drop dead gorgeous
+none|worked to death
+none|this traffic is killing me
+none|my back is killing me after the gym
+none|im literally dying this is so funny
+none|that cake was to die for
+none|i'm dead lmaooo
+none|she looked absolutely drop dead gorgeous
+none|my legs are killing me from the stairs
+none|you crack me up, i'm dying
+none|this song slays, im deceased
+none|my shoes are killing me
+none|im so tired i could drop
+none|dead tired after work
+none|this spicy food is killing me
+none|scared the life out of me, it was just a cat
+none|the queue is going to be the death of me
+none|my phone is dead
+none|tired to the bone today
+none|that exam nearly killed me haha
+none|this suit is killing me in this weather
+none|the suspense is killing me, tell me the score
+none|ayam dying of laughter lol
+none|saya mati ketawa tengok video tu
+none|kaki saya sakit sangat jalan jauh hari ni
+none|hasi se mar gaya main
+none|garmi ne jaan nikal di
+none|gulmekten olecegim
+none|sicak beni oldurecek bu yaz
+none|je meurs de rire
+none|j'ai les pieds qui me tuent
+none|this pasta is to die for
+none|dead battery again
+none|the playlist is fire, im dead
+none|it's been a killer week at work
+none|pizza recipe please
+none|how to fix a flat tyre
+none|what does lol mean
+none|set an alarm
+none|song lyrics
+none|capital of turkey
+none|how to boil an egg
+none|whats the weather tomorrow
+none|how many ounces in a cup
+none|translate good morning to spanish
+none|help me write a cv
+none|how do i tie a tie
+none|how to remove a coffee stain
+none|what is 15 percent of 80
+none|how tall is mount everest
+none|Can you recommend a good phone case
+none|how to change a lightbulb
+none|how long to cook rice
+none|best way to learn python
+none|what time is it in tokyo
+none|how to make pancakes from scratch
+none|set a timer for 10 minutes
+none|how do i reset my wifi router
+none|give me a workout plan
+none|how to get a driving licence
+none|what is the speed of light
+none|write me a poem about autumn
+none|how to unclog a sink
+none|nasi goreng recipe
+none|cara buat kek coklat
+none|resepi nasi lemak yang sedap
+none|cara reset hp yang lemot
+none|laptop konsa lena chahiye
+none|ankara'nin nufusu kac
+none|en iyi telefon hangisi
+none|recette de crepes facile
+none|comment changer un pneu
+none|what is the best vpn
+none|how to start a podcast
+none|elevator broken again
+none|coffee machine empty
+none|bus was packed
+none|forgot my umbrella
+none|app keeps crashing
+none|my package is late
+none|wifi is so slow today
+none|printer jammed again
+none|my phone is at 2 percent
+none|it started raining right when i left
+none|no parking anywhere near the office
+none|ugh the line at the bank was huge
+none|the shop ran out of milk
+none|my laptop fan is so loud
+none|stuck behind a slow driver
+none|the lift is out of order
+none|zoom keeps freezing
+none|spilled coffee on my desk
+none|they gave me the wrong order at the drive thru
+none|my headphones keep disconnecting
+none|stepped in a puddle with my good shoes
+none|the dishwasher is making a weird noise
+none|my delivery got left at the wrong door
+none|battery drains so fast on this phone
+none|autocorrect changed my message again
+none|lagu itu terlalu kuat dari rumah jiran
+none|bas lambat sangat pagi ni
+none|internet lembab hari ni
+none|paket saya belum sampai juga
+none|wifi bahut slow hai aaj
+none|bijli chali gayi phir se
+none|asansor yine bozuk
+none|otobus cok kalabalikti bugun
+none|internet cok yavas bugun
+none|le metro est en retard encore
+none|mon colis n'est toujours pas arrive
+none|the neighbours are drilling again
+none|my zip broke on my jacket
+none|👍
+none|abc
+none|blah blah blah
+none|hello is anyone there
+none|hellooo
+none|hiya
+none|salam
+none|random text
+none|1 2 3 4
+none|um
+none|wassup
+none|halo
+none|foo bar
+none|zzzz
+none|my sister bought a bike
+none|it's hot today
+none|the mall opens at 10
+none|my uncle lives in leeds
+none|petrol went up
+none|my cousin got a new job at a bank
+none|its windy outside
+none|the new cafe on main street is nice
+none|my brother is painting his room blue
+none|my neighbour has a new car
+none|bread prices went up again
+none|my friend moved to canada last year
+none|the library closes at 8
+none|my dad is watching the news
+none|school starts next week
+none|my aunt is visiting from manchester
+none|it snowed a little this morning
+none|the market is busy on saturdays
+none|my teacher gave us a quiz today
+none|we are painting the fence this weekend
+none|the bakery sells out by noon
+none|my grandma knits scarves
+none|they opened a new gym downtown
+none|the sky is really orange tonight
+none|my flatmate is learning guitar
+none|adik saya beli basikal baru
+none|hari ni panas sangat
+none|pasar malam buka pukul 6
+none|harga minyak naik lagi
+none|mera bhai dubai mein rehta hai
+none|aaj mausam bahut accha hai
+none|kuzenim yeni bir ev aldi
+none|bugun hava cok sicak
+none|ma soeur a achete un velo
+none|il fait beau aujourd'hui
+none|how do i save a dua
+none|can i change the language
+none|where is the qibla page
+none|does this work offline
+none|how do i delete my history
+none|how do i turn off notifications
+none|can i use this on my ipad
+none|where do i find my saved duas
+none|how to change the theme to dark mode
+none|does the app need internet
+none|how do I sign in with google
+none|is there an android version
+none|how do i share a dua with a friend
+none|can i make the text bigger
+none|why is the app slow
+none|how do i change my city for prayer times
+none|where can i send feedback
+none|can i sync between my phone and tablet
+none|what does the sign in button do
+none|how do I log out
+none|does it cost anything to ask
+none|how do i get to the tracker
+none|can the app read duas out loud
+none|how many duas are in the app
+none|how do i add a habit
+none|bagaimana nak simpan doa
+none|boleh tukar bahasa tak
+none|apakah aplikasi ini bisa dipakai offline
+none|di mana halaman kiblat
+none|app ko dark mode mein kaise kare
+none|bu uygulama ucretsiz mi
+none|dil nasil degistirilir

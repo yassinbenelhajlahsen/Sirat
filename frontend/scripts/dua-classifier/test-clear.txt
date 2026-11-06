@@ -1,0 +1,488 @@
+# Second unseen set (2026-11-06): 487 requests written to the same six personas but with one unmistakable need each, blind-labelled (writer + extras both labellers listed). Clearer than test.txt; not used for training or thresholds.
+parents|ngl my parents do so much for me and i be ignoring them. pls make dua i respect them more fr
+exam|I have a big test on Friday. Is there something I can say to God to help me remember what I studied
+gratitude|i feel so thankful to god for my new life and the people who helped me, i dont know the right words, what do i say
+wind|There's a really strong wind storm tonight. What can I say to God to be safe
+chastity|I want to keep my body and private life clean in God's eyes, no sex outside marriage. What do I ask for
+repentance|i did something really bad last night and wanna turn my life around fr, how do i make tawbah
+witr|Saya mau salat witir malam ini, doa qunut apa yang dibaca?
+parents|treat my parents right
+family|Mere bachon aur ghar walon ke liye dua karein, sab ki zindagi mein barkat ho. Family ko Allah hamesha sath rakhe.
+paradise|Je veux entrer au paradis et etre protege du feu de l'enfer, quelle invocation dois-je dire ?
+longing,loss|miss my nan so much
+longing|Saya kangen sekali sama kampung halaman di Padang, sudah lima tahun tidak pulang. Doa apa supaya bisa pulang?
+new_clothes|new shirt, what dua
+oppression,injustice|my landlord keeps taking my money for no reason and i cant do nothing
+job_interview|I have a job interview tomorrow and I want God to help me say the right things. What do I say
+depression|Got up late, forgot lunch, rain wont stop and the bus was full again. Under it all I feel hollow and sad, nothing feels like it will get better
+medical|Besok ibu operasi di rumah sakit, doa apa ya yang dibaca?
+forgiveness_from_people|i said some foul stuff to my best friend and now we arent talking, how do i fix it and get him to forgive me
+job|I got laid off on Monday and I need to find work. Is there something I can say to God about it
+quran|Saya mau hafal Al-Quran tapi cepat lupa, ada doa supaya mudah menghafalnya?
+jealousy|Some relatives envy our new car and success, and I fear they gave us the evil eye. What supplication should I recite?
+betrayal|my bf cheated on me with my best friend and i feel sick
+job_interview|Rain all week, the car needs an oil change, my son keeps forgetting his lunch, and Thursday is my big interview for the nursing position
+healing|my lil bro has had a cough for weeks fr, dua for him to get better
+family_conflict|Ugh brother-in-law left dishes again, cousin said something nasty about me at the bbq. I'm done, I just want peace with my relatives.
+leaving_home|im heading off now, what do i say before i leave the house so god looks after me
+enemy|enemies out to get me
+anxiety|i am too much tension, mind not stop thinking, night no sleep, heart beating fast. what dua for tension
+visiting_graves|I plan to visit my wife's grave on Friday. What is the proper supplication upon entering the cemetery?
+pregnancy|ngl my gf is pregnant n im lowkey freaking out, pls make dua the baby is ok n we get thru it
+visiting_graves|Bought flowers, traffic on the ring road, kids fussing, and I'm finally going to my brother's grave this afternoon, what do I say there
+entering_home|Ghar mein wapas aaye hain, safar ke baad. Ghar mein daakhil hone ki dua kya hai?
+moving_home|Boxes everywhere, movers cancelled, internet still down, my cat hates the new place and I haven't slept. Please bless this house so we settle.
+marriage|Inshallah shaadi ka rishta mil jaye, achi biwi ya shohar. Dua karein please, mera rishta kahi nahi ban raha.
+debt|Slept badly, the dog threw up on the rug, work was a mess, and the bank called again about my overdue loan payments and I dont know how to pay
+guidance|I am lost in my life, no direction. Please give dua to guide me right way
+market|Is there a supplication to recite upon entering the marketplace? I go every Saturday for vegetables.
+business|opened a lil sneaker resell page on insta, any dua so it actually sells
+humility|I realized I look down on other people at my job. I want God to take that pride out of me
+healing|my friend gets migraines all the time, is there something i can say for her to be cured
+gift|ngl my aunt just gave me a laptop as a gift and i didnt even ask, so grateful, what do i say to thank her or allah
+business|Mera dukaan naya hai, customers bohot kam. Business ke liye koi dua batao
+backbiting|I always talk bad about my neighbor behind her back, I want stop this, what I should say
+in_prayer|Which supplication is recommended between the two prostrations? I have been sitting silent all these years.
+accident|crashed my bike into a pole and my knee is messed up
+night|Sunset ho gaya, sham ki dua kya hai? Mujhe batao kon si dua parhni chahiye raat aane se pehle, please
+sleep|cant fall asleep tonight
+meeting|ok leaving the hangout now, what do u say when u get up from a gathering pls
+debt|I took a loan for my daughter's wedding and the installments are becoming a burden. Is there a dua to be freed from debt?
+visiting_graves|going to my grandads grave this weekend, what do i say there
+anxiety|I don't know the words but my heart is racing and I can't breathe right when I think about tomorrow. What do I say for this?
+family_conflict,forgiveness_from_people|My sister-in-law has not spoken to me since the argument over who hosts Eid. Is there a supplication for reconciliation?
+injustice|teacher blamed me for cheating and i didnt do it, so unfair
+hope|need some optimism
+rain|its pouring so hard outside rn is there a dua for rain
+sleep|shift ran late, dishwasher leaked, neighbor playing loud music, cat knocked over my plants, I just want to lie down and sleep peacefully
+addiction|My son is in the grip of gambling and has lost much. Is there a supplication that he be freed from this bad habit?
+depression|ngl i feel empty everything is grey, i dont even wanna get out of bed rn. is there any dua for this feeling
+calamity|the earthquake wrecked our town and half the houses are gone, is there a thing to say
+guidance|lost, need direction
+success|My son is about to complete his medical degree. We pray for his success in all his endeavours. Is there a suitable supplication?
+major_decision|At fifty I am considering leaving my profession and migrating with my family to Canada. Is there a supplication for such a life decision?
+night|The sun is setting here and it is getting dark. What is the thing I should say in the evening? I am new to all this.
+gift|Traffic again, printer died, fifty emails. Then my colleague handed me a box of dates from her trip, so kind. Want to pray for her
+after_prayer|After salah finish, what I should to read? I only know say salam to the right and left
+forgiveness|Is there a supplication I may recite for seeking pardon for the many small sins I have accumulated over the years?
+decision|Gas prices up, neighbor's music is loud, tired all day, and I need to choose between two offers on my car and I cant tell which is right
+job|Bus was late again, my daughter has a cold, fridge is making that noise, and I still havent found any job after months of applying
+humility|ngl i think im better than everyone at my gym lol need to humble myself
+jealousy|people are envious of me
+backbiting|i keep spilling tea about my friends and its basically gheebah, how do i stop
+patience|Allah give me sabar, I am waiting for my papers many years in Germany
+wudu|Before I wash my hands and face for prayer I want to say something to God. What is it
+General|rough week, landlord emailed again, car needs repairs, kids loud, just tired, I'd like a dua for good in this life and the next
+children|Soccer ran late, car smelled like a gym bag, boss sent a 9pm email, and I'm scared for my kids in this world. Protect them, Allah.
+inheritance|Chachu ne zameen ka hissa dene se mana kar diya, wirasat ka masla hai. Insaf ke liye dua chahiye.
+difficulty|Dentist, laundry, kid has a cold, car in the shop, and honestly this whole season is just hard and I want Allah to make it easier on us
+peace|Mum called about the guest list, dog ate my shoes, wifi died. I just want a quiet evening, a calm heart and some peace in my head
+temptation|I keep wanting to look at my female neighbor. I know it's wrong. What can I say to God to resist
+divorce|signed the divorce papers today
+chastity|my gf wants to go further and i dont want to do zina, how do i stay pure
+adhan|Azan sunai de rahi hai abhi, jawab mein kya parhna chahiye aur baad mein kya kehna hai
+moving_home|Hum naye ghar mein shift ho rahe hain agle hafte. Ghar mein barkat ke liye dua chahiye.
+vehicle|Battery died twice this week, mechanic wants 800 bucks, and now I'm getting in the car to drive my son to school. Protect us on the road.
+sleep|cant sleep again lol its 3am and my brain wont shut off, any dua for sleep pls
+legal|Besok saya ke pengadilan, doa apa ya supaya urusan lancar?
+consultation|gotta ask my older cousin for advice on a big thing, dua so he gives me good counsel
+meeting|We finished the meeting and everyone is leaving. Is there a thing you say when you get up from a group of people at the end?
+mosque|leaving masjid now
+exam|Mom called three times, the heater is broken, I'm hungry, and my bar exam is in two days and I cant keep the material in my head
+loss|Our family has lost my brother-in-law this week. Is there a supplication for those who are grieving?
+repentance|want to come back to Allah
+success|Laundry piled up, its freezing, my sister wont text back, but what I really want is to finish my thesis and graduate with good results
+peace|I wish for inner tranquility and a calm heart in these busy years. Kindly tell me the supplication that brings peace to the soul.
+Friday|Dentist at nine, road works on Main St, forgot the milk, and today is Jumuah so I want to send lots of blessings on the Prophet
+Friday|its friday fam what should i be sayin to send love on the prophet
+vehicle|getting in the taxi
+hosting|Mehman aaye hain ghar par, unke liye kya dua karun? Aur mezban ke liye shukriya kya kahun?
+depression|Dear Sir/Madam, I have been very low and sad for several months without any reason. Kindly advise a supplication for this heavy heart.
+sneezing|exams next week, heater blasting, roommate left dishes again, bus packed, then my brother sneezed right next to me, what do I say back
+mosque|Fridge is empty, car making a noise, in-laws calling, but right now I'm just walking out of the masjid and want to say the right thing
+bad_news|Je viens de recevoir une mauvaise nouvelle de ma famille au pays, que dois-je dire?
+market|going to the mall w my mom to get stuff for eid, anything i should say when walking in
+seeing_disabled|Yesterday I saw a man who lost both legs begging at the traffic lights. My heart broke. Is there a supplication for this?
+longing|I miss my brother who moved to Germany years ago and we rarely speak. What supplication can I make to meet him again?
+entering_home|just walked in, pls make dua for the house, long day ngl
+new_beginning|I just moved to a new city and start fresh on Monday. Is there something to say to God for a new chapter
+sleep|I am go sleep now, what dua I should read before sleep, please tell me, thank you
+Friday|jumuah salawat pls
+peace|i want my heart to feel calm and quiet inside, i dont know the words to ask god for this peace
+forgiveness_from_people|I wronged my elder sister in an old quarrel. Is there a supplication to soften her heart so we may reconcile?
+travel|We are departing for a long journey by car and plane to visit my sister overseas. Could you tell me the supplication for a safe and easy trip?
+guidance|In these confusing times I pray to be guided to the straight path. Is there a supplication for guidance?
+laylatul qadr|its the 27th rn and i wanna catch the night better than a thousand months, what do i say
+sneezing|i just sneezed in class and everyone said bless u lol, what do i say back in islam pls
+NewBorn|Humare ghar mein bete ki paidaish hui hai, Masha Allah. Naye mehmaan ke liye dua chahiye.
+night|ngl the sun is going down rn and idk what to say, whats the dua for evening pls
+after_prayer|I just finished praying at home. What do people say right after it ends
+calamity|Spilled juice in the car, boss on my case, kids' homework, and then the storm took our whole basement and everything we owned in it
+fear|I have a terrible fear of snakes since childhood and when I see one my whole body freezes. Is there any dua for this kind of fear?
+leaving_home,morning|heading out rn pls dua for a good day ngl
+heart|My heart feels like stone when I pray, I feel nothing. How do I ask God to soften it
+oppression,injustice|wronged by my boss
+good_news,gratitude|I won the contest!
+remembrance|What's a simple phrase to say over and over to keep God in my mind all day? I have a long commute
+injustice|My daughter was refused a job because she wears hijab. Is there a dua for such unfair treatment?
+marriage|Traffic was awful, the dishwasher broke, and aunties keep asking when I'll marry. I just want a good spouse who fears God and treats me kindly.
+family_conflict|fighting w my sister again
+accident|i slipped on the ice outside and broke my wrist, is there something i can say to God
+NewBorn|my coworker just had a baby girl!! what do i say to wish her and the baby well in islam
+hope|i dont feel like anything good is coming, i want to feel hopeful again, what is the thing to say
+NewBorn|new baby cousin born
+remembrance|Is there a short phrase that is light on the tongue yet heavy on the scale that I might repeat throughout the day?
+charity|donating tonight, any words
+temptation|Young women on the street test my eyes and my resolve. Is there a supplication for restraining my gaze and desires?
+healing|Please tell me what I can recite to seek a cure for my wife, who has been unwell for a long time.
+provision|I'm struggling to pay rent and groceries. What can I ask God for to help with money
+exam|chem final tmrw and i havent studied enough pls give me a dua im cooked
+family|pls make dua my fam stays close, we been drifting since everyone got busy lol
+visiting_sick|going to see my grandpa in the hospital after school, what do i say to him
+forgiveness|I did some things I regret and I want God to wipe the slate clean. What do I say to Him
+wudu|finished wudu in the school bathroom sink, is there a thing to say after
+divorce|Bus was packed, kids fought over the tablet, lawyer emailed about the papers again. My ex and I still cant agree on anything. I want to let go.
+forgiveness_from_people|sorry to my brother
+mosque|I am going inside the masjid now, what I must say when I put my right foot first?
+deceased|janazah this afternoon
+fear|Saya takut sangat kalau naik lif sendirian, dada sesak dan jantung berdegup. Doa apa yang boleh dibaca?
+loss|grieving my sister
+gift|my uncle give me new phone as present, how i pray for him back? i want to say thank you to Allah for him
+night|long day, printer broke again, mom called 3 times, traffic was insane, now the sun is down and I want the evening dua
+medical|Rent due friday, car is making a noise, the dog ate my shoe, and tomorrow my scan results come back and I'm scared of what they'll say
+family|Hot day, meeting ran over, bank card declined, group chat nonstop. I just want my whole family close and good.
+illness,healing|Is there a supplication for my back pain? It has troubled me for three weeks now and the doctor says only rest.
+provision|need halal rizq
+visiting_sick|Picked up the dry cleaning, stuck behind a bus, late for my shift, then I'm going to see my aunt in the ward tonight and want to say something
+General|just want a dua for today pls no specific reason, just good stuff for me fr
+thunder|lightning outside, say what?
+illness|Traffic was awful, kids screaming in the back, forgot my lunch, and now my throat is on fire and I can barely swallow
+illness,healing|ngl got a fever since last night and my head is pounding pls send a dua
+vehicle,travel|jumping in the bus rn pls make dua i get there safe lol
+decision|I am deciding between two houses, both reasonable. Is there a supplication one makes to seek the best choice?
+bathroom|I need to go to the toilet, what is the thing you say when you go in? I want to do it right, I'm still learning.
+provision|Ya Allah, my salary is very small and family in Somalia need money. What dua for rizq?
+jealousy|ngl people at work are kinda jealous of me lately, feels like the evil eye is on me. pls
+job_interview|Salam, tomorrow I have interview in bank, my english not so good. Dua for easy interview?
+debt|I have credit card debt that I can't get under control. Is there a prayer for getting out of debt
+deceased|kids have a cold, power was out, groceries still not unpacked, and the janazah for my neighbour is after asr and I want to pray for him properly
+deceased|Kindly provide a prayer for my late father, may Allah have mercy on him, on this anniversary of his passing.
+oppression|A neighbour has seized part of our family land by force. What supplication may we make against such wrongdoing?
+in_prayer|what to say in sujood
+knowledge|My grandson asks difficult questions about our religion. I wish to increase my knowledge. Is there a supplication for beneficial knowledge?
+steadfastness|my iman is lowkey dropping and i keep skipping prayers, dua to stay firm
+knowledge|Ilmu ku kurang, mau belajar lebih. Doa for understand my lessons easy?
+legal|My custody hearing is on Thursday. Kindly recommend a supplication for the court proceedings.
+decision|cant pick between two colleges one is closer to home. how do i ask for guidance on picking
+after_prayer|Skipped lunch, printer jammed at the office, my sister texted ten times, and I just finished Asr and don't know what to say after
+heart|i pray but my mind is everywhere, no khushu at all, any dua for that
+meeting|two hour budget meeting, nobody agreed, coffee cold, printer jammed, finally wrapping up, what dua says when a gathering ends
+sitting|bad friends again
+consultation|I wish to consult a senior scholar about a family matter. Is there a supplication to ask for sound counsel?
+sneezing|my coworker just sneezed and i said bless you, but i think there's a proper thing muslims say, what is it?
+inheritance|uncles refusing to split grandpas land, its so unfair. pls make dua for it to be split fair
+mosque|When entering the house of Allah, which supplication did the Prophet teach us? I always forget it.
+forgiveness_from_people|I hurt my coworker's feelings last week and I want to apologize. Is there something to ask God so she forgives me
+eating|I'm about to eat, what's the thing you say before food? someone told me it's important in Islam but I don't know the words.
+hope|I have lost hope that my situation will improve after all these years. Please advise a supplication that can give a person hope again.
+illness|i have a really bad stomach bug and i feel awful, what do i say to God about it
+children|Mere bachon ki hifazat ke liye dua karein, Allah unhe har nuqsan aur bala se bachaye. Shukriya.
+travel|Kal Umrah ke liye safar hai, flight Jeddah, Allah tawakkal aur safar ki aasani de. Dua karein.
+laylatul qadr|Aisha asked the Messenger what to say if she should find the Night of Decree. Kindly share that supplication.
+oppression|someone at work treats me badly just because they can and i cant stop it, what do i say to God
+drinking_water|Mujhe bahut pyas lagi hai, paani peene se pehle kya padhna chahiye? Please batao
+humility|Got the promotion, everyone clapping, kids' swim meet, dentist bill, and I notice I'm getting big headed, need to stay humble
+night|sunset dua please
+thunder|There's a huge thunderstorm and the thunder is so loud. Is there something I should say to God
+repentance|I committed a huge sin and I stopped it for good. What do I tell God so He accepts my return
+paradise|want jannah, how
+sneezing|My husband sneezed at the dinner table and I did not know what to say. Is there a proper response in Islam when someone sneezes?
+deceased|funeral for my classmate is tomorrow what do i say for him
+heart|heart feels hard
+good_news,gratitude|Bills piling up, car needs brakes, upstairs dog barks all night. But I got the email, got the promotion!! Need to thank Allah for this
+sincerity|Soccer practice, grocery run, flat tire, oh and I keep posting my good deeds on insta and worry its just for likes
+addiction|I'm hooked on porn and can't stop even though I want to. What do I ask God
+business|new food truck, blessings?
+laylatul qadr|Tarawih ran late, mom feels dizzy, shopping left for Eid, but its the last ten nights and I want the dua for the night better than 1000 months
+moving_home|we just closed on our first house and move in saturday. whats the thing you say to ask god to bless the new place
+wudu|Plumber coming at noon, pasta boiling, sister's wedding stress, and I'm standing at the sink about to wash for prayer, what do I say
+Friday|It's the holy day for Muslims and I'm told to say blessings on the Prophet a lot. What exactly do I say
+depression,worry|Qalbi thaqeel, ana hazeen dayman, ma fi shay yufarrihni. Which dua for this?
+good_news,gratitude|omg i got accepted into my dream uni!!! pls what do i say to thank god for this, i cant believe it
+confusion|Woke up late again, skipped the gym, dishes still in the sink and the report is due. I cant make myself start anything, just keep scrolling all day
+breaking_fast|Iftar ka waqt aa gaya, kya dua parhni chahiye roza kholte waqt? Mere paas khajoor bhi hai, batao please
+eating|meeting ran till 6, forgot lunch, bus was late, boss yelled about the report, finally sitting down to eat this pasta, what do I say first
+mosque|bout to walk into the masjid for isha any dua for that
+forgiveness|Bus was late, kids screaming, rain soaked my shoes, but all I keep thinking is how many sins I piled up and need Allah to pardon me
+patience|Three buses late, a queue round the bank, the baby teething, and mostly I need the endurance to keep going through this long wait for my papers
+family|I wish to ask for blessings and goodness for my whole household and our extended family. Please advise which supplication is suitable.
+market|Kids are screaming, its pouring, I forgot my list, so now im walking into the supermarket and want to say the right thing when I go in
+marriage|i want to get married to a muslim man who is kind. I dont know what to say to god about it, the thing you say for a spouse
+temptation|Mata saya susah dijaga bila nampak perempuan, ada doa untuk tahan nafsu?
+rain|Hujan turun deras sekali sekarang, doa apa yang dibaca?
+inheritance|my dad passed and now my brothers want to split the house a certain way, im not sure its right. what to say about sharing the money properly
+knowledge|Woke up at five, burnt the toast, traffic on the bridge, and tonight I start my evening class on tafsir and want to actually understand it
+sneezing|sneezed, what to say
+mirror|I looked at myself in the mirror and I didn't like my face today. What is the thing to say when you see yourself? I am new.
+seeing_disabled|Printer broke, coffee machine dead, inbox full. At lunch a man with palsy couldn't hold his cup, shaking so badly. My heart went out to him
+wudu|Upon completing ablution, is there a particular testimony and supplication that is recommended?
+morning|dua to start my day
+praise|my landlord praise me today, say i am very good tenant. what dua to read when someone praise me
+meeting|The community meeting has finished. What is the supplication one should say at the end of a gathering so that it is recorded well?
+difficulty|everything is going wrong fr this year is cooked pls help
+gratitude|Long shift, bus was packed, cooked for 12 people. Still so grateful for my health and my home, want to thank God for all of it
+forgiveness|ngl i lied to my mom again and feel so guilty rn, how do i ask allah to forgive me
+job_interview|interview at 9 tmrw for the warehouse job and im nervous fr what do i say
+worry|Dishwasher broke again, kids missed the bus, parking fine came in. Still I cant stop worrying about my sister, she hasnt answered in days
+quran|I just started reading the Quran in English and don't get much from it. Can I ask God to help me connect with it
+hosting|twelve guests, cooked all day, oven broke, kids broke a plate, uncle complained about the rice, everyone finally gone, what dua for the guests
+temptation|my feed is full of thirst traps and i cant stop looking, how do i lower my gaze fr
+steadfastness|i converted six months ago and im scared ill drift away, how do i ask God to keep me on this path
+provision|money is so tight rn pls dua for rizq i cant even afford lunch this week
+protection|the bad thoughts come when i pray, i think shaytan is bothering me. what do i say to be safe from him
+major_decision|thinking of dropping out to start working in another country. huge decision idk what to do pls dua
+heart|Hati saya keras, susah menangis ketika solat, doa apa untuk melembutkan hati?
+sincerity|i only pray when ppl are watching ngl, how do i make it for allah only
+bathroom|kids fighting, internet down, car wont start, dog ate a sock, and now I finally need the bathroom, what do I say before going in
+debt|Saya banyak hutang, tidak bisa bayar bulan ini. Doa apa untuk lunas hutang?
+mirror|i look so ugly in the mirror rn ngl, is there a dua for this
+temptation|Meeting ran long, coffee spilled, cousin's wedding photos everywhere, and honestly my eyes keep wandering at that coworker and I need to resist
+seeing_disabled|ngl saw a guy in a wheelchair struggling up the stairs at the station, felt so sad for him, what do i say when i see someone like that
+praise|Kids loud at dinner, bins need emptying again. But my friend Sara told the whole street I'm the most patient, kind woman she knows
+praise|My manager praised my work in front of the whole team today. Is there a supplication I should say when people compliment me?
+moving_home|We have bought a new house and will be moving in next week. Kindly tell me the dua for a blessed new home.
+deceased|a guy from work died and im going to his funeral, what should i say for him
+adhan|after hearing azan
+charity|I want to give some money to the poor guy outside the store. Is there something to say so God accepts it
+marriage|Dear, my son is of age and we are looking for a suitable bride. Is there a supplication for finding a good wife for him?
+visiting_sick|my coworker is in the hospital with pneumonia, what should I say when I visit him
+praise|teacher said I'm brilliant
+drinking_water|i just poured a glass of water, what do i say before i drink it? my friend said theres a thing for it
+breaking_fast|fasting all day and the adhan is about to go off, whats the thing to say when u break ur fast fr
+sitting|ngl my friends keep pulling me into bad stuff, how do i find good people to hang with, any dua for that pls
+sincerity|I do good deeds but I worry is only for people to see me, how I make my intention only for Allah?
+major_decision|Mau pindah kerja ke Malaysia bersama keluarga, keputusan besar sekali. Doa apa ya?
+guidance|I feel like I don't know where I'm going in life or what God wants from me. What can I say to ask for direction
+success|Je veux réussir mes études et mon projet. Quelle invocation pour le succès ?
+longing|I moved to Canada and i miss everyone back home so much, my family is so far, what do i say to feel better and see them again
+betrayal|backstabbed by best friend
+in_prayer|Namazda secdede ne okumam gerekiyor, sadece subhane rabbiyel a'la biliyorum
+loss|the washing machine flooded the hall, boss moved my deadline, rain all week, and my best friend of 20 years died on sunday and I cant think
+mirror|long week, hair a mess, mirror shows a tired face, hate how I look, cant stop comparing myself to instagram people, is there a dua for this
+difficulty|Hayat çok zor şu an, Allah'tan kolaylık istiyorum, hangi duayı okuyayım?
+job|Brother i am looking job since 4 month, no one calling me back. please dua for work
+seeing_disabled|saw a burn victim
+wind|howling wind tonight
+eating|about to eat this biryani its literally so good, what do i say before eating ngl
+injustice|Late bus, cold coffee, kids, and my manager says I'm late every day which is false and HR believes him over me, it's so unfair
+wind|Angin kencang sekali di luar, takut atap terbang. Doa apa?
+protection|strange noises in my room at night, my flatmate say jinn is there. what i must read for protection
+betrayal|Burnt the toast, bus strike, sister's wedding to plan, and I found out my husband has been messaging another woman for months
+parents|Forgot milk again, printer died, boss is being weird, and Mum called about her doctor visit. I love her but I never do enough for my parents.
+morning|Assalamu alaikum. Subah uth gaya hoon, koi dua batao jo din shuru karne par padhun, din mein barakat ho. Shukriya
+medical|the doctor found a lump and i get the biopsy results tomorrow, what can i ask God to say or do
+new_clothes|I bought a new dress for the family gathering. Please tell me what dua one should recite when wearing new clothes.
+illness,healing|mujhe bohot tez bukhar hai aur body pain, koi dua batao please
+peace|ngl my head is so loud rn, i just want some calm and peace inside, what do i say
+seeing_disabled|i saw a old lady who cant see or walk and she was crying alone in the store. i dont know what to say when i see people suffering like that
+decision|this or that? help
+entering_home|i just pulled up at my apartment, what is the thing you say when you come into your home
+heart|Kids' recital, grocery bags, wifi is out, and what really bugs me is I pray but my heart is just hard and I feel nothing
+after_prayer|Having completed the obligatory prayer, what adhkar should I recite? My son says there is a set of words after the salam.
+leaving_home|Dog pooped on the carpet, coffee is cold, boss emailed at 7am, kids need a lift at 3. Walking out now, please protect me while I'm out today.
+pregnancy|Hum baby ke liye koshish kar rahe hain, mera hamal thehar jaye. Dua karein Allah ki madad se.
+witr|I wake at 3am to pray alone in the dark. Is there a special thing to say in that last odd-numbered prayer of the night
+accident|Late for pickup, microwave died, then I slipped on the wet stairs carrying laundry and cracked two ribs
+success|my first game at state finals sat, want to actually win. dua for success?
+steadfastness|stay firm please
+steadfastness|I fear my children are drifting from the deen. What supplication keeps the heart firm on the faith?
+worry|I am worry much for my cousin who not call me since two week, heart is heavy, what dua for this
+injustice|Je suis traité injustement au travail parce que je suis arabe, que puis-je dire?
+bathroom|Before I go into the washroom, is there a short supplication I should say? I have forgotten the one my mother taught me.
+enemy|Komşularım bana kötülük planlıyor, sürekli dedikodu yapıyorlar, onlara karşı nasıl dua edebilirim?
+worry|worried sick about nephew
+anger|Printer jammed, bus was late, cashier short-changed me and wifi dropped mid call. Now im so angry my hands are shaking and I want to scream at someone
+travel|airport in 2 hours
+hosting|Our guests are leaving after the weekend. Is there a supplication to thank the host, or to pray for the guests who visited our home?
+backbiting|In my retirement circle we often speak ill of absent members. Is there a supplication to guard my tongue?
+new_clothes|wedding tomorrow, tailor delivered my suit after 3 delays, iron is broken, dog barked all night, just put on my new suit, what dua do I say
+jealousy|Ada orang iri dengan rezeki saya, takut kena nazar, apa doa yang boleh dibaca?
+sitting|the people I used to hang out with are not good for me anymore, I want to pray for good friends, is there a prayer for that?
+forgiveness_from_people|Traffic was insane, boss piled work on me, dinner got burnt, and then I snapped at my wife and I need to make it right with her
+patience|i've been waiting on my visa for 2 years and i need to stay patient pls
+entering_home|back at the flat tired
+charity|Car wash, gym late, wife's birthday gift still to pick, and I'm about to hand a donation envelope to the masjid fund, what should I say
+exam|Tomorrow is my exam of anatomy, i am scared i forget everything. Dua for memory?
+addiction|Mujhe sharab ki lat lag gayi hai, chhodna chahta hoon, koi dua batao
+business|Dishwasher broke, my mother in law is visiting Sunday, taxes are due, and I just signed the lease on my little bakery so I need it to work out
+wind|A severe gale is blowing outside and the shutters are rattling. Is there a supplication for strong winds?
+knowledge|I'm trying to learn about Islam from scratch and it's overwhelming. What can I ask God so I actually understand things
+medical|My husband goes in for heart bypass surgery on Monday. Kindly advise a supplication for his operation.
+consultation|Mujhe apne ustad se mashwara lena hai, koi dua batao ke sahi salah mile
+pregnancy|found out were expecting, scared
+decision|I have to choose between two options and I don't know which is better. Is there a special prayer to ask God to pick for me
+rain|Work was long, my back hurts, the kids are bickering, and now the farm is bone dry with no rain for weeks and the well is low
+fear|i am afraid of dogs, when one barks i freeze and my heart stops, what do i say
+thunder|that thunder just shook my whole house lol what do i say
+debt|owe my cousin 800 and cant pay him back till next month, stressing fr
+divorce|my wife and i are splitting up after 9 years. i dont know how to ask god to make this easier on us, the thing you say for this
+Friday|Juma mubarak, I want to send salawat on Prophet Muhammad, how I write it correct?
+bad_news|just got a rejection email for the thing i worked on all year, feels like it was all for nothing
+adhan|Baby finally napping, soup boiling over, neighbor drilling again, and then the call to prayer starts and I want to say what comes after it
+thunder|Cooking dinner, the baby wont nap, my husband is late, and the thunder just cracked so loud the dishes rattled, what do we say
+rain|Our region has seen no rainfall for months and crops are suffering. Is there a supplication for rain?
+vehicle|Before I set off in the van, is there a supplication for protection while riding in a vehicle?
+repentance|After years of neglecting my duties, I wish to return to Allah sincerely. Kindly guide me to a supplication of repentance.
+eating|Before I start my meal, what is the proper supplication to say? My grandchildren always ask me and I want to set a good example.
+calamity|Our entire shop was swept away in the flood. Please tell me what supplication is appropriate in such a disaster.
+healing|Ya Allah heal my mother, she has sugar sickness many years. Please give dua for shifa
+quran|memorizing surah, need help
+protection|I believe someone did black magic on our family home and things keep going wrong. What supplication protects a household from such harm?
+leaving_home|Ghar se nikal rahe hain kaam ke liye. Allah ki hifazat ke liye koi dua hai?
+accident|Saya jatuh dari tangga dan kaki saya patah, apa doa nya?
+breaking_fast|fasted all day, double shift at work, phone died, couldnt call my sister, iftar finally here, what dua when I break my fast
+drinking_water|I have been very thirsty since this afternoon in the heat. Is there a supplication for when one drinks water?
+charity|I intend to give zakat this year. Is there a supplication to say when giving, that Allah may accept it?
+meeting|Meeting khatam hui, sab log jaa rahe hain, meeting ke end par kya dua parhni chahiye?
+family_conflict|my dad and my uncle have been fighting for months and it breaks my heart. what do i say to god to fix it
+inheritance|My cousins are refusing to accept the will and the division of our grandfather's property. Is there a supplication for a fair settlement?
+morning|Good morning. Is there a supplication to say when I wake up and start my day? I want to begin it properly this time.
+worry,protection|cant stop worrying about my little brother walking home alone at night pls
+enemy|Traffic was insane, toddler wouldnt nap and my team lead took credit for my work again. Now a coworker is plotting to push me out of the team
+steadfastness|Work was packed, the ac broke, got takeout again, and honestly I just want to stay firm in my faith when everything pulls me away
+peace|my soul always restless, want peace in heart, what dua i can read for calm mind
+witr|cant sleep so im doing tahajjud rn, what do i say in the last part, the qunoot thing
+morning|just woke up and want to say the thing you say first thing in the morning to God. im new so pls explain simply
+gratitude|alhamdulillah ngl everything is going so well rn, grateful for my fam and health. is there a dua to say thank u to god
+calamity|Kebakaran habis rumah kami, semua barang hilang, tolong doa ya
+chastity|Rent due, phone cracked, fasting Monday, and I'm single and want God to keep me pure and away from zina until I marry
+General|Koi khas problem nahi, bas Allah se achi zindagi aur akhirat ki bhalai ke liye dua chahiye
+thunder|Whenever the lightning flashes my grandchildren are frightened. Is there a supplication to recite at the sound of thunder?
+laylatul qadr|Is tonight maybe the Night of Power? What I should to say if I see it, my teacher said only one dua
+remembrance|i scroll tiktok all day and barely mention allah, wanna do more dhikr but dont know what to say
+major_decision|God, I'm thinking about moving across the world for my spouse. It changes everything. What should I say before deciding
+loneliness|lonely on sundays
+market|I'm headed to the grocery store. Is there something I should say to God when I go into a market
+confusion|ngl i keep putting off everything, lazy af, no motivation to do my assignments at all, pls send something
+NewBorn|Our daughter gave birth to a healthy baby boy this morning. Please advise what supplication to recite to congratulate her and bless the child.
+legal|police station tomorrow
+success|make my goals happen
+breaking_fast|I've been not eating since sunrise and now the sun is almost gone, what do I say when I open my fast? I'm new so I don't know.
+protection|Kids sick again, landlord raised rent, car battery died. And since the new job started I feel something evil is following me around
+gift|My neighbour sent us a basket of fruit and sweets for Eid. What supplication should I make in return for her kindness?
+wind|the wind is crazy rn the trees are bending over. any dua
+visiting_graves|Yarın babamın mezarını ziyarete gideceğim, orada ne okumalıyım?
+new_beginning|Aujourd'hui j'arrive dans une nouvelle ville pour recommencer ma vie. Une invocation ?
+humility|I have noticed arrogance growing in me since my business flourished. Which supplication will help me keep my ego low?
+enemy|some guys in my area keep trying to get me in trouble, they want me to fail. what is the thing to say against people like that
+paradise|scared of hell fr, what do i say to ask allah to keep me away from the fire
+witr|In the witr prayer I would like to recite the qunoot properly. Which words did the Prophet teach for this?
+gratitude|my thank for Allah not enough, he give me so much, how i say it properly
+remembrance|Laundry everywhere, spreadsheets due, mother in law visiting, bus stuck, wish I could just keep Allah on my tongue through all of it
+anger|ngl i blew up at my little sister today over nothing and i feel awful, how do i calm down when im this mad
+paradise|I want to end up in a good place after I die and not be punished. What do I ask God
+mirror|Aaina dekha toh apni shakal achi nahi lagi, kya koi dua hai jo parhun jab khud ko dekhun?
+pregnancy|Nausea all day, boss wants the report by Friday, husband forgot groceries. Baby due in March, pls Allah make this pregnancy easy.
+worry|I worry so much about my dad who lives alone far away. I don't know what the thing you say for worry is called.
+in_prayer|When I bow down in my prayer and put my face on the floor, can I say something besides the memorized parts? What is proper
+confusion|I dont know how to do anything right, i feel helpless and stuck, idk what to even start with. What is the thing you say when you feel like this
+adhan|adhan just went off in the car what do i say after it ends
+visiting_graves|my mom is buried in a muslim cemetery and i want to visit, what do i say when i walk in
+enemy|There are people in our community who plot against my business and wish us harm. Please advise a supplication for protection from enemies.
+quran|My grandson is memorizing the Holy Quran and struggles to retain verses. Is there a supplication for a firm memory of the Book?
+new_clothes|Naye kapde pehne hain, kya dua hai jo naye kapde pehnte waqt parhte hain? Batao
+entering_home|I have returned to my house after a long day at work. Is there a dua to say when entering the home?
+moving_home|moving into new flat
+backbiting|stop gossiping about coworkers
+bathroom|Bathroom jaane se pehle kon si dua padhte hain? Mujhe yaad nahi, batao please
+witr|Dishes piled up, kid's science project due, gas bill came, but tonight I'm finally praying witr before bed and need the right words
+family|keep my family united
+consultation|Printer jammed, school pickup at three, dentist tomorrow, and tonight im going to my uncle to ask his advice about a problem I have
+in_prayer|im in ruku rn lol what do i say i only know subhan something
+morning|ugh alarm went off at 5 again, kids fighting over the bathroom, bus in ten min, cant find my keys, need a dua to start the day right
+leaving_home|I am stepping out of the house now for my appointments. What supplication should I recite when I leave my home?
+guidance|Spilled coffee, late for the train, phone at 3 percent, and honestly I just feel like I have no direction in life and need to be guided
+children|ngl my son keeps running off n i get scared, pls make dua allah protects my kids
+protection|ngl my phone died 3 times today and car wont start, feel like someone put a curse on me. pls help me be protected
+legal|my immigration hearing is next month and im terrified, is there something i should say to God
+family_conflict|my bro n i not talking since the thanksgiving fight. pls make dua we make up
+loneliness|ngl nobody texts me anymore, i feel so alone in this city, idk who to talk to
+patience|I am an old man waiting for my pension and I tire of waiting. Is there a supplication for patience?
+forgiveness|Ya Allah maine bahut gunah kiye hain, mujhe maaf karwane ki dua batao please
+parents|my mum and dad are getting older and i feel i havent done enough for them. is there something to say for my parents?
+divorce|Mera talaq ka mamla chal raha hai, ghar bikhar gaya. Allah se asani aur sabr ki dua chahiye, shukriya.
+sitting|Mere dost galat kaam karte hain, mujhe achhe logon ke saath baithna hai. Kya koi dua hai iske liye?
+paradise|At my age I think often of the Hereafter. Is there a supplication to be granted Paradise and be saved from the Hellfire?
+longing|ngl i miss my bestie from home so bad, we used to hang every day, wish i could see her again
+sitting|I keep sitting with people who pull me away from prayer and goodness. Is there a supplication for choosing good company?
+humility|too much pride lately
+difficulty|Times are very hard for our family at present. Please suggest a supplication for ease in hardship.
+sincerity|I fear my recitation in the mosque is for the praise of the congregation. Is there a supplication for a pure intention?
+fear|fr im so scared rn, every little noise in the house makes me jump, pls help
+new_beginning|first day at my new school tmrw dont know anyone pls dua
+loss,deceased|my grandma passed this morning and idk what to say or do rn
+children|i have two little kids and i worry about what could happen to them. whats the thing to say to god to keep them safe
+healing|need shifa for dad
+drinking_water|bruh im so thirsty rn, what do u say before drinking water lol
+divorce|My daughter is going through a separation from her husband and the family is very upset. Is there a dua for a marriage that is falling apart?
+addiction|cant stop vaping, tried quitting 5 times, need allah to help me drop the habit
+NewBorn|Tired from the late shift, coffee machine broke, sister texted that her baby arrived at 3am, healthy. I want to bless the little one.
+wudu|after ablution
+charity|Je veux donner la charite a une famille pauvre, quelle invocation dois-je dire quand je donne ?
+travel|Packing at 2am, suitcase zip broke, Uber is late and my flight leaves at 6. Visiting family in Lahore. Please make the journey smooth, Allah.
+eating|before lunch dua
+good_news|Mabrouk! my friend got the big contract for her company, we so happy, what dua to say for good news
+chastity|As a widower still young in years, I wish to guard my chastity and avoid all unlawful relations. Is there a supplication?
+visiting_sick|visiting auntie at hospital
+quran|Boss kept me late, dinner's cold, car needs gas, but tonight I want to start reciting the Quran again and ask God to make it easy for me
+consultation|I want to ask my friend for advice about something personal. Is there a prayer so God puts the right advice in their mouth
+confusion|I am always postponing my tasks and I have no energy to start them. Is there a supplication to overcome this laziness?
+anxiety|Traffic was awful, kids screamed the whole drive and boss dumped 3 reports on me. Now I cant stop overthinking and my chest feels so heavy
+injustice|falsely accused at school
+bathroom|dua before the toilet
+sleep|Dear, I am having trouble falling asleep at night. Is there a supplication I can recite before going to bed to rest well?
+inheritance|uncle keeping dads house
+oppression|Dentist, school run, rain, and my uncle keeps bullying us out of our own shop and takes our money and there is nothing we can do about it
+betrayal|my friend lied to me for years and just told me the truth, how do I pray about it
+General|I don't have a problem exactly, I just want to say something nice to God, the thing you say to ask for good things in life?
+betrayal|A business partner of thirty years has deceived me and taken my savings. What is the right supplication?
+loneliness|I feel like no one in the world really cares about me, i am always by myself. How do I ask God to take this loneliness away
+anger|I get so angry and shout and i dont like who i become. what is the thing to say to make the anger go away
+parents|Ammi aur Abbu ke liye dua kijiye, unki sehat achi rahe aur Allah unhe khush rakhe. Jazakallah.
+bad_news|We received a letter today saying my pension has been cancelled. I am quite shaken. Is there a dua for unwelcome news?
+job|I was made redundant after twenty two years at the company. Is there a supplication for finding new employment?
+rain|drought, need rain
+remembrance|Mujhe zyada zikr karna hai, koi aasan kalma batao jo rozana parh sakun
+bad_news|Dropped the kids off late, spilled coffee on my shirt, got a parking ticket, then my cousin called with terrible news from back home and I just froze
+breaking_fast|It is almost time to break the fast. Could you tell me the supplication one says at iftar? I have been fasting since dawn.
+major_decision|quit and relocate abroad?
+backbiting|Soup's burnt, bus delayed, my son's grades, and I caught myself tearing apart my aunt to my friends again, need help to stop gossiping
+marriage|ngl my mum keeps saying its time, pls make dua i find a good husband who fears allah fr
+difficulty|things are really hard right now and I want God to make it easier, what do I say
+legal|court date next week bc of a ticket i dont deserve pls dua
+repentance|wallahi i want to make tawba, i did a big haram thing and i cant sleep, give me the words pls
+travel|flight at 6am tmrw ngl so nervous, pls make dua the trip goes smooth n i get back safe
+gratitude|Alhamdulillah for all the blessings my family has received this year. What is the proper supplication to express gratitude to Allah?
+good_news,gratitude|just got engaged, i dont know the thing to say to god for this good news, how do i say thank you
+hosting|I was invited to my friend's house for dinner and want to thank her properly. what's the thing to say to the person who hosted?
+praise|my coworker said i am very good with people and kind, everyone says nice things. what do i say when someone says nice things about me
+children|Please remember my grandchildren in your prayers, that Allah protect them from harm and keep them on the straight path.
+pregnancy|my wife is pregnant for the first time and were both nervous. is there something to say to god for the baby to be healthy
+new_beginning|Packed the last box, stuck behind a truck, kids hungry, and tomorrow is my first morning at the new office in a city where I know nobody
+provision|By the grace of Allah we manage, but the expenses of three children are heavy. Is there a supplication for abundant provision?
+business|I have recently opened a small hardware shop on the main road. Kindly advise a supplication for blessing in trade.
+loss|Bapakku meninggal bulan lalu, aku masih sangat sedih dan kehilangan
+visiting_sick|Je vais rendre visite à mon voisin malade, qu'est-ce que je dois dire pour lui?
+vehicle|first time riding my bike to uni, what do i say before i start pedalling so god keeps me safe
+adhan|I just heard the loud singing call from the tower. Am I supposed to say something back to it
+depression|feel so empty lately
+anxiety|I am feeling very much stress since the bank letter arrived and my mind will not rest. Is there a supplication for this anxious feeling?
+hope|ngl im kinda done trying, everything i try goes wrong, need some hope back fr
+jealousy|Client was rude, van broke down again. My cousins keep staring at my new house and saying nothing nice, I think they're envious of me
+new_clothes|bought new fit for eid, whats the dua for wearing new clothes fr
+loneliness|Work was a mess, washing machine flooded the kitchen again. Ate dinner alone, scrolled phone, nobody called. Feel so lonely, no one around
+after_prayer|just finished salah, now what
+gift|gift from my sister
+hope|my business failed and im broke, my hope is finish, what dua to bring hope back
+loneliness|I am living by myself in a foreign city and I have no one to talk to. Is there a supplication for this feeling of being alone?
+anger|my driver again make me gusse, i feel like i explode, what dua i read for this

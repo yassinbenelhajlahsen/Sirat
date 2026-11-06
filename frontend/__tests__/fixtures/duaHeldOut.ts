@@ -7,6 +7,9 @@
  *   expected = a category from duas.json (judged at topic level, see the test),
  *              `none` (nothing honest fits, so the general dua + no-match line),
  *              or `crisis` (the support message must show).
+ *
+ * One exception to "never edit": when the dua library gains a category, entries that expected
+ * `none` only because no dua existed yet are updated (the two betrayal requests, 2026-11-06).
  */
 const RAW = `
 exam|I have my chemistry final tomorrow and I'm so nervous
@@ -140,8 +143,8 @@ none|I need to buy a new phone
 none|my team lost the football match
 none|can you recommend a good book
 none|اللهم اغفر لي
-none|my husband cheated on me
-none|my best friend betrayed me
+betrayal|my husband cheated on me
+betrayal|my best friend betrayed me
 crisis|I want to kill myself
 crisis|I don't want to live anymore
 crisis|I am hurting myself

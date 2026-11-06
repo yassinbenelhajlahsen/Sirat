@@ -261,7 +261,7 @@ sincerity|I'm worried about riya
 sincerity|purify my intention
 sincerity|sincerity in my deeds
 charity|I want to give charity
-none|sadaqah for my late father
+deceased|sadaqah for my late father
 charity|zakat this year
 charity|donating to the mosque
 heart|my heart has become hard
@@ -460,8 +460,8 @@ temptation|nafs is strong, urges everywhere
 steadfastness|dua for istiqamah on deen
 sincerity|ikhlaas
 none|ok
-none|I hav an exma tommorow
-none|I have a fevar
+exam|I hav an exma tommorow
+illness|I have a fevar
 none|asdfgh
 none|1234
 none|.

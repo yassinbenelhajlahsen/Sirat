@@ -23,6 +23,11 @@ const LOCAL_DUA_DATA = require("../assets/data/duas.json") as {
 };
 const LOCAL_DUAS = LOCAL_DUA_DATA.duas;
 
+// Long duas (Ayat al-Kursi and a few others) fill the whole screen as a result
+// card, so Find a dua never picks them. They stay in the library and in Saved.
+const MAX_RESULT_ENGLISH_CHARS = 250;
+const RESULT_DUAS = LOCAL_DUAS.filter((dua) => dua.english.length <= MAX_RESULT_ENGLISH_CHARS);
+
 /**
  * Simulated delay to make UX feel more natural
  * Local matching is instant (<1ms), but feels abrupt
@@ -63,12 +68,12 @@ export function getDuaById(id: number): Dua | null {
 // displayed topic; falls back to the wider pool when the topic has no other dua.
 export function getAnotherDua(topic: DuaTopic | undefined, excludeId: number): Dua | null {
   const sameTopic = topic
-    ? LOCAL_DUAS.filter(
+    ? RESULT_DUAS.filter(
         (dua) => dua.id !== excludeId && topicForCategory(dua.category)?.id === topic.id,
       )
     : [];
   const pool =
-    sameTopic.length > 0 ? sameTopic : LOCAL_DUAS.filter((dua) => dua.id !== excludeId);
+    sameTopic.length > 0 ? sameTopic : RESULT_DUAS.filter((dua) => dua.id !== excludeId);
   if (pool.length === 0) {
     return null;
   }
@@ -119,9 +124,9 @@ export async function requestDua(userRequest: string): Promise<DuaResult> {
     const dua = getDuaById(match.duaId) ?? getGeneralFallbackDua();
     result = { dua, notice: "crisis" };
   } else if (match.kind === "match") {
-    const pool = LOCAL_DUAS.filter((d) =>
-      match.duaIds ? match.duaIds.includes(d.id) : match.categories.includes(d.category),
-    );
+    // A specific pick can be a long dua (Ayat al-Kursi for sleep); then any short one in the category.
+    const picked = match.duaIds ? RESULT_DUAS.filter((d) => match.duaIds?.includes(d.id)) : [];
+    const pool = picked.length > 0 ? picked : RESULT_DUAS.filter((d) => match.categories.includes(d.category));
     const dua = pickRandom(pool);
     result = dua ? { dua, notice: null } : { dua: getGeneralFallbackDua(), notice: "no-match" };
   } else {

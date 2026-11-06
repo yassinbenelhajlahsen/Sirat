@@ -54,7 +54,8 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `quran copy text formatting testing`
   - `services/quranCopyText.test.ts`
 - `dua flow testing`
-  - `services/duaMatcher.test.ts` — offline weighted scorer: crisis check and idioms, conflicts, misspellings, romanized terms, Arabic script, every category but General reachable, tuning list passes, held-out list meets the targets (90% correct, 3% wrong topic)
+  - `services/duaMatcher.test.ts` — offline matcher (keyword rules + classifier): crisis check and idioms, conflicts, misspellings, accent folding, romanized terms, Arabic script, off-topic requests, every category but General reachable, tuning list passes, held-out list meets the targets (90% correct, 3% wrong topic)
+  - `services/duaClassifier.test.ts` — the decision between keyword rules and the classifier (support, override, ties, unknown words) on a toy model; the bundled model is deterministic, under the asset budget, and meets the right/wrong bar on the unseen `scripts/dua-classifier/test.txt`
   - `fixtures/duaHeldOut.ts` — held-out requests with expected topics, written before the scorer and never tuned against: do not edit an entry to improve a result
   - `fixtures/duaTuning.ts` — tuning requests the rules may be adjusted against
   - `services/duaEval.helper.ts` — shared topic-level judging for the two lists (not a test)

@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { clearDuaHistory, getDuaHistory, getRecentDuas, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
+import { clearDuaHistory, getAnotherDua, getDuaById, getDuaHistory, getRecentDuas, requestDua, saveDuaToHistory, type Dua } from "@/services/duaService";
+import { getTopic } from "@/services/duaTopics";
 
 const GENERAL_DUA_ID = 100;
 
@@ -53,6 +54,22 @@ describe("services/duaService", () => {
       seen.add((await request).dua.category);
     }
     expect([...seen]).toEqual(["sleep"]);
+  });
+
+  it("never returns a long dua, even when it is the specific pick (Ayat al-Kursi)", async () => {
+    for (let i = 0; i < 20; i += 1) {
+      const request = requestDua("ayatul kursi before bed");
+      await jest.advanceTimersByTimeAsync(1200);
+      const { dua, notice } = await request;
+      expect(dua.category).toBe("sleep");
+      expect(dua.english.length).toBeLessThanOrEqual(250);
+      expect(notice).toBeNull();
+    }
+    const topic = getTopic("sleep");
+    for (let i = 0; i < 20; i += 1) {
+      expect(getAnotherDua(topic, 116)?.english.length).toBeLessThanOrEqual(250);
+    }
+    expect(getDuaById(120)).not.toBeNull();
   });
 
   it("never stores what was typed or whether a notice showed", async () => {

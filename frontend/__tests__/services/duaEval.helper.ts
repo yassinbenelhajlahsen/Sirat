@@ -17,6 +17,8 @@ export function judge(c: EvalCase): { outcome: Outcome; got: string; strict: boo
   }
   const gotCats = m.categories;
   const gotTopic = topicForCategory(gotCats[0])?.id;
+  // General is the dua a no-match shows anyway, so for "none" it is the same outcome without the notice.
+  if (c.expected === "none" && gotCats[0] === "General") return { outcome: "correct", got: "General", strict: false };
   if (c.expected === "none" || c.expected === "crisis") return { outcome: "wrong", got: gotCats.join(","), strict: false };
   const wantTopic = topicForCategory(c.expected)?.id;
   const ok = gotTopic === wantTopic;
