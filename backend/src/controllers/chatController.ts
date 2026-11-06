@@ -35,6 +35,14 @@ const FAILED = { error: "Chat failed, please try again" };
 
 export type ChatRequest = { message: string; history: HistoryItem[]; summary: string | null; deviceToken: string | null };
 
+export const DEV_USER_ID = "dev";
+export const DEV_ALLOWANCE = 9999;
+
+/** Local-only: needs CHAT_DEV_BYPASS=1 on the server (refused in production) and this header. */
+export function isDevChatRequest(req: Request): boolean {
+  return ENV.CHAT_DEV_BYPASS && req.get("x-sirat-chat-dev") === "1";
+}
+
 export function requireChatEnabled(_req: Request, res: Response, next: NextFunction) {
   if (!ENV.CHAT_ENABLED) return res.status(503).json({ error: "Chat is unavailable" });
   return next();
@@ -77,6 +85,7 @@ export function validateChat(req: Request, res: Response, next: NextFunction) {
 
 export async function getChatStatus(req: Request, res: Response) {
   const base = { enabled: true, resetsAt: resetsAt() };
+  if (isDevChatRequest(req)) return res.json({ ...base, allowance: DEV_ALLOWANCE, remaining: DEV_ALLOWANCE });
   const { isAuthenticated, userId } = getAuth(req);
   if (!isAuthenticated || !userId) return res.json({ ...base, allowance: null, remaining: null });
   try {
@@ -105,24 +114,30 @@ export async function postChat(req: Request, res: Response) {
   const signal = AbortSignal.any([AbortSignal.timeout(REPLY_DEADLINE_MS), hangUp.signal]);
   const month = currentMonth();
   const reset = resetsAt();
+  const dev = isDevChatRequest(req);
   let claimedBy: string | null = null;
 
   try {
-    const hash = await getIdentityHash(userId);
-    await ensureAllowance(hash, () => decideAllowance(deviceToken), month);
-    const usage = await claimMessage(hash, month);
-    if (!usage) {
-      const current = await getUsage(hash, month);
-      console.log("chat_reply", "limit");
-      return res.json({ kind: "limit", allowance: current?.allowance ?? MONTHLY_ALLOWANCE, remaining: 0, resetsAt: reset });
+    const hash = dev ? DEV_USER_ID : await getIdentityHash(userId);
+    let quota: { allowance: number; remaining: number; resetsAt: string };
+    if (dev) {
+      quota = { allowance: DEV_ALLOWANCE, remaining: DEV_ALLOWANCE, resetsAt: reset };
+    } else {
+      await ensureAllowance(hash, () => decideAllowance(deviceToken), month);
+      const usage = await claimMessage(hash, month);
+      if (!usage) {
+        const current = await getUsage(hash, month);
+        console.log("chat_reply", "limit");
+        return res.json({ kind: "limit", allowance: current?.allowance ?? MONTHLY_ALLOWANCE, remaining: 0, resetsAt: reset });
+      }
+      claimedBy = hash;
+      quota = { allowance: usage.allowance, remaining: usage.allowance - usage.used, resetsAt: reset };
     }
-    claimedBy = hash;
-    const quota = { allowance: usage.allowance, remaining: usage.allowance - usage.used, resetsAt: reset };
 
     const outcome = await answerMessage({ message, history, summary, safetyId: hash, signal });
     if (outcome.kind !== "answer") {
       // Crisis and blocked replies don't count toward the month; only a crisis reply skipped the model.
-      const refunded = await refundMessage(hash, month, outcome.kind === "blocked");
+      const refunded = dev ? false : await refundMessage(hash, month, outcome.kind === "blocked");
       claimedBy = null;
       console.log("chat_reply", outcome.kind);
       return res.json({ kind: outcome.kind, ...quota, remaining: quota.remaining + (refunded ? 1 : 0) });

@@ -1,9 +1,11 @@
-import express, { Router } from "express";
+import express, { Router, type NextFunction, type Request, type Response } from "express";
 import rateLimit from "express-rate-limit";
 import { clerkMiddleware } from "@clerk/express";
 import {
+  DEV_USER_ID,
   chatBodyErrors,
   getChatStatus,
+  isDevChatRequest,
   postChat,
   requireChatEnabled,
   validateChat,
@@ -11,6 +13,13 @@ import {
 import { requireAuth, type AuthedRequest } from "../middleware/requireAuth.js";
 
 const router = Router();
+
+// Dev requests skip sign-in and take the fixed dev id, which also keys the per-user limit.
+function requireChatUser(req: Request, res: Response, next: NextFunction) {
+  if (!isDevChatRequest(req)) return requireAuth(req, res, next);
+  (req as AuthedRequest).userId = DEV_USER_ID;
+  return next();
+}
 
 // Catches scripts spread across accounts.
 const ipLimiter = rateLimit({
@@ -48,6 +57,6 @@ router.get("/status", requireChatEnabled, getChatStatus);
  * Body: { message, history, summary, deviceToken }. Auth required.
  * Order: switch, auth, validation, per-user limit, then quota claim before any OpenAI call.
  */
-router.post("/", requireChatEnabled, requireAuth, validateChat, userLimiter, postChat);
+router.post("/", requireChatEnabled, requireChatUser, validateChat, userLimiter, postChat);
 
 export default router;

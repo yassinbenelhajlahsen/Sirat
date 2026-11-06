@@ -117,4 +117,31 @@ describe("ENV configuration", () => {
 
     expect(ENV.DEVICECHECK_PRIVATE_KEY).toBe("-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----");
   });
+
+  it("keeps the chat dev bypass off unless CHAT_DEV_BYPASS is exactly 1", async () => {
+    delete process.env.CHAT_DEV_BYPASS;
+
+    const { ENV } = await import("../src/config/env.js");
+
+    expect(ENV.CHAT_DEV_BYPASS).toBe(false);
+  });
+
+  it("refuses to load with the chat dev bypass in production", async () => {
+    process.env.CHAT_DEV_BYPASS = "1";
+    process.env.NODE_ENV = "production";
+
+    await expect(import("../src/config/env.js")).rejects.toThrow("CHAT_DEV_BYPASS is not allowed in production");
+  });
+
+  it("warns when the chat dev bypass is on outside production", async () => {
+    process.env.CHAT_DEV_BYPASS = "1";
+    process.env.NODE_ENV = "development";
+    const warn = jest.spyOn(console, "warn");
+
+    const { ENV } = await import("../src/config/env.js");
+
+    expect(ENV.CHAT_DEV_BYPASS).toBe(true);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("CHAT_DEV_BYPASS"));
+    warn.mockRestore();
+  });
 });

@@ -376,4 +376,76 @@ describe("Chat routes", () => {
       expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("SECRET-TEXT");
     });
   });
+
+  describe("dev bypass", () => {
+    const DEV = { "x-sirat-chat-dev": "1" };
+    const buildWithFlag = async (value: string) => {
+      process.env.CHAT_DEV_BYPASS = value;
+      jest.resetModules();
+      await build();
+    };
+
+    afterEach(() => {
+      delete process.env.CHAT_DEV_BYPASS;
+    });
+
+    it("is off unless the server flag is exactly 1", async () => {
+      await buildWithFlag("true");
+      (mockGetAuth as any).mockReturnValue({ isAuthenticated: false, userId: null });
+
+      expect((await request(app).post("/api/chat").set(DEV).send(body())).status).toBe(401);
+      expect((await request(app).get("/api/chat/status").set(DEV)).body).toMatchObject({ allowance: null, remaining: null });
+    });
+
+    it("still needs sign-in when the flag is on but the header is missing", async () => {
+      await buildWithFlag("1");
+      (mockGetAuth as any).mockReturnValue({ isAuthenticated: false, userId: null });
+
+      expect((await request(app).post("/api/chat").send(body())).status).toBe(401);
+    });
+
+    it("answers a signed-out dev request without the account, the allowance or the limit", async () => {
+      await buildWithFlag("1");
+      (mockGetAuth as any).mockReturnValue({ isAuthenticated: false, userId: null });
+
+      const res = await request(app).post("/api/chat").set(DEV).send(body()).expect(200);
+
+      expect(res.body).toMatchObject({ kind: "answer", allowance: 9999, remaining: 9999 });
+      expect(mockGenerateAnswer).toHaveBeenCalledWith(expect.objectContaining({ safetyId: "dev" }));
+      expect(mockGetIdentityHash).not.toHaveBeenCalled();
+      expect(mockEnsureAllowance).not.toHaveBeenCalled();
+      expect(mockClaimMessage).not.toHaveBeenCalled();
+      expect(mockRefundMessage).not.toHaveBeenCalled();
+    });
+
+    it("keeps the quota at 9999 when the reply is a crisis notice, with no refund", async () => {
+      await buildWithFlag("1");
+      (mockGetAuth as any).mockReturnValue({ isAuthenticated: false, userId: null });
+      (mockModerate as any).mockResolvedValueOnce({ selfHarm: true, severe: false });
+
+      const res = await request(app).post("/api/chat").set(DEV).send(body()).expect(200);
+
+      expect(res.body).toMatchObject({ kind: "crisis", allowance: 9999, remaining: 9999 });
+      expect(mockRefundMessage).not.toHaveBeenCalled();
+    });
+
+    it("reports the fixed 9999 from status without sign-in", async () => {
+      await buildWithFlag("1");
+      (mockGetAuth as any).mockReturnValue({ isAuthenticated: false, userId: null });
+
+      const res = await request(app).get("/api/chat/status").set(DEV).expect(200);
+
+      expect(res.body).toEqual({ enabled: true, resetsAt: "2026-12-01T00:00:00.000Z", allowance: 9999, remaining: 9999 });
+      expect(mockGetUsage).not.toHaveBeenCalled();
+    });
+
+    it("keeps status signed-out when the header is missing", async () => {
+      await buildWithFlag("1");
+      (mockGetAuth as any).mockReturnValue({ isAuthenticated: false, userId: null });
+
+      const res = await request(app).get("/api/chat/status").expect(200);
+
+      expect(res.body).toMatchObject({ allowance: null, remaining: null });
+    });
+  });
 });

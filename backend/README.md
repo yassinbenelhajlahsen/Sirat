@@ -141,6 +141,7 @@ LOG_LEVEL=info
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-6-luna
 CHAT_ENABLED=0
+CHAT_DEV_BYPASS=0
 CHAT_IDENTITY_SECRET=long_random_string
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```

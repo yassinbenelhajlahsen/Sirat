@@ -17,6 +17,7 @@ export const ENV = {
   RESEND_CONTACTS_API_KEY: process.env.RESEND_CONTACTS_API_KEY || "",
   RESEND_SEGMENT_ID: process.env.RESEND_SEGMENT_ID || "",
   CHAT_ENABLED: process.env.CHAT_ENABLED === "1",
+  CHAT_DEV_BYPASS: process.env.CHAT_DEV_BYPASS === "1",
   CHAT_IDENTITY_SECRET: process.env.CHAT_IDENTITY_SECRET || "",
   CHAT_QURAN_QUOTES: (process.env.CHAT_QURAN_QUOTES === "reference" ? "reference" : "text") as "text" | "reference",
   CHAT_SCHOLAR_LINK: process.env.CHAT_SCHOLAR_LINK || "https://seekersguidance.org/answers/",
@@ -27,6 +28,12 @@ export const ENV = {
   DEVICECHECK_ENV: (process.env.DEVICECHECK_ENV === "development" ? "development" : "production") as "production" | "development",
   DEVICECHECK_REQUIRED: process.env.DEVICECHECK_REQUIRED !== "0",
 } as const;
+
+// Refusing to start, not just ignoring the flag, so a production deploy with it set is noticed at once.
+if (ENV.CHAT_DEV_BYPASS) {
+  if (ENV.NODE_ENV === "production") throw new Error("CHAT_DEV_BYPASS is not allowed in production");
+  console.warn("⚠️  CHAT_DEV_BYPASS is on. Chat skips sign-in and the monthly limit for requests with x-sirat-chat-dev: 1.");
+}
 
 if (!ENV.GOOGLE_MAPS_API_KEY) {
   console.warn("⚠️  GOOGLE_MAPS_API_KEY is not set. Mosque search will fail.");
