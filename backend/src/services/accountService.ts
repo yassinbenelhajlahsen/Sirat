@@ -15,12 +15,13 @@ async function removeFromMailingList(userId: string): Promise<void> {
 
 /**
  * Deletes all of a user's synced data (users row cascades to sync_documents)
- * and their feedback reports, takes them off the mailing list, then removes the Clerk identity. A Clerk 404 means the identity was already
+ * and their feedback and content reports, takes them off the mailing list, then removes the Clerk identity. A Clerk 404 means the identity was already
  * gone — treated as success so the call is idempotent.
  */
 export async function deleteAccount(userId: string): Promise<void> {
   await removeFromMailingList(userId);
   await prisma.feedbackReport.deleteMany({ where: { userId } });
+  await prisma.contentReport.deleteMany({ where: { userId } });
   await pool.query(`DELETE FROM users WHERE id = $1`, [userId]);
   try {
     await clerkClient.users.deleteUser(userId);

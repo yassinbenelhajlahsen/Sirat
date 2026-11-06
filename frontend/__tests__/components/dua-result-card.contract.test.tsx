@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
-import { Share, StyleSheet } from "react-native";
+import { Alert, Share, StyleSheet } from "react-native";
 
 import DuaResultCard, { CRISIS_MESSAGE, NO_MATCH_MESSAGE } from "@/components/DuaResultCard";
 import type { Dua } from "@/services/duaService";
@@ -197,5 +197,76 @@ describe("DuaResultCard contract", () => {
     await waitFor(() =>
       expect(consoleSpy).toHaveBeenCalledWith("Share error:", expect.any(Error))
     );
+  });
+
+  describe("wrong-dua report", () => {
+    // Presses the dialog's Send button.
+    const confirmSend = () =>
+      jest.spyOn(Alert, "alert").mockImplementation((_t, _m, buttons) => {
+        buttons?.find((b) => b.text === "Send")?.onPress?.();
+      });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it("is hidden without a report handler and when the crisis message shows", () => {
+      const plain = render(<DuaResultCard dua={sampleDua} onClose={jest.fn()} />);
+      expect(plain.queryByText("Wrong dua for this?")).toBeNull();
+
+      const crisis = render(
+        <DuaResultCard dua={sampleDua} onClose={jest.fn()} notice="crisis" onReport={jest.fn()} />,
+      );
+      expect(crisis.queryByText("Wrong dua for this?")).toBeNull();
+    });
+
+    it("sends only after the dialog's Send and then shows the thanks line", async () => {
+      const onReport = jest.fn().mockResolvedValue(undefined);
+      const alert = confirmSend();
+      const { getByText, queryByText } = render(
+        <DuaResultCard dua={sampleDua} onClose={jest.fn()} onReport={onReport} />,
+      );
+
+      fireEvent.press(getByText("Wrong dua for this?"));
+
+      expect(alert).toHaveBeenCalledWith("Report a poor match?", undefined, expect.any(Array));
+      await waitFor(() => expect(getByText("Thanks, this helps us improve matching.")).toBeTruthy());
+      expect(onReport).toHaveBeenCalledTimes(1);
+      expect(queryByText("Wrong dua for this?")).toBeNull();
+    });
+
+    it("does not send when the dialog is cancelled", () => {
+      const onReport = jest.fn();
+      jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      const { getByText } = render(<DuaResultCard dua={sampleDua} onClose={jest.fn()} onReport={onReport} />);
+
+      fireEvent.press(getByText("Wrong dua for this?"));
+
+      expect(onReport).not.toHaveBeenCalled();
+    });
+
+    it("keeps the button and shows an error when sending fails", async () => {
+      confirmSend();
+      const { getByText } = render(
+        <DuaResultCard dua={sampleDua} onClose={jest.fn()} onReport={jest.fn().mockRejectedValue(new Error("offline"))} />,
+      );
+
+      fireEvent.press(getByText("Wrong dua for this?"));
+
+      await waitFor(() => expect(getByText("Couldn't send. Try again.")).toBeTruthy());
+      expect(getByText("Wrong dua for this?")).toBeTruthy();
+    });
+
+    it("offers the report again once a different dua is shown", async () => {
+      confirmSend();
+      const onReport = jest.fn().mockResolvedValue(undefined);
+      const { getByText, rerender } = render(
+        <DuaResultCard dua={sampleDua} onClose={jest.fn()} onReport={onReport} />,
+      );
+      fireEvent.press(getByText("Wrong dua for this?"));
+      await waitFor(() => expect(getByText("Thanks, this helps us improve matching.")).toBeTruthy());
+
+      rerender(<DuaResultCard dua={{ ...sampleDua, id: 13 }} onClose={jest.fn()} onReport={onReport} />);
+
+      expect(getByText("Wrong dua for this?")).toBeTruthy();
+    });
   });
 });

@@ -61,7 +61,7 @@ function deviceLabel(diagnostics: Record<string, unknown> | null): string | null
 }
 
 // Sign-in is optional here: any auth failure just means an anonymous report.
-function optionalUserId(req: Request): string | null {
+export function optionalUserId(req: Request): string | null {
   try {
     const { isAuthenticated, userId } = getAuth(req);
     return isAuthenticated && userId ? userId : null;
@@ -70,7 +70,7 @@ function optionalUserId(req: Request): string | null {
   }
 }
 
-function header(req: Request, name: string): string | null {
+export function header(req: Request, name: string): string | null {
   const value = req.header(name);
   return value ? value.slice(0, 64) : null;
 }

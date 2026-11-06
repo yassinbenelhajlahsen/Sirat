@@ -44,3 +44,18 @@ model FeedbackReport {
   @@index([userId])
   @@map("feedback_reports")
 }
+
+// A user's report that something the app produced was wrong for what they asked.
+model ContentReport {
+  id         String   @id @default(uuid()) @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  kind       String
+  input      String
+  output     Json
+  userId     String?  @map("user_id")
+  appVersion String?  @map("app_version")
+
+  @@index([kind, createdAt])
+  @@index([userId])
+  @@map("content_reports")
+}

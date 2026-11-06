@@ -319,7 +319,7 @@
             transition-delay: 0.2s;
           "
         >
-          Last updated: November 5, 2026
+          Last updated: November 6, 2026
         </p>
       </div>
     </header>
@@ -407,7 +407,7 @@
             <strong style="color: var(--text-primary)"
               >Settings → Account → Delete Account</strong
             >. This permanently removes all cloud-stored sync data, any
-            feedback or bug reports you sent while signed in, and your account
+            feedback, bug or dua reports you sent while signed in, and your account
             record from Sirat's servers, and takes your email off the mailing
             list.
           </p>
@@ -441,7 +441,8 @@
             Sirat calls backend endpoints for prayer times, holiday data, and
             mosque lookup; backend services may call trusted APIs when needed.
             Dua search runs on your device, and what you type there is not sent
-            anywhere. Sirat also streams Quran audio from online sources.
+            anywhere unless you report a dua as a poor match (see below). Sirat
+            also streams Quran audio from online sources.
           </p>
         </div>
 
@@ -462,7 +463,9 @@
             your message, the email address you enter (optional), and the app
             version on Sirat's backend. If you are signed in, the report is
             linked to your account. Each report is emailed to the Sirat team
-            through an email delivery service.
+            through an email delivery service. If you report a dua as a poor
+            match, Sirat stores what you typed, the dua that was shown, and the
+            app version on its backend. These reports are not emailed.
           </p>
           <p
             style="
@@ -521,7 +524,7 @@
               margin-top: 1rem;
             "
           >
-            Feedback and bug reports are stored on Sirat's backend until they
+            Feedback, bug and dua reports are stored on Sirat's backend until they
             are deleted. Reports sent while signed in are deleted from Sirat's
             backend when you delete your account; copies already emailed to the
             Sirat team may remain. To delete a report you sent while signed out,

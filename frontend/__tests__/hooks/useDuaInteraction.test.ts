@@ -64,8 +64,14 @@ describe("hooks/useDuaInteraction", () => {
     expect(mockRequestDua).toHaveBeenCalledWith("help me");
     expect(mockSaveDuaToHistory).toHaveBeenCalledWith(dua);
     expect(result.current.selectedDua).toEqual(dua);
+    expect(result.current.request).toBe("help me");
     expect(result.current.duaLoading).toBe(false);
     expect(Alert.alert).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.closeDua();
+    });
+    await waitFor(() => expect(result.current.request).toBeNull());
   });
 
   it("fades the new card in only after it has rendered, with loading held until then", async () => {

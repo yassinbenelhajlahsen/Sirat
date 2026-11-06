@@ -7,6 +7,7 @@ const mockGetAuth: jest.Mock = jest.fn();
 const mockDeleteUser: jest.Mock = jest.fn();
 const mockQuery: jest.Mock = jest.fn();
 const mockDeleteReports: jest.Mock = jest.fn();
+const mockDeleteContentReports: jest.Mock = jest.fn();
 const mockGetUser: jest.Mock = jest.fn();
 const mockRemoveContact: jest.Mock = jest.fn();
 
@@ -20,6 +21,8 @@ describe("Account Routes Integration", () => {
     mockQuery.mockReset();
     mockDeleteReports.mockReset();
     (mockDeleteReports as any).mockResolvedValue({ count: 0 });
+    mockDeleteContentReports.mockReset();
+    (mockDeleteContentReports as any).mockResolvedValue({ count: 0 });
     mockGetUser.mockReset();
     (mockGetUser as any).mockResolvedValue({
       emailAddresses: [{ emailAddress: "a@b.co" }, { emailAddress: "c@d.co" }],
@@ -42,7 +45,10 @@ describe("Account Routes Integration", () => {
       pool: { query: mockQuery },
     }));
     jest.unstable_mockModule("../src/db/prisma.js", () => ({
-      prisma: { feedbackReport: { deleteMany: mockDeleteReports } },
+      prisma: {
+        feedbackReport: { deleteMany: mockDeleteReports },
+        contentReport: { deleteMany: mockDeleteContentReports },
+      },
     }));
 
     const accountRoutes = (await import("../src/routes/account.js")).default;
@@ -61,10 +67,11 @@ describe("Account Routes Integration", () => {
     expect(mockDeleteUser).toHaveBeenCalledWith("user_abc");
   });
 
-  it("deletes the user's feedback reports", async () => {
+  it("deletes the user's feedback and content reports", async () => {
     await request(app).delete("/api/account").expect(200);
 
     expect(mockDeleteReports).toHaveBeenCalledWith({ where: { userId: "user_abc" } });
+    expect(mockDeleteContentReports).toHaveBeenCalledWith({ where: { userId: "user_abc" } });
   });
 
   it("removes each of the user's addresses from the mailing list before the Clerk user goes", async () => {

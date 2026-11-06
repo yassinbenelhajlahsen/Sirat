@@ -1,3 +1,4 @@
+import PressableScale from "@/components/PressableScale";
 import Button from "@/components/ui/Button";
 import GlassSurface from "@/components/ui/GlassSurface";
 import IconButton from "@/components/ui/IconButton";
@@ -10,7 +11,7 @@ import { useHaptics } from "@/hooks/useHaptics";
 import { useSavedDuas } from "@/hooks/useSavedDuas";
 import type { Dua, DuaNotice } from "@/services/duaService";
 import React from "react";
-import { Clipboard, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Clipboard, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 
 interface DuaResultCardProps {
   dua: Dua;
@@ -21,6 +22,8 @@ interface DuaResultCardProps {
   onBrowse?: () => void;
   /** The screen owns the "Copied" toast so it can sit below the status bar. */
   onCopied?: () => void;
+  /** Sends a wrong-dua report. Omit when there is no typed request behind the dua. */
+  onReport?: () => Promise<void>;
 }
 
 export const CRISIS_MESSAGE =
@@ -29,7 +32,7 @@ export const NO_MATCH_MESSAGE = "We couldn't find a close match.";
 
 type Mode = "translation" | "transliteration";
 
-function DuaResultCard({ dua, onClose, onAnother, notice = null, onBrowse, onCopied }: DuaResultCardProps) {
+function DuaResultCard({ dua, onClose, onAnother, notice = null, onBrowse, onCopied, onReport }: DuaResultCardProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = React.useMemo(() => createStyles(theme), [theme]);
@@ -38,6 +41,9 @@ function DuaResultCard({ dua, onClose, onAnother, notice = null, onBrowse, onCop
   const saved = isSaved(dua.id);
 
   const [mode, setMode] = React.useState<Mode>("translation");
+  // Keyed by dua id so "Find another dua" resets the report state for the new dua.
+  const [report, setReport] = React.useState<{ id: number; state: "sending" | "sent" | "failed" } | null>(null);
+  const reportState = report?.id === dua.id ? report.state : null;
 
   // Category values are snake_case keys (e.g. "after_prayer", "drinking_water").
   // Render them as title-cased words so the underscore never reaches the UI.
@@ -68,6 +74,27 @@ function DuaResultCard({ dua, onClose, onAnother, notice = null, onBrowse, onCop
   const handleToggleSave = () => {
     haptic("light");
     void toggle(dua.id);
+  };
+
+  const sendReport = async () => {
+    if (!onReport) return;
+    const id = dua.id;
+    setReport({ id, state: "sending" });
+    try {
+      await onReport();
+      haptic("success");
+      setReport({ id, state: "sent" });
+    } catch {
+      setReport({ id, state: "failed" });
+    }
+  };
+
+  const handleReport = () => {
+    haptic("light");
+    Alert.alert("Report a poor match?", undefined, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Send", onPress: () => void sendReport() },
+    ]);
   };
 
   const handleAnother = () => {
@@ -198,6 +225,36 @@ function DuaResultCard({ dua, onClose, onAnother, notice = null, onBrowse, onCop
               style={styles.anotherButton}
             />
           ) : null}
+
+          {onReport && notice !== "crisis" ? (
+            reportState === "sent" ? (
+              <View style={styles.reportRow} accessible accessibilityLiveRegion="polite">
+                <AppIcon name="checkmark-circle" size={12} color={colors.textTertiary} />
+                <Caption color={colors.textTertiary}>Thanks, this helps us improve matching.</Caption>
+              </View>
+            ) : (
+              <>
+                <PressableScale
+                  onPress={handleReport}
+                  disabled={reportState === "sending"}
+                  hitSlop={10}
+                  style={styles.reportRow}
+                  accessibilityRole="button"
+                  accessibilityLabel="Report this dua as a poor match"
+                >
+                  <AppIcon name="flag-outline" size={12} color={colors.textTertiary} />
+                  <Caption color={colors.textTertiary}>
+                    {reportState === "sending" ? "Sending" : "Wrong dua for this?"}
+                  </Caption>
+                </PressableScale>
+                {reportState === "failed" ? (
+                  <Caption color={colors.textTertiary} style={styles.reportError}>
+                    {"Couldn't send. Try again."}
+                  </Caption>
+                ) : null}
+              </>
+            )
+          ) : null}
         </ScrollView>
       </GlassSurface>
     </View>
@@ -301,6 +358,17 @@ const createStyles = (theme: AppTheme) => {
     },
     anotherButton: {
       marginTop: spacing.sm,
+    },
+    reportRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      alignSelf: "center",
+      gap: spacing.xs,
+      minHeight: 24,
+    },
+    reportError: {
+      textAlign: "center",
     },
   });
 };

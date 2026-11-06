@@ -34,6 +34,7 @@ import { useKeyboardAutoScroll } from "../../hooks/useKeyboardAutoScroll";
 import { useTrackingStats } from "@/hooks/useTrackingStats";
 import { openAppSettings } from "@/utils/openAppSettings";
 import { appNow } from "@/utils/devClock";
+import { reportDuaMatch } from "@/services/reports";
 
 export default function Home() {
   const { theme } = useTheme();
@@ -49,7 +50,7 @@ export default function Home() {
     statuses, logSheet, openLogSheet,
   } = usePrayerDay("today");
   const { ramadanMode } = useRamadanMode();
-  const { selectedDua, notice, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
+  const { selectedDua, notice, request, duaLoading, duaSwapAnim, submitDua, closeDua, anotherDua } = useDuaInteraction();
   const [copyToastVisible, setCopyToastVisible] = useState(false);
   const hideCopyToast = useCallback(() => setCopyToastVisible(false), []);
   const { scrollViewRef, keyboardHeight, onDuaSectionLayout, onScrollViewLayout } = useKeyboardAutoScroll();
@@ -247,7 +248,7 @@ export default function Home() {
               ],
             }}
           >
-            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} notice={notice} onBrowse={() => router.push("/Duas")} onCopied={() => setCopyToastVisible(true)} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
+            {selectedDua ? <DuaResultCard dua={selectedDua} onClose={closeDua} onAnother={anotherDua} notice={notice} onBrowse={() => router.push("/Duas")} onCopied={() => setCopyToastVisible(true)} onReport={request ? () => reportDuaMatch(request, selectedDua.id) : undefined} /> : <DuaCard onSubmit={handleSubmitDua} loading={duaLoading} />}
           </Animated.View>
         </View>
       </ScrollView>

@@ -10,6 +10,8 @@ export function useDuaInteraction() {
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
   // Screen-only: never saved with the dua, never logged.
   const [notice, setNotice] = useState<DuaNotice>(null);
+  // The typed request behind the shown dua, kept only for a wrong-dua report.
+  const [request, setRequest] = useState<string | null>(null);
   const [duaLoading, setDuaLoading] = useState(false);
   const duaSwapAnim = useRef(new Animated.Value(1)).current;
   const [swapCount, setSwapCount] = useState(0);
@@ -59,6 +61,7 @@ export function useDuaInteraction() {
       setDuaLoading(true);
       const result = await requestDua(userRequest);
       await showDua(result.dua, result.notice);
+      setRequest(userRequest);
     } catch (err: unknown) {
       const message =
         err && typeof err === "object" && "message" in err
@@ -72,6 +75,7 @@ export function useDuaInteraction() {
 
   const closeDua = useCallback(() => {
     runDuaTransition(null, null);
+    setRequest(null);
   }, [runDuaTransition]);
 
   const anotherDua = useCallback(() => {
@@ -86,6 +90,7 @@ export function useDuaInteraction() {
   return {
     selectedDua,
     notice,
+    request,
     duaLoading,
     duaSwapAnim,
     submitDua,

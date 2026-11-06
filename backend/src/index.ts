@@ -11,6 +11,7 @@ import prayerTimesRoutes from "./routes/prayerTimes.js";
 import syncRoutes from "./routes/sync.js";
 import accountRoutes from "./routes/account.js";
 import feedbackRoutes from "./routes/feedback.js";
+import reportRoutes from "./routes/report.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/holidays", holidayRoutes);
 app.use("/api/sync", syncRoutes);
 app.use("/api/account", accountRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Root health check
 app.get("/", (req, res) => {
@@ -79,6 +81,7 @@ app.get("/", (req, res) => {
       "GET /api/holidays/year": "Proxy holiday list for a Gregorian year",
       "GET /api/holidays/health": "Holiday service health check",
       "POST /api/feedback": "Submit feedback or a bug report (auth optional)",
+      "POST /api/reports": "Report app output as wrong, e.g. a dua match (auth optional)",
     },
   });
 });
