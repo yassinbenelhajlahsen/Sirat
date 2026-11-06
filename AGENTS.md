@@ -39,7 +39,7 @@ Run commands from the correct package directory:
 
 ### Backend
 - Entry: `backend/src/index.ts`
-- Routes: `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`, `backend/src/routes/app.ts` (version check)
+- Routes: `backend/src/routes/mosque.ts`, `backend/src/routes/prayerTimes.ts`, `backend/src/routes/holiday.ts`, `backend/src/routes/app.ts` (version check), `backend/src/routes/chat.ts`
 - Controller: `backend/src/controllers/mosqueController.ts`, `backend/src/controllers/prayerTimesController.ts`, `backend/src/controllers/holidayController.ts`
 - Google Maps integration: `backend/src/services/googleMapsService.ts`
 - Aladhan integration/proxy + cache/retry: `backend/src/services/aladhanService.ts`
@@ -47,6 +47,7 @@ Run commands from the correct package directory:
 - Semver comparison: `backend/src/utils/semver.ts`
 - Error middleware: `backend/src/middleware/errorHandler.ts`
 - Version gate middleware: `backend/src/middleware/minVersionGate.ts` (monitor/enforce mode, 426 response)
+- Chat: `backend/src/controllers/chatController.ts` and `backend/src/services/chat/` (`identity.ts` quota key, `quota.ts` monthly count, `deviceCheck.ts` allowance, `openai.ts` + `prompt.ts` model and moderation, `sourceSearch.ts` Quran/hadith search, `guards.ts` quote guard and citations, `answer.ts` the shared answer steps). `POST /api/chat` and `GET /api/chat/status`, 503 unless `CHAT_ENABLED=1`. Limits: 100/15min per IP, 10/min per user, one reply in progress per user, 128KB parser. The quota is claimed before any OpenAI call and refunded on crisis, blocked or failure. Never log chat text: fixed error strings, event names and status codes only; body-parser errors are answered in the chat router so they never reach `errorHandler`. Quota rows are keyed to an HMAC of the Apple/Google ID, not the Clerk user. Source imports: `npm run import:quran -- ../frontend/assets/data/quran`, `npm run import:hadith` (re-run monthly). Pre-launch eval: `npm run chat:eval -- <questions.md> <out.md>`. Chat reports use `POST /api/reports` kind `chat`
 
 ### Frontend
 - Router entry/layout: `frontend/app/_layout.tsx`
@@ -76,8 +77,10 @@ Important frontend flows:
 - `FRONTEND_URL` default: `http://localhost:8081`
 - `TRUST_PROXY` default: empty (backend resolves trust proxy from environment/runtime)
 - `LOG_LEVEL` default: `info`
-- `OPENAI_API_KEY` default: empty (reserved for a future chatbot, unused today)
-- `OPENAI_MODEL` default: `gpt-6.1-terra`
+- `OPENAI_API_KEY` default: empty (chat answers and moderation)
+- `OPENAI_MODEL` default: `gpt-6-luna`; `OPENAI_MODERATION_MODEL` default: `omni-moderation-latest`
+- `CHAT_ENABLED` default: off (only `"1"` turns chat on); `CHAT_IDENTITY_SECRET` (HMAC key for the quota); `CHAT_QURAN_QUOTES` `text` (default) or `reference`; `CHAT_SCHOLAR_LINK`
+- `DEVICECHECK_TEAM_ID`, `DEVICECHECK_KEY_ID`, `DEVICECHECK_PRIVATE_KEY` (PEM with `\n` escapes), `DEVICECHECK_ENV` (`production` default), `DEVICECHECK_REQUIRED` (on unless `"0"`)
 - `GOOGLE_MAPS_API_KEY` default: empty (mosque lookup fails without it)
 - `MIN_SUPPORTED_APP_VERSION` default: `1.0.0` (minimum client version allowed; the gate always enforces it)
 - Database migrations: Prisma Migrate. Schema in `backend/prisma/schema.prisma`;
