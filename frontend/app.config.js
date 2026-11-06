@@ -5,12 +5,7 @@
 // binary whose `version` matches. Do NOT bump `version` for a JS-only release;
 // bump it (and rebuild) only when one of these lands:
 //
-// - In-app rating prompt: install expo-store-review and call requestReview after
-//   a good moment (see rateApp in utils/appLinks.ts). Not from a button.
-// - Drop unused native modules (none are imported or in `plugins`): expo-image,
-//   react-native-webview, expo-blur, expo-sensors, @react-native-picker/picker,
-//   expo-navigation-bar. Also delete the expo-blur mock in test/setup/jest.setup.ts.
-//   expo-image's bundled image decoders are most of the size win.
+// - Nothing queued.
 //
 // Search the codebase for "NEEDS NATIVE BUILD" to find every call site that
 // was written around the current native build.
@@ -19,7 +14,7 @@ export default {
   expo: {
     name: "Sirat",
     slug: "Sirat",
-    version: "1.2.0",
+    version: "1.3.0",
     orientation: "portrait",
     icon: "./assets/Icon.jpg",
     splash: {

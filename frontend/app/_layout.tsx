@@ -47,6 +47,7 @@ import { SkyGradient } from "@/components/splash/SplashSky";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
 import { getVersionHeaders } from "@/services/appVersion";
 import { useSyncEngine } from "@/hooks/useSyncEngine";
+import { useRatingPrompt } from "@/hooks/useRatingPrompt";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { installDiagnostics, recordScreen } from "@/services/diagnostics";
 
@@ -205,6 +206,7 @@ function RootLayoutContent() {
   const [fontsLoaded] = useFonts({ ...Ionicons.font });
 
   const [showSplash, setShowSplash] = useState(true);
+  useRatingPrompt(!showSplash);
   const [initialSynced, setInitialSynced] = useState(false);
   const [launchUpdateCheckDone, setLaunchUpdateCheckDone] = useState(false);
   const [showReloadCover, setShowReloadCover] = useState(false);

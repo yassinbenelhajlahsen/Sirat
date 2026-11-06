@@ -152,6 +152,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `components/settings/FeedbackSheet.test.tsx` — Send disabled while blank, email prefilled when signed in, bug-only disclosure line, send calls `onSent`, failure keeps the text and shows the error
 - `settings liquid-glass redesign testing`
   - `utils/appLinks.test.ts` — About-row link/share/version helpers
+  - `services/ratingPrompt.test.ts` — Apple rating prompt on the 25th visit, once per app version
   - `components/settings-section.test.tsx` — SettingsSection group rendering
   - `components/settings-row.test.tsx` — SettingsRow press/haptic/disabled behavior
   - `components/theme-picker.test.tsx` — ThemePicker selection + active state

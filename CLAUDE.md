@@ -100,7 +100,7 @@ Versioned keys — do not rename without migrating all references.
 
 **Sync:** `sync:settings_meta_v1` (per-setting LWW stamps `Record<settingKey, updatedAt>`), `sync:last_synced_v1` (last successful sync epoch-ms)
 
-**Other:** `diagnostics_log_v1` (hidden bug-report log, device-local, never synced), `dua_history_v1` (dua request history), `ramadan_tracker_v1` (missed fast days map), `mosques_[lat]_[lng]` (dynamically keyed mosque cache)
+**Other:** `diagnostics_log_v1` (hidden bug-report log, device-local, never synced), `dua_history_v1` (dua request history), `ramadan_tracker_v1` (missed fast days map), `rating_prompt_v1` (rating prompt visit count per app version, device-local, never synced), `mosques_[lat]_[lng]` (dynamically keyed mosque cache)
 
 ## Critical Gotchas
 

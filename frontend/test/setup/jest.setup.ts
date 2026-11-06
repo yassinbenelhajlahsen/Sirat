@@ -86,13 +86,6 @@ jest.mock("expo-symbols", () => ({
   SymbolView: ({ fallback }: { fallback?: unknown }) => fallback ?? null,
 }));
 
-jest.mock("expo-blur", () => {
-  const { View } = require("react-native");
-  return {
-    BlurView: View,
-  };
-});
-
 jest.mock("expo-haptics", () => ({
   selectionAsync: jest.fn(async () => {}),
   impactAsync: jest.fn(async () => {}),
