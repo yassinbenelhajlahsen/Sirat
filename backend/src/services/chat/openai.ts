@@ -181,6 +181,7 @@ export async function generateAnswer(input: {
       max_output_tokens: MAX_OUTPUT_TOKENS,
       safety_identifier: input.safetyId,
       store: false,
+      service_tier: ENV.OPENAI_SERVICE_TIER,
     }, input.signal);
     usage.input += data?.usage?.input_tokens ?? 0;
     usage.output += data?.usage?.output_tokens ?? 0;

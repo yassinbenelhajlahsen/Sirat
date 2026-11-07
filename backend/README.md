@@ -142,6 +142,7 @@ TRUST_PROXY=
 LOG_LEVEL=info
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-6-luna
+OPENAI_SERVICE_TIER=fast
 CHAT_ENABLED=0
 CHAT_DEV_BYPASS=0
 CHAT_IDENTITY_SECRET=long_random_string
@@ -151,6 +152,7 @@ GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 Notes:
 
 - Chat is off unless `CHAT_ENABLED=1`. It needs `OPENAI_API_KEY`, `CHAT_IDENTITY_SECRET` and the `DEVICECHECK_*` key (see `.env.example`); `DEVICECHECK_REQUIRED=0` skips DeviceCheck for local development.
+- `OPENAI_SERVICE_TIER` picks OpenAI's speed tier for chat answers. `fast` (the default) costs twice as much per token and roughly halves reply time; set `default` to use the standard tier without a code change.
 - `GOOGLE_MAPS_API_KEY` is required for `/api/mosque/nearby`.
 - `TRUST_PROXY` is optional; if omitted, proxy trust is inferred (`1` in production, `false` otherwise).
 - `LOG_LEVEL` currently defaults to `info`.

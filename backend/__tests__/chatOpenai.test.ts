@@ -182,6 +182,7 @@ describe("OpenAI chat client", () => {
       expect(body.model).toBe("gpt-6-luna");
       expect(body.max_output_tokens).toBe(900);
       expect(body.store).toBe(false);
+      expect(body.service_tier).toBe("fast");
       expect(body).not.toHaveProperty("temperature");
       expect(body.text.format).toMatchObject({ type: "json_schema", strict: true });
       expect(typeof body.instructions).toBe("string");
