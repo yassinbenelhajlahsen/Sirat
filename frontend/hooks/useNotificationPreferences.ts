@@ -9,6 +9,10 @@ import {
   notifWindowMapSetting,
   notifWindowOffsetSetting,
 } from "@/services/syncedSettings";
+import {
+  readAnnouncementsEnabled,
+  setAnnouncementsEnabled as persistAnnouncementsEnabled,
+} from "@/services/notifications/push";
 import { writeMasterEnabled } from "@/services/notifications/storage";
 import {
   PrayerKey,
@@ -24,6 +28,7 @@ export function useNotificationPreferences({
 }) {
   const [enabledLoaded, setEnabledLoaded] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const [announcementsEnabled, setAnnouncementsEnabled] = useState(true);
 
   const { value: prefs, loaded: prefsLoaded } = useSyncedSetting(notifPrefsSetting);
   const { value: soundMode, loaded: soundLoaded } = useSyncedSetting(notifSoundModeSetting);
@@ -48,6 +53,20 @@ export function useNotificationPreferences({
         if (active) setEnabledLoaded(true);
       }
     })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    readAnnouncementsEnabled()
+      .then((value) => {
+        if (active) setAnnouncementsEnabled(value);
+      })
+      .catch(() => {
+        // keep the default on hydration errors
+      });
     return () => {
       active = false;
     };
@@ -95,6 +114,11 @@ export function useNotificationPreferences({
     await notifFridaySetting.set(value);
   }, []);
 
+  const updateAnnouncementsEnabled = useCallback(async (value: boolean) => {
+    setAnnouncementsEnabled(value);
+    await persistAnnouncementsEnabled(value);
+  }, []);
+
   return {
     loaded,
     enabled,
@@ -103,10 +127,12 @@ export function useNotificationPreferences({
     windowPrefs,
     windowOffset,
     fridayEnabled,
+    announcementsEnabled,
     setPrayerPreference,
     updateSoundMode,
     setWindowPreference,
     setWindowOffset,
     setFridayEnabled,
+    setAnnouncementsEnabled: updateAnnouncementsEnabled,
   };
 }

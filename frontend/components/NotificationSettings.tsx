@@ -26,6 +26,8 @@ import { getNotificationStyles } from "../utils/notifications/styles";
 const WINDOW_FOOTER =
   "A heads up before a prayer's time runs out. Sent only if you have not logged it yet.";
 
+const ANNOUNCEMENTS_FOOTER =
+  "Occasional news about new features. Prayer reminders are not affected.";
 const FRIDAY_FOOTER = "A notification before Dhuhr every Friday to remind you to read Surah Al-Kahf.";
 
 type Props = {
@@ -47,11 +49,13 @@ export default function NotificationSettings({ notifStatus }: Props) {
     windowPrefs,
     windowOffset,
     fridayEnabled,
+    announcementsEnabled,
     setPrayerPreference,
     updateSoundMode,
     setWindowPreference,
     setWindowOffset,
     setFridayEnabled,
+    setAnnouncementsEnabled,
   } = useNotificationPreferences({ notifStatus });
 
   const { previewing, handlePreviewPress, stopPreview } = useAdhanPreview(enabled);
@@ -258,6 +262,16 @@ export default function NotificationSettings({ notifStatus }: Props) {
                   />
                 );
               })}
+            </SettingsSection>
+
+            <SettingsSection footer={ANNOUNCEMENTS_FOOTER}>
+              <SettingsRow
+                first
+                title="App announcements"
+                trailing={switchFor("App announcements", announcementsEnabled, (next) => {
+                  void setAnnouncementsEnabled(next);
+                })}
+              />
             </SettingsSection>
           </View>
         </View>

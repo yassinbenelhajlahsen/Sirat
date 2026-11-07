@@ -3,6 +3,10 @@ import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { DeviceEventEmitter } from "react-native";
 
 import { useNotificationPreferences } from "@/hooks/useNotificationPreferences";
+import {
+  readAnnouncementsEnabled,
+  setAnnouncementsEnabled as persistAnnouncementsEnabled,
+} from "@/services/notifications/push";
 import { subscribeMasterEnabled } from "@/services/notifications/storage";
 import { getSettingsMeta } from "@/services/sync/settingsMeta";
 import {
@@ -16,9 +20,15 @@ import {
   STORAGE_WINDOW_OFFSET,
 } from "@/utils/notifications/constants";
 
+jest.mock("@/services/notifications/push", () => ({
+  readAnnouncementsEnabled: jest.fn(async () => true),
+  setAnnouncementsEnabled: jest.fn(async () => {}),
+}));
+
 describe("useNotificationPreferences", () => {
   beforeEach(async () => {
     jest.clearAllMocks();
+    (readAnnouncementsEnabled as jest.Mock).mockResolvedValue(true);
     await AsyncStorage.clear();
   });
 
@@ -224,6 +234,29 @@ describe("useNotificationPreferences", () => {
       await result.current.setFridayEnabled(false);
     });
     expect((await getSettingsMeta()).notifFriday).toBe(stampedAt);
+  });
+
+  it("announcementsEnabled reflects the stored value", async () => {
+    (readAnnouncementsEnabled as jest.Mock).mockResolvedValue(false);
+    const { result } = renderHook(() =>
+      useNotificationPreferences({ notifStatus: null }),
+    );
+    expect(result.current.announcementsEnabled).toBe(true);
+    await waitFor(() => expect(result.current.announcementsEnabled).toBe(false));
+  });
+
+  it("setAnnouncementsEnabled updates state and calls the push module", async () => {
+    const { result } = renderHook(() =>
+      useNotificationPreferences({ notifStatus: null }),
+    );
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    await act(async () => {
+      await result.current.setAnnouncementsEnabled(false);
+    });
+
+    expect(result.current.announcementsEnabled).toBe(false);
+    expect(persistAnnouncementsEnabled).toHaveBeenCalledWith(false);
   });
 
   it("applies notifStatus overrides, persists them, and announces only real changes", async () => {

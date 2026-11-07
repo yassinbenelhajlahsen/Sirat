@@ -12,6 +12,7 @@ const updateSoundMode = jest.fn(async () => {});
 const setWindowPreference = jest.fn(async () => {});
 const setWindowOffset = jest.fn(async () => {});
 const setFridayEnabled = jest.fn(async () => {});
+const setAnnouncementsEnabled = jest.fn(async () => {});
 const stopPreview = jest.fn(async () => {});
 const handlePreviewPress = jest.fn();
 const pulseHeader = jest.fn();
@@ -69,6 +70,8 @@ function configureHookMocks({
     windowPrefs: { Fajr: false, Dhuhr: true, Asr: false, Maghrib: false },
     windowOffset: 15,
     fridayEnabled: true,
+    announcementsEnabled: true,
+    setAnnouncementsEnabled,
     setWindowPreference,
     setWindowOffset,
     setFridayEnabled,
@@ -233,6 +236,30 @@ describe("NotificationSettings contract", () => {
     expect(
       getByText("A notification before Dhuhr every Friday to remind you to read Surah Al-Kahf."),
     ).toBeTruthy();
+  });
+
+  it("shows the App announcements switch with its footer", () => {
+    const { getByLabelText, getByText } = render(
+      <NotificationSettings notifStatus="granted" />,
+    );
+    expect(getByLabelText("App announcements").props.value).toBe(true);
+    expect(
+      getByText("Occasional news about new features. Prayer reminders are not affected."),
+    ).toBeTruthy();
+  });
+
+  it("turning it off calls setAnnouncementsEnabled(false)", async () => {
+    const { getByLabelText } = render(<NotificationSettings notifStatus="granted" />);
+    fireEvent(getByLabelText("App announcements"), "valueChange", false);
+    await waitFor(() => expect(setAnnouncementsEnabled).toHaveBeenCalledWith(false));
+  });
+
+  it("the switch is disabled when notifications are off", () => {
+    configureHookMocks({ enabled: false });
+    const { getByLabelText } = render(<NotificationSettings notifStatus="denied" />);
+    expect(
+      getByLabelText("App announcements", { includeHiddenElements: true }).props.disabled,
+    ).toBe(true);
   });
 
   it("has no suhoor reminder", () => {
