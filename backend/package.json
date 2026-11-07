@@ -18,7 +18,8 @@
     "import:quran": "tsx scripts/importQuran.ts",
     "import:hadith": "tsx scripts/importHadeethEnc.ts",
     "import:duas": "tsx scripts/importDuas.ts",
-    "chat:eval": "tsx scripts/chatEval.ts"
+    "chat:eval": "tsx scripts/chatEval.ts",
+    "push:announce": "tsx scripts/pushAnnounce.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.30",

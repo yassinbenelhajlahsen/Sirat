@@ -128,6 +128,7 @@ npm run import:quran -- ../frontend/assets/data/quran   # chat Quran source
 npm run import:hadith                                    # chat hadith source (HadeethEnc); re-run monthly
 npm run import:duas                                      # chat dua source (../frontend/assets/data/duas.json); re-run when that file changes
 npm run chat:eval -- <questions.md> <out.md>             # pre-launch chat question run
+railway run npm run push:announce -- --title "..." --body "..." [--test | --all]   # broadcast push; dry run unless --test (PUSH_TEST_TOKEN) or --all
 ```
 
 ## Environment Variables
