@@ -1,6 +1,7 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import {
   databaseLabel,
+  errorLabel,
   parseAnnounceArgs,
   sendAnnouncement,
 } from "../src/services/pushAnnounce.js";
@@ -63,9 +64,28 @@ describe("databaseLabel", () => {
     ["postgresql://u:p@[::1]:5432/x", "local database"],
     ["postgresql://u:p@monorail.proxy.rlwy.net:123/railway", "remote database"],
     ["", "local database"],
-    ["not a url", "local database"],
+    ["not a url", "remote database"],
+    ["postgresql://u:p@host:5432/db?x=%", "remote database"],
   ])("labels %j as %s", (url, label) => {
     expect(databaseLabel(url)).toBe(label);
+  });
+});
+
+describe("errorLabel", () => {
+  it("uses the error name and code, never the message", () => {
+    const err = Object.assign(new Error("Can't reach database server at db.example.com:5432 user u"), {
+      code: "P1001",
+    });
+    err.name = "PrismaClientInitializationError";
+    const label = errorLabel(err);
+    expect(label).toBe("PrismaClientInitializationError P1001");
+    expect(label).not.toContain("example.com");
+  });
+
+  it("omits a missing code and handles non-errors", () => {
+    expect(errorLabel(new TypeError("secret"))).toBe("TypeError");
+    expect(errorLabel("secret")).toBe("Error");
+    expect(errorLabel(null)).toBe("Error");
   });
 });
 

@@ -33,8 +33,15 @@ export function databaseLabel(url: string): "local database" | "remote database"
     const { hostname } = new URL(url);
     return ["localhost", "127.0.0.1", "[::1]", "::1"].includes(hostname) ? "local database" : "remote database";
   } catch {
-    return "local database";
+    return url === "" ? "local database" : "remote database";
   }
+}
+
+// Prisma connection errors put the database host and user in the message, so only name and code are printed.
+export function errorLabel(err: unknown): string {
+  const name = err instanceof Error ? err.name : "Error";
+  const code = (err as { code?: unknown } | null)?.code;
+  return typeof code === "string" || typeof code === "number" ? `${name} ${code}` : name;
 }
 
 export type SendResult = { sent: number; accepted: number; errors: number; deadTokens: string[] };
