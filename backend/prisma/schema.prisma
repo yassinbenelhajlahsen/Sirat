@@ -112,3 +112,13 @@ model ChatDua {
 
   @@map("duas")
 }
+
+// Anonymous Expo push tokens for broadcast announcements. Nothing links a row to a person.
+model PushToken {
+  token      String   @id
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  appVersion String?  @map("app_version")
+
+  @@map("push_tokens")
+}

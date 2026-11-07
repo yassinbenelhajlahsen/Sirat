@@ -13,6 +13,7 @@ import accountRoutes from "./routes/account.js";
 import feedbackRoutes from "./routes/feedback.js";
 import reportRoutes from "./routes/report.js";
 import chatRoutes from "./routes/chat.js";
+import pushRoutes from "./routes/push.js";
 
 const app = express();
 
@@ -29,9 +30,9 @@ const resolveTrustProxy = (): boolean | number | string => {
 app.set("trust proxy", resolveTrustProxy());
 
 // Middleware
-// /api/sync, /api/feedback and /api/chat have their own larger parsers; skip the global 16KB parser for them.
+// /api/sync, /api/feedback and /api/chat have their own larger parsers, and /api/push a smaller one; skip the global 16KB parser for them.
 const defaultJsonParser = express.json({ limit: "16kb" });
-const OWN_PARSER_PREFIXES = ["/api/sync", "/api/feedback", "/api/chat"];
+const OWN_PARSER_PREFIXES = ["/api/sync", "/api/feedback", "/api/chat", "/api/push"];
 app.use((req, res, next) => {
   if (OWN_PARSER_PREFIXES.some((p) => req.path === p || req.path.startsWith(`${p}/`))) return next();
   return defaultJsonParser(req, res, next);
@@ -61,6 +62,7 @@ app.use("/api/sync", syncRoutes);
 app.use("/api/account", accountRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/push", pushRoutes);
 app.use("/api/chat", chatRoutes);
 
 // Root health check
@@ -84,6 +86,8 @@ app.get("/", (req, res) => {
       "GET /api/holidays/health": "Holiday service health check",
       "POST /api/feedback": "Submit feedback or a bug report (auth optional)",
       "POST /api/reports": "Report app output as wrong, e.g. a dua match (auth optional)",
+      "POST /api/push/register": "Save an anonymous Expo push token for announcements",
+      "POST /api/push/unregister": "Delete a push token",
       "GET /api/chat/status": "Whether chat is on, and this month's messages left (auth optional)",
       "POST /api/chat": "Ask the Islamic Q&A chat (auth required, monthly quota)",
     },
