@@ -3,6 +3,8 @@ import { Platform } from "react-native";
 export const STORAGE_SCHEDULE_IDS = "notif_schedule_ids_v1";
 export const STORAGE_DAYKEY = "notif_daykey_v1";
 export const STORAGE_SEEN_KEYS = "notif_seen_keys_v1";
+export const STORAGE_ANNOUNCEMENTS = "notif_announcements_v1";
+export const STORAGE_PUSH_TOKEN = "push_token_v1";
 
 export const STORAGE_CITY_DISPLAY_LOC = "notif_city_display_loc_v1";
 export const STORAGE_CITY_DISPLAY_MAN = "notif_city_display_man_v1";

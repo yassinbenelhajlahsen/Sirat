@@ -10,6 +10,7 @@ import {
   cancelPreviouslyScheduled,
   readPlanInputs,
 } from "./notifications/scheduler";
+import { initPushRegistration } from "./notifications/push";
 import { readMasterEnabled } from "./notifications/storage";
 import type { RescheduleReason } from "./notifications/types";
 
@@ -32,6 +33,8 @@ export const NotificationService = {
         shouldShowList: true as any,
       }),
     });
+
+    initPushRegistration();
 
     initNotificationLifecycle((reason) => {
       NotificationService.rescheduleAll(reason).catch(() => {

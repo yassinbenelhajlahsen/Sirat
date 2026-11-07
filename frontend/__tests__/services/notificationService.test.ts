@@ -14,6 +14,7 @@ async function load(overrides: Record<string, jest.Mock> = {}) {
     cancelPreviouslyScheduled: jest.fn(async () => {}),
     readPlanInputs: jest.fn(async () => ({ plan: "inputs" })),
     applySchedule: jest.fn(async () => {}),
+    initPushRegistration: jest.fn(),
     ...overrides,
   };
 
@@ -28,6 +29,7 @@ async function load(overrides: Record<string, jest.Mock> = {}) {
     readPlanInputs: mocks.readPlanInputs,
     applySchedule: mocks.applySchedule,
   }));
+  jest.doMock("@/services/notifications/push", () => ({ initPushRegistration: mocks.initPushRegistration }));
   jest.doMock("@/services/notifications/storage", () => ({ readMasterEnabled: mocks.readMasterEnabled }));
 
   const { NotificationService } = require("@/services/notificationService");
@@ -95,6 +97,7 @@ describe("NotificationService", () => {
     expect(mocks.configureAndroidNotificationChannel).toHaveBeenCalledTimes(1);
     expect(mocks.setNotificationHandler).toHaveBeenCalledTimes(1);
     expect(mocks.initNotificationLifecycle).toHaveBeenCalledTimes(1);
+    expect(mocks.initPushRegistration).toHaveBeenCalledTimes(1);
 
     mocks.cancelPreviouslyScheduled.mockClear();
     await lifecycleCallbackRef.cb?.("app-foreground");
