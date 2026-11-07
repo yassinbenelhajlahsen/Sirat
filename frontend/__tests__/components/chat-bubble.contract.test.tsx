@@ -93,6 +93,17 @@ describe("ChatBubble", () => {
     expect(JSON.stringify(toJSON())).toContain(`"maxWidth":${listWidth * 0.85}`);
   });
 
+  it("the row's height comes from an invisible copy of the answer at the same cap, hidden from VoiceOver and touches", () => {
+    const { getByTestId, getAllByLabelText } = renderBubble(answer());
+    const spacer = getByTestId("answer-menu-spacer", { includeHiddenElements: true });
+    const listWidth = Dimensions.get("window").width - 2 * 20;
+
+    expect(flatStyle(spacer)).toMatchObject({ opacity: 0, maxWidth: listWidth * 0.85 });
+    expect(spacer.props.accessibilityElementsHidden).toBe(true);
+    expect(spacer.props.pointerEvents).toBe("none");
+    expect(getAllByLabelText(/^Answer:/)).toHaveLength(1);
+  });
+
   it("a number tag calls onRefPress with the message id and number", () => {
     const { getByLabelText } = renderBubble(answer());
 
