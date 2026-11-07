@@ -169,39 +169,40 @@ function Row({ citation, n, last, expanded, highlighted, onExpand, onLayoutY }: 
     );
   }
 
-  const content = (
+  const headerContent = (
     <>
-      <View style={styles.label}>
-        <View style={styles.num}>
-          <Text style={styles.numText} maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE}>
-            {n}
-          </Text>
-        </View>
-        <AppIcon name={ICONS[citation.kind]} size={15} color={colors.accent} />
-        <Subhead color={colors.white} style={styles.labelText}>
-          {label}
-        </Subhead>
-        {right}
+      <View style={styles.num}>
+        <Text style={styles.numText} maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE}>
+          {n}
+        </Text>
       </View>
+      <AppIcon name={ICONS[citation.kind]} size={15} color={colors.accent} />
+      <Subhead color={colors.white} style={styles.labelText}>
+        {label}
+      </Subhead>
+      {right}
+    </>
+  );
+
+  return (
+    <View
+      onLayout={(e) => onLayoutY(e.nativeEvent.layout.y)}
+      style={[styles.row, !last && styles.divider, highlighted && styles.highlight]}
+    >
+      {/* Only the header opens the verse: an accessible parent would hide the body and "Show more" from VoiceOver. */}
+      {onPress ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Open ${label}`} onPress={onPress} style={styles.label}>
+          {headerContent}
+        </Pressable>
+      ) : (
+        <View style={styles.label}>{headerContent}</View>
+      )}
       {body}
       {long && !expanded ? (
         <Pressable accessibilityRole="button" hitSlop={8} onPress={onExpand} style={styles.more}>
           <Subhead color={colors.accent}>Show more</Subhead>
         </Pressable>
       ) : null}
-    </>
-  );
-
-  const rowStyle = [styles.row, !last && styles.divider, highlighted && styles.highlight];
-  const layout = (e: { nativeEvent: { layout: { y: number } } }) => onLayoutY(e.nativeEvent.layout.y);
-
-  return onPress ? (
-    <Pressable accessibilityRole="button" accessibilityLabel={`Open ${label}`} onPress={onPress} onLayout={layout} style={rowStyle}>
-      {content}
-    </Pressable>
-  ) : (
-    <View onLayout={layout} style={rowStyle}>
-      {content}
     </View>
   );
 }

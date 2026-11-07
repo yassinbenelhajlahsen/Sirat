@@ -82,6 +82,20 @@ describe("chat answer text and sources", () => {
     });
   });
 
+  it("Quran row: only the header opens the verse, so the body and 'Show more' stay reachable", () => {
+    const { getByText, getByLabelText } = render(<SourcesBlock citations={[quran]} focus={null} />);
+    const english = getByText(quran.kind === "quran" ? quran.english! : "");
+    fireEvent(english, "textLayout", lines(4));
+    const opener = getByLabelText("Open Al-Baqarah 2:286");
+    const inside = (node: { parent: unknown }, ancestor: unknown) => {
+      for (let p: any = node.parent; p; p = p.parent) if (p === ancestor) return true;
+      return false;
+    };
+    expect(inside(getByText("Al-Baqarah 2:286"), opener)).toBe(true);
+    expect(inside(english, opener)).toBe(false);
+    expect(inside(getByText("Show more"), opener)).toBe(false);
+  });
+
   it("Hadith row shows the full stored grade", () => {
     const { getByText } = render(<SourcesBlock citations={[hadith]} focus={null} />);
     expect(getByText(GRADE)).toBeTruthy();
