@@ -1,6 +1,6 @@
 import { ENV } from "../../config/env.js";
 import { findReligiousQuote, numberCitations, renderCitations, scrubInternals, stripReligiousQuotes, type Citation } from "./guards.js";
-import { generateAnswer, moderate, type TokenUsage } from "./openai.js";
+import { generateAnswer, moderate, type ChatStage, type TokenUsage } from "./openai.js";
 import type { HistoryItem } from "./prompt.js";
 
 /** Milliseconds per stage, plus model `rounds` and tool `searches`. Numbers only, so it is safe to log. */
@@ -21,6 +21,7 @@ export async function answerMessage(input: {
   summary: string | null;
   safetyId: string;
   signal?: AbortSignal;
+  onStage?: (stage: ChatStage) => void;
 }): Promise<AnswerOutcome> {
   const start = Date.now();
   const usage: TokenUsage = { input: 0, output: 0 };

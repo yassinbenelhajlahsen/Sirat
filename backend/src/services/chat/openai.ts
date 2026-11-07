@@ -10,6 +10,8 @@ const MAX_SUMMARY = 1200;
 
 export type ModelAnswer = { answer: string; citations: string[]; isRuling: boolean; summary: string };
 export type TokenUsage = { input: number; output: number };
+/** Progress for the app's typing bubble. Never carries text from the question or the answer. */
+export type ChatStage = { stage: "searching"; source: "quran" | "hadith" | "dua" } | { stage: "writing" };
 
 type OutputItem = {
   type?: string;
@@ -89,6 +91,8 @@ const SEARCHES: Record<string, (q: string) => Promise<SourceHit[]>> = {
   search_duas: searchDuas,
 };
 
+const SOURCES: Record<string, "quran" | "hadith" | "dua"> = { search_quran: "quran", search_hadith: "hadith", search_duas: "dua" };
+
 const ANSWER_FORMAT = {
   type: "json_schema",
   name: "chat_answer",
@@ -154,6 +158,7 @@ export async function generateAnswer(input: {
   summary: string | null;
   safetyId: string;
   signal?: AbortSignal;
+  onStage?: (stage: ChatStage) => void;
 }): Promise<{ answer: ModelAnswer; retrievedIds: Set<string>; usage: TokenUsage; rounds: number; searches: number }> {
   const conversation: unknown[] = buildInput(input);
   const retrievedIds = new Set<string>();
@@ -163,6 +168,8 @@ export async function generateAnswer(input: {
 
   for (;;) {
     rounds++;
+    // Any round may be the last, so each one reports writing; searches come back as their own stage.
+    input.onStage?.({ stage: "writing" });
     const toolsAllowed = searches < MAX_SEARCHES;
     const data = await post<ResponsesReply>("/responses", {
       model: ENV.OPENAI_MODEL,
@@ -195,6 +202,8 @@ export async function generateAnswer(input: {
       let hits: SourceHit[] = [];
       if (searches < MAX_SEARCHES) {
         searches++;
+        const source = Object.prototype.hasOwnProperty.call(SOURCES, call.name ?? "") ? SOURCES[call.name!] : undefined;
+        if (source) input.onStage?.({ stage: "searching", source });
         hits = await runSearch(call);
         hits.forEach((h) => retrievedIds.add(h.id));
       }

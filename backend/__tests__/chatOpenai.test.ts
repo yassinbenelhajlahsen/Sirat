@@ -75,6 +75,26 @@ describe("OpenAI chat client", () => {
       expect(second).toContainEqual({ type: "function_call_output", call_id: "c1", output: JSON.stringify([{ id: "q:2:275", text: "trade and interest" }]) });
     });
 
+    it("reports writing at each model round and one searching stage per search actually run", async () => {
+      (mockFetch as any)
+        .mockResolvedValueOnce(response([fnCall("c1", "search_quran", "a"), fnCall("c2", "search_duas", "b")]))
+        .mockResolvedValueOnce(response([fnCall("c3", "search_hadith", "c"), fnCall("c4", "search_hadith", "d")]))
+        .mockResolvedValueOnce(response([final(ANSWER)]));
+      const { generateAnswer } = await load();
+      const stages: unknown[] = [];
+
+      await generateAnswer({ ...INPUT, onStage: (s) => stages.push(s) });
+
+      expect(stages).toEqual([
+        { stage: "writing" },
+        { stage: "searching", source: "quran" },
+        { stage: "searching", source: "dua" },
+        { stage: "writing" },
+        { stage: "searching", source: "hadith" },
+        { stage: "writing" },
+      ]);
+    });
+
     it("offers search_duas and lets the model call it, counting its hits as retrieved", async () => {
       (mockFetch as any)
         .mockResolvedValueOnce(response([fnCall("c1", "search_duas", "travel")]))

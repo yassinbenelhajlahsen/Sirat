@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/express";
 import { ENV } from "../config/env.js";
 import type { AuthedRequest } from "../middleware/requireAuth.js";
 import { answerMessage } from "../services/chat/answer.js";
+import type { ChatStage } from "../services/chat/openai.js";
 import { decideAllowance } from "../services/chat/deviceCheck.js";
 import { getIdentityHash } from "../services/chat/identity.js";
 import type { HistoryItem } from "../services/chat/prompt.js";
@@ -101,6 +102,39 @@ export async function getChatStatus(req: Request, res: Response) {
 // shortcut: in-process, so "one reply in progress per user" holds per instance only; move to a shared store if the backend runs >1 instance
 const inFlight = new Set<string>();
 
+/**
+ * Opt-in progress stream (`Accept: application/x-ndjson`): one JSON object per line,
+ * `stage` events while the answer is prepared, then one `reply` (today's body) or `error`.
+ * Errors before the quota claim stay plain HTTP errors; every 200 is the stream.
+ */
+function replyChannel(req: Request, res: Response) {
+  const streaming = (req.get("accept") ?? "").includes("application/x-ndjson");
+  const open = () => {
+    if (res.headersSent) return;
+    res.status(200).set({ "Content-Type": "application/x-ndjson", "Cache-Control": "no-cache", "X-Accel-Buffering": "no" });
+    res.flushHeaders();
+  };
+  const line = (event: object) => {
+    open();
+    // A late model round can report a stage after the reply is out or the phone hung up.
+    if (!res.writableEnded && !res.destroyed) res.write(`${JSON.stringify(event)}\n`);
+  };
+  return {
+    start: () => streaming && open(),
+    onStage: streaming ? (stage: ChatStage) => line({ type: "stage", ...stage }) : undefined,
+    reply: (body: object) => {
+      if (!streaming) return res.json(body);
+      line({ type: "reply", ...body });
+      return res.end();
+    },
+    fail: () => {
+      if (!streaming || !res.headersSent) return res.status(502).json(FAILED);
+      line({ type: "error", status: 502, code: "failed" });
+      return res.end();
+    },
+  };
+}
+
 export async function postChat(req: Request, res: Response) {
   const userId = (req as AuthedRequest).userId!;
   if (inFlight.has(userId)) return res.status(409).json({ error: "busy" });
@@ -116,6 +150,7 @@ export async function postChat(req: Request, res: Response) {
   const reset = resetsAt();
   const dev = isDevChatRequest(req);
   let claimedBy: string | null = null;
+  const channel = replyChannel(req, res);
 
   try {
     const hash = dev ? DEV_USER_ID : await getIdentityHash(userId);
@@ -128,25 +163,26 @@ export async function postChat(req: Request, res: Response) {
       if (!usage) {
         const current = await getUsage(hash, month);
         console.log("chat_reply", "limit");
-        return res.json({ kind: "limit", allowance: current?.allowance ?? MONTHLY_ALLOWANCE, remaining: 0, resetsAt: reset });
+        return channel.reply({ kind: "limit", allowance: current?.allowance ?? MONTHLY_ALLOWANCE, remaining: 0, resetsAt: reset });
       }
       claimedBy = hash;
       quota = { allowance: usage.allowance, remaining: usage.allowance - usage.used, resetsAt: reset };
     }
 
-    const outcome = await answerMessage({ message, history, summary, safetyId: hash, signal });
+    channel.start();
+    const outcome = await answerMessage({ message, history, summary, safetyId: hash, signal, onStage: channel.onStage });
     console.log("chat_timing", outcome.kind, outcome.timings);
     if (outcome.kind !== "answer") {
       // Crisis and blocked replies don't count toward the month; only a crisis reply skipped the model.
       const refunded = dev ? false : await refundMessage(hash, month, outcome.kind === "blocked");
       claimedBy = null;
       console.log("chat_reply", outcome.kind);
-      return res.json({ kind: outcome.kind, ...quota, remaining: quota.remaining + (refunded ? 1 : 0) });
+      return channel.reply({ kind: outcome.kind, ...quota, remaining: quota.remaining + (refunded ? 1 : 0) });
     }
 
     claimedBy = null;
     console.log("chat_reply", "answer", { citations: outcome.citations.length, ruling: outcome.isRuling });
-    return res.json({
+    return channel.reply({
       kind: "answer",
       answer: outcome.answer,
       citations: outcome.citations,
@@ -161,7 +197,7 @@ export async function postChat(req: Request, res: Response) {
     }
     const e = err as Error;
     console.error("chat_failed", e?.name, e?.message === "chat_model_failed" ? "model" : "other");
-    return res.status(502).json(FAILED);
+    return channel.fail();
   } finally {
     inFlight.delete(userId);
   }
