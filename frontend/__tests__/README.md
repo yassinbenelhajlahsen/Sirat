@@ -109,6 +109,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `visual refresh foundations (Plan 1) testing`
   - `utils/greeting.test.ts`
   - `utils/devClock.test.ts` — dev-only pretend time of day: real time by default, moves today's clock to the chosen hour and minute, clears back to real time
+  - `utils/devChat.test.ts` — dev-only chat bypass: off by default, stored as 1/0, loaded at startup, subscribers notified, never on outside dev builds
   - `utils/formatDate.test.ts` — ordinal day suffixes (1st/2nd/3rd/11th-13th) for the dial centre and calendar day title
   - `utils/hijriDate.test.ts` — shared Hijri date: Umm al-Qura (matches the holiday feed), rolls to the next day at Maghrib; `isFastingDay` / `ramadanDayAt` on the Ramadan 1448 boundaries
   - `utils/ramadanCountdown.test.ts` — Home Ramadan card state: hidden/shown, suhoor vs iftar target, Maghrib rollover, last-day end
@@ -145,13 +146,30 @@ This folder contains frontend automated tests for the Expo/React Native app.
 - `in-app feedback testing`
   - `services/diagnostics.test.ts` — hidden bug-report log: 50-entry cap, message/stack truncation, last 10 screens, `console.error` and global-handler capture (original handlers still called), fatal errors persisted, stored entries restored on install, device context
   - `services/feedback.test.ts` — `submitFeedback`: diagnostics only for bugs, trimmed message, empty email omitted
-  - `services/reports.test.ts` — `reportDuaMatch` posts only the trimmed request and dua id to `/api/reports`
+  - `services/reports.test.ts` — `reportDuaMatch` posts only the trimmed request and dua id to `/api/reports`; `reportChatAnswer` posts the trimmed question with the answer and citation ids
   - `hooks/useKeyboardAutoScroll.test.ts` — Home scrolls for the keyboard only while it is the focused screen (a keyboard opened in the Settings modal leaves Home still), and drops its padding if it lost focus mid-keyboard
   - `components/record-and-rethrow.test.tsx` — root error boundary records the render error, saves the log, then rethrows so the app still crashes and a bad OTA still rolls back
   - `components/copy-toast.test.tsx` — toast sits near the bottom by default and at the top with `placement="top"` (feedback thank-you)
   - `components/settings/FeedbackSheet.test.tsx` — Send disabled while blank, email prefilled when signed in, bug-only disclosure line, send calls `onSent`, failure keeps the text and shows the error
+- `in-app chat testing`
+  - `services/chatApi.test.ts` — dev bypass header on chat status and send, only while the bypass is on; send posts the question and resolves with the reply; error statuses, 426 and offline handled like `apiFetch`
+  - `services/chatDeviceCheck.test.ts` — DeviceCheck wrapper: no token when the native module is absent, unsupported, or generation rejects or takes over five seconds; token passed through
+  - `services/chatStore.test.ts` — device-local chat store: round-trip, 500-message cap, unreadable storage reads as empty, `clearChat` empties history and consent, storage errors swallowed silently
+  - `hooks/useChat.test.tsx` — send/retry/report: history capped at 20 and never includes failed messages, failed send marks the question and retry resends it in place (its answer lands after it), a reopened chat waits for a reply in flight, a failed send never puts question text in diagnostics, crisis/blocked/limit notices, one send at a time, 1000-char cap, report citation ids (unknown kinds left out), a reported answer is marked and saved, a second report of it is rejected, a failed report leaves it unmarked, `loaded` turns true only after stored history is read; `useChatStatus` visibility (module absent, switched off, error) and refetch on focus
+  - `hooks/useAccountActions.test.tsx` — sign-out and account deletion clear the chat before the Clerk session ends
+  - `services/chatAnswerFormat.test.ts` — answer parser: paragraphs, bold, bullets, `[n]` becomes a tag only when that source exists, old plain answers unchanged; `plainAnswer` and `copyText` (one reference line per source, unknown kinds skipped)
+  - `services/chatSources.test.ts` — source key matches the server id format, reference line per kind, surah label with fallbacks (unknown surah, Quran data not loaded)
+  - `services/chatTimeline.test.ts` — time line on the first message and after a 60-minute gap; Today, Yesterday, weekday, short date (year only when it differs), by calendar day
+  - `services/chatQuickPrompts.test.ts` — prompts offered on an empty chat or an hour after the last message; four distinct picks from the 20, count and random injectable
+  - `services/chatLimit.test.ts` — limit lines: reset date in UTC, fallback when allowance or date is missing, lines joined by one space
+  - `components/chat-sources.contract.test.tsx` — answer text (bold, bullets, Source button, stray tags dropped) and the grouped sources block: Quran, hadith (full grade), dua rows, Show more only on long text, long hadith titles clamped to 2 lines until Show more, only the Quran header opens the verse, focus token expands a row, numbered caption
+  - `components/chat-bubble.contract.test.tsx` — your bubble and answer bubble (text, sources), number tags as VoiceOver Source actions, native hold menu (mocked view) that copies and reports, with Report off once reported, wrapping the bubble with no sizing of its own so it hugs and wraps at 85%, Copy and Report as VoiceOver actions, blocked and limit bubbles Copy only, crisis box without menu, failed message retry, selection mode selector, writing bubble and its label
+  - `components/hold-menu-view.test.tsx` — hold menu wrapper: plain View with no menu props when the native module is absent, native view with children and Copy/Report props when present
+  - `components/chat-composer.contract.test.tsx` — composer: 1000-char cap with counter from 900, Send only with text and disabled while replying, one line as tall as the send circle with equal insets, limit lines replace the field; header title with messages left; prompt chips call `onPick`
+  - `screens/Chat.test.tsx` — Ask modal: signed-out sign-in button, dev bypass composer, consent gate, answers with citations (Quran citation goes back then to the verse, fresh stamp per tap), no scholar link, crisis/blocked/limit notices (once, above the first message), limit lines with next-month fallback, failed-message retry (and retry scrolls to the end), 1000-char counter, header title, time lines, quick prompts (hidden at the limit, wait for history), old history without tags, new answer scrolls to the top, soft fades under the header and above the composer that pass touches through, Report a message selection mode (toasts, in-flight guard, Report from the answer's menu)
 - `settings liquid-glass redesign testing`
   - `utils/appLinks.test.ts` — About-row link/share/version helpers
+  - `services/ratingPrompt.test.ts` — Apple rating prompt on the 25th visit, once per app version
   - `components/settings-section.test.tsx` — SettingsSection group rendering
   - `components/settings-row.test.tsx` — SettingsRow press/haptic/disabled behavior
   - `components/theme-picker.test.tsx` — ThemePicker selection + active state
@@ -201,6 +219,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `screens/Tracker.test.tsx` — Tracker screen contract: Overview section + Habits section, add-habit flow
   - `screens/home-tracker-affordance.test.tsx` — Home streak chip + "View tracker & habits" affordance
   - `screens/home-sign-in-card.test.tsx` — Home sign-in card clears on sign-in and stays quiet on sign-out
+  - `screens/home-ask-row.test.tsx` — Home "Ask" row: hidden when chat is not visible, "N left" when signed in, "Sign in to ask" when signed out, pushes `/Chat` when signed in and `/SignIn` (next Chat) when signed out, no sign-in text until auth loads, sits between Tracker and Dua
 - `weekday habits + Tracker check-off (Phase 3.1) testing`
   - `utils/habitFrequency.test.ts` — `frequencyLabel` (weekday list), `isHabitDueOnDate`, `WEEKDAY_SHORT`
   - `services/tracking/habits.migration.test.ts` — legacy `{weekly, timesPerWeek}` habits migrate to Daily on read
@@ -210,7 +229,7 @@ This folder contains frontend automated tests for the Expo/React Native app.
   - `hooks/useAuthState.test.tsx` — Clerk session state subscription (isLoaded, isSignedIn, userId, email)
   - `hooks/useAccountActions.test.tsx` — sign-out and account-delete actions
   - `components/accountSection.test.tsx` — account UI section rendering and action callbacks
-  - `screens/signIn.test.tsx` — SignIn screen: renders both provider buttons, Google/Apple SSO flow invocation, session activation
+  - `screens/signIn.test.tsx` — SignIn screen: renders both provider buttons, Google/Apple SSO flow invocation, session activation, back once signed in, or replace with the chat when opened for it
   - `screens/settings.account.test.tsx` — Settings account section integration + sign-out/delete confirmation flows
 - `cloud sync engine (Phase 3) testing`
   - `services/sync/replaceSetters.test.ts` — `replacePrayerLog` / `replaceHabitLog` / `replaceHabits` internal setters

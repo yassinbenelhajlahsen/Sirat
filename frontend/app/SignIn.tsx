@@ -5,7 +5,7 @@ import {
   AppleAuthenticationButtonStyle,
   AppleAuthenticationButtonType,
 } from "expo-apple-authentication";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import { useCallback, useEffect, useMemo } from "react";
@@ -25,12 +25,16 @@ export default function SignIn() {
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { isSignedIn } = useAuthState();
+  const { next } = useLocalSearchParams<{ next?: string }>();
   const { startSSOFlow } = useSSO();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
 
+  // Opened from the Ask row: the chat takes the sheet's place, so the user lands in it rather than back on Home.
   useEffect(() => {
-    if (isSignedIn) router.back();
-  }, [isSignedIn]);
+    if (!isSignedIn) return;
+    if (next === "Chat") router.replace("/Chat");
+    else router.back();
+  }, [isSignedIn, next]);
 
   const signInWithGoogle = useCallback(async () => {
     try {

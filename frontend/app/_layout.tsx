@@ -34,6 +34,7 @@ import { glassTintFor, type ThemeName } from "@/constants/theme";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { useNativeHeaderOptions } from "@/hooks/useNativeHeaderOptions";
 import { preloadQuranData } from "@/services/quranData";
+import { loadChatDevBypass } from "@/utils/devChat";
 import { preloadQuranDisplayModes } from "@/services/quranDisplayModes";
 import { preloadPrayerLog } from "@/services/prayerTracker";
 import { preloadHabitLog } from "@/services/habitTracker";
@@ -47,6 +48,7 @@ import { SkyGradient } from "@/components/splash/SplashSky";
 import { QuranMiniPlayerPortal } from "@/components/quran/QuranMiniPlayerPortal";
 import { getVersionHeaders } from "@/services/appVersion";
 import { useSyncEngine } from "@/hooks/useSyncEngine";
+import { useRatingPrompt } from "@/hooks/useRatingPrompt";
 import { useWidgetSync } from "@/hooks/useWidgetSync";
 import { installDiagnostics, recordScreen } from "@/services/diagnostics";
 
@@ -198,6 +200,7 @@ function RootLayoutContent() {
   }, [pathname]);
   const { theme, isHydrated } = useTheme();
   const trackerHeader = useNativeHeaderOptions("Tracker", { large: false, titleSize: 26 });
+  const chatHeader = useNativeHeaderOptions("Ask", { large: false, titleSize: 26 });
   const backgroundColor = isHydrated
     ? theme.colors.primaryDark
     : LAUNCH_BACKGROUND_COLOR;
@@ -205,6 +208,7 @@ function RootLayoutContent() {
   const [fontsLoaded] = useFonts({ ...Ionicons.font });
 
   const [showSplash, setShowSplash] = useState(true);
+  useRatingPrompt(!showSplash);
   const [initialSynced, setInitialSynced] = useState(false);
   const [launchUpdateCheckDone, setLaunchUpdateCheckDone] = useState(false);
   const [showReloadCover, setShowReloadCover] = useState(false);
@@ -326,6 +330,11 @@ function RootLayoutContent() {
 
   useEffect(() => {
     NotificationService.init();
+  }, []);
+
+  // Chat requests read the dev bypass synchronously, so load the stored choice at launch.
+  useEffect(() => {
+    void loadChatDevBypass();
   }, []);
 
   // Keep native root/system background aligned with app color to avoid white frames
@@ -487,6 +496,24 @@ function RootLayoutContent() {
                   name="Tracker"
                   options={{
                     ...trackerHeader,
+                    presentation: "modal",
+                    animation: "slide_from_bottom",
+                    unstable_headerRightItems: () => [
+                      {
+                        type: "button",
+                        label: "Close",
+                        icon: { type: "sfSymbol", name: "xmark" },
+                        variant: "prominent" as const,
+                        tintColor: glassTintFor(theme),
+                        onPress: () => router.back(),
+                      },
+                    ],
+                  }}
+                />
+                <Stack.Screen
+                  name="Chat"
+                  options={{
+                    ...chatHeader,
                     presentation: "modal",
                     animation: "slide_from_bottom",
                     unstable_headerRightItems: () => [

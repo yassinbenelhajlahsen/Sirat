@@ -117,12 +117,6 @@ jest.mock("@/utils/appLinks", () => ({
   shareApp: jest.fn(),
 }));
 
-// --- push token ---
-const mockReadSavedPushToken = jest.fn();
-jest.mock("@/services/notifications/push", () => ({
-  readSavedPushToken: () => mockReadSavedPushToken(),
-}));
-
 // --- icons ---
 jest.mock("@expo/vector-icons", () => {
   const React = require("react");
@@ -163,8 +157,7 @@ jest.mock("@/components/PressableScale", () => {
   };
 });
 
-import { Alert, Clipboard, StyleSheet } from "react-native";
-import { act } from "@testing-library/react-native";
+import { Alert, StyleSheet } from "react-native";
 import { HeaderHeightContext } from "expo-router/react-navigation";
 import { useAuthState } from "@/hooks/useAuthState";
 import Settings from "@/app/Settings";
@@ -239,34 +232,5 @@ describe("Settings account integration", () => {
     expect(mockDeleteAccount).toHaveBeenCalledTimes(1);
 
     alertSpy.mockRestore();
-  });
-
-  it("long-pressing the version copies the saved push token and confirms", async () => {
-    const TOKEN = "ExponentPushToken[abc]";
-    mockReadSavedPushToken.mockResolvedValue(TOKEN);
-    const setString = jest.spyOn(Clipboard, "setString").mockImplementation(() => {});
-
-    const { getByText } = render(<Settings />);
-    await act(async () => {
-      fireEvent(getByText(/^Sirat /), "longPress");
-    });
-
-    expect(setString).toHaveBeenCalledWith(TOKEN);
-    expect(getByText("Push token copied")).toBeTruthy();
-    setString.mockRestore();
-  });
-
-  it("with no saved token it copies nothing and says so", async () => {
-    mockReadSavedPushToken.mockResolvedValue(null);
-    const setString = jest.spyOn(Clipboard, "setString").mockImplementation(() => {});
-
-    const { getByText } = render(<Settings />);
-    await act(async () => {
-      fireEvent(getByText(/^Sirat /), "longPress");
-    });
-
-    expect(setString).not.toHaveBeenCalled();
-    expect(getByText("No push token on this device")).toBeTruthy();
-    setString.mockRestore();
   });
 });

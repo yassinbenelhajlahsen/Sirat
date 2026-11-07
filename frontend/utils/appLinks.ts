@@ -38,8 +38,7 @@ export async function shareApp(): Promise<void> {
   }
 }
 
-// NEEDS NATIVE BUILD: Apple's in-app rating prompt (expo-store-review) is a native module.
-// Custom prompts are disallowed (App Store guideline 5.6.1), so this row stays the only way until then.
+// Opens the App Store review page; Apple's in-app prompt is asked separately in services/ratingPrompt.ts.
 export function rateApp(): Promise<void> {
   return open(APP_LINKS.reviewUrl);
 }

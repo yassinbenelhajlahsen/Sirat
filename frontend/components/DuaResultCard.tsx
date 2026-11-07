@@ -5,6 +5,7 @@ import IconButton from "@/components/ui/IconButton";
 import Segmented from "@/components/ui/Segmented";
 import AppIcon from "@/components/ui/AppIcon";
 import { Caption, Footnote, Subhead } from "@/components/ui/Text";
+import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -26,8 +27,7 @@ interface DuaResultCardProps {
   onReport?: () => Promise<void>;
 }
 
-export const CRISIS_MESSAGE =
-  "You don't have to face this alone. If you might hurt yourself, or someone is hurting you, call your local emergency number or a crisis line now, and reach out to someone you trust.";
+export { CRISIS_MESSAGE };
 export const NO_MATCH_MESSAGE = "We couldn't find a close match.";
 
 type Mode = "translation" | "transliteration";

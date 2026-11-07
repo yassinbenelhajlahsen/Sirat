@@ -17,6 +17,7 @@ jest.mock("react-native-safe-area-context", () => {
   };
 });
 // Provide deterministic prayer times so the arc renders passed prayers.
+jest.mock("@/hooks/useChatStatus", () => ({ useChatStatus: () => ({ visible: false, remaining: null }) }));
 jest.mock("@/hooks/useAuthState", () => ({
   useAuthState: () => ({ isLoaded: true, isSignedIn: true, userId: "u1", email: null }),
 }));

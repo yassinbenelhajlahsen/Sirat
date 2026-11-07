@@ -30,7 +30,11 @@ export function handleForceUpdate(body: unknown): never {
 }
 
 /** `fetch` that logs failures for bug reports. `path` must leave out the query string: it can hold coordinates. */
-export async function loggedFetch(path: string, url: string, init?: RequestInit): Promise<Response> {
+export async function loggedFetch(
+  path: string,
+  url: string,
+  init?: RequestInit,
+): Promise<Response> {
   const method = init?.method ?? "GET";
   try {
     const res = await fetch(url, init);
@@ -48,6 +52,7 @@ export async function apiFetch<T>(
     method?: string;
     body?: unknown;
     params?: Record<string, string | number>;
+    headers?: Record<string, string>;
   },
 ): Promise<T> {
   let url = `${API_BASE}${path}`;
@@ -67,6 +72,7 @@ export async function apiFetch<T>(
     headers: {
       "Content-Type": "application/json",
       ...getVersionHeaders(),
+      ...options?.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body:
@@ -74,7 +80,11 @@ export async function apiFetch<T>(
   });
 
   const responseBody = await res.json().catch(() => null);
+  throwIfFailed(res, responseBody);
+  return responseBody as T;
+}
 
+function throwIfFailed(res: Response, responseBody: any) {
   if (res.status === 426) {
     handleForceUpdate(responseBody);
   }
@@ -89,8 +99,6 @@ export async function apiFetch<T>(
           : `API error (${res.status})`;
     throw new Error(message);
   }
-
-  return responseBody as T;
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {

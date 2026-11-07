@@ -5,6 +5,8 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuthState } from "@/hooks/useAuthState";
+import { useChatStatus } from "@/hooks/useChatStatus";
+import { useChatDevBypass } from "@/utils/devChat";
 import SignInCard from "@/components/home/SignInCard";
 import { shouldShowHomeCard, markHomeCardShown, dismissHomeCard } from "@/services/auth/authPrompts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -65,6 +67,11 @@ export default function Home() {
   const stats = useTrackingStats();
 
   const { isLoaded, isSignedIn, firstName } = useAuthState();
+  const chat = useChatStatus();
+  const devChat = useChatDevBypass();
+  const askSignedIn = isSignedIn || devChat;
+  const askRemaining = askSignedIn ? chat.remaining : null;
+  const askRightText = !isLoaded ? null : !askSignedIn ? "Sign in to ask" : askRemaining !== null ? `${askRemaining} left` : null;
   const [showCard, setShowCard] = useState(false);
   useEffect(() => {
     let mounted = true;
@@ -223,13 +230,32 @@ export default function Home() {
             accessibilityRole="button"
             accessibilityLabel="View tracker and habits"
           >
-            <GlassSurface tier="row" radius={theme.radii.row} style={styles.trackerRow}>
+            <GlassSurface tier="row" radius={theme.radii.row} style={styles.affordanceRow}>
               <Text style={styles.flame} maxFontSizeMultiplier={1.2}>🔥</Text>
-              <Body style={styles.trackerLabel}>{`${stats?.streak ?? 0} day streak`}</Body>
+              <Body style={styles.affordanceLabel}>{`${stats?.streak ?? 0} day streak`}</Body>
               <Subhead color={colors.textTertiary}>Tracker &amp; habits</Subhead>
             </GlassSurface>
           </PressableScale>
         </View>
+
+        {chat.visible && (
+          <View style={styles.section}>
+            <SectionHeader title="Ask" />
+            <PressableScale
+              variant="row"
+              radius={theme.radii.row}
+              onPress={() => router.push(askSignedIn ? "/Chat" : { pathname: "/SignIn", params: { next: "Chat" } })}
+              accessibilityRole="button"
+              accessibilityLabel={askRemaining !== null ? `Ask a question, ${askRemaining} messages left` : "Ask a question"}
+            >
+              <GlassSurface tier="row" radius={theme.radii.row} style={styles.affordanceRow}>
+                <AppIcon name="chatbubble-ellipses-outline" size={20} color={colors.accent} />
+                <Body style={styles.affordanceLabel}>Ask a question</Body>
+                {askRightText !== null && <Subhead color={colors.textTertiary}>{askRightText}</Subhead>}
+              </GlassSurface>
+            </PressableScale>
+          </View>
+        )}
 
         {/* Dua section (logic unchanged) */}
         <View style={styles.section} onLayout={onDuaSectionLayout}>
@@ -272,14 +298,14 @@ const createStyles = (theme: AppTheme) => {
     dialSlot: { marginTop: spacing.xl },
     ramadanSlot: { marginTop: spacing.lg },
     section: { marginTop: spacing.xxl },
-    trackerRow: {
+    affordanceRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: spacing.sm,
       minHeight: 56,
       paddingHorizontal: spacing.lg,
     },
-    trackerLabel: { flex: 1 },
+    affordanceLabel: { flex: 1 },
     flame: { fontSize: 17 },
     signInCardSlot: { marginBottom: spacing.md },
   });

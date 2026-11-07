@@ -86,13 +86,6 @@ jest.mock("expo-symbols", () => ({
   SymbolView: ({ fallback }: { fallback?: unknown }) => fallback ?? null,
 }));
 
-jest.mock("expo-blur", () => {
-  const { View } = require("react-native");
-  return {
-    BlurView: View,
-  };
-});
-
 jest.mock("expo-haptics", () => ({
   selectionAsync: jest.fn(async () => {}),
   impactAsync: jest.fn(async () => {}),
@@ -182,6 +175,15 @@ jest.mock("@expo/ui/swift-ui", () => {
         }),
       );
     },
+  };
+});
+// The native hold menu only exists in a device build. A plain View keeps its props, so tests fire
+// "copy" / "report" on testID "answer-menu" and read canReport.
+jest.mock("@/components/chat/HoldMenuView", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return function HoldMenuView(props: any) {
+    return React.createElement(View, { testID: "answer-menu", ...props });
   };
 });
 jest.mock("@expo/ui/swift-ui/modifiers", () => {
