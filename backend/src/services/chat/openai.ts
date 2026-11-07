@@ -145,7 +145,32 @@ async function runSearch(call: OutputItem): Promise<SourceHit[]> {
 }
 
 /**
- * Answers with up to MAX_SEARCHES tool searches, then one final call with no tools.
+ * Runs every search for the user's own words before the first model call, so the
+ * model can usually answer in one round. Each hit list goes in as a search the model
+ * made, the same shape as a tool result. A failed or empty search is left out.
+ */
+async function prefetchSearches(message: string): Promise<{ items: unknown[]; hits: SourceHit[] }> {
+  const query = message.slice(0, 200);
+  const results = await Promise.all(Object.entries(SEARCHES).map(async ([name, search]) => {
+    try {
+      return { name, hits: await search(query) };
+    } catch {
+      console.error("chat_prefetch_failed");
+      return { name, hits: [] };
+    }
+  }));
+  const found = results.filter((r) => r.hits.length);
+  return {
+    items: found.flatMap(({ name, hits }) => [
+      { type: "function_call", call_id: `prefetch_${name}`, name, arguments: JSON.stringify({ query }) },
+      { type: "function_call_output", call_id: `prefetch_${name}`, output: JSON.stringify(hits) },
+    ]),
+    hits: found.flatMap((r) => r.hits),
+  };
+}
+
+/**
+ * Prefetches searches for the message, then answers with up to MAX_SEARCHES tool searches, then one final call with no tools.
  * `retrievedIds` is every source ID a search returned: the only IDs a citation may use.
  */
 export async function generateAnswer(input: {
@@ -154,9 +179,13 @@ export async function generateAnswer(input: {
   summary: string | null;
   safetyId: string;
   signal?: AbortSignal;
-}): Promise<{ answer: ModelAnswer; retrievedIds: Set<string>; usage: TokenUsage; rounds: number; searches: number }> {
-  const conversation: unknown[] = buildInput(input);
-  const retrievedIds = new Set<string>();
+}): Promise<{ answer: ModelAnswer; retrievedIds: Set<string>; usage: TokenUsage; rounds: number; searches: number; prefetchMs: number }> {
+  const started = Date.now();
+  const prefetched = await prefetchSearches(input.message);
+  const prefetchMs = Date.now() - started;
+  // Prefetch is not counted toward MAX_SEARCHES: it costs no model round, so rounds stay capped at MAX_SEARCHES + 1.
+  const conversation: unknown[] = [...buildInput(input), ...prefetched.items];
+  const retrievedIds = new Set(prefetched.hits.map((h) => h.id));
   const usage: TokenUsage = { input: 0, output: 0 };
   let searches = 0;
   let rounds = 0;
@@ -182,7 +211,7 @@ export async function generateAnswer(input: {
 
     if (!calls.length || !toolsAllowed) {
       try {
-        return { answer: parseAnswer(output), retrievedIds, usage, rounds, searches };
+        return { answer: parseAnswer(output), retrievedIds, usage, rounds, searches, prefetchMs };
       } catch (err) {
         console.error("chat_model_bad_output", data?.status, data?.incomplete_details?.reason);
         throw err;
