@@ -10,6 +10,7 @@ import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { ChatMessage } from "@/services/chat/chatStore";
+import { limitMessage } from "@/services/chat/limit";
 
 export const CHAT_DISCLAIMER = "This is an aid and answers may be wrong. Please consult a trusted scholar.";
 const BLOCKED_MESSAGE = "I can't help with that one. Please ask a trusted scholar.";
@@ -23,14 +24,6 @@ type Props = {
   onRetry: (id: string) => void;
   onReport: (id: string) => Promise<void>;
 };
-
-export function limitMessage(allowance: number | null, resetsAt: string | null): string {
-  const count = allowance === null ? "" : `${allowance} `;
-  const when = resetsAt
-    ? `on ${new Date(resetsAt).toLocaleDateString(undefined, { month: "long", day: "numeric" })}`
-    : "at the start of next month";
-  return `You've used this month's ${count}messages. They reset ${when}.`;
-}
 
 export default function ChatBubble({ message, allowance, resetsAt, onRetry, onReport }: Props) {
   const { theme } = useTheme();

@@ -5,7 +5,7 @@ import { router, Stack, type NativeStackHeaderItem } from "expo-router";
 import { HeaderHeightContext } from "expo-router/react-navigation";
 
 import CopyToast from "@/components/CopyToast";
-import ChatBubble, { limitMessage } from "@/components/chat/ChatBubble";
+import ChatBubble from "@/components/chat/ChatBubble";
 import ChatComposer from "@/components/chat/ChatComposer";
 import ChatConsent from "@/components/chat/ChatConsent";
 import EmptyState from "@/components/ui/EmptyState";
@@ -17,6 +17,7 @@ import { useAuthState } from "@/hooks/useAuthState";
 import { useChat } from "@/hooks/useChat";
 import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { hasConsented, type ChatMessage } from "@/services/chat/chatStore";
+import { limitMessage } from "@/services/chat/limit";
 import { useChatDevBypass } from "@/utils/devChat";
 
 export default function Chat() {
