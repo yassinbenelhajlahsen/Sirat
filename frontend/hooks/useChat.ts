@@ -47,6 +47,7 @@ export function useChat() {
   const [resetsAt, setResetsAt] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const applyAllowance = useCallback(
     (a: { allowance: number | null; remaining: number | null; resetsAt: string | null }) => {
@@ -84,6 +85,7 @@ export function useChat() {
         chatRef.current = { ...state, generation };
         setMessages(state.messages);
         setRestoring(false);
+        setHistoryLoaded(true);
       });
     getChatStatus().then(applyAllowance, () => {});
   }, [applyAllowance]);
@@ -187,5 +189,5 @@ export function useChat() {
     [liveState, write],
   );
 
-  return { messages, remaining, allowance, resetsAt, sending: sending || restoring, send, retry, report };
+  return { messages, remaining, allowance, resetsAt, sending: sending || restoring, loaded: historyLoaded, send, retry, report };
 }

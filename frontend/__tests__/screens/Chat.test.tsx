@@ -1,12 +1,14 @@
 // frontend/__tests__/screens/Chat.test.tsx
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { Linking } from "react-native";
+import { FlatList, Linking, Text } from "react-native";
 
 import Chat from "@/app/Chat";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { hasConsented, setConsented } from "@/services/chat/chatStore";
 import type { ChatMessage } from "@/services/chat/chatStore";
+import { CHAT_PROMPTS } from "@/services/chat/quickPrompts";
+import { formatTimeLine } from "@/services/chat/timeline";
 
 jest.mock("react-native-safe-area-context", () => {
   const actual = jest.requireActual("react-native-safe-area-context");
@@ -44,6 +46,11 @@ jest.mock("@/services/chat/chatStore", () => ({
 }));
 
 const DISCLAIMER = "This is an aid and answers may be wrong. Please consult a trusted scholar.";
+const NOTICE = "Answers are an aid and may be wrong. Please consult a trusted scholar.";
+const THANKS = "Thanks, we'll review this answer.";
+const REPORT_FAILED = "Couldn't send the report. Please try again.";
+const LIMIT_1 = "You've used this month's 15 messages.";
+const LIMIT_2 = `They reset on ${new Date("2026-12-15T12:00:00.000Z").toLocaleDateString(undefined, { month: "long", day: "numeric", timeZone: "UTC" })}.`;
 const BLOCKED = "I can't help with that one. Please ask a trusted scholar.";
 const QURAN = { kind: "quran" as const, surah: 2, ayah: 255, arabic: "ٱللَّهُ", english: "Allah" };
 const HADITH = {
@@ -78,6 +85,7 @@ function chatState(overrides: Record<string, unknown> = {}) {
     allowance: 15,
     resetsAt: "2026-12-15T12:00:00.000Z",
     sending: false,
+    loaded: true,
     send,
     retry,
     report,
@@ -97,19 +105,23 @@ const answer = (id: string, text: string, extra: Partial<ChatMessage> = {}): Cha
 });
 
 // The consent check resolves after mount; flush it so the rendered state is the real one.
+const tree = () => (
+  <ThemeProvider>
+    <Chat />
+  </ThemeProvider>
+);
 const renderChat = async () => {
-  const screen = render(
-    <ThemeProvider>
-      <Chat />
-    </ThemeProvider>,
-  );
+  const screen = render(tree());
   await act(async () => {});
   return screen;
 };
 
-const monthDay = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "long", day: "numeric" });
+const stackOptions = () => (jest.requireMock("expo-router").Stack as { Screen: jest.Mock }).Screen.mock.calls.at(-1)?.[0].options;
+const promptButtons = (queryAllByRole: (role: string) => { props: { accessibilityLabel?: string } }[]) =>
+  queryAllByRole("button").filter((b) => CHAT_PROMPTS.includes(b.props.accessibilityLabel ?? ""));
 
 beforeEach(() => {
+  report.mockImplementation(async () => {});
   mockAuth.mockReturnValue(signedIn);
   mockDevChat = false;
   mockUseChat.mockReturnValue(chatState());
@@ -180,9 +192,9 @@ describe("Chat screen", () => {
   });
 
   it("each tap on the same Quran citation carries a new stamp, so a repeat tap scrolls again", async () => {
-    const now = jest.spyOn(Date, "now").mockReturnValueOnce(1000).mockReturnValueOnce(2000);
     mockUseChat.mockReturnValue(chatState({ messages: [answer("a1", "See the verse.", { citations: [QURAN] })] }));
     const { getByRole } = await renderChat();
+    const now = jest.spyOn(Date, "now").mockReturnValueOnce(1000).mockReturnValueOnce(2000);
 
     fireEvent.press(getByRole("button", { name: /^Open .* 2:255$/ }));
     fireEvent.press(getByRole("button", { name: /^Open .* 2:255$/ }));
@@ -191,26 +203,39 @@ describe("Chat screen", () => {
     now.mockRestore();
   });
 
-  it("shows the limit line above the composer once the allowance is used up", async () => {
+  it("at the limit, both limit lines replace the field, and a final limit-notice bubble is not drawn", async () => {
+    mockUseChat.mockReturnValue(
+      chatState({ remaining: 0, messages: [user("q1", "Q?"), answer("a1", "", { notice: "limit" })] }),
+    );
+    const { getByText, queryByText, queryByLabelText } = await renderChat();
+
+    expect(getByText(LIMIT_1)).toBeTruthy();
+    expect(getByText(LIMIT_2)).toBeTruthy();
+    expect(queryByText(`${LIMIT_1} ${LIMIT_2}`)).toBeNull();
+    expect(queryByLabelText("Your question")).toBeNull();
+  });
+
+  it("the limit lines fall back to next month when the reset time is unknown", async () => {
     mockUseChat.mockReturnValue(chatState({ remaining: 0, resetsAt: null }));
     const { getByText } = await renderChat();
 
-    expect(getByText("You've used this month's 15 messages. They reset at the start of next month.")).toBeTruthy();
+    expect(getByText("They reset at the start of next month.")).toBeTruthy();
   });
 
-  it("hides the limit line while a reply is pending", async () => {
+  it("while a reply is pending at the limit, the field stays and the limit lines wait", async () => {
     mockUseChat.mockReturnValue(chatState({ remaining: 0, sending: true }));
-    const { queryByText } = await renderChat();
+    const { queryByText, getByLabelText } = await renderChat();
 
-    expect(queryByText(/You've used this month/)).toBeNull();
+    expect(queryByText(LIMIT_1)).toBeNull();
+    expect(getByLabelText("Your question")).toBeTruthy();
   });
 
-  it("shows a writing row at the end of the chat while a reply is pending", async () => {
+  it("TypingBubble shows while sending", async () => {
     mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?")], sending: true }));
-    const { getByLabelText, getByText } = await renderChat();
+    const { getByLabelText, queryByText } = await renderChat();
 
     expect(getByLabelText("Writing an answer")).toBeTruthy();
-    expect(getByText("Writing an answer...")).toBeTruthy();
+    expect(queryByText("Writing an answer...")).toBeNull();
   });
 
   it("has no writing row when no reply is pending", async () => {
@@ -300,32 +325,22 @@ describe("Chat screen", () => {
     expect(getByText(BLOCKED)).toBeTruthy();
   });
 
-  it("the limit notice shows the allowance and the local reset date", async () => {
-    mockUseChat.mockReturnValue(
-      chatState({ remaining: 0, messages: [answer("a1", "", { notice: "limit" })] }),
-    );
-    const { getAllByText } = await renderChat();
+  it("a limit notice in history still shows once the limit is no longer reached", async () => {
+    mockUseChat.mockReturnValue(chatState({ remaining: 15, messages: [answer("a1", "", { notice: "limit" })] }));
+    const { getByText, getByLabelText } = await renderChat();
 
-    // Only the notice in the list: the line above the composer does not repeat it.
-    expect(getAllByText(`You've used this month's 15 messages. They reset on ${monthDay("2026-12-15T12:00:00.000Z")}.`)).toHaveLength(1);
+    expect(getByText(`${LIMIT_1} ${LIMIT_2}`)).toBeTruthy();
+    expect(getByLabelText("Your question")).toBeTruthy();
   });
 
-  it("the limit line stays above the composer when a question came after the limit notice", async () => {
+  it("a limit notice that is not the last message still shows above the limit lines", async () => {
     mockUseChat.mockReturnValue(
       chatState({ remaining: 0, messages: [answer("a1", "", { notice: "limit" }), user("q2", "Next?")] }),
     );
-    const { getAllByText } = await renderChat();
+    const { getByText } = await renderChat();
 
-    expect(getAllByText(`You've used this month's 15 messages. They reset on ${monthDay("2026-12-15T12:00:00.000Z")}.`)).toHaveLength(2);
-  });
-
-  it("the limit notice falls back to next month when the reset time is unknown", async () => {
-    mockUseChat.mockReturnValue(
-      chatState({ remaining: 0, resetsAt: null, messages: [answer("a1", "", { notice: "limit" })] }),
-    );
-    const { getAllByText } = await renderChat();
-
-    expect(getAllByText("You've used this month's 15 messages. They reset at the start of next month.")).toHaveLength(1);
+    expect(getByText(`${LIMIT_1} ${LIMIT_2}`)).toBeTruthy();
+    expect(getByText(LIMIT_1)).toBeTruthy();
   });
 
   it("a failed message's retry resends that message", async () => {
@@ -360,43 +375,264 @@ describe("Chat screen", () => {
     expect(getByLabelText("Your question").props.value).toBe("");
   });
 
-  it("send is disabled when the allowance is used up", async () => {
-    mockUseChat.mockReturnValue(chatState({ remaining: 0 }));
-    const { getByLabelText, getByRole } = await renderChat();
-
-    fireEvent.changeText(getByLabelText("Your question"), "Hello");
-
-    expect(getByRole("button", { name: "Send" })).toBeDisabled();
-  });
-
-  it("the header shows the messages left before Close", async () => {
+  it("the header title shows '12 of 15 left', and the right items hold only Close", async () => {
     await renderChat();
-    const stack = jest.requireMock("expo-router").Stack as { Screen: jest.Mock };
-    const options = stack.Screen.mock.calls.at(-1)?.[0].options;
+    const options = stackOptions();
+    const { getByText } = render(<ThemeProvider>{options.headerTitle()}</ThemeProvider>);
     const items = options.unstable_headerRightItems();
-    const { getByText } = render(<ThemeProvider>{items[0].element}</ThemeProvider>);
 
-    expect(items).toHaveLength(2);
-    expect(getByText("12 left")).toBeTruthy();
+    expect(getByText("12 of 15 left")).toBeTruthy();
+    expect(items).toHaveLength(1);
+    expect(items[0].label).toBe("Close");
   });
 
-  it("a report shows the thanks toast", async () => {
-    mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.", { citations: [QURAN] })] }));
-    const { getByRole, findByText } = await renderChat();
+  it("the notice text appears once, above the first message, with 3 answers in history", async () => {
+    mockUseChat.mockReturnValue(
+      chatState({
+        messages: [
+          user("q1", "First question?"),
+          answer("a1", "One."),
+          user("q2", "Two?"),
+          answer("a2", "Two."),
+          user("q3", "Three?"),
+          answer("a3", "Three."),
+        ],
+      }),
+    );
+    const { getAllByText, UNSAFE_getAllByType } = await renderChat();
 
-    fireEvent.press(getByRole("button", { name: "Report" }));
-
-    expect(report).toHaveBeenCalledWith("a1");
-    expect(await findByText("Thanks, we'll review this answer.")).toBeTruthy();
+    expect(getAllByText(NOTICE)).toHaveLength(1);
+    const texts = UNSAFE_getAllByType(Text).map((t) => String(t.props.children));
+    expect(texts.indexOf(NOTICE)).toBeLessThan(texts.indexOf("First question?"));
   });
 
-  it("a failed report says so in the toast", async () => {
-    report.mockRejectedValueOnce(new Error("Couldn't send"));
-    mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.")] }));
-    const { getByRole, findByText } = await renderChat();
+  it("a time line appears before the first message and after a 60-minute gap", async () => {
+    jest.useFakeTimers({ now: new Date(2026, 10, 6, 12, 0) });
+    const at = (h: number, m: number) => new Date(2026, 10, 6, h, m).getTime();
+    mockUseChat.mockReturnValue(
+      chatState({
+        messages: [
+          { ...user("q1", "Q1?"), createdAt: at(9, 0) },
+          { ...answer("a1", "A1."), createdAt: at(9, 1) },
+          { ...user("q2", "Q2?"), createdAt: at(10, 1) },
+          { ...answer("a2", "A2."), createdAt: at(10, 2) },
+        ],
+      }),
+    );
+    try {
+      const { getAllByText, getByText } = await renderChat();
 
-    fireEvent.press(getByRole("button", { name: "Report" }));
+      expect(getAllByText("Today")).toHaveLength(2);
+      expect(getByText(`Today ${formatTimeLine(at(9, 0), new Date()).time}`)).toBeTruthy();
+      expect(getByText(`Today ${formatTimeLine(at(10, 1), new Date()).time}`)).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 
-    expect(await findByText("Couldn't send the report. Please try again.")).toBeTruthy();
+  it("four prompts show on an empty chat. Tapping one sends it and hides the chips", async () => {
+    const random = jest.spyOn(Math, "random").mockReturnValue(0);
+    try {
+      const { queryAllByRole, getByRole } = await renderChat();
+
+      expect(promptButtons(queryAllByRole).map((b) => b.props.accessibilityLabel)).toEqual(CHAT_PROMPTS.slice(0, 4));
+
+      fireEvent.press(getByRole("button", { name: CHAT_PROMPTS[0] }));
+
+      expect(send).toHaveBeenCalledWith(CHAT_PROMPTS[0]);
+      expect(promptButtons(queryAllByRole)).toHaveLength(0);
+    } finally {
+      random.mockRestore();
+    }
+  });
+
+  it("prompts show when the last message is 2 hours old, and don't when it is 10 minutes old", async () => {
+    const NOW = 1_800_000_000_000;
+    const now = jest.spyOn(Date, "now").mockReturnValue(NOW);
+    try {
+      mockUseChat.mockReturnValue(chatState({ messages: [{ ...user("q1", "Q?"), createdAt: NOW - 2 * 60 * 60_000 }] }));
+      const old = await renderChat();
+      expect(promptButtons(old.queryAllByRole)).toHaveLength(4);
+      old.unmount();
+
+      mockUseChat.mockReturnValue(chatState({ messages: [{ ...user("q1", "Q?"), createdAt: NOW - 10 * 60_000 }] }));
+      const recent = await renderChat();
+      expect(promptButtons(recent.queryAllByRole)).toHaveLength(0);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
+  it("prompts wait until the history has loaded", async () => {
+    mockUseChat.mockReturnValue(chatState({ loaded: false }));
+    const { queryAllByRole } = await renderChat();
+
+    expect(promptButtons(queryAllByRole)).toHaveLength(0);
+  });
+
+  it("prompts are hidden at the limit", async () => {
+    mockUseChat.mockReturnValue(chatState({ remaining: 0 }));
+    const { queryAllByRole } = await renderChat();
+
+    expect(promptButtons(queryAllByRole)).toHaveLength(0);
+  });
+
+  it("old history (plain answer, citations, no reported) renders without number tags", async () => {
+    mockUseChat.mockReturnValue(
+      chatState({
+        messages: [user("q1", "Is zakat due?"), answer("a1", "Yes, once it reaches nisab.", { citations: [QURAN, HADITH] })],
+      }),
+    );
+    const { getByText, queryAllByRole, getByLabelText, getByRole } = await renderChat();
+
+    expect(getByText("Yes, once it reaches nisab.")).toBeTruthy();
+    expect(queryAllByRole("button", { name: /^Source \d+$/ })).toHaveLength(0);
+    expect(getByLabelText("Answer: Yes, once it reaches nisab.").props.accessibilityActions).toBeUndefined();
+    expect(getByText("Intentions")).toBeTruthy();
+    expect(getByRole("button", { name: "Report a message" })).toBeTruthy();
+  });
+
+  it("an answer that arrives is scrolled to the top of the list, never past the end", async () => {
+    const scrollToOffset = jest.spyOn(FlatList.prototype, "scrollToOffset").mockImplementation(() => {});
+    try {
+      mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?")] }));
+      const screen = await renderChat();
+      const list = screen.UNSAFE_getByType(FlatList);
+      fireEvent(list, "layout", { nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 700 } } });
+
+      mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "A.")] }));
+      screen.rerender(tree());
+      fireEvent(screen.getByTestId("chat-cell-a1"), "layout", { nativeEvent: { layout: { x: 0, y: 1000, width: 390, height: 300 } } });
+      fireEvent(list, "contentSizeChange", 390, 3000);
+      expect(scrollToOffset).toHaveBeenLastCalledWith(expect.objectContaining({ offset: 1000 - 8 }));
+
+      fireEvent(list, "contentSizeChange", 390, 1300);
+      expect(scrollToOffset).toHaveBeenLastCalledWith(expect.objectContaining({ offset: 600 }));
+    } finally {
+      scrollToOffset.mockRestore();
+    }
+  });
+
+  describe("report flow", () => {
+    const history = () =>
+      chatState({
+        messages: [
+          user("q1", "Q1?"),
+          answer("a1", "First answer."),
+          user("q2", "Q2?"),
+          answer("a2", "Already reported.", { reported: true }),
+          user("q3", "Q3?"),
+          answer("a3", "", { notice: "blocked" }),
+        ],
+      });
+
+    it("'Report a message' enters selection mode, with a selector only on reportable answers", async () => {
+      mockUseChat.mockReturnValue(history());
+      const { getByRole, getAllByRole, queryByLabelText } = await renderChat();
+
+      fireEvent.press(getByRole("button", { name: "Report a message" }));
+
+      expect(getAllByRole("radio")).toHaveLength(1);
+      expect(queryByLabelText("Your question")).toBeNull();
+      expect(getByRole("button", { name: "Cancel" })).toBeTruthy();
+    });
+
+    it("Report stays disabled until an answer is picked, and Cancel leaves the mode", async () => {
+      mockUseChat.mockReturnValue(history());
+      const { getByRole, queryAllByRole, getByLabelText } = await renderChat();
+
+      fireEvent.press(getByRole("button", { name: "Report a message" }));
+      expect(getByRole("button", { name: "Report" })).toBeDisabled();
+
+      fireEvent.press(getByRole("radio", { name: "Select this answer" }));
+      expect(getByRole("button", { name: "Report" })).toBeEnabled();
+
+      fireEvent.press(getByRole("button", { name: "Cancel" }));
+      expect(queryAllByRole("radio")).toHaveLength(0);
+      expect(getByLabelText("Your question")).toBeTruthy();
+    });
+
+    it("success shows the thanks toast and leaves the mode", async () => {
+      mockUseChat.mockReturnValue(history());
+      const { getByRole, queryAllByRole, findByText } = await renderChat();
+
+      fireEvent.press(getByRole("button", { name: "Report a message" }));
+      fireEvent.press(getByRole("radio", { name: "Select this answer" }));
+      fireEvent.press(getByRole("button", { name: "Report" }));
+
+      expect(report).toHaveBeenCalledWith("a1");
+      expect(await findByText(THANKS)).toBeTruthy();
+      expect(queryAllByRole("radio")).toHaveLength(0);
+    });
+
+    it("failure shows the failure toast and stays in the mode", async () => {
+      report.mockRejectedValueOnce(new Error("Couldn't send"));
+      mockUseChat.mockReturnValue(history());
+      const { getByRole, getAllByRole, findByText } = await renderChat();
+
+      fireEvent.press(getByRole("button", { name: "Report a message" }));
+      fireEvent.press(getByRole("radio", { name: "Select this answer" }));
+      fireEvent.press(getByRole("button", { name: "Report" }));
+
+      expect(await findByText(REPORT_FAILED)).toBeTruthy();
+      expect(getAllByRole("radio")).toHaveLength(1);
+    });
+
+    it("a report in flight ignores further taps and keeps Report disabled", async () => {
+      let finish: () => void = () => {};
+      report.mockImplementationOnce(() => new Promise<void>((resolve) => (finish = resolve)));
+      mockUseChat.mockReturnValue(history());
+      const { getByRole, findByText } = await renderChat();
+
+      fireEvent.press(getByRole("button", { name: "Report a message" }));
+      fireEvent.press(getByRole("radio", { name: "Select this answer" }));
+      fireEvent.press(getByRole("button", { name: "Report" }));
+      fireEvent.press(getByRole("button", { name: "Report" }));
+
+      expect(report).toHaveBeenCalledTimes(1);
+      expect(getByRole("button", { name: "Report" })).toBeDisabled();
+      await act(async () => finish());
+      expect(await findByText(THANKS)).toBeTruthy();
+    });
+
+    it("the long-press Report uses the same toasts and ignores a second tap in flight", async () => {
+      let fail: (e: Error) => void = () => {};
+      report.mockImplementationOnce(() => new Promise<void>((_, reject) => (fail = reject)));
+      mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.", { citations: [QURAN] })] }));
+      const { getByRole, findByText } = await renderChat();
+
+      fireEvent.press(getByRole("button", { name: "Report" }));
+      fireEvent.press(getByRole("button", { name: "Report" }));
+      expect(report).toHaveBeenCalledTimes(1);
+
+      await act(async () => fail(new Error("Couldn't send")));
+      expect(await findByText(REPORT_FAILED)).toBeTruthy();
+
+      fireEvent.press(getByRole("button", { name: "Report" }));
+      expect(report).toHaveBeenLastCalledWith("a1");
+      expect(await findByText(THANKS)).toBeTruthy();
+    });
+
+    it("no 'Report a message' link when nothing is reportable", async () => {
+      mockUseChat.mockReturnValue(
+        chatState({ messages: [user("q1", "Q?"), answer("a1", "Done.", { reported: true }), answer("a2", "", { notice: "blocked" })] }),
+      );
+      const { queryByRole } = await renderChat();
+
+      expect(queryByRole("button", { name: "Report a message" })).toBeNull();
+    });
+
+    it("a reply that lands during selection mode is selectable", async () => {
+      mockUseChat.mockReturnValue(history());
+      const screen = await renderChat();
+      fireEvent.press(screen.getByRole("button", { name: "Report a message" }));
+      expect(screen.getAllByRole("radio")).toHaveLength(1);
+
+      const next = history();
+      mockUseChat.mockReturnValue({ ...next, messages: [...next.messages, user("q4", "Q4?"), answer("a4", "New answer.")] });
+      screen.rerender(tree());
+
+      expect(screen.getAllByRole("radio")).toHaveLength(2);
+    });
   });
 });

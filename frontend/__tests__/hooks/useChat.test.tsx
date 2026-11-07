@@ -67,6 +67,18 @@ async function mountChat() {
 }
 
 describe("hooks/useChat", () => {
+  it("loaded turns true only once the stored history has been read", async () => {
+    await AsyncStorage.setItem(
+      "chat_history_v1",
+      JSON.stringify({ messages: [{ id: "m1", role: "user", text: "Q", createdAt: 1 }], summary: null }),
+    );
+    const { result } = renderHook(() => useChat());
+
+    expect(result.current.loaded).toBe(false);
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(result.current.messages.map((m) => m.id)).toEqual(["m1"]);
+  });
+
   it("send appends the question and the answer, and stores the new summary", async () => {
     mockSendChat.mockResolvedValueOnce(ANSWER);
     const { result } = await mountChat();
