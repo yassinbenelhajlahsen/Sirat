@@ -41,7 +41,7 @@ export default function ChatConsent({ onContinue }: Props) {
     >
       <Title2 accessibilityRole="header">Before you ask</Title2>
       <Body color={colors.textSecondary}>
-        Your question and recent messages from this chat are sent to OpenAI, a third-party AI service, to write the
+        Your question and recent messages from this chat are sent to a third-party AI service, to write the
         answer.
       </Body>
       <Body color={colors.textSecondary}>

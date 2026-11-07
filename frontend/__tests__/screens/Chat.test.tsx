@@ -154,7 +154,7 @@ describe("Chat screen", () => {
     expect(await findByText("Before you ask")).toBeTruthy();
     expect(
       await findByText(
-        "Your question and recent messages from this chat are sent to OpenAI, a third-party AI service, to write the answer.",
+        "Your question and recent messages from this chat are sent to a third-party AI service, to write the answer.",
       ),
     ).toBeTruthy();
 
