@@ -117,7 +117,7 @@ function Conversation() {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const screenMargin = useScreenMargin();
-  const { messages, remaining, allowance, resetsAt, sending, stage, loaded, send, retry, report } = useChat();
+  const { messages, remaining, allowance, resetsAt, sending, loaded, send, retry, report } = useChat();
   const [draft, setDraft] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [openedAt] = useState(Date.now);
@@ -267,7 +267,7 @@ function Conversation() {
     ) : null;
 
   const footer = sending ? (
-    <TypingBubble stage={stage} />
+    <TypingBubble />
   ) : reportLink || showPrompts ? (
     <View style={styles.footer}>
       {reportLink}

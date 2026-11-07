@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getChatStatus, sendChat, type ChatReply, type ChatStage, type ChatTurn } from "@/services/chat/chatApi";
+import { getChatStatus, sendChat, type ChatReply, type ChatTurn } from "@/services/chat/chatApi";
 import { chatGeneration, loadChat, saveChat, type ChatMessage, type ChatState } from "@/services/chat/chatStore";
 import { getDeviceToken } from "@/services/chat/deviceCheck";
 import { citationKey } from "@/services/chat/sources";
@@ -46,7 +46,6 @@ export function useChat() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [resetsAt, setResetsAt] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [stage, setStage] = useState<ChatStage | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
@@ -95,17 +94,12 @@ export function useChat() {
     async (generation: number, id: string, text: string, history: ChatTurn[]) => {
       let reply: ChatReply;
       try {
-        reply = await sendChat(
-          {
-            message: text,
-            history,
-            summary: chatRef.current.summary,
-            deviceToken: await getDeviceToken(),
-          },
-          (next) => {
-            if (chatGeneration() === generation) setStage(next);
-          },
-        );
+        reply = await sendChat({
+          message: text,
+          history,
+          summary: chatRef.current.summary,
+          deviceToken: await getDeviceToken(),
+        });
       } catch {
         if (chatGeneration() === generation) {
           write(chatRef.current.messages.map((m): ChatMessage => (m.id === id ? { ...m, status: "failed" } : m)));
@@ -144,7 +138,6 @@ export function useChat() {
       pendingSend = null;
       busy.current = false;
       setSending(false);
-      setStage(null);
     }
   }, []);
 
@@ -196,5 +189,5 @@ export function useChat() {
     [liveState, write],
   );
 
-  return { messages, remaining, allowance, resetsAt, sending: sending || restoring, stage, loaded: historyLoaded, send, retry, report };
+  return { messages, remaining, allowance, resetsAt, sending: sending || restoring, loaded: historyLoaded, send, retry, report };
 }
