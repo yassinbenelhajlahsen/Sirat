@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View, type ViewProps } from "react-native";
 import { router, Stack, type NativeStackHeaderItem } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { HeaderHeightContext } from "expo-router/react-navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -26,6 +27,7 @@ import { limitLines } from "@/services/chat/limit";
 import { pickPrompts, promptsEligible } from "@/services/chat/quickPrompts";
 import { formatTimeLine, timeLineAt } from "@/services/chat/timeline";
 import { useChatDevBypass } from "@/utils/devChat";
+import { mixColors } from "@/utils/sky";
 
 const NOTICE = "Answers are an aid and may be wrong. Please consult a trusted scholar.";
 const REPORT_THANKS = "Thanks, we'll review this answer.";
@@ -131,6 +133,14 @@ function Conversation() {
   });
   const hideToast = useCallback(() => setToast(null), []);
   const topInset = headerHeight + theme.spacing.sm;
+  // The screen gradient runs diagonally from primaryDeep to primaryLift; these approximate it across the header band and just above the composer.
+  const fades = useMemo(
+    () => ({
+      top: mixColors(colors.primaryDeep, colors.primary, 0.5),
+      bottom: mixColors(colors.primary, colors.primaryLift, 0.3),
+    }),
+    [colors],
+  );
 
   const limit = remaining === 0 && !sending ? limitLines(allowance, resetsAt) : null;
   const shown = limit && messages[messages.length - 1]?.notice === "limit" ? messages.slice(0, -1) : messages;
@@ -256,78 +266,86 @@ function Conversation() {
         }}
       />
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <CellLayoutContext.Provider value={onCellLayout}>
-          <FlatList
-            ref={listRef}
-            data={shown}
-            keyExtractor={(message) => message.id}
-            CellRendererComponent={MeasuredCell}
-            ListHeaderComponent={
-              <Caption color={colors.textTertiary} style={styles.notice}>
-                {NOTICE}
-              </Caption>
-            }
-            renderItem={({ item, index }) => {
-              const ts = timeLineAt(shown, index);
-              const line = ts === null ? null : formatTimeLine(ts, new Date());
-              const selectable = isReportable(item);
-              return (
-                <View style={styles.item}>
-                  {line ? (
-                    <Caption color={colors.textTertiary} style={styles.timeLine}>
-                      <Caption color={colors.textTertiary} style={styles.timeDay}>
-                        {line.day}
+        <View style={styles.fill}>
+          <CellLayoutContext.Provider value={onCellLayout}>
+            <FlatList
+              ref={listRef}
+              data={shown}
+              keyExtractor={(message) => message.id}
+              CellRendererComponent={MeasuredCell}
+              ListHeaderComponent={
+                <Caption color={colors.textTertiary} style={styles.notice}>
+                  {NOTICE}
+                </Caption>
+              }
+              renderItem={({ item, index }) => {
+                const ts = timeLineAt(shown, index);
+                const line = ts === null ? null : formatTimeLine(ts, new Date());
+                const selectable = isReportable(item);
+                return (
+                  <View style={styles.item}>
+                    {line ? (
+                      <Caption color={colors.textTertiary} style={styles.timeLine}>
+                        <Caption color={colors.textTertiary} style={styles.timeDay}>
+                          {line.day}
+                        </Caption>
+                        {` ${line.time}`}
                       </Caption>
-                      {` ${line.time}`}
-                    </Caption>
-                  ) : null}
-                  <View
-                    onLayout={(e) => {
-                      layout.current.bubbles[item.id] = e.nativeEvent.layout.y;
-                    }}
-                  >
-                    <ChatBubble
-                      message={item}
-                      allowance={allowance}
-                      resetsAt={resetsAt}
-                      sourceFocus={focus?.id === item.id ? { n: focus.n, token: focus.token } : null}
-                      selection={{
-                        active: selecting.active,
-                        selectable,
-                        selected: selecting.selectedId === item.id,
-                        onSelect: () => setSelecting((s) => ({ ...s, selectedId: item.id })),
+                    ) : null}
+                    <View
+                      onLayout={(e) => {
+                        layout.current.bubbles[item.id] = e.nativeEvent.layout.y;
                       }}
-                      onRetry={onRetry}
-                      onReport={(id) => sendReport(id)}
-                      onRefPress={onRefPress}
-                      onSourceLayout={onSourceLayout}
-                    />
+                    >
+                      <ChatBubble
+                        message={item}
+                        allowance={allowance}
+                        resetsAt={resetsAt}
+                        sourceFocus={focus?.id === item.id ? { n: focus.n, token: focus.token } : null}
+                        selection={{
+                          active: selecting.active,
+                          selectable,
+                          selected: selecting.selectedId === item.id,
+                          onSelect: () => setSelecting((s) => ({ ...s, selectedId: item.id })),
+                        }}
+                        onRetry={onRetry}
+                        onReport={(id) => sendReport(id)}
+                        onRefPress={onRefPress}
+                        onSourceLayout={onSourceLayout}
+                      />
+                    </View>
                   </View>
-                </View>
-              );
-            }}
-            ListFooterComponent={footer}
-            // The list sits inside the keyboard wrapper, where iOS doesn't inset it under the transparent header.
-            contentInsetAdjustmentBehavior="never"
-            contentContainerStyle={[
-              styles.list,
-              { paddingHorizontal: screenMargin, paddingTop: headerHeight + theme.spacing.lg },
-            ]}
-            keyboardShouldPersistTaps="handled"
-            // Any touch hands scrolling back to the person; a tap that targets something sets a new pin after this.
-            onTouchStart={() => {
-              pin.current = null;
-            }}
-            onLayout={(e) => {
-              layout.current.frame = e.nativeEvent.layout.height;
-              applyPin();
-            }}
-            onContentSizeChange={(_w, h) => {
-              layout.current.content = h;
-              applyPin();
-            }}
+                );
+              }}
+              ListFooterComponent={footer}
+              // The list sits inside the keyboard wrapper, where iOS doesn't inset it under the transparent header.
+              contentInsetAdjustmentBehavior="never"
+              contentContainerStyle={[
+                styles.list,
+                { paddingHorizontal: screenMargin, paddingTop: headerHeight + theme.spacing.lg },
+              ]}
+              keyboardShouldPersistTaps="handled"
+              // Any touch hands scrolling back to the person; a tap that targets something sets a new pin after this.
+              onTouchStart={() => {
+                pin.current = null;
+              }}
+              onLayout={(e) => {
+                layout.current.frame = e.nativeEvent.layout.height;
+                applyPin();
+              }}
+              onContentSizeChange={(_w, h) => {
+                layout.current.content = h;
+                applyPin();
+              }}
+            />
+          </CellLayoutContext.Provider>
+          <LinearGradient
+            testID="chat-bottom-fade"
+            pointerEvents="none"
+            colors={[withOpacity(fades.bottom, 0), fades.bottom]}
+            style={styles.bottomFade}
           />
-        </CellLayoutContext.Provider>
+        </View>
         {showPrompts ? <QuickPrompts prompts={prompts} onPick={sendText} /> : null}
         {selecting.active ? (
           <View
@@ -366,6 +384,14 @@ function Conversation() {
           <ChatComposer value={draft} onChangeText={setDraft} onSend={onSend} sending={sending} limit={limit} />
         )}
       </KeyboardAvoidingView>
+      {/* The header is transparent, so messages would scroll under the title; they fade out first, like Messages. */}
+      <LinearGradient
+        testID="chat-top-fade"
+        pointerEvents="none"
+        colors={[fades.top, fades.top, withOpacity(fades.top, 0)]}
+        locations={[0, 0.7, 1]}
+        style={[styles.topFade, { height: headerHeight + theme.spacing.lg }]}
+      />
       <CopyToast
         visible={toast !== null}
         message={toast ?? undefined}
@@ -383,6 +409,8 @@ const createStyles = (theme: AppTheme) => {
     fill: { flex: 1 },
     centered: { flex: 1, justifyContent: "center" },
     list: { paddingBottom: spacing.lg, gap: spacing.lg },
+    topFade: { position: "absolute", top: 0, left: 0, right: 0 },
+    bottomFade: { position: "absolute", bottom: 0, left: 0, right: 0, height: spacing.lg },
     notice: { textAlign: "center", paddingHorizontal: spacing.xl },
     item: { gap: spacing.sm },
     timeLine: { textAlign: "center" },

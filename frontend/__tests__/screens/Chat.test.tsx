@@ -381,6 +381,23 @@ describe("Chat screen", () => {
     expect(items[0].label).toBe("Close");
   });
 
+  it("messages fade out under the header and above the composer, without blocking touches", async () => {
+    const { getByTestId } = await renderChat();
+
+    for (const id of ["chat-top-fade", "chat-bottom-fade"]) {
+      const fade = getByTestId(id);
+      expect(fade.props.pointerEvents).toBe("none");
+      expect(fade.props.colors).toHaveLength(id === "chat-top-fade" ? 3 : 2);
+    }
+    // Colors arrive processed as ARGB ints: opaque where the title sits, zero alpha (same hue, so no grey blend) at the open end.
+    const alpha = (c: number) => c >>> 24;
+    const top = getByTestId("chat-top-fade").props.colors;
+    const bottom = getByTestId("chat-bottom-fade").props.colors;
+    expect([alpha(top[0]), alpha(top[2])]).toEqual([255, 0]);
+    expect([alpha(bottom[0]), alpha(bottom[1])]).toEqual([0, 255]);
+    expect(top[2] & 0xffffff).toBe(top[0] & 0xffffff);
+  });
+
   it("the notice text appears once, above the first message, with 3 answers in history", async () => {
     mockUseChat.mockReturnValue(
       chatState({
