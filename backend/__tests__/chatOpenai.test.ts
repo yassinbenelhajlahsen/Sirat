@@ -60,9 +60,10 @@ describe("OpenAI chat client", () => {
         .mockResolvedValueOnce(response([reasoning, final(ANSWER)], 300, 120));
       const { generateAnswer } = await load();
 
-      const { answer, retrievedIds, usage } = await generateAnswer(INPUT);
+      const { answer, retrievedIds, usage, rounds, searches } = await generateAnswer(INPUT);
 
       expect(answer).toEqual(ANSWER);
+      expect([rounds, searches]).toEqual([3, 2]);
       expect([...retrievedIds].sort()).toEqual(["h:5", "q:2:275"]);
       expect(mockSearchQuran).toHaveBeenCalledWith("riba");
       expect(mockSearchHadith).toHaveBeenCalledWith("interest");

@@ -7,7 +7,7 @@ import { prisma } from "../src/db/prisma.js";
 import { ENV } from "../src/config/env.js";
 import { answerMessage, type AnswerOutcome } from "../src/services/chat/answer.js";
 import type { Citation } from "../src/services/chat/guards.js";
-import { parseEvalQuestions, usageStats, type EvalQuestion } from "../src/services/chat/evalReport.js";
+import { parseEvalQuestions, timingStats, usageStats, type EvalQuestion } from "../src/services/chat/evalReport.js";
 import type { TokenUsage } from "../src/services/chat/openai.js";
 
 const CONCURRENCY = 4;
@@ -26,14 +26,19 @@ type Result = { q: EvalQuestion; outcome?: AnswerOutcome; error?: string; ms: nu
 const renderCitation = (c: Citation) =>
   c.kind === "quran"
     ? `- Quran ${c.surah}:${c.ayah}\n  - ${c.arabic}${c.english ? `\n  - ${c.english}` : ""}`
-    : `- Hadith h:${c.id}, ${c.title} (${c.grade}; ${c.source} · ${c.credit})\n  - ${c.text.trim().replace(/\n+/g, " ")}`;
+    : c.kind === "dua"
+      ? `- Dua d:${c.id} (${c.reference})\n  - ${c.english.trim().replace(/\n+/g, " ")}`
+      : `- Hadith h:${c.id}, ${c.title} (${c.grade}; ${c.source} · ${c.credit})\n  - ${c.text.trim().replace(/\n+/g, " ")}`;
 
 function renderResult({ q, outcome, error, ms }: Result): string {
   const head = `### ${q.n}. ${q.question}\n\n*${q.category}.* Expected: ${q.expected}\n\n`;
   if (error || !outcome) return `${head}**Result:** FAILED (${error}), the user would see "Chat failed, please try again".\n`;
-  const tokens = `Tokens: ${outcome.usage.input} in, ${outcome.usage.output} out. ${(ms / 1000).toFixed(1)}s.`;
-  if (outcome.kind === "crisis") return `${head}**Result:** CRISIS, the app shows its fixed crisis message. ${tokens}\n`;
-  if (outcome.kind === "blocked") return `${head}**Result:** BLOCKED by answer moderation. ${tokens}\n`;
+  const t = outcome.timings;
+  const tokens = `Tokens: ${outcome.usage.input} in, ${outcome.usage.output} out. ${(ms / 1000).toFixed(1)}s (${t.rounds} rounds, ${t.searches} searches).`;
+  if (outcome.kind !== "answer") {
+    const what = outcome.kind === "crisis" ? "CRISIS, the app shows its fixed crisis message" : "BLOCKED by answer moderation";
+    return `${head}**Result:** ${what}. ${tokens}\n`;
+  }
   const cites = outcome.citations.length ? outcome.citations.map(renderCitation).join("\n") : "- (none)";
   return `${head}**Answer** (ruling: ${outcome.isRuling ? "yes" : "no"}${outcome.scholarLink ? ", scholar link shown" : ""}):\n\n${outcome.answer}\n\n**Sources:**\n\n${cites}\n\n${tokens}\n`;
 }
@@ -59,6 +64,10 @@ await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 const usages: TokenUsage[] = results.flatMap((r) => (r.outcome?.kind === "answer" ? [r.outcome.usage] : []));
 const stats = usageStats(usages);
 const count = (k: string) => results.filter((r) => (r.outcome?.kind ?? "failed") === k).length;
+const timingRows = Object.entries(timingStats(results.flatMap((r) => (r.outcome ? [r.outcome.timings] : [])))).map(
+  ([key, v]) => `| ${key} | ${v.p50} | ${v.p90} | ${v.max} | ${v.count} |`,
+);
+const timingTable = ["## Timing (ms; rounds and searches are counts)", "", "| Stage | p50 | p90 | max | n |", "|---|---|---|---|---|", ...timingRows].join("\n");
 const summary = [
   "## Summary",
   "",
@@ -70,6 +79,7 @@ const summary = [
   stats.avgCostCents > 0.4 ? "- FLAG: the average is above the 0.4 cents per message budget." : "- Within the 0.4 cents per message budget.",
 ].join("\n");
 
-writeFileSync(outPath, `# Sirat chatbot: pre-launch answers\n\n${summary}\n\n## Answers\n\n${results.map(renderResult).join("\n")}`);
+writeFileSync(outPath, `# Sirat chatbot: pre-launch answers\n\n${summary}\n\n${timingTable}\n\n## Answers\n\n${results.map(renderResult).join("\n")}`);
 console.log(summary);
+console.log(timingTable);
 await prisma.$disconnect();

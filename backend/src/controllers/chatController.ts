@@ -135,6 +135,7 @@ export async function postChat(req: Request, res: Response) {
     }
 
     const outcome = await answerMessage({ message, history, summary, safetyId: hash, signal });
+    console.log("chat_timing", outcome.kind, outcome.timings);
     if (outcome.kind !== "answer") {
       // Crisis and blocked replies don't count toward the month; only a crisis reply skipped the model.
       const refunded = dev ? false : await refundMessage(hash, month, outcome.kind === "blocked");

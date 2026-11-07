@@ -154,13 +154,15 @@ export async function generateAnswer(input: {
   summary: string | null;
   safetyId: string;
   signal?: AbortSignal;
-}): Promise<{ answer: ModelAnswer; retrievedIds: Set<string>; usage: TokenUsage }> {
+}): Promise<{ answer: ModelAnswer; retrievedIds: Set<string>; usage: TokenUsage; rounds: number; searches: number }> {
   const conversation: unknown[] = buildInput(input);
   const retrievedIds = new Set<string>();
   const usage: TokenUsage = { input: 0, output: 0 };
   let searches = 0;
+  let rounds = 0;
 
   for (;;) {
+    rounds++;
     const toolsAllowed = searches < MAX_SEARCHES;
     const data = await post<ResponsesReply>("/responses", {
       model: ENV.OPENAI_MODEL,
@@ -180,7 +182,7 @@ export async function generateAnswer(input: {
 
     if (!calls.length || !toolsAllowed) {
       try {
-        return { answer: parseAnswer(output), retrievedIds, usage };
+        return { answer: parseAnswer(output), retrievedIds, usage, rounds, searches };
       } catch (err) {
         console.error("chat_model_bad_output", data?.status, data?.incomplete_details?.reason);
         throw err;

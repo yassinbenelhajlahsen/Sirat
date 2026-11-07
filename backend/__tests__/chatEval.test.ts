@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { parseEvalQuestions, usageStats } from "../src/services/chat/evalReport.js";
+import { parseEvalQuestions, timingStats, usageStats } from "../src/services/chat/evalReport.js";
 
 describe("parseEvalQuestions", () => {
   it("reads numbered questions with their expected line under category headings", () => {
@@ -41,5 +41,16 @@ describe("usageStats", () => {
 
   it("handles no usage", () => {
     expect(usageStats([])).toEqual({ count: 0, avgInput: 0, avgOutput: 0, p95Total: 0, avgCostCents: 0, p95CostCents: 0 });
+  });
+});
+
+describe("timingStats", () => {
+  it("gives p50, p90 and max per stage over the answers that recorded it", () => {
+    const timings = Array.from({ length: 10 }, (_, i) => ({ total: (i + 1) * 100, ...(i < 2 ? { quoteRetry: 50 * (i + 1) } : {}) }));
+
+    expect(timingStats(timings)).toEqual({
+      total: { p50: 500, p90: 900, max: 1000, count: 10 },
+      quoteRetry: { p50: 50, p90: 100, max: 100, count: 2 },
+    });
   });
 });

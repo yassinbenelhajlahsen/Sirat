@@ -186,6 +186,23 @@ describe("Chat routes", () => {
       expect(mockRefundMessage).not.toHaveBeenCalled();
     });
 
+    it("logs one chat_timing event with stage numbers only", async () => {
+      (mockGenerateAnswer as any).mockResolvedValue({ answer: { ...ANSWER }, retrievedIds: new Set(["q:2:275"]), usage: { input: 1, output: 1 }, rounds: 2, searches: 1 });
+      // setup.ts already spies on console.log; reuse it from a clean slate.
+      const logSpy = jest.spyOn(console, "log");
+      logSpy.mockClear();
+
+      await request(app).post("/api/chat").send(body({ message: SECRET })).expect(200);
+
+      const timing = logSpy.mock.calls.filter((c) => c[0] === "chat_timing");
+      expect(timing).toHaveLength(1);
+      expect(timing[0][1]).toBe("answer");
+      const t = timing[0][2] as Record<string, unknown>;
+      expect(t).toMatchObject({ rounds: 2, searches: 1 });
+      for (const key of ["moderateQuestion", "generate", "renderCitations", "moderateAnswer", "total"]) expect(typeof t[key]).toBe("number");
+      expect(Object.values(t).every((v) => typeof v === "number")).toBe(true);
+    });
+
     it("decides the allowance from the device token on first use", async () => {
       await request(app).post("/api/chat").send(body()).expect(200);
 
