@@ -329,6 +329,10 @@ function Conversation() {
               onTouchStart={() => {
                 pin.current = null;
               }}
+              // A drag can start without a touch reaching JS (the scroll indicator, a touch the native menu claims).
+              onScrollBeginDrag={() => {
+                pin.current = null;
+              }}
               onLayout={(e) => {
                 layout.current.frame = e.nativeEvent.layout.height;
                 applyPin();

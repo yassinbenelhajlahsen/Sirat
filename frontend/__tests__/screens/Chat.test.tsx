@@ -347,6 +347,24 @@ describe("Chat screen", () => {
     }
   });
 
+  it("dragging the list stops it following the end until the next send", async () => {
+    const scrollToEnd = jest.spyOn(FlatList.prototype, "scrollToEnd").mockImplementation(() => {});
+    try {
+      mockUseChat.mockReturnValue(chatState({ messages: [user("m1", "Question?")] }));
+      const screen = await renderChat();
+      const list = screen.UNSAFE_getByType(FlatList);
+
+      fireEvent(list, "scrollBeginDrag");
+      scrollToEnd.mockClear();
+      fireEvent(list, "contentSizeChange", 390, 2000);
+      fireEvent(list, "layout", { nativeEvent: { layout: { width: 390, height: 700 } } });
+
+      expect(scrollToEnd).not.toHaveBeenCalled();
+    } finally {
+      scrollToEnd.mockRestore();
+    }
+  });
+
   it("the composer caps the question at 1000 characters and counts from 900", async () => {
     const { getByLabelText, queryByText, getByText } = await renderChat();
     const input = getByLabelText("Your question");
