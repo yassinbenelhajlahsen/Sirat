@@ -1,5 +1,5 @@
 import { useContext, useMemo, useState } from "react";
-import { Alert, Clipboard, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { useRouter } from "expo-router";
 import { HeaderHeightContext } from "expo-router/react-navigation";
 
@@ -13,7 +13,6 @@ import PickerDialog from "@/components/settings/PickerDialog";
 import DeveloperSection from "@/components/settings/DeveloperSection";
 import FeedbackSheet from "@/components/settings/FeedbackSheet";
 import CopyToast from "@/components/CopyToast";
-import { readSavedPushToken } from "@/services/notifications/push";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -73,7 +72,6 @@ export default function Settings() {
   const [methodModalVisible, setMethodModalVisible] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [thanksVisible, setThanksVisible] = useState(false);
-  const [tokenToast, setTokenToast] = useState<string | null>(null);
 
   // App-icon-per-theme: only offered when the live icon doesn't match the theme.
   const [iconSupported] = useState(alternateIconsSupported);
@@ -251,15 +249,7 @@ export default function Settings() {
           />
         </SettingsSection>
 
-        <Footnote
-          color={colors.textTertiary}
-          style={styles.version}
-          onLongPress={async () => {
-            const token = await readSavedPushToken();
-            if (token) Clipboard.setString(token);
-            setTokenToast(token ? "Push token copied" : "No push token on this device");
-          }}
-        >
+        <Footnote color={colors.textTertiary} style={styles.version}>
           Sirat {getAppVersion()}
         </Footnote>
       </ScrollView>
@@ -299,13 +289,6 @@ export default function Settings() {
         placement="top"
         topOffset={headerHeight}
         onHide={() => setThanksVisible(false)}
-      />
-      <CopyToast
-        visible={tokenToast !== null}
-        message={tokenToast ?? undefined}
-        placement="top"
-        topOffset={headerHeight}
-        onHide={() => setTokenToast(null)}
       />
     </Screen>
   );

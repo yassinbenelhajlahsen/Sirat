@@ -1,6 +1,14 @@
 // frontend/app/Chat.tsx
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View, type ViewProps } from "react-native";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewProps,
+} from "react-native";
 import { router, Stack, type NativeStackHeaderItem } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { HeaderHeightContext } from "expo-router/react-navigation";
@@ -107,6 +115,7 @@ function Conversation() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const headerHeight = useContext(HeaderHeightContext) ?? 0;
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const screenMargin = useScreenMargin();
   const { messages, remaining, allowance, resetsAt, sending, stage, loaded, send, retry, report } = useChat();
   const [draft, setDraft] = useState("");
@@ -119,6 +128,7 @@ function Conversation() {
     selectedId: null,
   });
   const [reporting, setReporting] = useState(false);
+  const [bodyBottom, setBodyBottom] = useState<number | null>(null);
   const [focus, setFocus] = useState<{ id: string; n: number; token: number } | null>(null);
   const reportInFlight = useRef(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
@@ -243,18 +253,26 @@ function Conversation() {
     },
   ];
 
+  const reportLink =
+    !selecting.active && shown.some(isReportable) ? (
+      <PressableScale
+        variant="button"
+        onPress={() => setSelecting({ active: true, selectedId: null })}
+        accessibilityRole="button"
+        accessibilityLabel="Report a message"
+        style={styles.reportLink}
+      >
+        <Footnote color={colors.textTertiary}>Report a message</Footnote>
+      </PressableScale>
+    ) : null;
+
   const footer = sending ? (
     <TypingBubble stage={stage} />
-  ) : !selecting.active && shown.some(isReportable) ? (
-    <PressableScale
-      variant="button"
-      onPress={() => setSelecting({ active: true, selectedId: null })}
-      accessibilityRole="button"
-      accessibilityLabel="Report a message"
-      style={styles.reportLink}
-    >
-      <Footnote color={colors.textTertiary}>Report a message</Footnote>
-    </PressableScale>
+  ) : reportLink || showPrompts ? (
+    <View style={styles.footer}>
+      {reportLink}
+      {showPrompts ? <QuickPrompts prompts={prompts} onPick={sendText} /> : null}
+    </View>
   ) : null;
 
   return (
@@ -265,7 +283,14 @@ function Conversation() {
           unstable_headerRightItems: headerRightItems,
         }}
       />
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView
+        style={styles.fill}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        // It measures itself from the sheet's top but the keyboard from the screen's, so it needs the sheet's offset. That is the
+        // screen height minus our bottom, since the sheet reaches the screen's bottom. The inset is dropped because the keyboard covers the home indicator.
+        keyboardVerticalOffset={bodyBottom === null ? 0 : windowHeight - bodyBottom - insets.bottom}
+        onLayout={(e) => setBodyBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+      >
         <View style={styles.fill}>
           <CellLayoutContext.Provider value={onCellLayout}>
             <FlatList
@@ -350,7 +375,6 @@ function Conversation() {
             style={styles.bottomFade}
           />
         </View>
-        {showPrompts ? <QuickPrompts prompts={prompts} onPick={sendText} /> : null}
         {selecting.active ? (
           <View
             style={[
@@ -420,6 +444,7 @@ const createStyles = (theme: AppTheme) => {
     timeLine: { textAlign: "center" },
     timeDay: { fontWeight: "600" },
     reportLink: { alignSelf: "center", paddingVertical: spacing.xs },
+    footer: { gap: spacing.lg },
     selectionBar: {
       flexDirection: "row",
       justifyContent: "space-between",
