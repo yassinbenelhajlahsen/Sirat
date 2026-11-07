@@ -129,7 +129,12 @@ export function citationId(c: Citation): string {
   return c.kind === "quran" ? `q:${c.surah}:${c.ayah}` : `${c.kind === "hadith" ? "h" : "d"}:${c.id}`;
 }
 
-const MARKER_GROUP = /([^\S\n]*)\[((?:[qhd]:[\d:]+)(?:\s*,\s*[qhd]:[\d:]+)*)\]/g;
+const MARKER_GROUP = /([^\S\n]*)\[\s*((?:[qhd]:[\d:]+)(?:\s*,\s*[qhd]:[\d:]+)*)\s*\]/gi;
+const normalizeId = (id: string) => id.trim().toLowerCase();
+// Brackets of bare numbers, lists or ranges: [1], [1000], [1, 2], [1-3].
+const WRITTEN_NUMBERS = /[^\S\n]*\[\s*\d+(?:\s*[,\-–]\s*\d+)*\s*\]/g;
+// Whatever ID-like bracket is left once numbering is done, e.g. [q:2:286-288] or [q:2:286; h:1].
+const LEFTOVER_ID = /[^\S\n]*\[[^\]\n]*\b[qhd]\s*:\s*\d[^\]\n]*\]/gi;
 
 /**
  * Turns the model's [q:2:286] / [h:1] / [d:3] markers into [n] matching the
@@ -139,19 +144,19 @@ const MARKER_GROUP = /([^\S\n]*)\[((?:[qhd]:[\d:]+)(?:\s*,\s*[qhd]:[\d:]+)*)\]/g
  */
 export function numberCitations(text: string, citations: Citation[]): { text: string; citations: Citation[] } {
   // Models imitate the numbered form and write [1] themselves; those would collide with ours.
-  const clean = text.replace(/[^\S\n]*\[\d{1,3}\]/g, "");
+  const clean = text.replace(WRITTEN_NUMBERS, "");
   const available = new Set(citations.map(citationId));
   const marked = new Set<string>();
   for (const m of clean.matchAll(MARKER_GROUP)) {
-    for (const id of m[2].split(",")) if (available.has(id.trim())) marked.add(id.trim());
+    for (const id of m[2].split(",")) if (available.has(normalizeId(id))) marked.add(normalizeId(id));
   }
   const byId = new Map(citations.map((c) => [citationId(c), c]));
   const kept = [...[...marked].map((id) => byId.get(id)!), ...citations.filter((c) => !marked.has(citationId(c)))].slice(0, MAX_CITATIONS);
   const position = new Map(kept.map((c, i) => [citationId(c), i + 1]));
   const numbered = clean.replace(MARKER_GROUP, (_, ws: string, ids: string) => {
-    const nums = ids.split(",").flatMap((id) => position.get(id.trim()) ?? []);
+    const nums = ids.split(",").flatMap((id) => position.get(normalizeId(id)) ?? []);
     return nums.length ? ws + nums.map((n) => `[${n}]`).join("") : "";
   });
-  const tidy = numbered.replace(/(\[\d+\])(\s*\1)+/g, "$1").replace(/ {2,}/g, " ");
+  const tidy = numbered.replace(LEFTOVER_ID, "").replace(/(\[\d+\])(?:[^\S\n]*\1)+/g, "$1").replace(/ {2,}/g, " ");
   return { text: tidy, citations: kept };
 }

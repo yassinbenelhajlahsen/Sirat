@@ -252,6 +252,26 @@ describe("chat guards", () => {
       const { numberCitations } = await load();
       expect(numberCitations("Yes [h:1] [h:1].", [hadith(1)]).text).toBe("Yes [1].");
     });
+    it("numbers a marker with other letter case or spaces inside the bracket", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("A [Q:2:286] b [ h:1 ].", [hadith(1), quran(2, 286)]).text).toBe("A [1] b [2].");
+    });
+    it("removes a marker holding two ids with a semicolon", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("Yes [q:2:286; h:1].", [hadith(1), quran(2, 286)]).text).toBe("Yes.");
+    });
+    it("removes a marker holding a verse range", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("Yes [q:2:286-288].", [quran(2, 286)]).text).toBe("Yes.");
+    });
+    it("strips number lists and four-digit numbers the model wrote", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("A [1, 2] b [1000] c [1-3].", [hadith(1)]).text).toBe("A b c.");
+    });
+    it("keeps a paragraph break when collapsing repeats", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("End [h:1]\n\n[h:1] Next.", [hadith(1)]).text).toBe("End [1]\n\n[1] Next.");
+    });
     it("caps at six after reordering, so marked sources win", async () => {
       const { numberCitations, citationId } = await load();
       const seven = [1, 2, 3, 4, 5, 6, 7].map(hadith);
