@@ -127,6 +127,17 @@ describe("chat answer text and sources", () => {
     expect(queryByText("Show more")).toBeNull();
   });
 
+  it("A long hadith title is clamped to 2 lines and shows in full after 'Show more'", () => {
+    const { getByText, queryByText } = render(<SourcesBlock citations={[hadith]} focus={null} />);
+    const title = getByText("The traveller's remembrance");
+    expect(title.props.numberOfLines).toBeUndefined();
+    fireEvent(title, "textLayout", lines(5));
+    expect(getByText("The traveller's remembrance").props.numberOfLines).toBe(2);
+    fireEvent.press(getByText("Show more"));
+    expect(queryByText("Show more")).toBeNull();
+    expect(getByText("The traveller's remembrance").props.numberOfLines).toBeUndefined();
+  });
+
   it("A short source has no 'Show more'", () => {
     const { getByText, queryByText } = render(<SourcesBlock citations={[quran]} focus={null} />);
     fireEvent(getByText(quran.kind === "quran" ? quran.english! : ""), "textLayout", lines(1));

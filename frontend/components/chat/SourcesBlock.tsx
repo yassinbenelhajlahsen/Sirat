@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, type TextLayoutEvent } from "react-native";
 import { router } from "expo-router";
 
 import AppIcon, { type AppIconName } from "@/components/ui/AppIcon";
@@ -102,15 +102,14 @@ function Row({ citation, n, last, expanded, highlighted, onExpand, onLayoutY }: 
   const [long, setLong] = useState(false);
 
   // Measured unclamped first. `long` never resets, so expanding and re-measuring cannot hide the button.
+  const clamp = (lines: number) => ({
+    numberOfLines: long && !expanded ? lines : undefined,
+    onTextLayout: (e: TextLayoutEvent) => {
+      if (e.nativeEvent.lines.length > lines) setLong(true);
+    },
+  });
   const clamped = (lines: number, node: ReactNode, style?: object) => (
-    <Text
-      style={style}
-      maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE}
-      numberOfLines={long && !expanded ? lines : undefined}
-      onTextLayout={(e) => {
-        if (e.nativeEvent.lines.length > lines) setLong(true);
-      }}
-    >
+    <Text style={style} maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE} {...clamp(lines)}>
       {node}
     </Text>
   );
@@ -171,16 +170,18 @@ function Row({ citation, n, last, expanded, highlighted, onExpand, onLayoutY }: 
 
   const headerContent = (
     <>
-      <View style={styles.num}>
-        <Text style={styles.numText} maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE}>
-          {n}
-        </Text>
+      <View style={styles.firstLine}>
+        <View style={styles.num}>
+          <Text style={styles.numText} maxFontSizeMultiplier={TEXT_MAX_FONT_SCALE}>
+            {n}
+          </Text>
+        </View>
+        <AppIcon name={ICONS[citation.kind]} size={15} color={colors.accent} />
       </View>
-      <AppIcon name={ICONS[citation.kind]} size={15} color={colors.accent} />
-      <Subhead color={colors.white} style={styles.labelText}>
+      <Subhead color={colors.white} style={styles.labelText} {...clamp(2)}>
         {label}
       </Subhead>
-      {right}
+      {right ? <View style={styles.firstLine}>{right}</View> : null}
     </>
   );
 
@@ -227,7 +228,9 @@ const createStyles = (theme: AppTheme) => {
     row: { paddingVertical: spacing.md, paddingHorizontal: 14, gap: 6 },
     divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: withOpacity(colors.white, 0.09) },
     highlight: { backgroundColor: withOpacity(colors.accent, 0.1) },
-    label: { flexDirection: "row", alignItems: "center", gap: 7 },
+    label: { flexDirection: "row", alignItems: "flex-start", gap: 7 },
+    // As tall as the label's first line, so the tag, icon and right detail center on it when a title wraps.
+    firstLine: { height: theme.type.subhead.lineHeight, flexDirection: "row", alignItems: "center", gap: 7 },
     labelText: { flex: 1, fontWeight: "600" },
     num: {
       width: 18,
