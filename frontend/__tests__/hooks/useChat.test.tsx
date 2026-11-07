@@ -7,11 +7,13 @@ const mockGetDeviceToken = jest.fn();
 const mockHasDeviceCheckModule = jest.fn();
 const mockReportChatAnswer = jest.fn();
 const mockFocusEffects: Array<() => void> = [];
+const mockStreamFetch = jest.fn();
 
 jest.mock("@/services/chat/chatApi", () => ({
   sendChat: (...args: unknown[]) => mockSendChat(...args),
   getChatStatus: (...args: unknown[]) => mockGetChatStatus(...args),
 }));
+jest.mock("expo/fetch", () => ({ fetch: (...args: unknown[]) => mockStreamFetch(...args) }));
 jest.mock("@/services/chat/deviceCheck", () => ({
   getDeviceToken: (...args: unknown[]) => mockGetDeviceToken(...args),
   hasDeviceCheckModule: (...args: unknown[]) => mockHasDeviceCheckModule(...args),
@@ -97,7 +99,7 @@ describe("hooks/useChat", () => {
       history: [],
       summary: null,
       deviceToken: "token",
-    });
+    }, expect.any(Function));
     expect((await storedChat()).summary).toBe("new summary");
   });
 
@@ -197,6 +199,61 @@ describe("hooks/useChat", () => {
     await expect(loadChat()).resolves.toEqual({ messages: [], summary: null });
   });
 
+  it("exposes the latest stage while sending and clears it when the send ends", async () => {
+    let finish!: (value: unknown) => void;
+    let fail!: (err: Error) => void;
+    mockSendChat
+      .mockImplementationOnce((_body, onStage) => new Promise((resolve) => { onStage("writing"); finish = resolve; }))
+      .mockImplementationOnce((_body, onStage) => new Promise((_resolve, reject) => { onStage("dua"); fail = reject; }));
+    const { result } = await mountChat();
+    expect(result.current.stage).toBeNull();
+
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.send("first");
+    });
+    await waitFor(() => expect(result.current.stage).toBe("writing"));
+    act(() => mockSendChat.mock.calls[0][1]("quran"));
+    expect(result.current.stage).toBe("quran");
+    await act(async () => {
+      finish(ANSWER);
+      await pending;
+    });
+    expect(result.current.stage).toBeNull();
+
+    act(() => {
+      pending = result.current.send("second");
+    });
+    await waitFor(() => expect(result.current.stage).toBe("dua"));
+    await act(async () => {
+      fail(new Error("Chat failed (502)"));
+      await pending;
+    });
+    expect(result.current.stage).toBeNull();
+  });
+
+  it("ignores stages that arrive after sign-out", async () => {
+    let finish!: (value: unknown) => void;
+    mockSendChat.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    const { result } = await mountChat();
+
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.send("before sign-out");
+    });
+    await waitFor(() => expect(mockSendChat).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      await clearChat();
+    });
+    act(() => mockSendChat.mock.calls[0][1]("hadith"));
+    expect(result.current.stage).toBeNull();
+    await act(async () => {
+      finish(ANSWER);
+      await pending;
+    });
+    expect(result.current.stage).toBeNull();
+  });
+
   it("a send after sign-out starts a fresh conversation", async () => {
     mockSendChat.mockResolvedValueOnce(ANSWER);
     const { result } = await mountChat();
@@ -224,11 +281,11 @@ describe("hooks/useChat", () => {
     const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     const consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
     const actualSendChat = jest.requireActual("@/services/chat/chatApi").sendChat;
-    jest.spyOn(global, "fetch").mockResolvedValueOnce({
+    mockStreamFetch.mockResolvedValueOnce({
       ok: false,
       status: 502,
       json: async () => ({ error: "Chat failed, please try again" }),
-    } as Response);
+    });
     mockSendChat.mockImplementationOnce((body: unknown) => actualSendChat(body));
     const { result } = await mountChat();
 

@@ -1,16 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
+import { Caption } from "@/components/ui/Text";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import type { ChatStage } from "@/services/chat/chatApi";
 
 const CYCLE_MS = 1200;
 const STAGGER_MS = 200;
 const PULSE_MS = 360;
 const DIM = 0.35;
+const WRITING = "Writing an answer";
 
-export default function TypingBubble() {
+const STAGE_LABELS: Record<ChatStage, string> = {
+  writing: WRITING,
+  quran: "Searching the Quran",
+  hadith: "Searching hadith",
+  dua: "Searching duas",
+};
+
+export default function TypingBubble({ stage = null }: { stage?: ChatStage | null }) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const reduceMotion = useReducedMotion();
@@ -34,11 +44,22 @@ export default function TypingBubble() {
     return () => loop.stop();
   }, [dots, reduceMotion]);
 
+  const label = stage ? STAGE_LABELS[stage] : null;
+
   return (
-    <View style={styles.bubble} accessible accessibilityLabel="Writing an answer">
+    <View
+      style={styles.bubble}
+      accessible
+      accessibilityLabel={label && label !== WRITING ? `${WRITING}, ${label}` : WRITING}
+    >
       {dots.map((dot, i) => (
         <Animated.View key={i} style={[styles.dot, { opacity: reduceMotion ? 0.6 : dot }]} />
       ))}
+      {label ? (
+        <Caption color={theme.colors.textTertiary} style={styles.label}>
+          {label}
+        </Caption>
+      ) : null}
     </View>
   );
 }
@@ -48,6 +69,7 @@ const createStyles = (theme: AppTheme) =>
     bubble: {
       alignSelf: "flex-start",
       flexDirection: "row",
+      alignItems: "center",
       gap: 5,
       paddingVertical: 13,
       paddingHorizontal: 16,
@@ -56,4 +78,5 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: withOpacity(theme.colors.white, 0.11),
     },
     dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.textTertiary },
+    label: { marginLeft: 5 },
   });

@@ -108,7 +108,7 @@ function Conversation() {
   const headerHeight = useContext(HeaderHeightContext) ?? 0;
   const insets = useSafeAreaInsets();
   const screenMargin = useScreenMargin();
-  const { messages, remaining, allowance, resetsAt, sending, loaded, send, retry, report } = useChat();
+  const { messages, remaining, allowance, resetsAt, sending, stage, loaded, send, retry, report } = useChat();
   const [draft, setDraft] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [openedAt] = useState(Date.now);
@@ -244,7 +244,7 @@ function Conversation() {
   ];
 
   const footer = sending ? (
-    <TypingBubble />
+    <TypingBubble stage={stage} />
   ) : !selecting.active && shown.some(isReportable) ? (
     <PressableScale
       variant="button"

@@ -1,4 +1,4 @@
-import { apiFetch } from "@/services/apiClient";
+import { apiFetch, apiStream } from "@/services/apiClient";
 import { isChatDevBypass } from "@/utils/devChat";
 
 // Mirrors the server's chat contract (backend/src/services/chat). Keep in step with it.
@@ -46,6 +46,9 @@ export type ChatReply =
   | ({ kind: "blocked" } & Allowance)
   | ({ kind: "limit"; remaining: 0 } & Allowance);
 
+// What the server is doing while a reply is prepared: writing, or searching one of the sources.
+export type ChatStage = "writing" | "quran" | "hadith" | "dua";
+
 export type ChatStatus = {
   enabled: boolean;
   allowance: number | null;
@@ -62,6 +65,23 @@ export function getChatStatus(): Promise<ChatStatus> {
   return apiFetch<ChatStatus>("/api/chat/status", { headers: devHeaders() });
 }
 
-export function sendChat(body: ChatRequest): Promise<ChatReply> {
-  return apiFetch<ChatReply>("/api/chat", { method: "POST", body, headers: devHeaders() });
+const SOURCES: readonly string[] = ["quran", "hadith", "dua"];
+
+export async function sendChat(body: ChatRequest, onStage?: (stage: ChatStage) => void): Promise<ChatReply> {
+  let reply: ChatReply | undefined;
+  const plain = await apiStream("/api/chat", { body, headers: devHeaders() }, (event) => {
+    if (event?.type === "reply") {
+      const { type: _type, ...rest } = event;
+      reply = rest;
+    } else if (event?.type === "error") {
+      throw new Error(`Chat failed (${event.status})`);
+    } else if (event?.type === "stage") {
+      if (event.stage === "writing") onStage?.("writing");
+      else if (event.stage === "searching" && SOURCES.includes(event.source)) onStage?.(event.source);
+    }
+  });
+  // A server without streaming answers with the plain reply.
+  if (plain !== undefined) return plain as ChatReply;
+  if (!reply) throw new Error("Chat stream ended without a reply");
+  return reply;
 }

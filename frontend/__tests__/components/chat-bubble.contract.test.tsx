@@ -3,6 +3,7 @@ import { AccessibilityInfo, Clipboard, Dimensions, StyleSheet, type StyleProp, t
 
 import ChatBubble from "@/components/chat/ChatBubble";
 import TypingBubble from "@/components/chat/TypingBubble";
+import { TEXT_MAX_FONT_SCALE } from "@/components/ui/Text";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { defaultTheme } from "@/constants/theme";
 import type { Citation } from "@/services/chat/chatApi";
@@ -261,5 +262,21 @@ describe("TypingBubble", () => {
   it("has the label 'Writing an answer'", () => {
     const { getByLabelText } = render(<TypingBubble />);
     expect(getByLabelText("Writing an answer")).toBeTruthy();
+  });
+
+  it("shows no stage text before the first event", () => {
+    const { queryByText } = render(<TypingBubble stage={null} />);
+    expect(queryByText(/Searching|Writing/)).toBeNull();
+  });
+
+  it.each([
+    ["writing", "Writing an answer", "Writing an answer"],
+    ["quran", "Searching the Quran", "Writing an answer, Searching the Quran"],
+    ["hadith", "Searching hadith", "Writing an answer, Searching hadith"],
+    ["dua", "Searching duas", "Writing an answer, Searching duas"],
+  ] as const)("shows the %s stage", (stage, text, label) => {
+    const { getByText, getByLabelText } = render(<TypingBubble stage={stage} />);
+    expect(getByText(text).props.maxFontSizeMultiplier).toBe(TEXT_MAX_FONT_SCALE);
+    expect(getByLabelText(label)).toBeTruthy();
   });
 });
