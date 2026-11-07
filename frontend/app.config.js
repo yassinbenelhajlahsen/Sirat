@@ -36,7 +36,7 @@ export default {
         NSLocationWhenInUseUsageDescription:
           "Sirat uses your location to show accurate prayer times for your area, determine the Qibla direction, and find nearby mosques.",
         NSUserNotificationsUsageDescription:
-          "Sirat sends prayer time reminders and notifications you enable in the app settings.",
+          "Sirat sends prayer reminders and occasional app news. You can change these in settings.",
         UIBackgroundModes: ["audio"],
       },
     },
