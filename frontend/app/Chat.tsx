@@ -150,8 +150,9 @@ function Conversation() {
           value={draft}
           onChangeText={setDraft}
           onSend={onSend}
-          sending={sending}
-          remaining={remaining}
+          // shortcut: the field still shows at the limit and Send is just disabled; Task 9 passes limitLines here.
+          sending={sending || remaining === 0}
+          limit={null}
         />
       </KeyboardAvoidingView>
       <CopyToast
