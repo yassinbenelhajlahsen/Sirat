@@ -1,5 +1,5 @@
-import { fireEvent, render } from "@testing-library/react-native";
-import { AccessibilityInfo, Clipboard, Dimensions, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { fireEvent, render, within } from "@testing-library/react-native";
+import { AccessibilityInfo, Clipboard, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 import ChatBubble from "@/components/chat/ChatBubble";
 import TypingBubble from "@/components/chat/TypingBubble";
@@ -68,12 +68,12 @@ beforeEach(() => jest.clearAllMocks());
 
 describe("ChatBubble", () => {
   it("your message renders in an accent bubble labelled 'You said: …'", () => {
-    const { getByLabelText, getByText, queryByRole } = renderBubble(user());
+    const { getByLabelText, getByText, queryByTestId } = renderBubble(user());
 
     const bubble = getByLabelText("You said: Is zakat due on gold?");
     expect(flatStyle(bubble).backgroundColor).toBe(defaultTheme.colors.accent);
     expect(StyleSheet.flatten(getByText("Is zakat due on gold?").props.style).color).toBe(defaultTheme.colors.onAccent);
-    expect(queryByRole("button", { name: "Copy" })).toBeNull();
+    expect(queryByTestId("answer-menu")).toBeNull();
     expect(bubble.props.accessibilityActions).toBeUndefined();
   });
 
@@ -87,22 +87,15 @@ describe("ChatBubble", () => {
     expect(queryByText(DISCLAIMER)).toBeNull();
   });
 
-  it("the menu's hosted view caps the answer at 85% of the list width, so long text wraps inside it", () => {
-    const { toJSON } = renderBubble(answer());
-    const listWidth = Dimensions.get("window").width - 2 * 20;
+  it("the hold menu wraps the bubble with no sizing of its own, so the row hugs and wraps like any RN view", () => {
+    const { getByTestId, getAllByLabelText, toJSON } = renderBubble(answer());
+    const menu = getByTestId("answer-menu");
 
-    expect(JSON.stringify(toJSON())).toContain(`"maxWidth":${listWidth * 0.85}`);
-  });
-
-  it("the row's height comes from an invisible copy of the answer at the same cap, hidden from VoiceOver and touches", () => {
-    const { getByTestId, getAllByLabelText } = renderBubble(answer());
-    const spacer = getByTestId("answer-menu-spacer", { includeHiddenElements: true });
-    const listWidth = Dimensions.get("window").width - 2 * 20;
-
-    expect(flatStyle(spacer)).toMatchObject({ opacity: 0, maxWidth: listWidth * 0.85 });
-    expect(spacer.props.accessibilityElementsHidden).toBe(true);
-    expect(spacer.props.pointerEvents).toBe("none");
+    expect(menu.props.style).toBeUndefined();
+    expect(menu.props.canReport).toBe(true);
+    expect(within(menu).getByLabelText("Answer: Yes, once it reaches nisab.")).toBeTruthy();
     expect(getAllByLabelText(/^Answer:/)).toHaveLength(1);
+    expect(JSON.stringify(toJSON())).toContain('"maxWidth":"85%"');
   });
 
   it("a number tag calls onRefPress with the message id and number", () => {
@@ -141,9 +134,9 @@ describe("ChatBubble", () => {
 
   it("Copy writes copyText to the clipboard", () => {
     const setString = jest.spyOn(Clipboard, "setString").mockImplementation(() => {});
-    const { getByRole } = renderBubble(answer());
+    const { getByTestId } = renderBubble(answer());
 
-    fireEvent.press(getByRole("button", { name: "Copy" }));
+    fireEvent(getByTestId("answer-menu"), "copy");
 
     expect(setString).toHaveBeenCalledWith("Yes, once it reaches nisab.\n\nQuran 2:286 (Al-Baqarah)");
     setString.mockRestore();
@@ -166,9 +159,9 @@ describe("ChatBubble", () => {
   });
 
   it("Report is offered for an unreported answer and hidden when `reported` is set", () => {
-    const { getByRole, getByLabelText, rerender, queryByRole } = renderBubble(answer());
+    const { getByTestId, getByLabelText, rerender } = renderBubble(answer());
 
-    fireEvent.press(getByRole("button", { name: "Report" }));
+    fireEvent(getByTestId("answer-menu"), "report");
     expect(onReport).toHaveBeenCalledWith("a1");
 
     rerender(
@@ -183,8 +176,7 @@ describe("ChatBubble", () => {
         onRefPress={onRefPress}
       />,
     );
-    expect(queryByRole("button", { name: "Report" })).toBeNull();
-    expect(getByRole("button", { name: "Copy" })).toBeTruthy();
+    expect(getByTestId("answer-menu").props.canReport).toBe(false);
     expect(getByLabelText("Answer: Yes, once it reaches nisab.").props.accessibilityActions).toEqual([
       { name: "Source 1", label: "Source 1" },
       { name: "copy", label: "Copy" },
@@ -195,20 +187,20 @@ describe("ChatBubble", () => {
     const setString = jest.spyOn(Clipboard, "setString").mockImplementation(() => {});
     const blocked = renderBubble(answer({ text: "", citations: [], notice: "blocked" }));
     expect(blocked.getByLabelText(`Answer: ${BLOCKED}`)).toBeTruthy();
-    expect(blocked.queryByRole("button", { name: "Report" })).toBeNull();
-    fireEvent.press(blocked.getByRole("button", { name: "Copy" }));
+    expect(blocked.getByTestId("answer-menu").props.canReport).toBe(false);
+    fireEvent(blocked.getByTestId("answer-menu"), "copy");
     expect(setString).toHaveBeenLastCalledWith(BLOCKED);
     blocked.unmount();
 
     const limit = renderBubble(answer({ text: "", citations: [], notice: "limit" }));
-    expect(limit.queryByRole("button", { name: "Report" })).toBeNull();
-    fireEvent.press(limit.getByRole("button", { name: "Copy" }));
+    expect(limit.getByTestId("answer-menu").props.canReport).toBe(false);
+    fireEvent(limit.getByTestId("answer-menu"), "copy");
     expect(setString).toHaveBeenLastCalledWith("You've used this month's 15 messages. They reset on December 1.");
     limit.unmount();
 
     const crisis = renderBubble(answer({ text: "", citations: [], notice: "crisis" }));
     expect(crisis.getByText(CRISIS_MESSAGE)).toBeTruthy();
-    expect(crisis.queryByRole("button", { name: "Copy" })).toBeNull();
+    expect(crisis.queryByTestId("answer-menu")).toBeNull();
     expect(crisis.getByLabelText(CRISIS_MESSAGE).props.accessibilityActions).toBeUndefined();
     setString.mockRestore();
   });
@@ -223,7 +215,7 @@ describe("ChatBubble", () => {
 
   it("in selection mode a selectable answer shows a selector with the selected state, and non-selectable items are dimmed", () => {
     const onSelect = jest.fn();
-    const { getByRole, rerender, getByLabelText, queryByRole, toJSON } = renderBubble(answer(), {
+    const { getByRole, rerender, getByLabelText, queryByRole, queryByTestId, toJSON } = renderBubble(answer(), {
       active: true,
       selectable: true,
       selected: true,
@@ -232,7 +224,7 @@ describe("ChatBubble", () => {
 
     const selector = getByRole("radio");
     expect(selector.props.accessibilityState).toEqual(expect.objectContaining({ selected: true }));
-    expect(queryByRole("button", { name: "Copy" })).toBeNull();
+    expect(queryByTestId("answer-menu")).toBeNull();
     expect(getByLabelText("Answer: Yes, once it reaches nisab.").props.accessibilityActions).toEqual([
       { name: "Source 1", label: "Source 1" },
     ]);

@@ -6,6 +6,7 @@
 // bump it (and rebuild) only when one of these lands:
 //
 // - DeviceCheck token for the chat quota (modules/sirat-device-check, iOS)
+// - Native hold menu for chat answers (modules/sirat-context-menu, iOS)
 //
 // Search the codebase for "NEEDS NATIVE BUILD" to find every call site that
 // was written around the current native build.

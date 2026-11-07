@@ -632,16 +632,16 @@ describe("Chat screen", () => {
       let fail: (e: Error) => void = () => {};
       report.mockImplementationOnce(() => new Promise<void>((_, reject) => (fail = reject)));
       mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.", { citations: [QURAN] })] }));
-      const { getByRole, findByText } = await renderChat();
+      const { getByTestId, findByText } = await renderChat();
 
-      fireEvent.press(getByRole("button", { name: "Report" }));
-      fireEvent.press(getByRole("button", { name: "Report" }));
+      fireEvent(getByTestId("answer-menu"), "report");
+      fireEvent(getByTestId("answer-menu"), "report");
       expect(report).toHaveBeenCalledTimes(1);
 
       await act(async () => fail(new Error("Couldn't send")));
       expect(await findByText(REPORT_FAILED)).toBeTruthy();
 
-      fireEvent.press(getByRole("button", { name: "Report" }));
+      fireEvent(getByTestId("answer-menu"), "report");
       expect(report).toHaveBeenLastCalledWith("a1");
       expect(await findByText(THANKS)).toBeTruthy();
     });
