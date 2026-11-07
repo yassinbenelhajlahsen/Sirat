@@ -67,3 +67,8 @@ it("copyText adds one reference line per source", () => {
 it("copyText has no trailing block without sources", () => {
   expect(copyText(answerWith("Plain.", []), () => "x")).toBe("Plain.");
 });
+
+it("copyText skips a source of a kind this build does not know", () => {
+  const unknown = { kind: "fatwa", id: 1 } as unknown as Citation;
+  expect(copyText(answerWith("Yes.", [unknown, dua({ reference: "Muslim 1342" })]), () => "x")).toBe("Yes.\n\nMuslim 1342");
+});

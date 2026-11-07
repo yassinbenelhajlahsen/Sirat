@@ -152,16 +152,16 @@ describe("Chat screen", () => {
     expect(await findByLabelText("Your question")).toBeTruthy();
   });
 
-  it("an answer shows the disclaimer verbatim and its citation", async () => {
+  it("an answer shows its text and citation, with no per-answer disclaimer", async () => {
     mockUseChat.mockReturnValue(
       chatState({
         messages: [user("q1", "Is zakat due on gold?"), answer("a1", "Yes, when it reaches nisab.", { citations: [QURAN] })],
       }),
     );
-    const { getByText, getAllByText } = await renderChat();
+    const { getByText, queryByText } = await renderChat();
 
     expect(getByText("Yes, when it reaches nisab.")).toBeTruthy();
-    expect(getAllByText(DISCLAIMER)).toHaveLength(1);
+    expect(queryByText(DISCLAIMER)).toBeNull();
     expect(getByText("Allah")).toBeTruthy();
   });
 
@@ -169,7 +169,7 @@ describe("Chat screen", () => {
     mockUseChat.mockReturnValue(chatState({ messages: [answer("a1", "See the verse.", { citations: [QURAN] })] }));
     const { getByRole } = await renderChat();
 
-    fireEvent.press(getByRole("button", { name: "Open Quran 2:255" }));
+    fireEvent.press(getByRole("button", { name: /^Open .* 2:255$/ }));
 
     expect(mockBack).toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith({
@@ -184,8 +184,8 @@ describe("Chat screen", () => {
     mockUseChat.mockReturnValue(chatState({ messages: [answer("a1", "See the verse.", { citations: [QURAN] })] }));
     const { getByRole } = await renderChat();
 
-    fireEvent.press(getByRole("button", { name: "Open Quran 2:255" }));
-    fireEvent.press(getByRole("button", { name: "Open Quran 2:255" }));
+    fireEvent.press(getByRole("button", { name: /^Open .* 2:255$/ }));
+    fireEvent.press(getByRole("button", { name: /^Open .* 2:255$/ }));
 
     expect(mockPush.mock.calls.map(([target]) => target.params.at)).toEqual(["1000", "2000"]);
     now.mockRestore();
@@ -332,7 +332,7 @@ describe("Chat screen", () => {
     mockUseChat.mockReturnValue(chatState({ messages: [{ ...user("m1", "Question?"), status: "failed" }] }));
     const { getByText } = await renderChat();
 
-    fireEvent.press(getByText("Didn't send. Tap to retry"));
+    fireEvent.press(getByText("Not delivered. Tap to retry"));
 
     expect(retry).toHaveBeenCalledWith("m1");
   });
@@ -384,18 +384,18 @@ describe("Chat screen", () => {
     mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.", { citations: [QURAN] })] }));
     const { getByRole, findByText } = await renderChat();
 
-    fireEvent.press(getByRole("button", { name: "Report this answer" }));
+    fireEvent.press(getByRole("button", { name: "Report" }));
 
     expect(report).toHaveBeenCalledWith("a1");
     expect(await findByText("Thanks, we'll review this answer.")).toBeTruthy();
   });
 
-  it("a failed report says so under the answer", async () => {
+  it("a failed report says so in the toast", async () => {
     report.mockRejectedValueOnce(new Error("Couldn't send"));
     mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.")] }));
     const { getByRole, findByText } = await renderChat();
 
-    fireEvent.press(getByRole("button", { name: "Report this answer" }));
+    fireEvent.press(getByRole("button", { name: "Report" }));
 
     expect(await findByText("Couldn't send the report. Please try again.")).toBeTruthy();
   });

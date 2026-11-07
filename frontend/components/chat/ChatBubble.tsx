@@ -1,51 +1,75 @@
 // frontend/components/chat/ChatBubble.tsx
-import { useMemo, useState } from "react";
-import { Linking, StyleSheet, View } from "react-native";
+import { useMemo, useRef } from "react";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
 
-import CitationCard from "@/components/chat/CitationCard";
+import AnswerMenu from "@/components/chat/AnswerMenu";
+import AnswerText from "@/components/chat/AnswerText";
+import SourcesBlock from "@/components/chat/SourcesBlock";
 import PressableScale from "@/components/PressableScale";
 import AppIcon from "@/components/ui/AppIcon";
 import { Body, Caption, Footnote, Subhead } from "@/components/ui/Text";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { copyText, plainAnswer } from "@/services/chat/answerFormat";
 import type { ChatMessage } from "@/services/chat/chatStore";
 import { limitMessage } from "@/services/chat/limit";
+import { surahLabel } from "@/services/chat/sources";
 
 export const CHAT_DISCLAIMER = "This is an aid and answers may be wrong. Please consult a trusted scholar.";
 const BLOCKED_MESSAGE = "I can't help with that one. Please ask a trusted scholar.";
-
-type ReportState = "idle" | "sending" | "failed" | "sent";
+const SELECTOR_SIZE = 22;
 
 type Props = {
   message: ChatMessage;
   allowance: number | null;
   resetsAt: string | null;
+  sourceFocus: { n: number; token: number } | null;
+  selection: { active: boolean; selectable: boolean; selected: boolean; onSelect: () => void };
   onRetry: (id: string) => void;
-  onReport: (id: string) => Promise<void>;
+  onReport: (id: string) => void;
+  onRefPress: (id: string, n: number) => void;
+  onSourceLayout?: (id: string, n: number, y: number) => void;
 };
 
-export default function ChatBubble({ message, allowance, resetsAt, onRetry, onReport }: Props) {
+export default function ChatBubble({
+  message,
+  allowance,
+  resetsAt,
+  sourceFocus,
+  selection,
+  onRetry,
+  onReport,
+  onRefPress,
+  onSourceLayout,
+}: Props) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const [reportState, setReportState] = useState<ReportState>("idle");
+  const blockY = useRef<number | null>(null);
+  const rowYs = useRef<Record<number, number>>({});
+  const dim = selection.active && !selection.selectable ? styles.dim : null;
 
   if (message.role === "user") {
+    const failed = message.status === "failed";
     return (
-      <View style={styles.userColumn}>
-        <View style={styles.userBubble}>
-          <Body color={colors.white}>{message.text}</Body>
+      <View style={[styles.userColumn, dim]}>
+        <View
+          style={[styles.userBubble, failed && styles.failed]}
+          accessible
+          accessibilityLabel={`You said: ${message.text}`}
+        >
+          <Body color={colors.onAccent}>{message.text}</Body>
         </View>
-        {message.status === "failed" ? (
+        {failed ? (
           <PressableScale
             variant="button"
             hitSlop={8}
             onPress={() => onRetry(message.id)}
             accessibilityRole="button"
-            accessibilityLabel="Didn't send. Tap to retry"
+            accessibilityLabel="Not delivered. Tap to retry"
           >
-            <Caption color={colors.danger}>Didn&apos;t send. Tap to retry</Caption>
+            <Caption color={colors.danger}>Not delivered. Tap to retry</Caption>
           </PressableScale>
         ) : null}
       </View>
@@ -55,7 +79,7 @@ export default function ChatBubble({ message, allowance, resetsAt, onRetry, onRe
   if (message.notice === "crisis") {
     return (
       <View
-        style={styles.crisisBox}
+        style={[styles.crisisBox, dim]}
         accessible
         accessibilityRole="alert"
         accessibilityLiveRegion="polite"
@@ -66,63 +90,100 @@ export default function ChatBubble({ message, allowance, resetsAt, onRetry, onRe
     );
   }
 
-  if (message.notice) {
-    const text = message.notice === "blocked" ? BLOCKED_MESSAGE : limitMessage(allowance, resetsAt);
-    return (
-      <View style={styles.assistant}>
-        <Body color={colors.white}>{text}</Body>
-      </View>
+  const notice = message.notice
+    ? message.notice === "blocked"
+      ? BLOCKED_MESSAGE
+      : limitMessage(allowance, resetsAt)
+    : null;
+  const citations = notice === null ? (message.citations ?? []) : [];
+  const selecting = selection.active && selection.selectable;
+  const indent = selecting ? styles.indent : null;
+  // Only the text is one "Answer: …" element; the sources and scholar link stay separate so VoiceOver can reach them.
+  const label = `Answer: ${notice ?? plainAnswer(message.text)}`;
+  const content =
+    notice !== null ? (
+      <Body>{notice}</Body>
+    ) : (
+      <AnswerText text={message.text} sourceCount={citations.length} onRefPress={(n) => onRefPress(message.id, n)} />
     );
-  }
 
-  const handleReport = async () => {
-    setReportState("sending");
-    try {
-      await onReport(message.id);
-      setReportState("sent");
-    } catch {
-      setReportState("failed");
+  const emitSource = (n: number) => {
+    if (blockY.current !== null && rowYs.current[n] !== undefined) {
+      onSourceLayout?.(message.id, n, blockY.current + rowYs.current[n]);
     }
   };
 
+  let bubble = selecting ? (
+    <Pressable
+      style={styles.answerBubble}
+      onPress={selection.onSelect}
+      accessibilityLabel={label}
+      accessibilityState={{ selected: selection.selected }}
+    >
+      {content}
+    </Pressable>
+  ) : (
+    <View style={styles.answerBubble} accessible accessibilityLabel={label}>
+      {content}
+    </View>
+  );
+  if (!selection.active) {
+    bubble = (
+      <AnswerMenu
+        copy={notice ?? copyText(message, surahLabel)}
+        canReport={notice === null && !message.reported}
+        onReport={() => onReport(message.id)}
+      >
+        {bubble}
+      </AnswerMenu>
+    );
+  }
+
   return (
-    <View style={styles.assistant}>
-      <Body color={colors.white}>{message.text}</Body>
-      {(message.citations ?? []).map((citation) => (
-        <CitationCard
-          key={citation.kind === "quran" ? `q${citation.surah}:${citation.ayah}` : `${citation.kind}${citation.id}`}
-          citation={citation}
-        />
-      ))}
+    <View style={[styles.answer, dim]}>
+      <View style={styles.answerRow}>
+        {selecting ? (
+          <Pressable
+            onPress={selection.onSelect}
+            hitSlop={8}
+            accessibilityRole="radio"
+            accessibilityLabel="Select this answer"
+            accessibilityState={{ selected: selection.selected }}
+            style={[styles.selector, selection.selected && styles.selectorOn]}
+          >
+            {selection.selected ? <AppIcon name="checkmark" size={14} color={colors.onAccent} /> : null}
+          </Pressable>
+        ) : null}
+        <View style={styles.answerWrap}>{bubble}</View>
+      </View>
+      {citations.length ? (
+        <View
+          style={[styles.sources, indent]}
+          onLayout={(e) => {
+            blockY.current = e.nativeEvent.layout.y;
+            Object.keys(rowYs.current).forEach((n) => emitSource(Number(n)));
+          }}
+        >
+          <SourcesBlock
+            citations={citations}
+            focus={sourceFocus}
+            onRowLayout={(n, y) => {
+              rowYs.current[n] = y;
+              emitSource(n);
+            }}
+          />
+        </View>
+      ) : null}
       {message.scholarLink ? (
         <PressableScale
           variant="button"
           onPress={() => void Linking.openURL(message.scholarLink!).catch(() => {})}
           accessibilityRole="link"
           accessibilityLabel="Read a scholar's answer"
+          style={[styles.link, indent]}
         >
-          <Footnote color={colors.accent}>Read a scholar&apos;s answer</Footnote>
+          <Footnote color={colors.accent}>Read a scholar&apos;s answer ›</Footnote>
         </PressableScale>
-      ) : null}
-      <Caption color={colors.textTertiary}>{CHAT_DISCLAIMER}</Caption>
-      {reportState !== "sent" ? (
-        <>
-          <PressableScale
-            variant="button"
-            hitSlop={8}
-            disabled={reportState === "sending"}
-            onPress={handleReport}
-            accessibilityRole="button"
-            accessibilityLabel="Report this answer"
-            style={styles.reportRow}
-          >
-            <AppIcon name="flag-outline" size={12} color={colors.textTertiary} />
-            <Caption color={colors.textTertiary}>Report</Caption>
-          </PressableScale>
-          {reportState === "failed" ? (
-            <Caption color={colors.danger}>Couldn&apos;t send the report. Please try again.</Caption>
-          ) : null}
-        </>
       ) : null}
     </View>
   );
@@ -131,27 +192,47 @@ export default function ChatBubble({ message, allowance, resetsAt, onRetry, onRe
 const createStyles = (theme: AppTheme) => {
   const { colors, spacing, radii } = theme;
   return StyleSheet.create({
+    dim: { opacity: 0.35 },
     userColumn: { alignItems: "flex-end", gap: spacing.xs },
     userBubble: {
-      maxWidth: "85%",
-      padding: spacing.md,
-      borderRadius: radii.row,
-      backgroundColor: withOpacity(colors.accent, 0.18),
+      maxWidth: "78%",
+      paddingVertical: 9,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+      borderBottomRightRadius: 6,
+      backgroundColor: colors.accent,
     },
-    assistant: { gap: spacing.sm },
+    failed: { opacity: 0.6 },
+    answer: { gap: spacing.sm },
+    answerRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+    answerWrap: { maxWidth: "85%", flexShrink: 1 },
+    answerBubble: {
+      alignSelf: "flex-start",
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+      borderBottomLeftRadius: 6,
+      backgroundColor: withOpacity(colors.white, 0.11),
+    },
+    selector: {
+      width: SELECTOR_SIZE,
+      height: SELECTOR_SIZE,
+      borderRadius: SELECTOR_SIZE / 2,
+      borderWidth: 2,
+      borderColor: colors.textTertiary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    selectorOn: { backgroundColor: colors.accent, borderColor: colors.accent },
+    indent: { marginLeft: SELECTOR_SIZE + spacing.sm },
+    sources: { maxWidth: "85%" },
+    link: { alignSelf: "flex-start", paddingHorizontal: spacing.xs },
     crisisBox: {
       padding: spacing.md,
       borderRadius: radii.row,
       backgroundColor: withOpacity(colors.accent, 0.14),
       borderWidth: 1,
       borderColor: withOpacity(colors.accent, 0.4),
-    },
-    reportRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      alignSelf: "flex-start",
-      gap: spacing.xs,
-      minHeight: 24,
     },
   });
 };

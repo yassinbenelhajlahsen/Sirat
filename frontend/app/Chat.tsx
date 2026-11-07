@@ -20,6 +20,10 @@ import { hasConsented, type ChatMessage } from "@/services/chat/chatStore";
 import { limitMessage } from "@/services/chat/limit";
 import { useChatDevBypass } from "@/utils/devChat";
 
+// shortcut: no selection mode or source scrolling yet; Task 9 wires both.
+const NO_SELECTION = { active: false, selectable: false, selected: false, onSelect: () => {} };
+const noop = () => {};
+
 export default function Chat() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -84,9 +88,11 @@ function Conversation() {
     void send(text);
   };
 
-  const onReport = async (id: string) => {
-    await report(id);
-    setToast("Thanks, we'll review this answer.");
+  const onReport = (id: string) => {
+    report(id).then(
+      () => setToast("Thanks, we'll review this answer."),
+      () => setToast("Couldn't send the report. Please try again."),
+    );
   };
 
   const headerRightItems = (): NativeStackHeaderItem[] => {
@@ -118,8 +124,11 @@ function Conversation() {
               message={item}
               allowance={allowance}
               resetsAt={resetsAt}
+              sourceFocus={null}
+              selection={NO_SELECTION}
               onRetry={retry}
               onReport={onReport}
+              onRefPress={noop}
             />
           )}
           ListFooterComponent={sending ? <PendingReply /> : null}

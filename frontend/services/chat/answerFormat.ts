@@ -1,5 +1,5 @@
 import type { ChatMessage } from "@/services/chat/chatStore";
-import { sourceRefLine } from "@/services/chat/sources";
+import { citationKey, sourceRefLine } from "@/services/chat/sources";
 
 export type Inline = { kind: "text"; text: string; bold: boolean } | { kind: "ref"; n: number };
 export type AnswerBlock = { kind: "paragraph"; inlines: Inline[] } | { kind: "bullets"; items: Inline[][] };
@@ -66,7 +66,7 @@ export function plainAnswer(text: string): string {
 }
 
 export function copyText(message: ChatMessage, surahName: (surah: number) => string): string {
-  const refs = (message.citations ?? []).map((c) => sourceRefLine(c, surahName));
+  const refs = (message.citations ?? []).filter((c) => citationKey(c) !== "").map((c) => sourceRefLine(c, surahName));
   const body = plainAnswer(message.text);
   return refs.length ? `${body}\n\n${refs.join("\n")}` : body;
 }
