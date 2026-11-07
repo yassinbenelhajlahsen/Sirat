@@ -1,6 +1,6 @@
 // frontend/components/chat/ChatBubble.tsx
 import { useMemo, useRef } from "react";
-import { Pressable, StyleSheet, View, type AccessibilityActionEvent } from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions, type AccessibilityActionEvent } from "react-native";
 
 import AnswerMenu from "@/components/chat/AnswerMenu";
 import AnswerText from "@/components/chat/AnswerText";
@@ -11,6 +11,7 @@ import { Body, Caption, Subhead } from "@/components/ui/Text";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+import { useScreenMargin } from "@/hooks/useScreenMargin";
 import { copyText, parseAnswer, plainAnswer } from "@/services/chat/answerFormat";
 import type { ChatMessage } from "@/services/chat/chatStore";
 import { limitMessage } from "@/services/chat/limit";
@@ -19,6 +20,7 @@ import { surahLabel } from "@/services/chat/sources";
 export const CHAT_DISCLAIMER = "This is an aid and answers may be wrong. Please consult a trusted scholar.";
 const BLOCKED_MESSAGE = "I can't help with that one. Please ask a trusted scholar.";
 const SELECTOR_SIZE = 22;
+const ANSWER_MAX = 0.85;
 
 type Props = {
   message: ChatMessage;
@@ -49,6 +51,8 @@ export default function ChatBubble({
   const blockY = useRef<number | null>(null);
   const rowYs = useRef<Record<number, number>>({});
   const dim = selection.active && !selection.selectable ? styles.dim : null;
+  // The chat list spans the window inside the screen margin; known up front, so the menu's first frame already wraps.
+  const answerMaxWidth = (useWindowDimensions().width - 2 * useScreenMargin()) * ANSWER_MAX;
 
   if (message.role === "user") {
     const failed = message.status === "failed";
@@ -153,6 +157,7 @@ export default function ChatBubble({
         copy={notice ?? copyText(message, surahLabel)}
         canReport={notice === null && !message.reported}
         onReport={() => onReport(message.id)}
+        maxWidth={answerMaxWidth}
       >
         {bubble}
       </AnswerMenu>
@@ -214,7 +219,7 @@ const createStyles = (theme: AppTheme) => {
     failed: { opacity: 0.6 },
     answer: { gap: spacing.sm },
     answerRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-    answerWrap: { maxWidth: "85%", flexShrink: 1 },
+    answerWrap: { maxWidth: `${ANSWER_MAX * 100}%`, flexShrink: 1 },
     answerBubble: {
       alignSelf: "flex-start",
       paddingVertical: 10,

@@ -1,6 +1,6 @@
 // frontend/__tests__/screens/Chat.test.tsx
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { ActionSheetIOS, FlatList, Text } from "react-native";
+import { FlatList, Text } from "react-native";
 
 import Chat from "@/app/Chat";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
@@ -500,7 +500,8 @@ describe("Chat screen", () => {
     expect(getByText("Yes, once it reaches nisab.")).toBeTruthy();
     expect(queryAllByRole("button", { name: /^Source \d+$/ })).toHaveLength(0);
     expect(getByLabelText("Answer: Yes, once it reaches nisab.").props.accessibilityActions).toEqual([
-      { name: "menu", label: "Copy or report" },
+      { name: "copy", label: "Copy" },
+      { name: "report", label: "Report" },
     ]);
     expect(getByText("Intentions")).toBeTruthy();
     expect(getByRole("button", { name: "Report a message" })).toBeTruthy();
@@ -613,24 +614,16 @@ describe("Chat screen", () => {
       let fail: (e: Error) => void = () => {};
       report.mockImplementationOnce(() => new Promise<void>((_, reject) => (fail = reject)));
       mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.", { citations: [QURAN] })] }));
-      const { getByLabelText, findByText } = await renderChat();
-      // Long-press the answer and pick Report from the action sheet.
-      const longPressReport = () => {
-        const sheet = jest.spyOn(ActionSheetIOS, "showActionSheetWithOptions").mockImplementation((opts, choose) =>
-          choose(opts.options.indexOf("Report")),
-        );
-        fireEvent(getByLabelText("Answer: Answer."), "longPress");
-        sheet.mockRestore();
-      };
+      const { getByRole, findByText } = await renderChat();
 
-      longPressReport();
-      longPressReport();
+      fireEvent.press(getByRole("button", { name: "Report" }));
+      fireEvent.press(getByRole("button", { name: "Report" }));
       expect(report).toHaveBeenCalledTimes(1);
 
       await act(async () => fail(new Error("Couldn't send")));
       expect(await findByText(REPORT_FAILED)).toBeTruthy();
 
-      longPressReport();
+      fireEvent.press(getByRole("button", { name: "Report" }));
       expect(report).toHaveBeenLastCalledWith("a1");
       expect(await findByText(THANKS)).toBeTruthy();
     });

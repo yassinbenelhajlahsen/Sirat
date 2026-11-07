@@ -141,8 +141,20 @@ jest.mock("@expo/ui/swift-ui", () => {
   const React = require("react");
   const { View } = require("react-native");
   const Passthrough = ({ children }: any) => React.createElement(View, null, children);
+  // Menu items render inline as pressables, so tests can drive a context menu without a long press.
+  const ContextMenu = Object.assign((props: any) => Passthrough(props), { Trigger: Passthrough, Items: Passthrough, Preview: Passthrough });
+  const Button = ({ label, onPress }: any) => {
+    const { Pressable, Text: RNText } = require("react-native");
+    return React.createElement(
+      Pressable,
+      { accessibilityRole: "button", accessibilityLabel: label, onPress },
+      React.createElement(RNText, null, label),
+    );
+  };
   return {
     Host: Passthrough,
+    ContextMenu,
+    Button,
     DatePicker: () => null,
     Group: Passthrough,
     RNHostView: Passthrough,
