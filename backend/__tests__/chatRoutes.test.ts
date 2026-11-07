@@ -16,6 +16,11 @@ const mockGetHadiths: jest.Mock = jest.fn();
 
 const SECRET = "SECRET-TEXT about my family";
 const ANSWER = { answer: "Interest is not permitted.", citations: ["q:2:275"], isRuling: true, summary: "Asked about interest." };
+// A model call that only ends when it is stopped, the way fetch does on abort.
+const hangUntilStopped = (seen: { signal?: AbortSignal }) => (input: any) => new Promise((_resolve, reject) => {
+  seen.signal = input.signal;
+  input.signal.addEventListener("abort", () => reject(new Error("chat_model_failed")));
+});
 const body = (over: object = {}) => ({ message: "Is interest allowed?", history: [], summary: null, deviceToken: "tok", ...over });
 
 describe("Chat routes", () => {
@@ -254,14 +259,51 @@ describe("Chat routes", () => {
       expect(mockModerate).not.toHaveBeenCalled();
     });
 
-    it("returns the crisis reply on self-harm, refunds and never asks the model", async () => {
+    const CRISIS = { kind: "crisis", allowance: 15, remaining: 12, resetsAt: "2026-12-01T00:00:00.000Z" };
+
+    it("returns the crisis reply on self-harm and refunds, even when the model finished first", async () => {
       (mockModerate as any).mockResolvedValueOnce({ selfHarm: true, severe: false });
 
       const res = await request(app).post("/api/chat").send(body()).expect(200);
 
-      expect(res.body).toEqual({ kind: "crisis", allowance: 15, remaining: 12, resetsAt: "2026-12-01T00:00:00.000Z" });
+      expect(res.body).toEqual(CRISIS);
       expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", false);
-      expect(mockGenerateAnswer).not.toHaveBeenCalled();
+      expect(mockModerate).toHaveBeenCalledTimes(1);
+      expect(mockGetQuranAyahs).not.toHaveBeenCalled();
+    });
+
+    it("stops the model when the question check says self-harm first, without surfacing the model's error", async () => {
+      const seen: { signal?: AbortSignal } = {};
+      (mockGenerateAnswer as any).mockImplementation(hangUntilStopped(seen));
+      (mockModerate as any).mockResolvedValueOnce({ selfHarm: true, severe: false });
+
+      const res = await request(app).post("/api/chat").send(body()).expect(200);
+
+      expect(res.body).toEqual(CRISIS);
+      expect(seen.signal?.aborted).toBe(true);
+      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", false);
+    });
+
+    it("ignores a model failure that lands before a self-harm verdict", async () => {
+      (mockGenerateAnswer as any).mockRejectedValue(new Error("chat_model_failed"));
+      (mockModerate as any).mockImplementationOnce(() => new Promise((r) => setTimeout(() => r({ selfHarm: true, severe: false }), 20)));
+
+      const res = await request(app).post("/api/chat").send(body()).expect(200);
+
+      expect(res.body).toEqual(CRISIS);
+    });
+
+    it("starts the model while the question is still being checked", async () => {
+      let pass!: () => void;
+      (mockModerate as any).mockImplementationOnce(() => new Promise((r) => { pass = () => r({ selfHarm: false, severe: false }); }));
+
+      const pending = request(app).post("/api/chat").send(body()).then((r) => r);
+      for (let i = 0; i < 50 && !mockGenerateAnswer.mock.calls.length; i++) await new Promise((r) => setTimeout(r, 5));
+      expect(mockGenerateAnswer).toHaveBeenCalledTimes(1);
+      expect(mockGetQuranAyahs).not.toHaveBeenCalled();
+      pass();
+
+      expect((await pending).body.kind).toBe("answer");
     });
 
     it("blocks a severe answer and refunds", async () => {
@@ -363,6 +405,18 @@ describe("Chat routes", () => {
       for (let i = 0; i < 50 && !mockRefundMessage.mock.calls.length; i++) await new Promise((r) => setTimeout(r, 10));
 
       expect(seenSignal?.aborted).toBe(true);
+      expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", true);
+    });
+
+    it("stops the model, refunds and returns 502 when the question check fails", async () => {
+      const seen: { signal?: AbortSignal } = {};
+      (mockGenerateAnswer as any).mockImplementation(hangUntilStopped(seen));
+      (mockModerate as any).mockRejectedValueOnce(new Error("chat_model_failed"));
+
+      const res = await request(app).post("/api/chat").send(body());
+
+      expect(res.status).toBe(502);
+      expect(seen.signal?.aborted).toBe(true);
       expect(mockRefundMessage).toHaveBeenCalledWith("hash_1", "2026-11", true);
     });
 

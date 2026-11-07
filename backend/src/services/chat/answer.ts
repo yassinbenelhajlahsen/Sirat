@@ -35,19 +35,33 @@ export async function answerMessage(input: {
   };
   const done = () => ({ ...timings, total: Date.now() - start });
 
-  if ((await timed("moderateQuestion", () => moderate(input.message, input.signal))).selfHarm) {
-    return { kind: "crisis", usage, timings: done() };
-  }
-
+  // The question check runs alongside the model; nothing the model wrote is used until the check passes.
+  const stopModel = new AbortController();
+  const signal = input.signal ? AbortSignal.any([input.signal, stopModel.signal]) : stopModel.signal;
   const ask = async () => {
-    const result = await generateAnswer(input);
+    const result = await generateAnswer({ ...input, signal });
     usage.input += result.usage?.input ?? 0;
     usage.output += result.usage?.output ?? 0;
     timings.rounds += result.rounds ?? 0;
     timings.searches += result.searches ?? 0;
     return result;
   };
-  let { answer, retrievedIds } = await timed("generate", ask);
+  const first = timed("generate", ask);
+  // Its failure surfaces from the await below, or is moot after a crisis verdict.
+  first.catch(() => {});
+  let verdict: Awaited<ReturnType<typeof moderate>>;
+  try {
+    verdict = await timed("moderateQuestion", () => moderate(input.message, input.signal));
+  } catch (err) {
+    stopModel.abort();
+    throw err;
+  }
+  if (verdict.selfHarm) {
+    stopModel.abort();
+    return { kind: "crisis", usage, timings: done() };
+  }
+
+  let { answer, retrievedIds } = await first;
   const quoted = findReligiousQuote(answer.answer);
   if (quoted) ({ answer, retrievedIds } = await timed("quoteRetry", ask));
   const citations = await timed("renderCitations", () => renderCitations(answer.citations, retrievedIds));
