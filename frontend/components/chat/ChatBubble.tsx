@@ -1,6 +1,6 @@
 // frontend/components/chat/ChatBubble.tsx
 import { useMemo, useRef } from "react";
-import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View, type AccessibilityActionEvent } from "react-native";
 
 import AnswerMenu from "@/components/chat/AnswerMenu";
 import AnswerText from "@/components/chat/AnswerText";
@@ -11,7 +11,7 @@ import { Body, Caption, Footnote, Subhead } from "@/components/ui/Text";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
-import { copyText, plainAnswer } from "@/services/chat/answerFormat";
+import { copyText, parseAnswer, plainAnswer } from "@/services/chat/answerFormat";
 import type { ChatMessage } from "@/services/chat/chatStore";
 import { limitMessage } from "@/services/chat/limit";
 import { surahLabel } from "@/services/chat/sources";
@@ -107,6 +107,26 @@ export default function ChatBubble({
       <AnswerText text={message.text} sourceCount={citations.length} onRefPress={(n) => onRefPress(message.id, n)} />
     );
 
+  // The bubble is one VoiceOver element, which hides the number tags inside it; each tag is offered as an action instead.
+  const refs =
+    notice === null
+      ? [
+          ...new Set(
+            parseAnswer(message.text, citations.length)
+              .flatMap((b) => (b.kind === "paragraph" ? b.inlines : b.items.flat()))
+              .flatMap((part) => (part.kind === "ref" ? [part.n] : [])),
+          ),
+        ]
+      : [];
+  const a11y = {
+    accessibilityLabel: label,
+    accessibilityActions: refs.length ? refs.map((n) => ({ name: `Source ${n}`, label: `Source ${n}` })) : undefined,
+    onAccessibilityAction: (e: AccessibilityActionEvent) => {
+      const n = refs.find((r) => `Source ${r}` === e.nativeEvent.actionName);
+      if (n !== undefined) onRefPress(message.id, n);
+    },
+  };
+
   const emitSource = (n: number) => {
     if (blockY.current !== null && rowYs.current[n] !== undefined) {
       onSourceLayout?.(message.id, n, blockY.current + rowYs.current[n]);
@@ -117,13 +137,13 @@ export default function ChatBubble({
     <Pressable
       style={styles.answerBubble}
       onPress={selection.onSelect}
-      accessibilityLabel={label}
+      {...a11y}
       accessibilityState={{ selected: selection.selected }}
     >
       {content}
     </Pressable>
   ) : (
-    <View style={styles.answerBubble} accessible accessibilityLabel={label}>
+    <View style={styles.answerBubble} accessible {...a11y}>
       {content}
     </View>
   );

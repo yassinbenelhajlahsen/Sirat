@@ -93,6 +93,30 @@ describe("ChatBubble", () => {
     expect(onRefPress).toHaveBeenCalledWith("a1", 1);
   });
 
+  it("VoiceOver reaches each number tag as a 'Source n' action on the answer, and an out-of-range ref gets none", () => {
+    const hadith: Citation = {
+      kind: "hadith",
+      id: 7,
+      title: "Intentions",
+      text: "Actions are judged by intentions.",
+      arabic: null,
+      grade: "Authentic hadith",
+      source: "Bukhari 1",
+      credit: "HadeethEnc",
+    };
+    const { getByLabelText } = renderBubble(
+      answer({ text: "Yes [2], see [1] and [2] and [5].", citations: [QURAN, hadith] }),
+    );
+    const bubble = getByLabelText("Answer: Yes, see and and.");
+
+    expect(bubble.props.accessibilityActions).toEqual([
+      { name: "Source 2", label: "Source 2" },
+      { name: "Source 1", label: "Source 1" },
+    ]);
+    fireEvent(bubble, "accessibilityAction", { nativeEvent: { actionName: "Source 2" } });
+    expect(onRefPress).toHaveBeenCalledWith("a1", 2);
+  });
+
   it("Copy writes copyText to the clipboard", () => {
     const setString = jest.spyOn(Clipboard, "setString").mockImplementation(() => {});
     const { getByRole } = renderBubble(answer());
