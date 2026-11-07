@@ -188,6 +188,7 @@ function Conversation() {
 
   const onRetry = (id: string) => {
     setSentHere(true);
+    pin.current = "end";
     void retry(id);
   };
 

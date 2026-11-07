@@ -352,6 +352,24 @@ describe("Chat screen", () => {
     expect(retry).toHaveBeenCalledWith("m1");
   });
 
+  it("retrying a failed message scrolls to the end even after the list was touched", async () => {
+    const scrollToEnd = jest.spyOn(FlatList.prototype, "scrollToEnd").mockImplementation(() => {});
+    try {
+      mockUseChat.mockReturnValue(chatState({ messages: [{ ...user("m1", "Question?"), status: "failed" }] }));
+      const screen = await renderChat();
+      const list = screen.UNSAFE_getByType(FlatList);
+
+      fireEvent(list, "touchStart");
+      fireEvent.press(screen.getByText("Not delivered. Tap to retry"));
+      scrollToEnd.mockClear();
+      fireEvent(list, "contentSizeChange", 390, 2000);
+
+      expect(scrollToEnd).toHaveBeenCalled();
+    } finally {
+      scrollToEnd.mockRestore();
+    }
+  });
+
   it("the composer caps the question at 1000 characters and counts from 900", async () => {
     const { getByLabelText, queryByText, getByText } = await renderChat();
     const input = getByLabelText("Your question");
