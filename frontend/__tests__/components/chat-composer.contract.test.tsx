@@ -1,4 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 import ChatComposer from "@/components/chat/ChatComposer";
 import ChatHeaderTitle from "@/components/chat/ChatHeaderTitle";
@@ -43,6 +44,21 @@ describe("ChatComposer contract", () => {
   it("disables Send while a reply is in progress", () => {
     const { getByRole } = render(composer({ value: "Hello", sending: true }));
     expect(getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
+  it("one line of text is as tall as the send circle, with equal right and bottom insets around it", () => {
+    const { getByLabelText, getByRole } = render(composer({ value: "Hello" }));
+    const input = StyleSheet.flatten(getByLabelText("Your question").props.style);
+    const circle = 30;
+    expect(input.lineHeight + input.paddingTop + input.paddingBottom).toBe(circle);
+    expect(input.paddingTop).toBe(input.paddingBottom);
+
+    let shell = getByRole("button", { name: "Send" }).parent;
+    while (shell && StyleSheet.flatten(shell.props.style)?.flexDirection !== "row") shell = shell.parent;
+    const shellStyle = StyleSheet.flatten(shell!.props.style);
+    expect(shellStyle.paddingRight).toBe(shellStyle.paddingVertical);
+    expect(shellStyle.alignItems).toBe("flex-end");
+    expect(shellStyle.minHeight).toBeUndefined();
   });
 
   it("with a limit, the field is gone and both lines show", () => {

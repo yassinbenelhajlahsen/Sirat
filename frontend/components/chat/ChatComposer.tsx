@@ -13,6 +13,7 @@ import { useScreenMargin } from "@/hooks/useScreenMargin";
 export const QUESTION_MAX_LENGTH = 1000;
 const COUNT_FROM = 900;
 const SEND_SIZE = 30;
+const INSET = 4;
 
 type Props = {
   value: string;
@@ -83,17 +84,19 @@ const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "flex-end",
       gap: spacing.sm,
-      minHeight: 40,
       paddingLeft: spacing.md,
-      paddingRight: spacing.xs,
-      paddingVertical: spacing.xs,
-      borderRadius: 20,
+      paddingRight: INSET,
+      paddingVertical: INSET,
+      borderRadius: SEND_SIZE / 2 + INSET,
       borderCurve: "continuous",
       backgroundColor: withOpacity(colors.white, 0.08),
     },
     fieldColumn: { flex: 1 },
     input: {
       ...type.body,
+      // One line is exactly as tall as the send circle, so both center in the shell; explicit padding also replaces iOS's default multiline paddingTop of 5.
+      paddingTop: (SEND_SIZE - type.body.lineHeight) / 2,
+      paddingBottom: (SEND_SIZE - type.body.lineHeight) / 2,
       color: colors.white,
       maxHeight: 120,
     },
