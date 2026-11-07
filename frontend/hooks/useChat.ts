@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getChatStatus, sendChat, type ChatReply, type ChatTurn } from "@/services/chat/chatApi";
 import { chatGeneration, loadChat, saveChat, type ChatMessage, type ChatState } from "@/services/chat/chatStore";
 import { getDeviceToken } from "@/services/chat/deviceCheck";
+import { citationKey } from "@/services/chat/sources";
 import { reportChatAnswer } from "@/services/reports";
 
 const MAX_QUESTION = 1000;
@@ -177,12 +178,7 @@ export function useChat() {
       if (!answer || answer.role !== "assistant" || answer.notice) throw new Error("nothing to report");
       const question = current.slice(0, index).reverse().find((m) => m.role === "user");
       if (!question) throw new Error("nothing to report");
-      const citationIds = (answer.citations ?? []).flatMap((c): string[] => {
-        if (c.kind === "quran") return [`q:${c.surah}:${c.ayah}`];
-        if (c.kind === "hadith") return [`h:${c.id}`];
-        if (c.kind === "dua") return [`d:${c.id}`];
-        return [];
-      });
+      const citationIds = (answer.citations ?? []).map(citationKey).filter(Boolean);
       await reportChatAnswer(question.text.slice(0, MAX_QUESTION), answer.text, citationIds);
     },
     [liveState],
