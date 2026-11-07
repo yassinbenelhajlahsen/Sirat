@@ -122,28 +122,42 @@ describe("push registration", () => {
     }
   });
 
-  it("skips the POST within 24h for the same token, posts again after", async () => {
+  it("skips the token fetch and the POST within 24h, does both again after", async () => {
     const now = jest.spyOn(Date, "now").mockReturnValue(1_000_000);
     const { mod, mocks } = load();
     await mod.syncPushRegistration();
     expect(mocks.apiPost).toHaveBeenCalledTimes(1);
+    expect(mocks.getExpoPushTokenAsync).toHaveBeenCalledTimes(1);
 
     now.mockReturnValue(1_000_000 + DAY - 1);
     await mod.syncPushRegistration();
     expect(mocks.apiPost).toHaveBeenCalledTimes(1);
+    expect(mocks.getExpoPushTokenAsync).toHaveBeenCalledTimes(1);
 
     now.mockReturnValue(1_000_000 + DAY);
     await mod.syncPushRegistration();
     expect(mocks.apiPost).toHaveBeenCalledTimes(2);
+    expect(mocks.getExpoPushTokenAsync).toHaveBeenCalledTimes(2);
     expect((await savedToken()).registeredAt).toBe(1_000_000 + DAY);
   });
 
-  it("posts again at once when the token changed", async () => {
-    await AsyncStorage.setItem("push_token_v1", JSON.stringify({ token: "old", registeredAt: Date.now() }));
+  it("registers the fetched token once the saved registration is stale", async () => {
+    await AsyncStorage.setItem("push_token_v1", JSON.stringify({ token: "old", registeredAt: 1 }));
     const { mod, mocks } = load();
     await mod.syncPushRegistration();
     expect(mocks.apiPost).toHaveBeenCalledWith("/api/push/register", { token: TOKEN });
     expect(await mod.readSavedPushToken()).toBe(TOKEN);
+  });
+
+  it("treats a saved registration dated in the future as stale", async () => {
+    await AsyncStorage.setItem(
+      "push_token_v1",
+      JSON.stringify({ token: TOKEN, registeredAt: Date.now() + DAY }),
+    );
+    const { mod, mocks } = load();
+    await mod.syncPushRegistration();
+    expect(mocks.getExpoPushTokenAsync).toHaveBeenCalledTimes(1);
+    expect(mocks.apiPost).toHaveBeenCalledWith("/api/push/register", { token: TOKEN });
   });
 
   it("switch off: stores \"0\", unregisters the saved token and clears it", async () => {
@@ -200,6 +214,25 @@ describe("push registration", () => {
     expect(await mod.readSavedPushToken()).toBeNull();
   });
 
+  it("a failed unregister after permission is revoked keeps the saved token and retries on the next foreground", async () => {
+    await AsyncStorage.setItem("push_token_v1", JSON.stringify({ token: TOKEN, registeredAt: Date.now() }));
+    const apiPost = jest.fn().mockRejectedValueOnce(new Error("network")).mockResolvedValue({ ok: true });
+    const { mod, listeners, mocks } = load({ apiPost, granted: false });
+
+    mod.initPushRegistration();
+    await flush();
+    expect(mocks.apiPost).toHaveBeenCalledTimes(1);
+    expect(await mod.readSavedPushToken()).toBe(TOKEN);
+
+    listeners[0]("active");
+    await flush();
+
+    expect(mocks.apiPost).toHaveBeenCalledTimes(2);
+    expect(mocks.apiPost).toHaveBeenLastCalledWith("/api/push/unregister", { token: TOKEN });
+    expect(mocks.getExpoPushTokenAsync).not.toHaveBeenCalled();
+    expect(await mod.readSavedPushToken()).toBeNull();
+  });
+
   it("a failed register records a fixed bug-log message with no token and does not throw", async () => {
     const apiPost = jest.fn().mockRejectedValue(new Error(`boom ${TOKEN}`));
     const { mod, mocks } = load({ apiPost });
@@ -210,7 +243,67 @@ describe("push registration", () => {
     expect(args[0]).toBe("error");
     expect(args[1]).toEqual(new Error("Push registration failed"));
     expect(JSON.stringify(args)).not.toContain(TOKEN);
+  });
+
+  it("a failed register leaves a stale saved token that a switch-off unregisters", async () => {
+    const apiPost = jest.fn().mockRejectedValueOnce(new Error("lost")).mockResolvedValue({ ok: true });
+    const { mod, mocks } = load({ apiPost });
+
+    await mod.syncPushRegistration();
+    expect(await savedToken()).toEqual({ token: TOKEN, registeredAt: 0 });
+
+    await mod.setAnnouncementsEnabled(false);
+    expect(mocks.apiPost).toHaveBeenLastCalledWith("/api/push/unregister", { token: TOKEN });
     expect(await mod.readSavedPushToken()).toBeNull();
+  });
+
+  it("a failed register is retried on the next run without waiting a day", async () => {
+    const apiPost = jest.fn().mockRejectedValueOnce(new Error("lost")).mockResolvedValue({ ok: true });
+    const { mod, mocks } = load({ apiPost });
+
+    await mod.syncPushRegistration();
+    await mod.syncPushRegistration();
+    expect(mocks.apiPost).toHaveBeenCalledTimes(2);
+    expect((await savedToken()).registeredAt).toBeGreaterThan(0);
+  });
+
+  it("logs a failure once per session", async () => {
+    const apiPost = jest.fn().mockRejectedValue(new Error("down"));
+    const { mod, mocks } = load({ apiPost });
+
+    await mod.syncPushRegistration();
+    await mod.syncPushRegistration();
+    expect(mocks.apiPost).toHaveBeenCalledTimes(2);
+    expect(mocks.recordError).toHaveBeenCalledTimes(1);
+  });
+
+  describe("token fetch timeout", () => {
+    afterEach(() => jest.useRealTimers());
+
+    it("gives up on a hung token fetch, logs it, and does not stall the queue", async () => {
+      jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick"] });
+      const { mod, mocks } = load();
+      mocks.getExpoPushTokenAsync.mockImplementationOnce(() => new Promise(() => {}));
+
+      const first = mod.syncPushRegistration();
+      await flush();
+      expect(mocks.recordError).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(mod.TOKEN_TIMEOUT_MS);
+      await first;
+
+      expect(mocks.recordError).toHaveBeenCalledTimes(1);
+      expect(mocks.apiPost).not.toHaveBeenCalled();
+
+      await mod.syncPushRegistration();
+      expect(mocks.apiPost).toHaveBeenCalledWith("/api/push/register", { token: TOKEN });
+    });
+
+    it("clears the timer when the token arrives in time", async () => {
+      jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick"] });
+      const { mod } = load();
+      await mod.syncPushRegistration();
+      expect(jest.getTimerCount()).toBe(0);
+    });
   });
 
   it("concurrent syncs run one after another; final state wins", async () => {
