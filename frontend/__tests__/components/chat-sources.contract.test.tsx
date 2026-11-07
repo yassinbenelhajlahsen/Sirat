@@ -138,6 +138,25 @@ describe("chat answer text and sources", () => {
     expect(getByText("The traveller's remembrance").props.numberOfLines).toBeUndefined();
   });
 
+  it("A remounted row of the same message starts clamped, and an expanded one stays expanded", () => {
+    const englishOf = quran.kind === "quran" ? quran.english! : "";
+    const first = render(<SourcesBlock citations={[quran, hadith]} focus={null} messageId="remount-1" />);
+    fireEvent(first.getByText(englishOf), "textLayout", lines(4));
+    fireEvent(first.getByText(hadith.kind === "hadith" ? hadith.text : ""), "textLayout", lines(5));
+    fireEvent.press(first.getAllByText("Show more")[1]);
+    first.unmount();
+
+    const again = render(<SourcesBlock citations={[quran, hadith]} focus={null} messageId="remount-1" />);
+    expect(again.getByText(englishOf).props.numberOfLines).toBe(2);
+    expect(again.getAllByText("Show more")).toHaveLength(1);
+    expect(again.getByText(hadith.kind === "hadith" ? hadith.text : "").props.numberOfLines).toBeUndefined();
+    again.unmount();
+
+    // Another message citing the same verse still measures for itself.
+    const other = render(<SourcesBlock citations={[quran]} focus={null} messageId="remount-2" />);
+    expect(other.getByText(englishOf).props.numberOfLines).toBeUndefined();
+  });
+
   it("A short source has no 'Show more'", () => {
     const { getByText, queryByText } = render(<SourcesBlock citations={[quran]} focus={null} />);
     fireEvent(getByText(quran.kind === "quran" ? quran.english! : ""), "textLayout", lines(1));

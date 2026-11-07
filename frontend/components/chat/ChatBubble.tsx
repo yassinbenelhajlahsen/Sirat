@@ -192,6 +192,7 @@ export default function ChatBubble({
           <SourcesBlock
             citations={citations}
             focus={sourceFocus}
+            messageId={message.id}
             onRowLayout={(n, y) => {
               rowYs.current[n] = y;
               emitSource(n);

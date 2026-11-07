@@ -12,6 +12,8 @@ import { citationKey, gradeTone, surahLabel } from "@/services/chat/sources";
 type Props = {
   citations: Citation[];
   focus: { n: number; token: number } | null;
+  // Rows the list unmounts and remounts while scrolling keep their clamp and expansion under this key.
+  messageId?: string;
   onRowLayout?: (n: number, y: number) => void;
 };
 
@@ -22,19 +24,33 @@ const ICONS: Record<Citation["kind"], AppIconName> = {
   dua: "hand-left-outline",
 };
 
-export default function SourcesBlock({ citations, focus, onRowLayout }: Props) {
+// Outlive the component: a remounted row that started unclamped or collapsed would change height on screen and shift the list.
+const longRows = new Set<string>();
+const expandedRows = new Set<string>();
+
+export default function SourcesBlock({ citations, focus, messageId, onRowLayout }: Props) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const rowKey = (n: number) =>
+    messageId === undefined || !citations[n - 1] ? null : `${messageId}:${citationKey(citations[n - 1])}`;
+  const [expanded, setExpanded] = useState<Record<number, boolean>>(() =>
+    Object.fromEntries(citations.map((_, i) => [i + 1, expandedRows.has(rowKey(i + 1) ?? "")])),
+  );
   const [seenToken, setSeenToken] = useState<number | null>(null);
   const [highlight, setHighlight] = useState<{ n: number; token: number } | null>(null);
   const rowYs = useRef<Record<number, number>>({});
   const groupY = useRef<number | null>(null);
 
   // A new focus token expands its row and starts the highlight (state adjusted during render, not in an effect).
+  const expand = (n: number) => {
+    const key = rowKey(n);
+    if (key) expandedRows.add(key);
+    setExpanded((e) => ({ ...e, [n]: true }));
+  };
+
   if (focus && focus.token !== seenToken) {
     setSeenToken(focus.token);
-    setExpanded((e) => ({ ...e, [focus.n]: true }));
+    expand(focus.n);
     setHighlight(focus);
   }
 
@@ -70,10 +86,11 @@ export default function SourcesBlock({ citations, focus, onRowLayout }: Props) {
             key={citationKey(c)}
             citation={c}
             n={n}
+            cacheKey={rowKey(n)}
             last={i === rows.length - 1}
             expanded={!!expanded[n]}
             highlighted={highlight?.n === n}
-            onExpand={() => setExpanded((e) => ({ ...e, [n]: true }))}
+            onExpand={() => expand(n)}
             onLayoutY={(y) => {
               rowYs.current[n] = y;
               reportRow(n);
@@ -88,6 +105,7 @@ export default function SourcesBlock({ citations, focus, onRowLayout }: Props) {
 type RowProps = {
   citation: Citation;
   n: number;
+  cacheKey: string | null;
   last: boolean;
   expanded: boolean;
   highlighted: boolean;
@@ -95,17 +113,19 @@ type RowProps = {
   onLayoutY: (y: number) => void;
 };
 
-function Row({ citation, n, last, expanded, highlighted, onExpand, onLayoutY }: RowProps) {
+function Row({ citation, n, cacheKey, last, expanded, highlighted, onExpand, onLayoutY }: RowProps) {
   const { theme } = useTheme();
   const { colors } = theme;
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const [long, setLong] = useState(false);
+  const [long, setLong] = useState(() => cacheKey !== null && longRows.has(cacheKey));
 
-  // Measured unclamped first. `long` never resets, so expanding and re-measuring cannot hide the button.
+  // Measured unclamped the first time only. `long` never resets, so expanding and re-measuring cannot hide the button.
   const clamp = (lines: number) => ({
     numberOfLines: long && !expanded ? lines : undefined,
     onTextLayout: (e: TextLayoutEvent) => {
-      if (e.nativeEvent.lines.length > lines) setLong(true);
+      if (e.nativeEvent.lines.length <= lines) return;
+      if (cacheKey !== null) longRows.add(cacheKey);
+      setLong(true);
     },
   });
   const clamped = (lines: number, node: ReactNode, style?: object) => (
