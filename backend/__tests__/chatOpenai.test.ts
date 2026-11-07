@@ -35,18 +35,13 @@ describe("OpenAI chat client", () => {
     (globalThis as any).fetch = mockFetch;
     process.env.OPENAI_API_KEY = "sk-test";
     process.env.OPENAI_MODEL = "gpt-6-luna";
-    // The prefetch searches the user's own message; by default it finds nothing, so only tool searches return hits.
-    const unlessMessage = (hits: unknown[]) => async (q: string) => (q === INPUT.message ? [] : hits);
-    (mockSearchQuran as any).mockImplementation(unlessMessage([{ id: "q:2:275", text: "trade and interest" }]));
-    (mockSearchHadith as any).mockImplementation(unlessMessage([{ id: "h:5", text: "a hadith", grade: "Sahih" }]));
-    (mockSearchDuas as any).mockImplementation(unlessMessage([{ id: "d:12", text: "travel: Glory to Him who has subjected this to us" }]));
+    (mockSearchQuran as any).mockResolvedValue([{ id: "q:2:275", text: "trade and interest" }]);
+    (mockSearchHadith as any).mockResolvedValue([{ id: "h:5", text: "a hadith", grade: "Sahih" }]);
+    (mockSearchDuas as any).mockResolvedValue([{ id: "d:12", text: "travel: Glory to Him who has subjected this to us" }]);
     jest.unstable_mockModule("../src/services/chat/sourceSearch.js", () => ({
       searchQuran: (...a: unknown[]) => mockSearchQuran(...a),
       searchHadith: (...a: unknown[]) => mockSearchHadith(...a),
       searchDuas: (...a: unknown[]) => mockSearchDuas(...a),
-      getQuranAyahs: async () => [{ surah: 2, ayah: 275, textAr: "ar", textEn: "en" }],
-      getHadiths: async () => [],
-      getDuas: async () => [],
     }));
   });
 
@@ -56,7 +51,6 @@ describe("OpenAI chat client", () => {
 
   const load = async () => await import("../src/services/chat/openai.js");
   const bodyOf = (call: number) => JSON.parse((mockFetch.mock.calls[call][1] as any).body);
-  const toolCalls = (m: jest.Mock) => m.mock.calls.filter((c) => c[0] !== INPUT.message).length;
 
   describe("generateAnswer", () => {
     it("runs two searches, then returns the answer with the union of retrieved ids", async () => {
@@ -108,7 +102,9 @@ describe("OpenAI chat client", () => {
 
       await generateAnswer(INPUT);
 
-      expect([toolCalls(mockSearchDuas), toolCalls(mockSearchQuran), toolCalls(mockSearchHadith)]).toEqual([1, 1, 1]);
+      expect(mockSearchDuas).toHaveBeenCalledTimes(1);
+      expect(mockSearchQuran).toHaveBeenCalledTimes(1);
+      expect(mockSearchHadith).toHaveBeenCalledTimes(1);
       expect(bodyOf(2).tools).toBeUndefined();
     });
 
@@ -121,7 +117,7 @@ describe("OpenAI chat client", () => {
 
       await generateAnswer(INPUT);
 
-      expect(toolCalls(mockSearchQuran) + toolCalls(mockSearchHadith)).toBe(3);
+      expect(mockSearchQuran.mock.calls.length + mockSearchHadith.mock.calls.length).toBe(3);
       expect(mockFetch).toHaveBeenCalledTimes(3);
       expect(bodyOf(0).tools).toHaveLength(3);
       expect(bodyOf(1).tools).toHaveLength(3);
@@ -253,85 +249,14 @@ describe("OpenAI chat client", () => {
 
       await generateAnswer(INPUT);
 
-      expect(toolCalls(mockSearchQuran)).toBe(0);
+      expect(mockSearchQuran).not.toHaveBeenCalled();
       expect(bodyOf(1).input).toContainEqual({ type: "function_call_output", call_id: "c1", output: "[]" });
-    });
-  });
-
-  describe("prefetch", () => {
-    const hitsFor = (m: jest.Mock, hits: unknown[]) => (m as any).mockImplementation(async (q: string) => (q === INPUT.message ? hits : []));
-
-    it("searches all three sources for the message and sends the hits in the first request, as searches", async () => {
-      hitsFor(mockSearchQuran, [{ id: "q:2:275", text: "trade and interest" }]);
-      hitsFor(mockSearchDuas, [{ id: "d:12", text: "travel dua" }]);
-      (mockFetch as any).mockResolvedValueOnce(response([final(ANSWER)]));
-      const { generateAnswer } = await load();
-
-      const { retrievedIds, rounds, searches } = await generateAnswer(INPUT);
-
-      for (const m of [mockSearchQuran, mockSearchHadith, mockSearchDuas]) expect(m).toHaveBeenCalledWith(INPUT.message);
-      const input = bodyOf(0).input;
-      expect(input).toContainEqual({ type: "function_call", call_id: "prefetch_search_quran", name: "search_quran", arguments: JSON.stringify({ query: INPUT.message }) });
-      expect(input).toContainEqual({ type: "function_call_output", call_id: "prefetch_search_quran", output: JSON.stringify([{ id: "q:2:275", text: "trade and interest" }]) });
-      expect(input).toContainEqual({ type: "function_call_output", call_id: "prefetch_search_duas", output: JSON.stringify([{ id: "d:12", text: "travel dua" }]) });
-      // An empty search is left out rather than sent as "nothing found".
-      expect(input).not.toContainEqual(expect.objectContaining({ call_id: "prefetch_search_hadith" }));
-      expect(bodyOf(0).tools).toHaveLength(3);
-      expect([...retrievedIds].sort()).toEqual(["d:12", "q:2:275"]);
-      expect([rounds, searches]).toEqual([1, 0]);
-    });
-
-    it("leaves the tool searches available, with the full cap, after a prefetch", async () => {
-      hitsFor(mockSearchQuran, [{ id: "q:1:1", text: "praise" }]);
-      (mockFetch as any)
-        .mockResolvedValueOnce(response([fnCall("c1", "search_hadith", "anger")]))
-        .mockResolvedValueOnce(response([final(ANSWER)]));
-      (mockSearchHadith as any).mockImplementation(async (q: string) => (q === "anger" ? [{ id: "h:7", text: "anger", grade: "Sahih" }] : []));
-      const { generateAnswer } = await load();
-
-      const { retrievedIds, searches } = await generateAnswer(INPUT);
-
-      expect(searches).toBe(1);
-      expect(bodyOf(1).tools).toHaveLength(3);
-      expect([...retrievedIds].sort()).toEqual(["h:7", "q:1:1"]);
-    });
-
-    it("renders a prefetched source the model cites as a numbered citation", async () => {
-      hitsFor(mockSearchQuran, [{ id: "q:2:275", text: "trade and interest" }]);
-      (mockFetch as any).mockImplementation(async (url: string) => url.endsWith("/moderations")
-        ? ok({ results: [{ categories: {} }] })
-        : response([final({ ...ANSWER, answer: "Riba is forbidden [q:2:275]." })]));
-      const { answerMessage } = await import("../src/services/chat/answer.js");
-
-      const outcome = await answerMessage(INPUT);
-
-      expect(outcome).toMatchObject({ kind: "answer", answer: "Riba is forbidden [1].", citations: [{ kind: "quran", surah: 2, ayah: 275 }] });
-      expect(outcome.timings).toMatchObject({ rounds: 1, searches: 0, prefetch: expect.any(Number), total: expect.any(Number) });
-    });
-
-    it("carries on without a search that fails, logging only an event name", async () => {
-      hitsFor(mockSearchDuas, [{ id: "d:3", text: "dua" }]);
-      (mockSearchQuran as any).mockRejectedValue(Object.assign(new Error("db said USER-SECRET"), { name: "PrismaClientKnownRequestError" }));
-      (mockFetch as any).mockResolvedValueOnce(response([final(ANSWER)]));
-      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-      const { generateAnswer } = await load();
-
-      const { answer, retrievedIds } = await generateAnswer(INPUT);
-
-      expect(answer).toEqual(ANSWER);
-      expect([...retrievedIds]).toEqual(["d:3"]);
-      expect(errorSpy).toHaveBeenCalledWith("chat_prefetch_failed");
-      expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("USER-SECRET");
-      errorSpy.mockRestore();
     });
   });
 
   describe("search failures", () => {
     it("answers a failed search with an empty result and logs only the error name", async () => {
-      (mockSearchQuran as any).mockImplementation(async (q: string) => {
-        if (q === INPUT.message) return [];
-        throw Object.assign(new Error("db said USER-SECRET"), { name: "PrismaClientKnownRequestError" });
-      });
+      (mockSearchQuran as any).mockRejectedValueOnce(Object.assign(new Error("db said USER-SECRET"), { name: "PrismaClientKnownRequestError" }));
       (mockFetch as any)
         .mockResolvedValueOnce(response([fnCall("c1", "search_quran", "USER-SECRET")]))
         .mockResolvedValueOnce(response([final(ANSWER)]));

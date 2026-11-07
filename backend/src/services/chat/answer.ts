@@ -3,7 +3,7 @@ import { findReligiousQuote, numberCitations, renderCitations, scrubInternals, s
 import { generateAnswer, moderate, type TokenUsage } from "./openai.js";
 import type { HistoryItem } from "./prompt.js";
 
-/** Milliseconds per stage (`prefetch` is inside `generate`), plus model `rounds` and tool `searches`. Numbers only, so it is safe to log. */
+/** Milliseconds per stage, plus model `rounds` and tool `searches`. Numbers only, so it is safe to log. */
 export type Timings = Record<string, number>;
 
 export type AnswerOutcome =
@@ -44,7 +44,6 @@ export async function answerMessage(input: {
     usage.output += result.usage?.output ?? 0;
     timings.rounds += result.rounds ?? 0;
     timings.searches += result.searches ?? 0;
-    timings.prefetch = (timings.prefetch ?? 0) + (result.prefetchMs ?? 0);
     return result;
   };
   const first = timed("generate", ask);
