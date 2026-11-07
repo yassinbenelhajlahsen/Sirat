@@ -1,6 +1,6 @@
 // frontend/__tests__/screens/Chat.test.tsx
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { FlatList, Linking, Text } from "react-native";
+import { ActionSheetIOS, FlatList, Text } from "react-native";
 
 import Chat from "@/app/Chat";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
@@ -245,37 +245,14 @@ describe("Chat screen", () => {
     expect(queryByLabelText("Writing an answer")).toBeNull();
   });
 
-  it("a scholar link opens its URL", async () => {
-    const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined as never);
+  it("never shows a scholar link, even when the answer carries one", async () => {
     mockUseChat.mockReturnValue(
       chatState({ messages: [answer("a1", "A ruling.", { scholarLink: "https://example.org/answers/1" })] }),
     );
-    const { getByRole } = await renderChat();
+    const { getByText, queryByText } = await renderChat();
 
-    fireEvent.press(getByRole("link", { name: "Read a scholar's answer" }));
-
-    expect(openURL).toHaveBeenCalledWith("https://example.org/answers/1");
-    openURL.mockRestore();
-  });
-
-  it("a scholar link that fails to open raises no unhandled rejection", async () => {
-    const unhandled = jest.fn();
-    process.on("unhandledRejection", unhandled);
-    const openURL = jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("No app can open this link"));
-    mockUseChat.mockReturnValue(
-      chatState({ messages: [answer("a1", "A ruling.", { scholarLink: "https://example.org/answers/1" })] }),
-    );
-    const { getByRole } = await renderChat();
-
-    fireEvent.press(getByRole("link", { name: "Read a scholar's answer" }));
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    process.off("unhandledRejection", unhandled);
-    expect(openURL).toHaveBeenCalledWith("https://example.org/answers/1");
-    expect(unhandled).not.toHaveBeenCalled();
-    openURL.mockRestore();
+    expect(getByText("A ruling.")).toBeTruthy();
+    expect(queryByText(/scholar's answer/)).toBeNull();
   });
 
   it("a hadith citation shows its title, text, grade and source and credit", async () => {
@@ -505,7 +482,9 @@ describe("Chat screen", () => {
 
     expect(getByText("Yes, once it reaches nisab.")).toBeTruthy();
     expect(queryAllByRole("button", { name: /^Source \d+$/ })).toHaveLength(0);
-    expect(getByLabelText("Answer: Yes, once it reaches nisab.").props.accessibilityActions).toBeUndefined();
+    expect(getByLabelText("Answer: Yes, once it reaches nisab.").props.accessibilityActions).toEqual([
+      { name: "menu", label: "Copy or report" },
+    ]);
     expect(getByText("Intentions")).toBeTruthy();
     expect(getByRole("button", { name: "Report a message" })).toBeTruthy();
   });
@@ -617,16 +596,24 @@ describe("Chat screen", () => {
       let fail: (e: Error) => void = () => {};
       report.mockImplementationOnce(() => new Promise<void>((_, reject) => (fail = reject)));
       mockUseChat.mockReturnValue(chatState({ messages: [user("q1", "Q?"), answer("a1", "Answer.", { citations: [QURAN] })] }));
-      const { getByRole, findByText } = await renderChat();
+      const { getByLabelText, findByText } = await renderChat();
+      // Long-press the answer and pick Report from the action sheet.
+      const longPressReport = () => {
+        const sheet = jest.spyOn(ActionSheetIOS, "showActionSheetWithOptions").mockImplementation((opts, choose) =>
+          choose(opts.options.indexOf("Report")),
+        );
+        fireEvent(getByLabelText("Answer: Answer."), "longPress");
+        sheet.mockRestore();
+      };
 
-      fireEvent.press(getByRole("button", { name: "Report" }));
-      fireEvent.press(getByRole("button", { name: "Report" }));
+      longPressReport();
+      longPressReport();
       expect(report).toHaveBeenCalledTimes(1);
 
       await act(async () => fail(new Error("Couldn't send")));
       expect(await findByText(REPORT_FAILED)).toBeTruthy();
 
-      fireEvent.press(getByRole("button", { name: "Report" }));
+      longPressReport();
       expect(report).toHaveBeenLastCalledWith("a1");
       expect(await findByText(THANKS)).toBeTruthy();
     });

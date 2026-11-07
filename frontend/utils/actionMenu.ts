@@ -9,7 +9,7 @@ export type ActionMenuOption = {
 };
 
 type Params = {
-  title: string;
+  title?: string;
   message?: string;
   options: ActionMenuOption[];
   theme: AppTheme;
@@ -41,7 +41,7 @@ export function showActionMenu({ title, message, options, theme }: Params): void
     return;
   }
 
-  Alert.alert(title, message, [
+  Alert.alert(title ?? "", message, [
     ...options.map((o) => ({
       text: o.label,
       style: o.destructive ? ("destructive" as const) : ("default" as const),

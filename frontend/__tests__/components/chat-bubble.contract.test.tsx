@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react-native";
-import { Clipboard, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { ActionSheetIOS, Clipboard, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 import ChatBubble from "@/components/chat/ChatBubble";
 import TypingBubble from "@/components/chat/TypingBubble";
@@ -61,18 +61,31 @@ const renderBubble = (message: ChatMessage, selection = NO_SELECTION) =>
     />,
   );
 
+// Long-presses the answer and returns the sheet's buttons, each pressable by label.
+const openMenu = (getByLabelText: (label: string) => any, label: string) => {
+  const sheet = jest.spyOn(ActionSheetIOS, "showActionSheetWithOptions").mockImplementation(() => {});
+  fireEvent(getByLabelText(label), "longPress");
+  const [opts, choose] = sheet.mock.calls[0];
+  sheet.mockRestore();
+  return { options: opts.options, press: (name: string) => choose(opts.options.indexOf(name)), opts };
+};
+
 const flatStyle = (node: { props: { style?: StyleProp<ViewStyle> } }) => StyleSheet.flatten(node.props.style) ?? {};
 
 beforeEach(() => jest.clearAllMocks());
 
 describe("ChatBubble", () => {
   it("your message renders in an accent bubble labelled 'You said: …'", () => {
-    const { getByLabelText, getByText, queryByRole } = renderBubble(user());
+    const { getByLabelText, getByText } = renderBubble(user());
 
     const bubble = getByLabelText("You said: Is zakat due on gold?");
     expect(flatStyle(bubble).backgroundColor).toBe(defaultTheme.colors.accent);
     expect(StyleSheet.flatten(getByText("Is zakat due on gold?").props.style).color).toBe(defaultTheme.colors.onAccent);
-    expect(queryByRole("button", { name: "Copy" })).toBeNull();
+    const sheet = jest.spyOn(ActionSheetIOS, "showActionSheetWithOptions").mockImplementation(() => {});
+    fireEvent(bubble, "longPress");
+    expect(sheet).not.toHaveBeenCalled();
+    expect(bubble.props.accessibilityActions).toBeUndefined();
+    sheet.mockRestore();
   });
 
   it("an answer renders AnswerText and SourcesBlock, with no disclaimer text", () => {
@@ -112,6 +125,7 @@ describe("ChatBubble", () => {
     expect(bubble.props.accessibilityActions).toEqual([
       { name: "Source 2", label: "Source 2" },
       { name: "Source 1", label: "Source 1" },
+      { name: "menu", label: "Copy or report" },
     ]);
     fireEvent(bubble, "accessibilityAction", { nativeEvent: { actionName: "Source 2" } });
     expect(onRefPress).toHaveBeenCalledWith("a1", 2);
@@ -119,18 +133,39 @@ describe("ChatBubble", () => {
 
   it("Copy writes copyText to the clipboard", () => {
     const setString = jest.spyOn(Clipboard, "setString").mockImplementation(() => {});
-    const { getByRole } = renderBubble(answer());
+    const { getByLabelText } = renderBubble(answer());
 
-    fireEvent.press(getByRole("button", { name: "Copy" }));
+    openMenu(getByLabelText, "Answer: Yes, once it reaches nisab.").press("Copy");
 
     expect(setString).toHaveBeenCalledWith("Yes, once it reaches nisab.\n\nQuran 2:286 (Al-Baqarah)");
     setString.mockRestore();
   });
 
-  it("Report is offered for an unreported answer and hidden when `reported` is set", () => {
-    const { getByRole, rerender, queryByRole } = renderBubble(answer());
+  it("the long-press sheet offers Copy, a destructive Report and Cancel", () => {
+    const { getByLabelText } = renderBubble(answer());
+    const { opts } = openMenu(getByLabelText, "Answer: Yes, once it reaches nisab.");
 
-    fireEvent.press(getByRole("button", { name: "Report" }));
+    expect(opts).toEqual(
+      expect.objectContaining({ options: ["Copy", "Report", "Cancel"], cancelButtonIndex: 2, destructiveButtonIndex: [1] }),
+    );
+  });
+
+  it("VoiceOver opens the same sheet through a 'Copy or report' action", () => {
+    const sheet = jest.spyOn(ActionSheetIOS, "showActionSheetWithOptions").mockImplementation(() => {});
+    const { getByLabelText } = renderBubble(answer());
+
+    fireEvent(getByLabelText("Answer: Yes, once it reaches nisab."), "accessibilityAction", { nativeEvent: { actionName: "menu" } });
+
+    expect(sheet.mock.calls[0][0].options).toEqual(["Copy", "Report", "Cancel"]);
+    expect(onRefPress).not.toHaveBeenCalled();
+    sheet.mockRestore();
+  });
+
+  it("Report is offered for an unreported answer and hidden when `reported` is set", () => {
+    const { getByLabelText, rerender } = renderBubble(answer());
+    const label = "Answer: Yes, once it reaches nisab.";
+
+    openMenu(getByLabelText, label).press("Report");
     expect(onReport).toHaveBeenCalledWith("a1");
 
     rerender(
@@ -145,28 +180,32 @@ describe("ChatBubble", () => {
         onRefPress={onRefPress}
       />,
     );
-    expect(queryByRole("button", { name: "Report" })).toBeNull();
-    expect(getByRole("button", { name: "Copy" })).toBeTruthy();
+    expect(openMenu(getByLabelText, label).options).toEqual(["Copy", "Cancel"]);
   });
 
   it("blocked and limit bubbles offer Copy only, and the crisis box has no menu", () => {
     const setString = jest.spyOn(Clipboard, "setString").mockImplementation(() => {});
     const blocked = renderBubble(answer({ text: "", citations: [], notice: "blocked" }));
-    expect(blocked.getByLabelText(`Answer: ${BLOCKED}`)).toBeTruthy();
-    expect(blocked.queryByRole("button", { name: "Report" })).toBeNull();
-    fireEvent.press(blocked.getByRole("button", { name: "Copy" }));
+    const blockedMenu = openMenu(blocked.getByLabelText, `Answer: ${BLOCKED}`);
+    expect(blockedMenu.options).toEqual(["Copy", "Cancel"]);
+    blockedMenu.press("Copy");
     expect(setString).toHaveBeenLastCalledWith(BLOCKED);
     blocked.unmount();
 
     const limit = renderBubble(answer({ text: "", citations: [], notice: "limit" }));
-    expect(limit.queryByRole("button", { name: "Report" })).toBeNull();
-    fireEvent.press(limit.getByRole("button", { name: "Copy" }));
+    const limitText = "You've used this month's 15 messages. They reset on December 1.";
+    const limitMenu = openMenu(limit.getByLabelText, `Answer: ${limitText}`);
+    expect(limitMenu.options).toEqual(["Copy", "Cancel"]);
+    limitMenu.press("Copy");
     expect(setString).toHaveBeenLastCalledWith("You've used this month's 15 messages. They reset on December 1.");
     limit.unmount();
 
     const crisis = renderBubble(answer({ text: "", citations: [], notice: "crisis" }));
-    expect(crisis.getByText(CRISIS_MESSAGE)).toBeTruthy();
-    expect(crisis.queryByRole("button", { name: "Copy" })).toBeNull();
+    const sheet = jest.spyOn(ActionSheetIOS, "showActionSheetWithOptions").mockImplementation(() => {});
+    fireEvent(crisis.getByText(CRISIS_MESSAGE), "longPress");
+    expect(sheet).not.toHaveBeenCalled();
+    expect(crisis.getByLabelText(CRISIS_MESSAGE).props.accessibilityActions).toBeUndefined();
+    sheet.mockRestore();
     setString.mockRestore();
   });
 
@@ -176,15 +215,6 @@ describe("ChatBubble", () => {
     fireEvent.press(getByText("Not delivered. Tap to retry"));
 
     expect(onRetry).toHaveBeenCalledWith("q1");
-  });
-
-  it("the scholar link renders after the sources", () => {
-    const { getByText, toJSON } = renderBubble(answer({ scholarLink: "https://example.org/1" }));
-    const link = "Read a scholar's answer ›";
-
-    expect(getByText(link)).toBeTruthy();
-    const tree = JSON.stringify(toJSON());
-    expect(tree.indexOf("SOURCES")).toBeLessThan(tree.indexOf(link));
   });
 
   it("in selection mode a selectable answer shows a selector with the selected state, and non-selectable items are dimmed", () => {
@@ -198,7 +228,9 @@ describe("ChatBubble", () => {
 
     const selector = getByRole("radio");
     expect(selector.props.accessibilityState).toEqual(expect.objectContaining({ selected: true }));
-    expect(queryByRole("button", { name: "Copy" })).toBeNull();
+    expect(getByLabelText("Answer: Yes, once it reaches nisab.").props.accessibilityActions).toEqual([
+      { name: "Source 1", label: "Source 1" },
+    ]);
     fireEvent.press(selector);
     fireEvent.press(getByLabelText("Answer: Yes, once it reaches nisab."));
     expect(onSelect).toHaveBeenCalledTimes(2);

@@ -1,13 +1,13 @@
 // frontend/components/chat/ChatBubble.tsx
 import { useMemo, useRef } from "react";
-import { Linking, Pressable, StyleSheet, View, type AccessibilityActionEvent } from "react-native";
+import { Pressable, StyleSheet, View, type AccessibilityActionEvent } from "react-native";
 
 import AnswerMenu from "@/components/chat/AnswerMenu";
 import AnswerText from "@/components/chat/AnswerText";
 import SourcesBlock from "@/components/chat/SourcesBlock";
 import PressableScale from "@/components/PressableScale";
 import AppIcon from "@/components/ui/AppIcon";
-import { Body, Caption, Footnote, Subhead } from "@/components/ui/Text";
+import { Body, Caption, Subhead } from "@/components/ui/Text";
 import { CRISIS_MESSAGE } from "@/constants/crisis";
 import { withOpacity, type AppTheme } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
@@ -98,7 +98,7 @@ export default function ChatBubble({
   const citations = notice === null ? (message.citations ?? []) : [];
   const selecting = selection.active && selection.selectable;
   const indent = selecting ? styles.indent : null;
-  // Only the text is one "Answer: …" element; the sources and scholar link stay separate so VoiceOver can reach them.
+  // Only the text is one "Answer: …" element; the sources stay separate so VoiceOver can reach them.
   const label = `Answer: ${notice ?? plainAnswer(message.text)}`;
   const content =
     notice !== null ? (
@@ -194,17 +194,6 @@ export default function ChatBubble({
           />
         </View>
       ) : null}
-      {message.scholarLink ? (
-        <PressableScale
-          variant="button"
-          onPress={() => void Linking.openURL(message.scholarLink!).catch(() => {})}
-          accessibilityRole="link"
-          accessibilityLabel="Read a scholar's answer"
-          style={[styles.link, indent]}
-        >
-          <Footnote color={colors.accent}>Read a scholar&apos;s answer ›</Footnote>
-        </PressableScale>
-      ) : null}
     </View>
   );
 }
@@ -246,7 +235,6 @@ const createStyles = (theme: AppTheme) => {
     selectorOn: { backgroundColor: colors.accent, borderColor: colors.accent },
     indent: { marginLeft: SELECTOR_SIZE + spacing.sm },
     sources: { maxWidth: "85%" },
-    link: { alignSelf: "flex-start", paddingHorizontal: spacing.xs },
     crisisBox: {
       padding: spacing.md,
       borderRadius: radii.row,
