@@ -46,3 +46,6 @@ coverage/
 
 # Superpowers brainstorming mockups
 .superpowers/
+
+# Local git worktrees
+.claude/worktrees/
