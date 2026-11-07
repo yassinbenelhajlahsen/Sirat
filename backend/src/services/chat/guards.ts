@@ -122,5 +122,36 @@ export async function renderCitations(ids: string[], retrieved: Set<string>): Pr
       if (h) out.push({ kind: "hadith", id: h.id, title: h.title, text: h.textEn, arabic: h.textAr, grade: h.grade, source: h.attribution, credit: "HadeethEnc.com" });
     }
   }
-  return out.slice(0, MAX_CITATIONS);
+  return out;
+}
+
+export function citationId(c: Citation): string {
+  return c.kind === "quran" ? `q:${c.surah}:${c.ayah}` : `${c.kind === "hadith" ? "h" : "d"}:${c.id}`;
+}
+
+const MARKER_GROUP = /([^\S\n]*)\[((?:[qhd]:[\d:]+)(?:\s*,\s*[qhd]:[\d:]+)*)\]/g;
+
+/**
+ * Turns the model's [q:2:286] / [h:1] / [d:3] markers into [n] matching the
+ * returned citations. Sources are ordered by first marker, then capped, so a
+ * referenced source is never the one the cap cuts. Runs after every other text
+ * edit, because it is the step that settles the final numbering.
+ */
+export function numberCitations(text: string, citations: Citation[]): { text: string; citations: Citation[] } {
+  // Models imitate the numbered form and write [1] themselves; those would collide with ours.
+  const clean = text.replace(/[^\S\n]*\[\d{1,3}\]/g, "");
+  const available = new Set(citations.map(citationId));
+  const marked = new Set<string>();
+  for (const m of clean.matchAll(MARKER_GROUP)) {
+    for (const id of m[2].split(",")) if (available.has(id.trim())) marked.add(id.trim());
+  }
+  const byId = new Map(citations.map((c) => [citationId(c), c]));
+  const kept = [...[...marked].map((id) => byId.get(id)!), ...citations.filter((c) => !marked.has(citationId(c)))].slice(0, MAX_CITATIONS);
+  const position = new Map(kept.map((c, i) => [citationId(c), i + 1]));
+  const numbered = clean.replace(MARKER_GROUP, (_, ws: string, ids: string) => {
+    const nums = ids.split(",").flatMap((id) => position.get(id.trim()) ?? []);
+    return nums.length ? ws + nums.map((n) => `[${n}]`).join("") : "";
+  });
+  const tidy = numbered.replace(/(\[\d+\])(\s*\1)+/g, "$1").replace(/ {2,}/g, " ");
+  return { text: tidy, citations: kept };
 }

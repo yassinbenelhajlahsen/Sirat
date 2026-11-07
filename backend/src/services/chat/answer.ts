@@ -1,5 +1,5 @@
 import { ENV } from "../../config/env.js";
-import { findReligiousQuote, renderCitations, scrubInternals, stripReligiousQuotes, type Citation } from "./guards.js";
+import { findReligiousQuote, numberCitations, renderCitations, scrubInternals, stripReligiousQuotes, type Citation } from "./guards.js";
 import { generateAnswer, moderate, type TokenUsage } from "./openai.js";
 import type { HistoryItem } from "./prompt.js";
 
@@ -34,12 +34,14 @@ export async function answerMessage(input: {
   const citations = await renderCitations(answer.citations, retrievedIds);
   const text = scrubInternals(quoted ? stripReligiousQuotes(answer.answer, citations.length > 0) : answer.answer);
 
-  if ((await moderate(text, input.signal)).severe) return { kind: "blocked", usage };
+  const numbered = numberCitations(text, citations);
+
+  if ((await moderate(numbered.text, input.signal)).severe) return { kind: "blocked", usage };
 
   return {
     kind: "answer",
-    answer: text,
-    citations,
+    answer: numbered.text,
+    citations: numbered.citations,
     scholarLink: answer.isRuling ? ENV.CHAT_SCHOLAR_LINK : null,
     summary: answer.summary,
     isRuling: answer.isRuling,

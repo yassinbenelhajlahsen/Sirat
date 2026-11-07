@@ -142,14 +142,14 @@ describe("chat guards", () => {
       expect(mockGetHadiths).toHaveBeenCalledWith([2962, 999]);
     });
 
-    it("keeps at most 6 citations", async () => {
-      const refs = Array.from({ length: 8 }, (_, i) => ({ surah: 1, ayah: i + 1, textAr: "a", textEn: "e" }));
+    it("returns every rendered source, since the cap moved to numberCitations", async () => {
+      const refs = Array.from({ length: 7 }, (_, i) => ({ surah: 1, ayah: i + 1, textAr: "a", textEn: "e" }));
       (mockGetQuranAyahs as any).mockResolvedValue(refs);
       (mockGetHadiths as any).mockResolvedValue([]);
       const { renderCitations } = await load();
       const ids = refs.map((r) => `q:${r.surah}:${r.ayah}`);
 
-      expect(await renderCitations(ids, new Set(ids))).toHaveLength(6);
+      expect(await renderCitations(ids, new Set(ids))).toHaveLength(7);
     });
 
     it("leaves out the English in reference mode", async () => {
@@ -201,7 +201,7 @@ describe("chat guards", () => {
         expect(mockGetDuas).toHaveBeenCalledWith([99]);
       });
 
-      it("keeps the model's order across kinds and counts duas toward the 6 cap", async () => {
+      it("keeps the model's order across kinds", async () => {
         (mockGetQuranAyahs as any).mockResolvedValue([ayah]);
         (mockGetHadiths as any).mockResolvedValue([]);
         const duas = Array.from({ length: 6 }, (_, i) => ({ ...dua, id: i + 1 }));
@@ -211,10 +211,60 @@ describe("chat guards", () => {
 
         const out = await renderCitations(ids, new Set(ids));
 
-        expect(out).toHaveLength(6);
+        expect(out).toHaveLength(7);
         expect(out[0]).toMatchObject({ kind: "dua", id: 1 });
         expect(out[1]).toMatchObject({ kind: "quran" });
       });
+    });
+  });
+
+  describe("numberCitations", () => {
+    type C = import("../src/services/chat/guards.js").Citation;
+    const hadith = (id: number): C => ({ kind: "hadith", id, title: "t", text: "x", arabic: null, grade: "g", source: "s", credit: "c" });
+    const quran = (surah: number, ayah: number): C => ({ kind: "quran", surah, ayah, arabic: "a", english: null });
+    const dua = (id: number): C => ({ kind: "dua", id, arabic: "a", transliteration: "t", english: "e", reference: "r" });
+
+    it("numbers markers by first appearance and reorders sources", async () => {
+      const { numberCitations, citationId } = await load();
+      const out = numberCitations("Pray. [h:1] It is fine [q:2:286].", [quran(2, 286), hadith(1)]);
+      expect(out.text).toBe("Pray. [1] It is fine [2].");
+      expect(out.citations.map(citationId)).toEqual(["h:1", "q:2:286"]);
+    });
+    it("keeps unmarked sources after marked ones, in model order", async () => {
+      const { numberCitations, citationId } = await load();
+      const out = numberCitations("A [d:3].", [hadith(1), quran(2, 286), dua(3)]);
+      expect(out.citations.map(citationId)).toEqual(["d:3", "h:1", "q:2:286"]);
+      expect(out.text).toBe("A [1].");
+    });
+    it("removes markers for ids not in the list without leaving spaces", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("Be patient [q:9:9].", [hadith(1)]).text).toBe("Be patient.");
+    });
+    it("strips numbers the model wrote itself", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("See [1] and [h:1].", [hadith(1)]).text).toBe("See and [1].");
+    });
+    it("splits a bracket holding several ids", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("Yes [q:2:286, h:1].", [hadith(1), quran(2, 286)]).text).toBe("Yes [1][2].");
+    });
+    it("collapses repeats of the same source", async () => {
+      const { numberCitations } = await load();
+      expect(numberCitations("Yes [h:1] [h:1].", [hadith(1)]).text).toBe("Yes [1].");
+    });
+    it("caps at six after reordering, so marked sources win", async () => {
+      const { numberCitations, citationId } = await load();
+      const seven = [1, 2, 3, 4, 5, 6, 7].map(hadith);
+      const out = numberCitations("Key [h:7].", seven);
+      expect(out.citations).toHaveLength(6);
+      expect(citationId(out.citations[0])).toBe("h:7");
+      expect(out.citations.map(citationId)).not.toContain("h:6");
+    });
+    it("removes markers for sources cut by the cap", async () => {
+      const { numberCitations, citationId } = await load();
+      const seven = [1, 2, 3, 4, 5, 6, 7].map(hadith);
+      const text = seven.map((h) => `x [${citationId(h)}]`).join(" ");
+      expect(numberCitations(text, seven).text).not.toMatch(/\[7\]/);
     });
   });
 });
