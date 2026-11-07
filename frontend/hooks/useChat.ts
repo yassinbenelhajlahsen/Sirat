@@ -175,13 +175,16 @@ export function useChat() {
       const current = liveState().messages;
       const index = current.findIndex((m) => m.id === id);
       const answer = current[index];
-      if (!answer || answer.role !== "assistant" || answer.notice) throw new Error("nothing to report");
+      if (!answer || answer.role !== "assistant" || answer.notice || answer.reported) throw new Error("nothing to report");
       const question = current.slice(0, index).reverse().find((m) => m.role === "user");
       if (!question) throw new Error("nothing to report");
       const citationIds = (answer.citations ?? []).map(citationKey).filter(Boolean);
       await reportChatAnswer(question.text.slice(0, MAX_QUESTION), answer.text, citationIds);
+      // Re-read: a sign-out while the request was in flight leaves nothing to mark.
+      const latest = liveState().messages;
+      if (latest.some((m) => m.id === id)) write(latest.map((m): ChatMessage => (m.id === id ? { ...m, reported: true } : m)));
     },
-    [liveState],
+    [liveState, write],
   );
 
   return { messages, remaining, allowance, resetsAt, sending: sending || restoring, send, retry, report };

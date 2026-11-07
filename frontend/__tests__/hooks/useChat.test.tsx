@@ -392,6 +392,52 @@ describe("hooks/useChat", () => {
     expect(mockReportChatAnswer).not.toHaveBeenCalled();
   });
 
+  it("marks the answer reported and saves it", async () => {
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+    await act(async () => {
+      await result.current.send("How?");
+    });
+    const id = result.current.messages[1].id;
+
+    await act(async () => {
+      await result.current.report(id);
+    });
+
+    expect(result.current.messages[1].reported).toBe(true);
+    expect((await storedChat()).messages[1].reported).toBe(true);
+    expect((await loadChat()).messages[1].reported).toBe(true);
+  });
+
+  it("rejects a second report of the same answer", async () => {
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    const { result } = await mountChat();
+    await act(async () => {
+      await result.current.send("How?");
+    });
+    const id = result.current.messages[1].id;
+    await act(async () => {
+      await result.current.report(id);
+    });
+
+    await expect(result.current.report(id)).rejects.toThrow("nothing to report");
+    expect(mockReportChatAnswer).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the answer unmarked when the report fails", async () => {
+    mockSendChat.mockResolvedValueOnce(ANSWER);
+    mockReportChatAnswer.mockRejectedValueOnce(new Error("offline"));
+    const { result } = await mountChat();
+    await act(async () => {
+      await result.current.send("How?");
+    });
+
+    await expect(result.current.report(result.current.messages[1].id)).rejects.toThrow("offline");
+
+    expect(result.current.messages[1].reported).toBeUndefined();
+    expect((await storedChat()).messages[1].reported).toBeUndefined();
+  });
+
   it("report rejects when no message has the id", async () => {
     const { result } = await mountChat();
 

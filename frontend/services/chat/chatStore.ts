@@ -16,6 +16,7 @@ export type ChatMessage = {
   citations?: Citation[];
   scholarLink?: string | null;
   notice?: "crisis" | "blocked" | "limit";
+  reported?: true;
 };
 
 export type ChatState = { messages: ChatMessage[]; summary: string | null };
