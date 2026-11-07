@@ -62,22 +62,6 @@ public final class SiratContextMenuView: ExpoView, UIContextMenuInteractionDeleg
     bubblePreview()
   }
 
-  // A hold that opens the menu must not also end as a press on a number tag inside the answer, so RN's touch handler drops the touch.
-  public func contextMenuInteraction(
-    _ interaction: UIContextMenuInteraction,
-    willDisplayMenuFor configuration: UIContextMenuConfiguration,
-    animator: (any UIContextMenuInteractionAnimating)?
-  ) {
-    var view = superview
-    while let current = view {
-      for recognizer in current.gestureRecognizers ?? [] where NSStringFromClass(type(of: recognizer)).contains("TouchHandler") {
-        recognizer.isEnabled = false
-        recognizer.isEnabled = true
-      }
-      view = current.superview
-    }
-  }
-
   private func bubblePreview() -> UITargetedPreview? {
     guard window != nil else { return nil }
     let parameters = UIPreviewParameters()
